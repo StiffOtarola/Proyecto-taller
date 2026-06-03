@@ -4,7 +4,7 @@ import { AlertController, LoadingController, ToastController } from '@ionic/angu
 import { OrdenesService } from '../../services/ordenes.service';
 import { UsuariosService } from '../../services/usuarios.service';
 import { AuthService } from '../../services/auth.service';
-import { Orden, OrdenAvance, OrdenRepuesto, EstadoOrden, ESTADO_CONFIG } from '../../models/orden.model';
+import { Orden, OrdenAvance, OrdenRepuesto, OrdenChecklist, EstadoOrden, ESTADO_CONFIG } from '../../models/orden.model';
 import { Usuario } from '../../models/usuario.model';
 
 @Component({ standalone: false,
@@ -22,6 +22,17 @@ export class DetalleOrdenPage implements OnInit {
   nuevoAvance = '';
   nuevoRepuesto: OrdenRepuesto = { nombre: '', cantidad: 1, costo_unitario: 0 };
   mostrarFormRepuesto = false;
+
+  checklist: OrdenChecklist = {
+    prueba_realizada: false,
+    lavado: false,
+    calidad_revisada: false,
+    facturacion_lista: false,
+    cliente_notificado: false,
+    observaciones: '',
+  };
+
+  cierre = { metodo_pago: 'efectivo', garantia_dias: 30, observaciones_finales: '' };
 
   readonly estadosSiguientes: Record<EstadoOrden, EstadoOrden[]> = {
     recepcion:            ['diagnostico', 'cancelada'],
@@ -58,6 +69,18 @@ export class DetalleOrdenPage implements OnInit {
     });
     this.ordenSvc.getAvances(id).subscribe(res => this.avances = res.data);
     this.ordenSvc.getRepuestos(id).subscribe(res => this.repuestos = res.data);
+    this.ordenSvc.getChecklist(id).subscribe(res => {
+      if (res.data) {
+        this.checklist = {
+          prueba_realizada: !!res.data.prueba_realizada,
+          lavado: !!res.data.lavado,
+          calidad_revisada: !!res.data.calidad_revisada,
+          facturacion_lista: !!res.data.facturacion_lista,
+          cliente_notificado: !!res.data.cliente_notificado,
+          observaciones: res.data.observaciones || '',
+        };
+      }
+    });
     this.usuarioSvc.getAll().subscribe(res => {
       this.tecnicos = res.data.filter(u => u.rol === 'tecnico' && u.activo);
     });
@@ -162,6 +185,63 @@ export class DetalleOrdenPage implements OnInit {
   get totalOrden() {
     if (!this.orden) return 0;
     return (this.orden.costo_mano_obra || 0) + this.totalRepuestos - (this.orden.descuento || 0);
+  }
+
+  guardarChecklist() {
+    this.ordenSvc.saveChecklist(this.orden!.id!, this.checklist).subscribe({
+      next: () => this.mostrarToast('Checklist guardado'),
+      error: (err) => this.mostrarAlertError(err.error?.error),
+    });
+  }
+
+  get checklistCompleto(): boolean {
+    const c = this.checklist;
+    return c.prueba_realizada && c.lavado && c.calidad_revisada && c.facturacion_lista;
+  }
+
+  get puedeEntregar(): boolean {
+    return this.orden?.estado === 'lista_entrega' && this.auth.tieneRol('jefe_taller', 'admin', 'gerencia');
+  }
+
+  async facturarYEntregar() {
+    if (!this.checklistCompleto) {
+      const a = await this.alert.create({
+        header: 'Checklist incompleto',
+        message: 'Completá prueba, lavado, calidad y facturación antes de entregar.',
+        buttons: ['OK'],
+      });
+      await a.present();
+      return;
+    }
+
+    const conf = await this.alert.create({
+      header: 'Confirmar entrega',
+      message: `Total a cobrar: ₡${this.totalOrden.toLocaleString('es-CR')}. ¿Cerrar la orden y marcarla como entregada?`,
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Entregar', handler: () => this.ejecutarCierre() },
+      ],
+    });
+    await conf.present();
+  }
+
+  private async ejecutarCierre() {
+    const l = await this.loading.create({ message: 'Cerrando orden...' });
+    await l.present();
+    // Persistir checklist primero, luego cerrar
+    this.ordenSvc.saveChecklist(this.orden!.id!, this.checklist).subscribe(() => {
+      this.ordenSvc.cerrar(this.orden!.id!, this.cierre).subscribe({
+        next: async () => {
+          await l.dismiss();
+          this.cargar(this.orden!.id!);
+          this.mostrarToast('Orden entregada y facturada');
+        },
+        error: async (err) => {
+          await l.dismiss();
+          this.mostrarAlertError(err.error?.error);
+        },
+      });
+    });
   }
 
   private async mostrarToast(msg: string) {

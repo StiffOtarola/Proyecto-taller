@@ -75,6 +75,116 @@
     </ion-list>
   </ion-card>
 
+  <!-- Checklist de entrega + Facturación -->
+  <ion-card *ngIf="orden.estado === 'lista_entrega' || orden.estado === 'entregada'"
+            [class.entregada-card]="orden.estado === 'entregada'">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="checkbox-outline" style="vertical-align:middle;margin-right:6px;color:var(--ion-color-success)"></ion-icon>
+        Checklist de entrega
+      </ion-card-title>
+    </ion-card-header>
+
+    <ion-list>
+      <ion-item lines="full">
+        <ion-checkbox slot="start" [(ngModel)]="checklist.prueba_realizada" [disabled]="orden.estado === 'entregada'"></ion-checkbox>
+        <ion-label>Prueba de manejo realizada</ion-label>
+      </ion-item>
+      <ion-item lines="full">
+        <ion-checkbox slot="start" [(ngModel)]="checklist.lavado" [disabled]="orden.estado === 'entregada'"></ion-checkbox>
+        <ion-label>Lavado</ion-label>
+      </ion-item>
+      <ion-item lines="full">
+        <ion-checkbox slot="start" [(ngModel)]="checklist.calidad_revisada" [disabled]="orden.estado === 'entregada'"></ion-checkbox>
+        <ion-label>Calidad revisada</ion-label>
+      </ion-item>
+      <ion-item lines="full">
+        <ion-checkbox slot="start" [(ngModel)]="checklist.facturacion_lista" [disabled]="orden.estado === 'entregada'"></ion-checkbox>
+        <ion-label>Facturación lista</ion-label>
+      </ion-item>
+      <ion-item lines="full">
+        <ion-checkbox slot="start" [(ngModel)]="checklist.cliente_notificado" [disabled]="orden.estado === 'entregada'"></ion-checkbox>
+        <ion-label>Cliente notificado</ion-label>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-textarea label="Observaciones" labelPlacement="floating"
+          [(ngModel)]="checklist.observaciones" rows="2"
+          [disabled]="orden.estado === 'entregada'"></ion-textarea>
+      </ion-item>
+    </ion-list>
+
+    <ion-card-content *ngIf="orden.estado === 'lista_entrega'">
+      <ion-button expand="block" fill="outline" (click)="guardarChecklist()" class="ion-margin-bottom">
+        <ion-icon name="save-outline" slot="start"></ion-icon>
+        Guardar checklist
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Facturación y cierre (jefe_taller+) -->
+  <ion-card *ngIf="puedeEntregar">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="cash-outline" style="vertical-align:middle;margin-right:6px;color:var(--ion-color-success)"></ion-icon>
+        Facturación y entrega
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div class="total-cobrar">
+        <span>Total a cobrar</span>
+        <strong>₡{{ totalOrden | number:'1.0-0' }}</strong>
+      </div>
+
+      <ion-item>
+        <ion-select label="Método de pago" labelPlacement="floating" [(ngModel)]="cierre.metodo_pago" interface="action-sheet">
+          <ion-select-option value="efectivo">Efectivo</ion-select-option>
+          <ion-select-option value="sinpe">SINPE Móvil</ion-select-option>
+          <ion-select-option value="tarjeta">Tarjeta</ion-select-option>
+          <ion-select-option value="transferencia">Transferencia</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Garantía (días)" labelPlacement="floating" type="number" [(ngModel)]="cierre.garantia_dias"></ion-input>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-textarea label="Observaciones finales" labelPlacement="floating" [(ngModel)]="cierre.observaciones_finales" rows="2"></ion-textarea>
+      </ion-item>
+
+      <ion-button expand="block" color="success" class="ion-margin-top" (click)="facturarYEntregar()" [disabled]="!checklistCompleto">
+        <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
+        Facturar y entregar
+      </ion-button>
+      <p *ngIf="!checklistCompleto" class="checklist-aviso">
+        <ion-icon name="information-circle-outline"></ion-icon>
+        Completá prueba, lavado, calidad y facturación para habilitar la entrega.
+      </p>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Resumen de entrega (orden ya entregada) -->
+  <ion-card *ngIf="orden.estado === 'entregada'">
+    <ion-card-header><ion-card-title>Entrega</ion-card-title></ion-card-header>
+    <ion-list>
+      <ion-item>
+        <ion-label>Método de pago</ion-label>
+        <ion-note slot="end">{{ orden.metodo_pago || '—' }}</ion-note>
+      </ion-item>
+      <ion-item>
+        <ion-label>Garantía</ion-label>
+        <ion-note slot="end">{{ orden.garantia_dias || 0 }} días</ion-note>
+      </ion-item>
+      <ion-item *ngIf="orden.fecha_entrega_real">
+        <ion-label>Entregada</ion-label>
+        <ion-note slot="end">{{ orden.fecha_entrega_real | date:'dd/MM/yyyy HH:mm' }}</ion-note>
+      </ion-item>
+      <ion-item *ngIf="orden.observaciones_finales" lines="none">
+        <ion-label class="ion-text-wrap">
+          <p><strong>Observaciones:</strong> {{ orden.observaciones_finales }}</p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </ion-card>
+
   <!-- Repuestos -->
   <ion-card>
     <ion-card-header>

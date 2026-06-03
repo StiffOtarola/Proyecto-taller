@@ -64,6 +64,15 @@ export interface OrdenRepuesto {
   estado?: string;
 }
 
+export interface OrdenChecklist {
+  prueba_realizada: boolean;
+  lavado: boolean;
+  calidad_revisada: boolean;
+  facturacion_lista: boolean;
+  cliente_notificado: boolean;
+  observaciones?: string;
+}
+
 export const ESTADO_CONFIG: Record<EstadoOrden, { label: string; color: string }> = {
   recepcion:             { label: 'Recepción',            color: 'primary' },
   diagnostico:           { label: 'Diagnóstico',          color: 'warning' },

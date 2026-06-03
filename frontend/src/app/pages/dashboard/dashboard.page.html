@@ -72,8 +72,102 @@
             <ion-icon name="cash-outline" style="font-size:26px;color:var(--ion-color-success)"></ion-icon>
           </div>
         </div>
+        <div class="factura-periodo">
+          <div>
+            <span>Semana</span>
+            <strong>₡{{ resumen.facturacion_semana | number:'1.0-0' }}</strong>
+          </div>
+          <div>
+            <span>Mes</span>
+            <strong>₡{{ resumen.facturacion_mes | number:'1.0-0' }}</strong>
+          </div>
+        </div>
       </ion-card-content>
     </ion-card>
+
+    <!-- Semáforo de entregas -->
+    <div class="ion-padding-horizontal ion-padding-top">
+      <p class="seccion-titulo">Semáforo de entregas</p>
+    </div>
+    <ion-grid style="padding:0 8px 4px">
+      <ion-row>
+        <ion-col size="4">
+          <div class="semaforo-pill rojo">
+            <span class="num">{{ countRojo }}</span>
+            <span class="lbl">Atrasadas</span>
+          </div>
+        </ion-col>
+        <ion-col size="4">
+          <div class="semaforo-pill amarillo">
+            <span class="num">{{ countAmarillo }}</span>
+            <span class="lbl">Por vencer</span>
+          </div>
+        </ion-col>
+        <ion-col size="4">
+          <div class="semaforo-pill verde">
+            <span class="num">{{ countVerde }}</span>
+            <span class="lbl">A tiempo</span>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+
+    <!-- Lista de órdenes ordenadas por urgencia -->
+    <ion-card *ngIf="atrasos.length">
+      <ion-list>
+        <ion-item *ngFor="let a of atrasos" button (click)="abrirOrden(a.id)" lines="inset">
+          <div slot="start" class="semaforo-dot" [class.rojo]="semaforo(a.dias_restantes)==='rojo'"
+               [class.amarillo]="semaforo(a.dias_restantes)==='amarillo'"
+               [class.verde]="semaforo(a.dias_restantes)==='verde'"
+               [class.gris]="semaforo(a.dias_restantes)==='gris'"></div>
+          <ion-label>
+            <h2>{{ a.numero_orden }} · {{ a.marca }} {{ a.modelo }}</h2>
+            <p>{{ a.cliente_nombre }} {{ a.cliente_apellido }}
+               <span *ngIf="a.tecnico_nombre"> · {{ a.tecnico_nombre }}</span></p>
+          </ion-label>
+          <ion-badge slot="end" [color]="semaforoColor(a.dias_restantes)">
+            {{ semaforoTexto(a.dias_restantes) }}
+          </ion-badge>
+        </ion-item>
+      </ion-list>
+    </ion-card>
+
+    <!-- KPIs operativos -->
+    <div class="ion-padding-horizontal ion-padding-top">
+      <p class="seccion-titulo">Indicadores</p>
+    </div>
+    <ion-grid style="padding:0 8px 8px">
+      <ion-row>
+        <ion-col size="6">
+          <div class="kpi-card">
+            <ion-icon name="pricetag-outline" color="primary"></ion-icon>
+            <span class="kpi-num">₡{{ resumen.ticket_promedio | number:'1.0-0' }}</span>
+            <span class="kpi-lbl">Ticket promedio</span>
+          </div>
+        </ion-col>
+        <ion-col size="6">
+          <div class="kpi-card">
+            <ion-icon name="time-outline" color="secondary"></ion-icon>
+            <span class="kpi-num">{{ resumen.tiempo_promedio_horas || 0 }}h</span>
+            <span class="kpi-lbl">Reparación promedio</span>
+          </div>
+        </ion-col>
+        <ion-col size="6">
+          <div class="kpi-card">
+            <ion-icon name="trending-up-outline" color="success"></ion-icon>
+            <span class="kpi-num">{{ resumen.conversion_pct }}%</span>
+            <span class="kpi-lbl">Diagnóstico → reparación</span>
+          </div>
+        </ion-col>
+        <ion-col size="6">
+          <div class="kpi-card">
+            <ion-icon name="cube-outline" [color]="resumen.repuestos_pendientes > 0 ? 'warning' : 'medium'"></ion-icon>
+            <span class="kpi-num">{{ resumen.repuestos_pendientes }}</span>
+            <span class="kpi-lbl">Repuestos pendientes</span>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
 
     <!-- Acciones rápidas -->
     <div class="ion-padding-horizontal ion-padding-top">
@@ -122,6 +216,23 @@
             <h2>{{ t.nombre }}</h2>
             <p>{{ t.ordenes_completadas }} completadas · {{ t.horas_promedio || 0 }}h promedio</p>
           </ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-card>
+
+    <!-- Tiempo promedio por etapa (cuellos de botella) -->
+    <ion-card *ngIf="tiempos.length">
+      <ion-card-header>
+        <ion-card-title>Tiempo por etapa</ion-card-title>
+        <ion-card-subtitle>Promedio de horas — detecta cuellos de botella</ion-card-subtitle>
+      </ion-card-header>
+      <ion-list>
+        <ion-item *ngFor="let t of tiempos" lines="inset">
+          <ion-label>
+            <h3>{{ etapaLabel[t.etapa] || t.etapa }}</h3>
+            <p>{{ t.total }} orden{{ t.total !== 1 ? 'es' : '' }}</p>
+          </ion-label>
+          <ion-note slot="end" class="etapa-horas">{{ t.horas_promedio || 0 }}h</ion-note>
         </ion-item>
       </ion-list>
     </ion-card>

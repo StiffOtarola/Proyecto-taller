@@ -16,10 +16,68 @@ router.get('/resumen', async (req, res) => {
     const [[{ facturacion_hoy }]] = await pool.query(
       "SELECT COALESCE(SUM(costo_mano_obra + costo_repuestos - descuento), 0) AS facturacion_hoy FROM ordenes_trabajo WHERE DATE(fecha_entrega_real) = CURDATE() AND estado = 'entregada'"
     );
+    const [[{ facturacion_semana }]] = await pool.query(
+      "SELECT COALESCE(SUM(costo_mano_obra + costo_repuestos - descuento), 0) AS facturacion_semana FROM ordenes_trabajo WHERE estado = 'entregada' AND YEARWEEK(fecha_entrega_real, 1) = YEARWEEK(CURDATE(), 1)"
+    );
+    const [[{ facturacion_mes }]] = await pool.query(
+      "SELECT COALESCE(SUM(costo_mano_obra + costo_repuestos - descuento), 0) AS facturacion_mes FROM ordenes_trabajo WHERE estado = 'entregada' AND MONTH(fecha_entrega_real) = MONTH(CURDATE()) AND YEAR(fecha_entrega_real) = YEAR(CURDATE())"
+    );
+    const [[{ ticket_promedio }]] = await pool.query(
+      "SELECT COALESCE(AVG(costo_mano_obra + costo_repuestos - descuento), 0) AS ticket_promedio FROM ordenes_trabajo WHERE estado = 'entregada'"
+    );
+    const [[{ tiempo_promedio_horas }]] = await pool.query(
+      "SELECT ROUND(AVG(TIMESTAMPDIFF(HOUR, fecha_ingreso, fecha_entrega_real)), 1) AS tiempo_promedio_horas FROM ordenes_trabajo WHERE estado = 'entregada' AND fecha_entrega_real IS NOT NULL"
+    );
+    const [[{ repuestos_pendientes }]] = await pool.query(
+      "SELECT COUNT(*) AS repuestos_pendientes FROM orden_repuestos r JOIN ordenes_trabajo o ON o.id = r.orden_id WHERE r.estado IN ('pendiente','pedido_especial') AND o.estado NOT IN ('entregada','cancelada')"
+    );
+    const [[conversion]] = await pool.query(
+      `SELECT
+         (SELECT COUNT(DISTINCT orden_id) FROM orden_tiempos WHERE etapa = 'diagnostico') AS con_diagnostico,
+         (SELECT COUNT(DISTINCT orden_id) FROM orden_tiempos WHERE etapa = 'en_reparacion') AS con_reparacion`
+    );
+    const conversion_pct = conversion.con_diagnostico > 0
+      ? Math.round((conversion.con_reparacion / conversion.con_diagnostico) * 100)
+      : 0;
     const [ordenes_por_estado] = await pool.query(
       "SELECT estado, COUNT(*) AS total FROM ordenes_trabajo WHERE estado NOT IN ('entregada','cancelada') GROUP BY estado"
     );
-    res.json({ data: { motos_activas, motos_atrasadas, facturacion_hoy, ordenes_por_estado } });
+    res.json({
+      data: {
+        motos_activas,
+        motos_atrasadas,
+        facturacion_hoy,
+        facturacion_semana,
+        facturacion_mes,
+        ticket_promedio,
+        tiempo_promedio_horas,
+        repuestos_pendientes,
+        conversion_pct,
+        ordenes_por_estado,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/dashboard/atrasos — órdenes activas con semáforo de entrega
+router.get('/atrasos', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT o.id, o.numero_orden, o.estado, o.fecha_estimada_entrega,
+              DATEDIFF(o.fecha_estimada_entrega, CURDATE()) AS dias_restantes,
+              m.marca, m.modelo, m.placa,
+              c.nombre AS cliente_nombre, c.apellido AS cliente_apellido,
+              t.nombre AS tecnico_nombre
+       FROM ordenes_trabajo o
+       JOIN motos m    ON m.id = o.moto_id
+       JOIN clientes c ON c.id = o.cliente_id
+       LEFT JOIN usuarios t ON t.id = o.tecnico_id
+       WHERE o.estado NOT IN ('entregada','cancelada')
+       ORDER BY (o.fecha_estimada_entrega IS NULL), o.fecha_estimada_entrega ASC`
+    );
+    res.json({ data: rows });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

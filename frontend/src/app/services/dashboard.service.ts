@@ -19,4 +19,8 @@ export class DashboardService {
   getTiempos(): Observable<{ data: any[] }> {
     return this.http.get<{ data: any[] }>(`${this.url}/tiempos`);
   }
+
+  getAtrasos(): Observable<{ data: any[] }> {
+    return this.http.get<{ data: any[] }>(`${this.url}/atrasos`);
+  }
 }

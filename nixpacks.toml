@@ -13,4 +13,4 @@ cmds = [
 ]
 
 [start]
-cmd = "NODE_ENV=production node backend/src/server.js"
+cmd = "node backend/src/server.js"

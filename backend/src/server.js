@@ -2,15 +2,16 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const { testConnection } = require('./db/pool');
 const itemsRoutes = require('./routes/items.routes');
 
 const app = express();
-const isProd = process.env.NODE_ENV === 'production';
+const frontendDist = path.join(__dirname, '../../frontend/www');
+const hasFrontend = fs.existsSync(path.join(frontendDist, 'index.html'));
 
-// En dev se necesita CORS porque frontend y backend corren en puertos distintos.
-// En produccion Express sirve el frontend directamente, CORS no aplica.
-if (!isProd) {
+// CORS solo si no servimos el frontend desde este mismo servidor
+if (!hasFrontend) {
   app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:8100' }));
 }
 
@@ -22,24 +23,26 @@ app.get('/api/health', (req, res) => res.json({ ok: true, ts: new Date().toISOSt
 // Rutas de la API
 app.use('/api/items', itemsRoutes);
 
-// Manejador central de errores de la API
+// Manejador de errores de la API
 app.use('/api', (err, req, res, next) => {
   console.error('Error:', err.message);
   res.status(500).json({ error: 'Error interno del servidor' });
 });
 
-// En produccion, sirve el build de Ionic/Angular desde frontend/www
-if (isProd) {
-  const frontendDist = path.join(__dirname, '../../frontend/www');
+// Sirve el build de Angular si existe (produccion / Railway)
+if (hasFrontend) {
   app.use(express.static(frontendDist));
-  // Fallback para rutas del router de Angular (Express 5 requiere named wildcard)
+  // Fallback para el router de Angular (Express 5 requiere named wildcard)
   app.get('/{*path}', (req, res) => {
     res.sendFile(path.join(frontendDist, 'index.html'));
   });
+  console.log('🌐 Sirviendo frontend desde', frontendDist);
+} else {
+  console.log('⚡ Modo desarrollo: frontend en http://localhost:8100');
 }
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
-  console.log(`🚀 Servidor escuchando en http://localhost:${PORT} [${isProd ? 'produccion' : 'desarrollo'}]`);
+  console.log(`🚀 Servidor en http://localhost:${PORT}`);
   await testConnection();
 });

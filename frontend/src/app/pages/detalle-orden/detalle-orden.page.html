@@ -1,0 +1,151 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/ordenes"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ orden?.numero_orden || 'Orden' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content *ngIf="!cargando && orden">
+  <!-- Estado actual -->
+  <ion-card>
+    <ion-card-header>
+      <ion-badge [color]="estadoColor(orden.estado!)" class="estado-badge">
+        {{ estadoLabel(orden.estado!) }}
+      </ion-badge>
+      <ion-card-title>{{ orden.marca }} {{ orden.modelo }} {{ orden.anio }}</ion-card-title>
+      <ion-card-subtitle>
+        {{ orden.cliente_nombre }} {{ orden.cliente_apellido }} · {{ orden.cliente_telefono }}
+        <span *ngIf="orden.placa"> · {{ orden.placa }}</span>
+      </ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <p><strong>Problema:</strong> {{ orden.problema_reportado }}</p>
+      <p *ngIf="orden.diagnostico"><strong>Diagnóstico:</strong> {{ orden.diagnostico }}</p>
+      <p *ngIf="orden.tecnico_nombre"><strong>Técnico:</strong> {{ orden.tecnico_nombre }}</p>
+      <p *ngIf="orden.fecha_estimada_entrega">
+        <strong>Entrega estimada:</strong> {{ orden.fecha_estimada_entrega | date:'dd/MM/yyyy' }}
+      </p>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Cambiar estado -->
+  <ion-card *ngIf="siguientes.length > 0">
+    <ion-card-header><ion-card-title>Cambiar estado</ion-card-title></ion-card-header>
+    <ion-card-content>
+      <ion-button *ngFor="let s of siguientes" (click)="cambiarEstado(s)"
+        [color]="estadoColor(s)" fill="outline" class="ion-margin-end ion-margin-bottom">
+        {{ estadoLabel(s) }}
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Asignar técnico (jefe_taller+) -->
+  <ion-card *ngIf="auth.tieneRol('jefe_taller','admin','gerencia') && tecnicos.length">
+    <ion-card-header><ion-card-title>Asignar técnico</ion-card-title></ion-card-header>
+    <ion-card-content>
+      <ion-select placeholder="Seleccionar técnico" [(ngModel)]="orden.tecnico_id"
+        (ngModelChange)="asignarTecnico($event)" interface="action-sheet">
+        <ion-select-option *ngFor="let t of tecnicos" [value]="t.id">{{ t.nombre }}</ion-select-option>
+      </ion-select>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Costos -->
+  <ion-card>
+    <ion-card-header><ion-card-title>Costos</ion-card-title></ion-card-header>
+    <ion-list>
+      <ion-item>
+        <ion-label>Mano de obra</ion-label>
+        <ion-note slot="end">₡{{ orden.costo_mano_obra | number:'1.0-0' }}</ion-note>
+      </ion-item>
+      <ion-item>
+        <ion-label>Repuestos</ion-label>
+        <ion-note slot="end">₡{{ totalRepuestos | number:'1.0-0' }}</ion-note>
+      </ion-item>
+      <ion-item *ngIf="orden.descuento">
+        <ion-label>Descuento</ion-label>
+        <ion-note slot="end" color="danger">-₡{{ orden.descuento | number:'1.0-0' }}</ion-note>
+      </ion-item>
+      <ion-item>
+        <ion-label><strong>Total</strong></ion-label>
+        <ion-note slot="end"><strong>₡{{ totalOrden | number:'1.0-0' }}</strong></ion-note>
+      </ion-item>
+    </ion-list>
+  </ion-card>
+
+  <!-- Repuestos -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Repuestos</ion-card-title>
+      <ion-button fill="clear" slot="end" (click)="mostrarFormRepuesto = !mostrarFormRepuesto">
+        <ion-icon name="add-outline"></ion-icon>
+      </ion-button>
+    </ion-card-header>
+
+    <ion-card-content *ngIf="mostrarFormRepuesto">
+      <ion-item>
+        <ion-label position="floating">Nombre</ion-label>
+        <ion-input [(ngModel)]="nuevoRepuesto.nombre"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Cantidad</ion-label>
+        <ion-input type="number" [(ngModel)]="nuevoRepuesto.cantidad"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Costo unitario (₡)</ion-label>
+        <ion-input type="number" [(ngModel)]="nuevoRepuesto.costo_unitario"></ion-input>
+      </ion-item>
+      <ion-button expand="block" class="ion-margin-top" (click)="agregarRepuesto()">Agregar</ion-button>
+    </ion-card-content>
+
+    <ion-list>
+      <ion-item-sliding *ngFor="let r of repuestos">
+        <ion-item>
+          <ion-label>
+            <h3>{{ r.nombre }}</h3>
+            <p>{{ r.cantidad }} × ₡{{ r.costo_unitario | number:'1.0-0' }} = ₡{{ r.cantidad * r.costo_unitario | number:'1.0-0' }}</p>
+          </ion-label>
+          <ion-badge slot="end" [color]="r.estado === 'disponible' ? 'success' : r.estado === 'pedido_especial' ? 'warning' : 'medium'">
+            {{ r.estado }}
+          </ion-badge>
+        </ion-item>
+        <ion-item-options side="end">
+          <ion-item-option color="danger" (click)="eliminarRepuesto(r)">
+            <ion-icon name="trash-outline"></ion-icon>
+          </ion-item-option>
+        </ion-item-options>
+      </ion-item-sliding>
+      <ion-item *ngIf="repuestos.length === 0">
+        <ion-label color="medium"><p>Sin repuestos registrados</p></ion-label>
+      </ion-item>
+    </ion-list>
+  </ion-card>
+
+  <!-- Avances / Timeline -->
+  <ion-card>
+    <ion-card-header><ion-card-title>Avances</ion-card-title></ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-textarea [(ngModel)]="nuevoAvance" placeholder="Descripción del avance..." rows="2"></ion-textarea>
+      </ion-item>
+      <ion-button expand="block" class="ion-margin-top" (click)="agregarAvance()">Registrar avance</ion-button>
+    </ion-card-content>
+    <ion-list>
+      <ion-item *ngFor="let a of avances">
+        <ion-label class="ion-text-wrap">
+          <p class="avance-fecha">{{ a.created_at | date:'dd/MM/yyyy HH:mm' }} — <strong>{{ a.usuario_nombre }}</strong></p>
+          <p>{{ a.descripcion }}</p>
+        </ion-label>
+      </ion-item>
+      <ion-item *ngIf="avances.length === 0">
+        <ion-label color="medium"><p>Sin avances registrados</p></ion-label>
+      </ion-item>
+    </ion-list>
+  </ion-card>
+</ion-content>
+
+<ion-content *ngIf="cargando" class="ion-padding ion-text-center">
+  <ion-spinner></ion-spinner>
+</ion-content>

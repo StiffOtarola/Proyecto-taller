@@ -1,0 +1,98 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>
+      <ion-icon name="construct-outline"></ion-icon> TallerMS
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="irNuevaOrden()" title="Nueva Orden">
+        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="logout()" title="Cerrar sesión">
+        <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar(); $event.target.complete()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="ion-padding" *ngIf="!cargando && resumen">
+    <p class="bienvenida">Bienvenido, <strong>{{ auth.getUsuario()?.nombre }}</strong>
+      <ion-badge color="primary" class="ion-margin-start">{{ auth.getUsuario()?.rol }}</ion-badge>
+    </p>
+
+    <!-- Cards de resumen -->
+    <ion-row>
+      <ion-col size="6">
+        <ion-card color="primary" class="stat-card" routerLink="/tabs/ordenes">
+          <ion-card-content>
+            <div class="stat-number">{{ resumen.motos_activas }}</div>
+            <div class="stat-label">Motos activas</div>
+            <ion-icon name="bicycle-outline"></ion-icon>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col size="6">
+        <ion-card [color]="resumen.motos_atrasadas > 0 ? 'danger' : 'success'" class="stat-card">
+          <ion-card-content>
+            <div class="stat-number">{{ resumen.motos_atrasadas }}</div>
+            <div class="stat-label">Atrasadas</div>
+            <ion-icon name="warning-outline"></ion-icon>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-subtitle>Facturación hoy</ion-card-subtitle>
+        <ion-card-title>₡{{ resumen.facturacion_hoy | number:'1.0-0' }}</ion-card-title>
+      </ion-card-header>
+    </ion-card>
+
+    <!-- Órdenes por estado -->
+    <ion-card *ngIf="resumen.ordenes_por_estado?.length">
+      <ion-card-header>
+        <ion-card-title>Órdenes por estado</ion-card-title>
+      </ion-card-header>
+      <ion-list>
+        <ion-item *ngFor="let item of resumen.ordenes_por_estado">
+          <ion-label>{{ item.estado | estadoLabel }}</ion-label>
+          <ion-badge slot="end" [color]="item.estado | estadoColor">{{ item.total }}</ion-badge>
+        </ion-item>
+      </ion-list>
+    </ion-card>
+
+    <!-- Productividad técnicos -->
+    <ion-card *ngIf="tecnicos.length">
+      <ion-card-header>
+        <ion-card-title>Técnicos</ion-card-title>
+      </ion-card-header>
+      <ion-list>
+        <ion-item *ngFor="let t of tecnicos">
+          <ion-avatar slot="start">
+            <ion-icon name="person-circle-outline" style="font-size:36px"></ion-icon>
+          </ion-avatar>
+          <ion-label>
+            <h2>{{ t.nombre }}</h2>
+            <p>{{ t.ordenes_completadas }} órdenes — {{ t.horas_promedio }}h promedio</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-card>
+  </div>
+
+  <div class="ion-padding ion-text-center" *ngIf="cargando">
+    <ion-spinner></ion-spinner>
+    <p>Cargando dashboard...</p>
+  </div>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button color="primary" (click)="irNuevaOrden()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

@@ -1,0 +1,52 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/citas"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ esEdicion ? 'Editar' : 'Nueva' }} Cita</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-list>
+    <ion-item>
+      <ion-label position="stacked">Cliente *</ion-label>
+      <ion-input [(ngModel)]="busquedaCliente" (ionInput)="buscarClientes()"
+        placeholder="Buscar cliente..."></ion-input>
+    </ion-item>
+    <ion-list *ngIf="clientes.length">
+      <ion-item *ngFor="let c of clientes" button (click)="seleccionarCliente(c)" detail="false">
+        <ion-label>{{ c.nombre }} {{ c.apellido }} — {{ c.telefono }}</ion-label>
+      </ion-item>
+    </ion-list>
+
+    <ion-item *ngIf="motos.length">
+      <ion-label position="stacked">Moto (opcional)</ion-label>
+      <ion-select [(ngModel)]="form.moto_id" interface="action-sheet" placeholder="Seleccionar moto">
+        <ion-select-option *ngFor="let m of motos" [value]="m.id">
+          {{ m.marca }} {{ m.modelo }} {{ m.placa ? '(' + m.placa + ')' : '' }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Fecha *</ion-label>
+      <ion-input type="date" [(ngModel)]="form.fecha"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Hora *</ion-label>
+      <ion-input type="time" [(ngModel)]="form.hora"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Motivo *</ion-label>
+      <ion-textarea [(ngModel)]="form.motivo" rows="3" placeholder="Motivo de la cita..."></ion-textarea>
+    </ion-item>
+  </ion-list>
+
+  <ion-button expand="block" class="ion-margin-top" (click)="guardar()">
+    <ion-icon name="save-outline" slot="start"></ion-icon>
+    Guardar
+  </ion-button>
+</ion-content>

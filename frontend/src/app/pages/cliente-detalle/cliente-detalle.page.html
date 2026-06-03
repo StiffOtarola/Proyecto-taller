@@ -1,0 +1,82 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/clientes"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ cliente?.nombre }} {{ cliente?.apellido }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="editarCliente()">
+        <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content *ngIf="!cargando && cliente">
+  <!-- Datos personales -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>{{ cliente!.nombre }} {{ cliente!.apellido }}</ion-card-title>
+    </ion-card-header>
+    <ion-list>
+      <ion-item>
+        <ion-icon name="call-outline" slot="start"></ion-icon>
+        <ion-label>{{ cliente!.telefono }}</ion-label>
+      </ion-item>
+      <ion-item *ngIf="cliente!.email">
+        <ion-icon name="mail-outline" slot="start"></ion-icon>
+        <ion-label>{{ cliente!.email }}</ion-label>
+      </ion-item>
+      <ion-item *ngIf="cliente!.cedula">
+        <ion-icon name="card-outline" slot="start"></ion-icon>
+        <ion-label>{{ cliente!.cedula }}</ion-label>
+      </ion-item>
+      <ion-item *ngIf="cliente!.direccion">
+        <ion-icon name="location-outline" slot="start"></ion-icon>
+        <ion-label class="ion-text-wrap">{{ cliente!.direccion }}</ion-label>
+      </ion-item>
+    </ion-list>
+  </ion-card>
+
+  <!-- Motos -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Motocicletas</ion-card-title>
+      <ion-button fill="clear" slot="end" (click)="nuevaMoto()">
+        <ion-icon name="add-outline"></ion-icon>
+      </ion-button>
+    </ion-card-header>
+    <ion-list>
+      <ion-item *ngFor="let m of motos" button (click)="abrirHistorial(m)" detail="true">
+        <ion-icon name="bicycle-outline" slot="start" color="primary"></ion-icon>
+        <ion-label>
+          <h2>{{ m.marca }} {{ m.modelo }} {{ m.anio }}</h2>
+          <p *ngIf="m.placa">Placa: {{ m.placa }}</p>
+          <p>{{ m.kilometraje_actual | number }} km</p>
+        </ion-label>
+      </ion-item>
+      <ion-item *ngIf="motos.length === 0">
+        <ion-label color="medium"><p>Sin motos registradas</p></ion-label>
+      </ion-item>
+    </ion-list>
+  </ion-card>
+
+  <!-- Historial de órdenes -->
+  <ion-card *ngIf="ordenes.length">
+    <ion-card-header><ion-card-title>Historial de órdenes</ion-card-title></ion-card-header>
+    <ion-list>
+      <ion-item *ngFor="let o of ordenes" button (click)="abrirOrden(o.id!)" detail="true">
+        <ion-label>
+          <h2>{{ o.numero_orden }}</h2>
+          <p>{{ o.marca }} {{ o.modelo }}</p>
+          <p>{{ o.fecha_ingreso | date:'dd/MM/yyyy' }}</p>
+        </ion-label>
+        <ion-badge slot="end" [color]="o.estado | estadoColor">{{ o.estado | estadoLabel }}</ion-badge>
+      </ion-item>
+    </ion-list>
+  </ion-card>
+</ion-content>
+
+<ion-content *ngIf="cargando" class="ion-padding ion-text-center">
+  <ion-spinner></ion-spinner>
+</ion-content>

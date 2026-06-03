@@ -1,0 +1,42 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ esEdicion ? 'Editar' : 'Nuevo' }} Cliente</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-list>
+    <ion-item>
+      <ion-label position="stacked">Nombre *</ion-label>
+      <ion-input [(ngModel)]="form.nombre" placeholder="Nombre"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Apellido *</ion-label>
+      <ion-input [(ngModel)]="form.apellido" placeholder="Apellido"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Teléfono *</ion-label>
+      <ion-input type="tel" [(ngModel)]="form.telefono" placeholder="8888-8888"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Cédula</ion-label>
+      <ion-input [(ngModel)]="form.cedula" placeholder="1-2345-6789"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Email</ion-label>
+      <ion-input type="email" [(ngModel)]="form.email" placeholder="correo@ejemplo.com"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Dirección</ion-label>
+      <ion-textarea [(ngModel)]="form.direccion" rows="2"></ion-textarea>
+    </ion-item>
+  </ion-list>
+
+  <ion-button expand="block" class="ion-margin-top" (click)="guardar()">
+    <ion-icon name="save-outline" slot="start"></ion-icon>
+    Guardar
+  </ion-button>
+</ion-content>

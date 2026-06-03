@@ -1,0 +1,27 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { Usuario } from '../models/usuario.model';
+
+@Injectable({ providedIn: 'root' })
+export class UsuariosService {
+  private url = `${environment.apiUrl}/usuarios`;
+  constructor(private http: HttpClient) {}
+
+  getAll(): Observable<{ data: Usuario[] }> {
+    return this.http.get<{ data: Usuario[] }>(this.url);
+  }
+
+  create(data: { nombre: string; email: string; password: string; rol: string }): Observable<{ data: Usuario }> {
+    return this.http.post<{ data: Usuario }>(this.url, data);
+  }
+
+  update(id: number, data: Partial<Usuario>): Observable<{ data: Usuario }> {
+    return this.http.put<{ data: Usuario }>(`${this.url}/${id}`, data);
+  }
+
+  toggleActivo(id: number, activo: boolean): Observable<any> {
+    return this.http.patch(`${this.url}/${id}/activo`, { activo });
+  }
+}

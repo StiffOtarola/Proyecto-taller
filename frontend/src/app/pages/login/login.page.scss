@@ -1,0 +1,35 @@
+.login-content {
+  --background: var(--ion-color-primary);
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.login-header {
+  text-align: center;
+  color: white;
+  margin-bottom: 24px;
+
+  .logo-icon {
+    font-size: 64px;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  p {
+    margin: 4px 0 0;
+    opacity: 0.85;
+    font-size: 14px;
+  }
+}

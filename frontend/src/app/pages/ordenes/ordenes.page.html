@@ -1,0 +1,55 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Órdenes de Trabajo</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="nuevaOrden()">
+        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [(ngModel)]="filtroEstado" (ngModelChange)="filtrar($event)" scrollable="true">
+      <ion-segment-button *ngFor="let e of estados" [value]="e.valor">
+        <ion-label>{{ e.label }}</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar(); $event.target.complete()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="ion-padding ion-text-center" *ngIf="cargando">
+    <ion-spinner></ion-spinner>
+  </div>
+
+  <ion-list *ngIf="!cargando">
+    <ion-item-sliding *ngFor="let orden of ordenes">
+      <ion-item (click)="abrirDetalle(orden.id!)" detail="true" button>
+        <ion-label>
+          <h2>{{ orden.numero_orden }} — {{ orden.marca }} {{ orden.modelo }}</h2>
+          <p>{{ orden.cliente_nombre }} {{ orden.cliente_apellido }} · {{ orden.cliente_telefono }}</p>
+          <p>{{ orden.problema_reportado | slice:0:60 }}</p>
+        </ion-label>
+        <div slot="end" class="ion-text-end">
+          <ion-badge [color]="orden.estado | estadoColor">{{ orden.estado | estadoLabel }}</ion-badge>
+          <p class="placa" *ngIf="orden.placa">{{ orden.placa }}</p>
+        </div>
+      </ion-item>
+    </ion-item-sliding>
+
+    <ion-item *ngIf="ordenes.length === 0 && !cargando">
+      <ion-label class="ion-text-center" color="medium">
+        <p>No hay órdenes{{ filtroEstado ? ' con ese estado' : '' }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button color="primary" (click)="nuevaOrden()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

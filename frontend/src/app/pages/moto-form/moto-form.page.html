@@ -1,0 +1,50 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ esEdicion ? 'Editar' : 'Nueva' }} Moto</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-list>
+    <ion-item>
+      <ion-label position="stacked">Marca *</ion-label>
+      <ion-input [(ngModel)]="form.marca" placeholder="Honda, Yamaha, Kawasaki..."></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Modelo *</ion-label>
+      <ion-input [(ngModel)]="form.modelo" placeholder="CBR150, FZ25..."></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Año</ion-label>
+      <ion-input type="number" [(ngModel)]="form.anio" placeholder="2020"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Placa</ion-label>
+      <ion-input [(ngModel)]="form.placa" placeholder="ABC-123"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Color</ion-label>
+      <ion-input [(ngModel)]="form.color" placeholder="Rojo, Azul..."></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Kilometraje actual</ion-label>
+      <ion-input type="number" [(ngModel)]="form.kilometraje_actual"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Número de motor</ion-label>
+      <ion-input [(ngModel)]="form.numero_motor"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Número de chasis</ion-label>
+      <ion-input [(ngModel)]="form.numero_chasis"></ion-input>
+    </ion-item>
+  </ion-list>
+
+  <ion-button expand="block" class="ion-margin-top" (click)="guardar()">
+    <ion-icon name="save-outline" slot="start"></ion-icon>
+    Guardar
+  </ion-button>
+</ion-content>

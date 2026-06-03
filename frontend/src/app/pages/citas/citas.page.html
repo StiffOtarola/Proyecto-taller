@@ -1,0 +1,75 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Agenda</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="nuevaCita()">
+        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [(ngModel)]="filtroEstado" (ngModelChange)="cargar()">
+      <ion-segment-button value=""><ion-label>Todas</ion-label></ion-segment-button>
+      <ion-segment-button value="pendiente"><ion-label>Pendientes</ion-label></ion-segment-button>
+      <ion-segment-button value="confirmada"><ion-label>Confirmadas</ion-label></ion-segment-button>
+      <ion-segment-button value="completada"><ion-label>Completadas</ion-label></ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar(); $event.target.complete()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="ion-padding ion-text-center" *ngIf="cargando">
+    <ion-spinner></ion-spinner>
+  </div>
+
+  <ion-list *ngIf="!cargando">
+    <ion-item-sliding *ngFor="let c of citas">
+      <ion-item>
+        <ion-icon name="calendar-outline" slot="start" [color]="
+          c.estado === 'confirmada' ? 'success' :
+          c.estado === 'cancelada' ? 'danger' :
+          c.estado === 'completada' ? 'medium' : 'primary'"></ion-icon>
+        <ion-label>
+          <h2>{{ c.cliente_nombre }} {{ c.cliente_apellido }}</h2>
+          <p>{{ c.fecha | date:'dd/MM/yyyy' }} a las {{ c.hora }}</p>
+          <p *ngIf="c.marca">{{ c.marca }} {{ c.modelo }}</p>
+          <p>{{ c.motivo | slice:0:60 }}</p>
+        </ion-label>
+        <ion-badge slot="end" [color]="
+          c.estado === 'confirmada' ? 'success' :
+          c.estado === 'cancelada' ? 'danger' :
+          c.estado === 'completada' ? 'medium' : 'primary'">
+          {{ c.estado }}
+        </ion-badge>
+      </ion-item>
+      <ion-item-options side="end">
+        <ion-item-option (click)="editarCita(c.id!)">
+          <ion-icon name="create-outline"></ion-icon>
+        </ion-item-option>
+        <ion-item-option color="success" (click)="cambiarEstado(c, 'confirmada')" *ngIf="c.estado === 'pendiente'">
+          <ion-icon name="checkmark-outline"></ion-icon>
+        </ion-item-option>
+        <ion-item-option color="success" (click)="cambiarEstado(c, 'completada')" *ngIf="c.estado === 'confirmada'">
+          <ion-icon name="checkmark-done-outline"></ion-icon>
+        </ion-item-option>
+        <ion-item-option color="danger" (click)="cambiarEstado(c, 'cancelada')">
+          <ion-icon name="close-outline"></ion-icon>
+        </ion-item-option>
+      </ion-item-options>
+    </ion-item-sliding>
+
+    <ion-item *ngIf="citas.length === 0 && !cargando">
+      <ion-label class="ion-text-center" color="medium"><p>No hay citas</p></ion-label>
+    </ion-item>
+  </ion-list>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button color="primary" (click)="nuevaCita()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

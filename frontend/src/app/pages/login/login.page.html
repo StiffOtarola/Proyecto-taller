@@ -1,0 +1,37 @@
+<ion-content class="ion-padding login-content">
+  <div class="login-container">
+    <div class="login-header">
+      <ion-icon name="construct-outline" class="logo-icon"></ion-icon>
+      <h1>TallerMS</h1>
+      <p>Sistema de Gestión de Taller</p>
+    </div>
+
+    <ion-card>
+      <ion-card-content>
+        <ion-item lines="full">
+          <ion-label position="floating">Email</ion-label>
+          <ion-input
+            type="email"
+            [(ngModel)]="email"
+            placeholder="admin@taller.com"
+            (keyup.enter)="login()">
+          </ion-input>
+        </ion-item>
+
+        <ion-item lines="none">
+          <ion-label position="floating">Contraseña</ion-label>
+          <ion-input
+            type="password"
+            [(ngModel)]="password"
+            (keyup.enter)="login()">
+          </ion-input>
+        </ion-item>
+
+        <ion-button expand="block" class="ion-margin-top" (click)="login()">
+          <ion-icon name="log-in-outline" slot="start"></ion-icon>
+          Iniciar Sesión
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

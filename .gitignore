@@ -1,0 +1,17 @@
+# Dependencias
+node_modules/
+
+# Builds
+frontend/www/
+frontend/.angular/
+backend/dist/
+
+# Entorno
+**/.env
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
+.DS_Store

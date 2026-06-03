@@ -21,31 +21,68 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <div class="ion-padding ion-text-center" *ngIf="cargando">
-    <ion-spinner></ion-spinner>
+  <div class="ion-padding ion-text-center" *ngIf="cargando" style="padding-top:40px">
+    <ion-spinner name="crescent"></ion-spinner>
   </div>
 
-  <ion-list *ngIf="!cargando">
-    <ion-item-sliding *ngFor="let orden of ordenes">
-      <ion-item (click)="abrirDetalle(orden.id!)" detail="true" button>
-        <ion-label>
-          <h2>{{ orden.numero_orden }} — {{ orden.marca }} {{ orden.modelo }}</h2>
-          <p>{{ orden.cliente_nombre }} {{ orden.cliente_apellido }} · {{ orden.cliente_telefono }}</p>
-          <p>{{ orden.problema_reportado | slice:0:60 }}</p>
-        </ion-label>
-        <div slot="end" class="ion-text-end">
-          <ion-badge [color]="orden.estado | estadoColor">{{ orden.estado | estadoLabel }}</ion-badge>
-          <p class="placa" *ngIf="orden.placa">{{ orden.placa }}</p>
-        </div>
-      </ion-item>
-    </ion-item-sliding>
+  <div *ngIf="!cargando">
+    <!-- Contador -->
+    <div class="ordenes-count" *ngIf="ordenes.length > 0">
+      {{ ordenes.length }} orden{{ ordenes.length !== 1 ? 'es' : '' }}
+    </div>
 
-    <ion-item *ngIf="ordenes.length === 0 && !cargando">
-      <ion-label class="ion-text-center" color="medium">
+    <ion-list style="padding:0 8px!important">
+      <ion-item-sliding *ngFor="let orden of ordenes">
+        <ion-item class="orden-item" (click)="abrirDetalle(orden.id!)" detail="false" button lines="none">
+          <div class="orden-card">
+            <!-- Barra de estado lateral -->
+            <div class="estado-bar" [style.background]="'var(--ion-color-' + (orden.estado | estadoColor) + ')'"></div>
+
+            <div class="orden-info">
+              <div class="orden-top">
+                <span class="orden-numero">{{ orden.numero_orden }}</span>
+                <ion-badge [color]="orden.estado | estadoColor" class="orden-badge">
+                  {{ orden.estado | estadoLabel }}
+                </ion-badge>
+              </div>
+              <div class="orden-moto">
+                <ion-icon name="bicycle-outline"></ion-icon>
+                {{ orden.marca }} {{ orden.modelo }}
+                <span class="placa-inline" *ngIf="orden.placa">· {{ orden.placa }}</span>
+              </div>
+              <div class="orden-cliente">
+                <ion-icon name="person-outline"></ion-icon>
+                {{ orden.cliente_nombre }} {{ orden.cliente_apellido }}
+              </div>
+              <div class="orden-problema">{{ orden.problema_reportado | slice:0:70 }}{{ orden.problema_reportado.length > 70 ? '…' : '' }}</div>
+              <div class="orden-footer">
+                <span *ngIf="orden.tecnico_nombre">
+                  <ion-icon name="build-outline"></ion-icon> {{ orden.tecnico_nombre }}
+                </span>
+                <span *ngIf="!orden.tecnico_nombre" style="color:var(--ion-color-warning)">
+                  <ion-icon name="alert-circle-outline"></ion-icon> Sin técnico
+                </span>
+                <span style="margin-left:auto">
+                  <ion-icon name="time-outline"></ion-icon>
+                  {{ orden.fecha_ingreso | date:'dd/MM' }}
+                </span>
+              </div>
+            </div>
+
+            <ion-icon name="chevron-forward-outline" class="orden-chevron"></ion-icon>
+          </div>
+        </ion-item>
+      </ion-item-sliding>
+
+      <div class="empty-state" *ngIf="ordenes.length === 0 && !cargando">
+        <ion-icon name="clipboard-outline"></ion-icon>
         <p>No hay órdenes{{ filtroEstado ? ' con ese estado' : '' }}</p>
-      </ion-label>
-    </ion-item>
-  </ion-list>
+        <ion-button fill="outline" size="small" (click)="nuevaOrden()">Nueva orden</ion-button>
+      </div>
+    </ion-list>
+
+    <div style="height:80px"></div>
+  </div>
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button color="primary" (click)="nuevaOrden()">

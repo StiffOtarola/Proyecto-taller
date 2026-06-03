@@ -1,37 +1,382 @@
-/*
- * App Global CSS
- * ----------------------------------------------------------------------------
- * Put style rules here that you want to apply globally. These styles are for
- * the entire app and not just one component. Additionally, this file can be
- * used as an entry point to import other CSS/Sass files to be included in the
- * output CSS.
- * For more information on global stylesheets, visit the documentation:
- * https://ionicframework.com/docs/layout/global-stylesheets
- */
-
-/* Core CSS required for Ionic components to work properly */
 @import "@ionic/angular/css/core.css";
-
-/* Basic CSS for apps built with Ionic */
 @import "@ionic/angular/css/normalize.css";
 @import "@ionic/angular/css/structure.css";
 @import "@ionic/angular/css/typography.css";
 @import "@ionic/angular/css/display.css";
-
-/* Optional CSS utils that can be commented out */
 @import "@ionic/angular/css/padding.css";
 @import "@ionic/angular/css/float-elements.css";
 @import "@ionic/angular/css/text-alignment.css";
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
 
-/**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
- */
+// ————————————————————————————————
+// Tipografía Inter desde Google Fonts
+// ————————————————————————————————
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import "@ionic/angular/css/palettes/dark.system.css";
+// ————————————————————————————————
+// Reset y base
+// ————————————————————————————————
+* { box-sizing: border-box; }
+
+ion-app {
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+// ————————————————————————————————
+// Toolbar
+// ————————————————————————————————
+ion-toolbar {
+  --min-height: 56px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+
+  ion-title {
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.3px;
+  }
+}
+
+ion-header ion-toolbar:first-child {
+  --border-width: 0;
+}
+
+// ————————————————————————————————
+// Cards
+// ————————————————————————————————
+ion-card {
+  --background: var(--ion-card-background);
+  border-radius: 16px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06) !important;
+  margin: 12px 16px !important;
+
+  ion-card-header {
+    padding: 16px 16px 8px;
+  }
+
+  ion-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ion-text-color);
+    letter-spacing: -0.2px;
+  }
+
+  ion-card-subtitle {
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-bottom: 2px;
+  }
+
+  ion-card-content {
+    padding: 12px 16px 16px;
+  }
+}
+
+// ————————————————————————————————
+// Items y listas
+// ————————————————————————————————
+ion-list {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+ion-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --inner-padding-end: 0;
+  --min-height: 56px;
+  --border-color: rgba(var(--ion-text-color-rgb), .07);
+  font-size: 14px;
+
+  &:last-child {
+    --border-color: transparent;
+  }
+
+  ion-label {
+    h2 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 2px;
+      letter-spacing: -0.1px;
+    }
+    p {
+      font-size: 13px;
+      color: var(--ion-color-medium);
+      margin: 1px 0;
+    }
+  }
+}
+
+// ————————————————————————————————
+// Badges
+// ————————————————————————————————
+ion-badge {
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+// ————————————————————————————————
+// Botones
+// ————————————————————————————————
+ion-button {
+  --border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  height: 48px;
+  font-size: 15px;
+
+  &[size="small"] {
+    height: 36px;
+    font-size: 13px;
+  }
+}
+
+// ————————————————————————————————
+// Inputs
+// ————————————————————————————————
+ion-input, ion-textarea, ion-select, ion-searchbar {
+  --border-radius: 10px;
+}
+
+ion-searchbar {
+  --border-radius: 12px;
+  --box-shadow: none;
+  --background: rgba(var(--ion-text-color-rgb), .06);
+  padding: 8px 12px !important;
+  font-size: 14px;
+}
+
+// ————————————————————————————————
+// Segmento / Tabs internos
+// ————————————————————————————————
+ion-segment {
+  --background: rgba(var(--ion-text-color-rgb), .06);
+  border-radius: 12px;
+  margin: 8px 16px;
+  padding: 3px;
+}
+
+ion-segment-button {
+  --border-radius: 9px;
+  --indicator-color: var(--ion-color-primary);
+  --color: var(--ion-color-medium);
+  --color-checked: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 34px;
+  letter-spacing: 0;
+}
+
+// ————————————————————————————————
+// Tab bar
+// ————————————————————————————————
+ion-tab-bar {
+  border-top: 1px solid rgba(var(--ion-text-color-rgb), .08);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  height: calc(60px + env(safe-area-inset-bottom, 0));
+
+  ion-tab-button {
+    font-size: 11px;
+    font-weight: 500;
+
+    ion-icon {
+      font-size: 22px;
+      margin-bottom: 2px;
+    }
+  }
+}
+
+// ————————————————————————————————
+// FAB
+// ————————————————————————————————
+ion-fab-button {
+  --border-radius: 16px;
+  --box-shadow: 0 4px 20px rgba(232, 93, 4, 0.4);
+}
+
+// ————————————————————————————————
+// Spinner
+// ————————————————————————————————
+ion-spinner {
+  color: var(--ion-color-primary);
+  width: 40px;
+  height: 40px;
+}
+
+// ————————————————————————————————
+// Stat cards (Dashboard)
+// ————————————————————————————————
+.stat-card {
+  margin: 0 !important;
+  border-radius: 16px !important;
+
+  ion-card-content {
+    padding: 20px !important;
+    text-align: center;
+
+    .stat-number {
+      font-size: 36px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: rgba(255,255,255,.85);
+      font-weight: 500;
+      margin-top: 4px;
+    }
+
+    ion-icon {
+      font-size: 28px;
+      color: rgba(255,255,255,.5);
+      margin-top: 8px;
+    }
+  }
+}
+
+// ————————————————————————————————
+// Login
+// ————————————————————————————————
+.login-content {
+  --background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+
+  .login-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100%;
+    padding: 24px;
+
+    .login-header {
+      text-align: center;
+      color: white;
+      margin-bottom: 32px;
+
+      .logo-wrapper {
+        width: 80px;
+        height: 80px;
+        background: var(--ion-color-primary);
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        box-shadow: 0 8px 32px rgba(232, 93, 4, 0.4);
+
+        ion-icon {
+          font-size: 40px;
+          color: #fff;
+        }
+      }
+
+      h1 {
+        font-size: 34px;
+        font-weight: 800;
+        margin: 0 0 6px;
+        letter-spacing: -1px;
+      }
+
+      p {
+        font-size: 14px;
+        color: rgba(255,255,255,.6);
+        margin: 0;
+      }
+    }
+
+    ion-card {
+      width: 100%;
+      max-width: 400px;
+      --background: rgba(255,255,255,.07);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,.1);
+      box-shadow: 0 20px 60px rgba(0,0,0,.4) !important;
+
+      ion-item {
+        --background: transparent;
+        --border-color: rgba(255,255,255,.12);
+        --color: #fff;
+
+        ion-label {
+          color: rgba(255,255,255,.7) !important;
+          font-size: 13px !important;
+          font-weight: 500;
+        }
+
+        ion-input {
+          color: #fff;
+          font-weight: 500;
+        }
+      }
+
+      ion-button {
+        margin-top: 8px;
+        --background: var(--ion-color-primary);
+        --box-shadow: 0 4px 20px rgba(232, 93, 4, 0.5);
+      }
+    }
+  }
+}
+
+// ————————————————————————————————
+// Bienvenida Dashboard
+// ————————————————————————————————
+.bienvenida {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ion-color-medium);
+  margin: 16px 4px 8px;
+}
+
+// ————————————————————————————————
+// Estado badge en detalle orden
+// ————————————————————————————————
+.estado-badge {
+  font-size: 13px;
+  padding: 6px 14px;
+  margin-bottom: 8px;
+  display: inline-block;
+}
+
+// ————————————————————————————————
+// Placa en lista ordenes
+// ————————————————————————————————
+.placa {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ion-color-medium);
+  margin-top: 4px;
+  background: rgba(var(--ion-text-color-rgb), .06);
+  padding: 2px 8px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+// ————————————————————————————————
+// Avances timeline
+// ————————————————————————————————
+.avance-fecha {
+  color: var(--ion-color-medium);
+  font-size: 11px;
+  margin-bottom: 3px;
+}
+
+// ————————————————————————————————
+// Grid responsive dashboard
+// ————————————————————————————————
+ion-grid {
+  padding: 0 8px;
+}
+
+ion-col {
+  padding: 4px 8px;
+}

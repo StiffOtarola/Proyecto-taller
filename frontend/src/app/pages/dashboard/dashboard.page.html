@@ -1,13 +1,17 @@
 <ion-header>
   <ion-toolbar color="primary">
     <ion-title>
-      <ion-icon name="construct-outline"></ion-icon> TallerMS
+      <ion-icon name="construct-outline" style="margin-right:6px;vertical-align:middle"></ion-icon>
+      TallerMS
     </ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="irNuevaOrden()" title="Nueva Orden">
         <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
       </ion-button>
-      <ion-button (click)="logout()" title="Cerrar sesión">
+      <ion-button [routerLink]="['/usuarios']" title="Usuarios" *ngIf="auth.tieneRol('admin','gerencia')">
+        <ion-icon slot="icon-only" name="people-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="logout()">
         <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -16,50 +20,90 @@
 
 <ion-content>
   <ion-refresher slot="fixed" (ionRefresh)="cargar(); $event.target.complete()">
-    <ion-refresher-content></ion-refresher-content>
+    <ion-refresher-content pullingIcon="chevron-down" refreshingSpinner="crescent"></ion-refresher-content>
   </ion-refresher>
 
-  <div class="ion-padding" *ngIf="!cargando && resumen">
-    <p class="bienvenida">Bienvenido, <strong>{{ auth.getUsuario()?.nombre }}</strong>
-      <ion-badge color="primary" class="ion-margin-start">{{ auth.getUsuario()?.rol }}</ion-badge>
-    </p>
+  <div *ngIf="!cargando && resumen">
+    <!-- Header de bienvenida -->
+    <div class="dash-header ion-padding-horizontal">
+      <p class="bienvenida">
+        Hola, <strong>{{ auth.getUsuario()?.nombre }}</strong>
+        <ion-badge color="primary" style="margin-left:8px;vertical-align:middle">
+          {{ auth.getUsuario()?.rol | titlecase }}
+        </ion-badge>
+      </p>
+    </div>
 
-    <!-- Cards de resumen -->
-    <ion-row>
-      <ion-col size="6">
-        <ion-card color="primary" class="stat-card" routerLink="/tabs/ordenes">
-          <ion-card-content>
-            <div class="stat-number">{{ resumen.motos_activas }}</div>
-            <div class="stat-label">Motos activas</div>
-            <ion-icon name="bicycle-outline"></ion-icon>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-      <ion-col size="6">
-        <ion-card [color]="resumen.motos_atrasadas > 0 ? 'danger' : 'success'" class="stat-card">
-          <ion-card-content>
-            <div class="stat-number">{{ resumen.motos_atrasadas }}</div>
-            <div class="stat-label">Atrasadas</div>
-            <ion-icon name="warning-outline"></ion-icon>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
+    <!-- Stats principales -->
+    <ion-grid>
+      <ion-row>
+        <ion-col size="6">
+          <ion-card color="primary" class="stat-card" button routerLink="/tabs/ordenes">
+            <ion-card-content>
+              <div class="stat-number">{{ resumen.motos_activas }}</div>
+              <div class="stat-label">En taller</div>
+              <ion-icon name="bicycle-outline"></ion-icon>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+        <ion-col size="6">
+          <ion-card [color]="resumen.motos_atrasadas > 0 ? 'danger' : 'success'" class="stat-card">
+            <ion-card-content>
+              <div class="stat-number">{{ resumen.motos_atrasadas }}</div>
+              <div class="stat-label">Atrasadas</div>
+              <ion-icon [name]="resumen.motos_atrasadas > 0 ? 'warning-outline' : 'checkmark-circle-outline'"></ion-icon>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
 
+    <!-- Facturación del día -->
     <ion-card>
-      <ion-card-header>
-        <ion-card-subtitle>Facturación hoy</ion-card-subtitle>
-        <ion-card-title>₡{{ resumen.facturacion_hoy | number:'1.0-0' }}</ion-card-title>
-      </ion-card-header>
+      <ion-card-content>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <p style="margin:0;font-size:12px;font-weight:600;color:var(--ion-color-medium);text-transform:uppercase;letter-spacing:0.5px">Facturación hoy</p>
+            <p style="margin:4px 0 0;font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--ion-color-success)">
+              ₡{{ resumen.facturacion_hoy | number:'1.0-0' }}
+            </p>
+          </div>
+          <div style="width:52px;height:52px;background:rgba(22,163,74,.12);border-radius:14px;display:flex;align-items:center;justify-content:center">
+            <ion-icon name="cash-outline" style="font-size:26px;color:var(--ion-color-success)"></ion-icon>
+          </div>
+        </div>
+      </ion-card-content>
     </ion-card>
+
+    <!-- Acciones rápidas -->
+    <div class="ion-padding-horizontal ion-padding-top">
+      <p style="font-size:12px;font-weight:700;color:var(--ion-color-medium);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Acciones rápidas</p>
+    </div>
+    <ion-grid style="padding:0 8px 8px">
+      <ion-row>
+        <ion-col size="6">
+          <ion-button expand="block" fill="outline" color="primary" (click)="irNuevaOrden()" style="--border-radius:12px;height:52px">
+            <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+            Nueva Orden
+          </ion-button>
+        </ion-col>
+        <ion-col size="6">
+          <ion-button expand="block" fill="outline" color="secondary" routerLink="/tabs/citas" style="--border-radius:12px;height:52px">
+            <ion-icon name="calendar-outline" slot="start"></ion-icon>
+            Nueva Cita
+          </ion-button>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
 
     <!-- Órdenes por estado -->
     <ion-card *ngIf="resumen.ordenes_por_estado?.length">
       <ion-card-header>
-        <ion-card-title>Órdenes por estado</ion-card-title>
+        <ion-card-title>Estado del taller</ion-card-title>
       </ion-card-header>
       <ion-list>
-        <ion-item *ngFor="let item of resumen.ordenes_por_estado">
+        <ion-item *ngFor="let item of resumen.ordenes_por_estado" lines="inset" button routerLink="/tabs/ordenes">
+          <div slot="start" class="estado-dot" [style.background]="'var(--ion-color-' + (item.estado | estadoColor) + ')'"></div>
           <ion-label>{{ item.estado | estadoLabel }}</ion-label>
           <ion-badge slot="end" [color]="item.estado | estadoColor">{{ item.total }}</ion-badge>
         </ion-item>
@@ -72,22 +116,22 @@
         <ion-card-title>Técnicos</ion-card-title>
       </ion-card-header>
       <ion-list>
-        <ion-item *ngFor="let t of tecnicos">
-          <ion-avatar slot="start">
-            <ion-icon name="person-circle-outline" style="font-size:36px"></ion-icon>
-          </ion-avatar>
+        <ion-item *ngFor="let t of tecnicos" lines="inset">
+          <div slot="start" class="avatar-circle">{{ t.nombre.charAt(0) }}</div>
           <ion-label>
             <h2>{{ t.nombre }}</h2>
-            <p>{{ t.ordenes_completadas }} órdenes — {{ t.horas_promedio }}h promedio</p>
+            <p>{{ t.ordenes_completadas }} completadas · {{ t.horas_promedio || 0 }}h promedio</p>
           </ion-label>
         </ion-item>
       </ion-list>
     </ion-card>
+
+    <div style="height: 80px"></div>
   </div>
 
-  <div class="ion-padding ion-text-center" *ngIf="cargando">
-    <ion-spinner></ion-spinner>
-    <p>Cargando dashboard...</p>
+  <div class="ion-padding ion-text-center" *ngIf="cargando" style="padding-top:40px">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p style="color:var(--ion-color-medium);font-size:14px;margin-top:12px">Cargando dashboard...</p>
   </div>
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">

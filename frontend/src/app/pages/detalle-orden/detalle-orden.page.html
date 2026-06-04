@@ -185,6 +185,80 @@
     </ion-list>
   </ion-card>
 
+  <!-- Garantía y reclamos (solo en órdenes entregadas) -->
+  <ion-card *ngIf="orden.estado === 'entregada'">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="shield-checkmark-outline" style="vertical-align:middle;margin-right:6px"></ion-icon>
+        Garantía
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <!-- Estado de cobertura -->
+      <div class="garantia-estado" [class.vigente]="garantiaVigente" [class.vencida]="!garantiaVigente">
+        <ng-container *ngIf="orden.garantia_dias && orden.garantia_dias > 0; else sinGarantia">
+          <ion-icon [name]="garantiaVigente ? 'shield-checkmark' : 'shield-outline'"></ion-icon>
+          <div>
+            <strong *ngIf="garantiaVigente">Garantía vigente</strong>
+            <strong *ngIf="!garantiaVigente">Garantía vencida</strong>
+            <span>
+              {{ orden.garantia_dias }} días ·
+              <ng-container *ngIf="garantiaVigente">quedan {{ diasGarantiaRestantes }} día(s)</ng-container>
+              <ng-container *ngIf="!garantiaVigente">venció hace {{ -(diasGarantiaRestantes || 0) }} día(s)</ng-container>
+            </span>
+          </div>
+        </ng-container>
+        <ng-template #sinGarantia>
+          <ion-icon name="shield-outline"></ion-icon>
+          <div><strong>Sin garantía</strong><span>No se registró garantía al cierre</span></div>
+        </ng-template>
+      </div>
+
+      <!-- Botón registrar reclamo -->
+      <ion-button expand="block" fill="outline" color="danger" class="ion-margin-top"
+        (click)="mostrarFormReclamo = !mostrarFormReclamo">
+        <ion-icon name="alert-circle-outline" slot="start"></ion-icon>
+        Registrar reclamo
+      </ion-button>
+
+      <!-- Formulario de reclamo -->
+      <div *ngIf="mostrarFormReclamo" class="reclamo-form">
+        <ion-item>
+          <ion-textarea label="¿Qué problema presenta?" labelPlacement="floating"
+            [(ngModel)]="nuevoReclamo.descripcion_problema" rows="3"></ion-textarea>
+        </ion-item>
+        <ion-item>
+          <ion-checkbox slot="start" [(ngModel)]="nuevoReclamo.cubre_repuestos"></ion-checkbox>
+          <ion-label>Cubre repuestos</ion-label>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-checkbox slot="start" [(ngModel)]="nuevoReclamo.cubre_mano_obra"></ion-checkbox>
+          <ion-label>Cubre mano de obra</ion-label>
+        </ion-item>
+        <ion-button expand="block" color="danger" class="ion-margin-top"
+          (click)="registrarReclamo()" [disabled]="!nuevoReclamo.descripcion_problema.trim()">
+          Guardar reclamo
+        </ion-button>
+      </div>
+
+      <!-- Reclamos existentes -->
+      <ion-list *ngIf="garantias.length" class="ion-margin-top">
+        <ion-item *ngFor="let g of garantias" button detail="true" (click)="irAGarantias()" lines="full">
+          <ion-label class="ion-text-wrap">
+            <h3>{{ g.descripcion_problema }}</h3>
+            <p>{{ g.created_at | date:'dd/MM/yyyy' }}
+              <span *ngIf="g.cubre_repuestos"> · repuestos</span>
+              <span *ngIf="g.cubre_mano_obra"> · mano de obra</span>
+            </p>
+          </ion-label>
+          <ion-badge slot="end" [color]="estadoGarantiaColor(g.estado!)">
+            {{ estadoGarantiaLabel(g.estado!) }}
+          </ion-badge>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+
   <!-- Repuestos -->
   <ion-card>
     <ion-card-header>

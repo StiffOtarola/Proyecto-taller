@@ -50,6 +50,52 @@
   opacity: 0.85;
 }
 
+// Garantía
+.garantia-estado {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+
+  ion-icon {
+    font-size: 30px;
+    flex-shrink: 0;
+  }
+
+  div {
+    display: flex;
+    flex-direction: column;
+  }
+
+  strong {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  span {
+    font-size: 12px;
+    color: var(--ion-color-medium);
+  }
+
+  &.vigente {
+    background: rgba(22, 163, 74, .1);
+    ion-icon, strong { color: var(--ion-color-success); }
+  }
+
+  &.vencida {
+    background: rgba(120, 120, 120, .1);
+    ion-icon, strong { color: var(--ion-color-medium); }
+  }
+}
+
+.reclamo-form {
+  margin-top: 8px;
+  padding: 12px;
+  background: rgba(220, 38, 38, .05);
+  border-radius: 12px;
+}
+
 // Galería de evidencia
 .sin-fotos {
   text-align: center;

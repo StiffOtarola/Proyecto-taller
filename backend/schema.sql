@@ -4,6 +4,8 @@
 -- Para local: conectar a la DB proyecto_taller antes de ejecutar
 -- =============================================
 
+DROP TABLE IF EXISTS garantia_fotos;
+DROP TABLE IF EXISTS garantias;
 DROP TABLE IF EXISTS orden_checklist;
 DROP TABLE IF EXISTS orden_tiempos;
 DROP TABLE IF EXISTS orden_fotos;
@@ -163,4 +165,28 @@ CREATE TABLE IF NOT EXISTS orden_checklist (
   created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (orden_id) REFERENCES ordenes_trabajo(id)
+);
+
+CREATE TABLE IF NOT EXISTS garantias (
+  id                   INT AUTO_INCREMENT PRIMARY KEY,
+  orden_id             INT NOT NULL,
+  descripcion_problema TEXT NOT NULL,
+  cubre_repuestos      TINYINT(1) DEFAULT 0,
+  cubre_mano_obra      TINYINT(1) DEFAULT 0,
+  estado               ENUM('abierto','en_revision','aprobado','rechazado','resuelto') NOT NULL DEFAULT 'abierto',
+  resolucion           TEXT,
+  creado_por           INT,
+  created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (orden_id)   REFERENCES ordenes_trabajo(id),
+  FOREIGN KEY (creado_por) REFERENCES usuarios(id)
+);
+
+CREATE TABLE IF NOT EXISTS garantia_fotos (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  garantia_id INT NOT NULL,
+  url         MEDIUMTEXT NOT NULL,
+  descripcion VARCHAR(200),
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (garantia_id) REFERENCES garantias(id)
 );

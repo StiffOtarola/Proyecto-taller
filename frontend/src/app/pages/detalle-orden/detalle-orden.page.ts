@@ -3,9 +3,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, LoadingController, ToastController } from '@ionic/angular';
 import { OrdenesService } from '../../services/ordenes.service';
 import { UsuariosService } from '../../services/usuarios.service';
+import { GarantiasService } from '../../services/garantias.service';
 import { AuthService } from '../../services/auth.service';
 import { Orden, OrdenAvance, OrdenRepuesto, OrdenChecklist, OrdenFoto, EstadoOrden, ESTADO_CONFIG } from '../../models/orden.model';
+import { Garantia, EstadoGarantia, ESTADO_GARANTIA_CONFIG } from '../../models/garantia.model';
 import { Usuario } from '../../models/usuario.model';
+import { comprimirImagen } from '../../shared/image.util';
 
 @Component({ standalone: false,
   selector: 'app-detalle-orden',
@@ -56,11 +59,16 @@ export class DetalleOrdenPage implements OnInit {
     cancelada:            [],
   };
 
+  garantias: Garantia[] = [];
+  mostrarFormReclamo = false;
+  nuevoReclamo = { descripcion_problema: '', cubre_repuestos: false, cubre_mano_obra: false };
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private ordenSvc: OrdenesService,
     private usuarioSvc: UsuariosService,
+    private garantiaSvc: GarantiasService,
     public auth: AuthService,
     private alert: AlertController,
     private loading: LoadingController,
@@ -81,6 +89,7 @@ export class DetalleOrdenPage implements OnInit {
     this.ordenSvc.getAvances(id).subscribe(res => this.avances = res.data);
     this.ordenSvc.getRepuestos(id).subscribe(res => this.repuestos = res.data);
     this.ordenSvc.getFotos(id).subscribe(res => this.fotos = res.data);
+    this.garantiaSvc.getAll({ orden_id: id }).subscribe(res => this.garantias = res.data);
     this.ordenSvc.getChecklist(id).subscribe(res => {
       if (res.data) {
         this.checklist = {
@@ -275,7 +284,7 @@ export class DetalleOrdenPage implements OnInit {
 
     this.subiendoFoto = true;
     try {
-      const dataUrl = await this.comprimirImagen(file);
+      const dataUrl = await comprimirImagen(file);
       this.ordenSvc.addFoto(this.orden!.id!, { url: dataUrl, tipo: this.tipoFoto }).subscribe({
         next: res => {
           this.fotos.push(res.data);
@@ -292,37 +301,6 @@ export class DetalleOrdenPage implements OnInit {
       this.mostrarAlertError('No se pudo procesar la imagen');
     }
     input.value = '';
-  }
-
-  // Redimensiona a máx 1024px y comprime a JPEG q0.7 para reducir el peso del base64
-  private comprimirImagen(file: File, maxLado = 1024, calidad = 0.7): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const img = new Image();
-        img.onload = () => {
-          let { width, height } = img;
-          if (width > height && width > maxLado) {
-            height = Math.round((height * maxLado) / width);
-            width = maxLado;
-          } else if (height > maxLado) {
-            width = Math.round((width * maxLado) / height);
-            height = maxLado;
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return reject();
-          ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', calidad));
-        };
-        img.onerror = reject;
-        img.src = reader.result as string;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
   }
 
   async verFoto(foto: OrdenFoto) {
@@ -366,6 +344,38 @@ export class DetalleOrdenPage implements OnInit {
     const a = await this.alert.create({ header: 'Error', message: msg || 'Ocurrió un error', buttons: ['OK'] });
     await a.present();
   }
+
+  // ===== Garantía =====
+  estadoGarantiaLabel(e: EstadoGarantia) { return ESTADO_GARANTIA_CONFIG[e]?.label ?? e; }
+  estadoGarantiaColor(e: EstadoGarantia) { return ESTADO_GARANTIA_CONFIG[e]?.color ?? 'medium'; }
+
+  // Días restantes de cobertura desde la fecha de entrega real
+  get diasGarantiaRestantes(): number | null {
+    if (!this.orden?.fecha_entrega_real || !this.orden?.garantia_dias) return null;
+    const entrega = new Date(this.orden.fecha_entrega_real);
+    const vence = new Date(entrega.getTime() + this.orden.garantia_dias * 86400000);
+    return Math.ceil((vence.getTime() - Date.now()) / 86400000);
+  }
+
+  get garantiaVigente(): boolean {
+    const d = this.diasGarantiaRestantes;
+    return d !== null && d >= 0;
+  }
+
+  registrarReclamo() {
+    if (!this.nuevoReclamo.descripcion_problema.trim()) return;
+    this.garantiaSvc.create({ orden_id: this.orden!.id!, ...this.nuevoReclamo }).subscribe({
+      next: res => {
+        this.garantias.unshift(res.data);
+        this.nuevoReclamo = { descripcion_problema: '', cubre_repuestos: false, cubre_mano_obra: false };
+        this.mostrarFormReclamo = false;
+        this.mostrarToast('Reclamo de garantía registrado');
+      },
+      error: err => this.mostrarAlertError(err.error?.error),
+    });
+  }
+
+  irAGarantias() { this.router.navigate(['/garantias']); }
 
   volver() { this.router.navigate(['/tabs/ordenes']); }
 }

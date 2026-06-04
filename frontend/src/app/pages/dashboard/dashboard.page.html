@@ -8,6 +8,9 @@
       <ion-button (click)="irNuevaOrden()" title="Nueva Orden">
         <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
       </ion-button>
+      <ion-button [routerLink]="['/garantias']" title="Garantías">
+        <ion-icon slot="icon-only" name="shield-checkmark-outline"></ion-icon>
+      </ion-button>
       <ion-button [routerLink]="['/usuarios']" title="Usuarios" *ngIf="auth.tieneRol('admin','gerencia')">
         <ion-icon slot="icon-only" name="people-outline"></ion-icon>
       </ion-button>

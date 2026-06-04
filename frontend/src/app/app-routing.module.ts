@@ -68,6 +68,11 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     loadChildren: () => import('./pages/usuarios/usuarios.module').then(m => m.UsuariosPageModule),
   },
+  {
+    path: 'garantias',
+    canActivate: [AuthGuard],
+    loadChildren: () => import('./pages/garantias/garantias.module').then(m => m.GarantiasPageModule),
+  },
 ];
 
 @NgModule({

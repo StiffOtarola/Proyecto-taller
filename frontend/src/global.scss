@@ -10,56 +10,86 @@
 @import "@ionic/angular/css/flex-utils.css";
 
 // ————————————————————————————————
-// Tipografía Inter desde Google Fonts
+// Tipografía: Space Grotesk (display + cifras) + Plus Jakarta Sans (cuerpo)
 // ————————————————————————————————
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
-// ————————————————————————————————
-// Reset y base
-// ————————————————————————————————
 * { box-sizing: border-box; }
 
 ion-app {
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: var(--ion-font-family);
+  font-variant-numeric: tabular-nums;       // cifras alineadas en datos
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+// Display: títulos, montos y números grandes con carácter mecánico
+ion-title,
+ion-card-title,
+.stat-number, .kpi-num, .etapa-horas, .orden-numero, .garantia-orden,
+h1, h2 {
+  font-family: var(--font-display);
+  font-feature-settings: "tnum" 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 
 // ————————————————————————————————
-// Toolbar
+// Toolbars limpias (el naranja es acento, no toda la barra)
 // ————————————————————————————————
 ion-toolbar {
   --min-height: 56px;
-  --padding-start: 16px;
-  --padding-end: 16px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --border-width: 0;
 
   ion-title {
-    font-weight: 700;
+    font-weight: 600;
     font-size: 18px;
-    letter-spacing: -0.3px;
+    letter-spacing: -0.4px;
   }
 }
 
-ion-header ion-toolbar:first-child {
-  --border-width: 0;
+// Neutraliza las toolbars con color="primary" a superficie limpia
+ion-toolbar.ion-color-primary {
+  --ion-color-base: var(--ion-toolbar-background) !important;
+  --ion-color-contrast: var(--ion-toolbar-color) !important;
+  --ion-color-shade: var(--ion-toolbar-background) !important;
+  --ion-color-tint: var(--ion-toolbar-background) !important;
 }
 
+// Hairline bajo el header (separa sin pesar)
+ion-header ion-toolbar:last-of-type {
+  --border-width: 0 0 1px 0;
+  --border-color: var(--hairline);
+}
+ion-header.header-collapse-condense ion-toolbar { --border-width: 0; }
+
 // ————————————————————————————————
-// Cards
+// Cards — radio consistente, hairline + sombra tintada, entrada sutil
 // ————————————————————————————————
+@keyframes cardRise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
 ion-card {
   --background: var(--ion-card-background);
-  border-radius: 16px !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06) !important;
+  border-radius: var(--radius-card) !important;
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-md) !important;
   margin: 12px 16px !important;
+  animation: cardRise .38s var(--ease-out) both;
 
-  ion-card-header {
-    padding: 16px 16px 8px;
-  }
+  ion-card-header { padding: 16px 16px 8px; }
 
   ion-card-title {
     font-size: 16px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--ion-text-color);
-    letter-spacing: -0.2px;
+    letter-spacing: -0.3px;
   }
 
   ion-card-subtitle {
@@ -68,11 +98,16 @@ ion-card {
     text-transform: none;
     letter-spacing: 0;
     margin-bottom: 2px;
+    color: var(--ion-color-medium);
   }
 
-  ion-card-content {
-    padding: 12px 16px 16px;
-  }
+  ion-card-content { padding: 12px 16px 16px; }
+}
+
+// Cards interactivas: feedback físico al tocar
+ion-card[button], a > ion-card, ion-card.orden-card, ion-card.garantia-card, ion-card.promo-card {
+  transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out);
+  &:active { transform: scale(0.985); }
 }
 
 // ————————————————————————————————
@@ -88,25 +123,16 @@ ion-item {
   --padding-end: 16px;
   --inner-padding-end: 0;
   --min-height: 56px;
-  --border-color: rgba(var(--ion-text-color-rgb), .07);
+  --border-color: var(--hairline);
+  --transition: background .15s var(--ease-out);
   font-size: 14px;
 
-  &:last-child {
-    --border-color: transparent;
-  }
+  &:last-child { --border-color: transparent; }
 
   ion-label {
-    h2 {
-      font-size: 15px;
-      font-weight: 600;
-      margin-bottom: 2px;
-      letter-spacing: -0.1px;
-    }
-    p {
-      font-size: 13px;
-      color: var(--ion-color-medium);
-      margin: 1px 0;
-    }
+    h2 { font-size: 15px; font-weight: 600; margin-bottom: 2px; letter-spacing: -0.2px; }
+    h3 { font-size: 14px; font-weight: 600; }
+    p  { font-size: 13px; color: var(--ion-color-medium); margin: 1px 0; }
   }
 }
 
@@ -115,89 +141,106 @@ ion-item {
 // ————————————————————————————————
 ion-badge {
   border-radius: 8px;
-  padding: 4px 10px;
+  padding: 4px 9px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.2px;
+  text-transform: none;
 }
 
 // ————————————————————————————————
-// Botones
+// Botones — pill suave, easing real, presión física
 // ————————————————————————————————
 ion-button {
-  --border-radius: 12px;
+  --border-radius: var(--radius-control);
+  --box-shadow: none;
+  --transition: background .2s var(--ease-out);
+  font-family: var(--ion-font-family);
   font-weight: 600;
   letter-spacing: 0.1px;
+  text-transform: none;
   height: 48px;
   font-size: 15px;
+  transition: transform .18s var(--ease-out);
 
-  &[size="small"] {
-    height: 36px;
-    font-size: 13px;
-  }
+  &:active { transform: scale(0.97); }
+  &[size="small"] { height: 38px; font-size: 13px; }
+}
+
+ion-button[fill="solid"], ion-button:not([fill]) {
+  --box-shadow: 0 1px 2px rgba(40,24,8,.10);
+}
+
+// Anillo de foco accesible
+ion-button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--ion-color-primary);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 // ————————————————————————————————
 // Inputs
 // ————————————————————————————————
 ion-input, ion-textarea, ion-select, ion-searchbar {
-  --border-radius: 10px;
+  --border-radius: var(--radius-input);
 }
 
 ion-searchbar {
-  --border-radius: 12px;
+  --border-radius: var(--radius-input);
   --box-shadow: none;
-  --background: rgba(var(--ion-text-color-rgb), .06);
+  --background: rgba(var(--ion-text-color-rgb), .05);
   padding: 8px 12px !important;
   font-size: 14px;
 }
 
 // ————————————————————————————————
-// Segmento / Tabs internos
+// Segmento
 // ————————————————————————————————
 ion-segment {
   --background: rgba(var(--ion-text-color-rgb), .06);
-  border-radius: 12px;
+  border-radius: var(--radius-input);
   margin: 8px 16px;
   padding: 3px;
 }
 
 ion-segment-button {
   --border-radius: 9px;
-  --indicator-color: var(--ion-color-primary);
+  --indicator-color: var(--ion-card-background);
   --color: var(--ion-color-medium);
-  --color-checked: #fff;
+  --color-checked: var(--ion-color-primary);
+  --indicator-box-shadow: var(--shadow-sm);
   font-size: 12px;
   font-weight: 600;
   min-height: 34px;
   letter-spacing: 0;
+  text-transform: none;
 }
 
 // ————————————————————————————————
 // Tab bar
 // ————————————————————————————————
 ion-tab-bar {
-  border-top: 1px solid rgba(var(--ion-text-color-rgb), .08);
+  border-top: 1px solid var(--hairline);
   padding-bottom: env(safe-area-inset-bottom, 0);
   height: calc(60px + env(safe-area-inset-bottom, 0));
 
   ion-tab-button {
     font-size: 11px;
-    font-weight: 500;
+    font-weight: 600;
+    --color-selected: var(--ion-color-primary);
 
-    ion-icon {
-      font-size: 22px;
-      margin-bottom: 2px;
-    }
+    ion-icon { font-size: 22px; margin-bottom: 2px; }
   }
 }
 
 // ————————————————————————————————
-// FAB
+// FAB — acento con sombra tintada
 // ————————————————————————————————
 ion-fab-button {
   --border-radius: 16px;
-  --box-shadow: 0 4px 20px rgba(232, 93, 4, 0.4);
+  --box-shadow: var(--shadow-accent);
 }
 
 // ————————————————————————————————
@@ -205,27 +248,50 @@ ion-fab-button {
 // ————————————————————————————————
 ion-spinner {
   color: var(--ion-color-primary);
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
 }
 
 // ————————————————————————————————
-// Stat cards (Dashboard)
+// Skeleton loader (shimmer) — para estados de carga con forma
+// ————————————————————————————————
+@keyframes shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg,
+    rgba(var(--ion-text-color-rgb), .05) 25%,
+    rgba(var(--ion-text-color-rgb), .10) 37%,
+    rgba(var(--ion-text-color-rgb), .05) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 8px;
+}
+.skeleton-card {
+  height: 92px;
+  margin: 12px 16px;
+  border-radius: var(--radius-card);
+}
+
+// ————————————————————————————————
+// Stat cards (Dashboard) — número display + acento
 // ————————————————————————————————
 .stat-card {
   margin: 0 !important;
-  border-radius: 16px !important;
+  border-radius: var(--radius-card) !important;
+  border: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.20), 0 8px 22px rgba(40,24,8,.16) !important;
 
   ion-card-content {
     padding: 20px !important;
-    text-align: center;
 
     .stat-number {
-      font-size: 36px;
-      font-weight: 800;
+      font-size: 38px;
+      font-weight: 700;
       color: #fff;
       line-height: 1;
-      letter-spacing: -1px;
+      letter-spacing: -1.5px;
     }
 
     .stat-label {
@@ -237,17 +303,17 @@ ion-spinner {
 
     ion-icon {
       font-size: 28px;
-      color: rgba(255,255,255,.5);
+      color: rgba(255,255,255,.45);
       margin-top: 8px;
     }
   }
 }
 
 // ————————————————————————————————
-// Login
+// Login — charcoal cálido + glassmorphism con refracción de borde
 // ————————————————————————————————
 .login-content {
-  --background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+  --background: radial-gradient(120% 90% at 50% 0%, #2a221c 0%, #17130f 60%);
 
   .login-container {
     display: flex;
@@ -271,64 +337,51 @@ ion-spinner {
         align-items: center;
         justify-content: center;
         margin: 0 auto 20px;
-        box-shadow: 0 8px 32px rgba(232, 93, 4, 0.4);
+        box-shadow: 0 12px 32px rgba(232, 89, 12, 0.45);
 
-        ion-icon {
-          font-size: 40px;
-          color: #fff;
-        }
+        ion-icon { font-size: 40px; color: #fff; }
       }
 
       h1 {
+        font-family: var(--font-display);
         font-size: 34px;
-        font-weight: 800;
+        font-weight: 700;
         margin: 0 0 6px;
-        letter-spacing: -1px;
+        letter-spacing: -1.2px;
       }
 
-      p {
-        font-size: 14px;
-        color: rgba(255,255,255,.6);
-        margin: 0;
-      }
+      p { font-size: 14px; color: rgba(255,255,255,.6); margin: 0; }
     }
 
     ion-card {
       width: 100%;
       max-width: 400px;
-      --background: rgba(255,255,255,.07);
+      --background: rgba(255,255,255,.06);
       backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,.1);
-      box-shadow: 0 20px 60px rgba(0,0,0,.4) !important;
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 20px 60px rgba(0,0,0,.5),
+                  inset 0 1px 0 rgba(255,255,255,.10) !important;
 
       ion-item {
         --background: transparent;
-        --border-color: rgba(255,255,255,.12);
+        --border-color: rgba(255,255,255,.14);
         --color: #fff;
 
-        ion-label {
-          color: rgba(255,255,255,.7) !important;
-          font-size: 13px !important;
-          font-weight: 500;
-        }
-
-        ion-input {
-          color: #fff;
-          font-weight: 500;
-        }
+        ion-label { color: rgba(255,255,255,.7) !important; font-size: 13px !important; font-weight: 500; }
+        ion-input { color: #fff; font-weight: 500; }
       }
 
       ion-button {
         margin-top: 8px;
         --background: var(--ion-color-primary);
-        --box-shadow: 0 4px 20px rgba(232, 93, 4, 0.5);
+        --box-shadow: var(--shadow-accent);
       }
     }
   }
 }
 
 // ————————————————————————————————
-// Bienvenida Dashboard
+// Utilidades varias
 // ————————————————————————————————
 .bienvenida {
   font-size: 15px;
@@ -337,9 +390,6 @@ ion-spinner {
   margin: 16px 4px 8px;
 }
 
-// ————————————————————————————————
-// Estado badge en detalle orden
-// ————————————————————————————————
 .estado-badge {
   font-size: 13px;
   padding: 6px 14px;
@@ -347,9 +397,6 @@ ion-spinner {
   display: inline-block;
 }
 
-// ————————————————————————————————
-// Placa en lista ordenes
-// ————————————————————————————————
 .placa {
   font-size: 12px;
   font-weight: 600;
@@ -361,22 +408,11 @@ ion-spinner {
   text-align: center;
 }
 
-// ————————————————————————————————
-// Avances timeline
-// ————————————————————————————————
 .avance-fecha {
   color: var(--ion-color-medium);
   font-size: 11px;
   margin-bottom: 3px;
 }
 
-// ————————————————————————————————
-// Grid responsive dashboard
-// ————————————————————————————————
-ion-grid {
-  padding: 0 8px;
-}
-
-ion-col {
-  padding: 4px 8px;
-}
+ion-grid { padding: 0 8px; }
+ion-col { padding: 4px 8px; }

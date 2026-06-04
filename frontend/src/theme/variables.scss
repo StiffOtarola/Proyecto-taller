@@ -1,24 +1,25 @@
-// TallerMS — Design System
-// Paleta: naranja mecánico + gris oscuro + blanco limpio
+// TallerMS — Sistema de diseño
+// Lenguaje "Operator": herramienta operativa premium, acento cálido (naranja
+// mecánico), neutros cálidos, sombras tintadas. Un solo acento de marca.
 
 :root {
-  // Primary: naranja taller
-  --ion-color-primary: #e85d04;
-  --ion-color-primary-rgb: 232, 93, 4;
+  // —— Acento de marca: naranja mecánico ——
+  --ion-color-primary: #e8590c;
+  --ion-color-primary-rgb: 232, 89, 12;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #cc5204;
-  --ion-color-primary-tint: #ea6d1d;
+  --ion-color-primary-shade: #cc4e0a;
+  --ion-color-primary-tint: #ea6a24;
 
-  // Secondary: azul acero
-  --ion-color-secondary: #1e3a5f;
-  --ion-color-secondary-rgb: 30, 58, 95;
+  // —— Secondary: grafito cálido (estructura, no compite con el acento) ——
+  --ion-color-secondary: #44403c;
+  --ion-color-secondary-rgb: 68, 64, 60;
   --ion-color-secondary-contrast: #ffffff;
   --ion-color-secondary-contrast-rgb: 255, 255, 255;
-  --ion-color-secondary-shade: #1a3354;
-  --ion-color-secondary-tint: #354e6f;
+  --ion-color-secondary-shade: #3c3835;
+  --ion-color-secondary-tint: #57534e;
 
-  // Tertiary: azul claro (esperando aprobación)
+  // —— Tertiary: índigo (estado "esperando aprobación") ——
   --ion-color-tertiary: #6366f1;
   --ion-color-tertiary-rgb: 99, 102, 241;
   --ion-color-tertiary-contrast: #ffffff;
@@ -26,23 +27,21 @@
   --ion-color-tertiary-shade: #575ad4;
   --ion-color-tertiary-tint: #7375f3;
 
-  // Success: verde
-  --ion-color-success: #16a34a;
-  --ion-color-success-rgb: 22, 163, 74;
+  // —— Estados semánticos ——
+  --ion-color-success: #15803d;
+  --ion-color-success-rgb: 21, 128, 61;
   --ion-color-success-contrast: #ffffff;
   --ion-color-success-contrast-rgb: 255, 255, 255;
-  --ion-color-success-shade: #138f42;
-  --ion-color-success-tint: #2dae5c;
+  --ion-color-success-shade: #127036;
+  --ion-color-success-tint: #2c8d50;
 
-  // Warning: amarillo
-  --ion-color-warning: #d97706;
-  --ion-color-warning-rgb: 217, 119, 6;
+  --ion-color-warning: #c2680a;
+  --ion-color-warning-rgb: 194, 104, 10;
   --ion-color-warning-contrast: #ffffff;
   --ion-color-warning-contrast-rgb: 255, 255, 255;
-  --ion-color-warning-shade: #bf6805;
-  --ion-color-warning-tint: #dd851f;
+  --ion-color-warning-shade: #ab5b09;
+  --ion-color-warning-tint: #c87723;
 
-  // Danger: rojo
   --ion-color-danger: #dc2626;
   --ion-color-danger-rgb: 220, 38, 38;
   --ion-color-danger-contrast: #ffffff;
@@ -50,79 +49,83 @@
   --ion-color-danger-shade: #c22121;
   --ion-color-danger-tint: #e03c3c;
 
-  // Light / Medium / Dark
-  --ion-color-light: #f1f5f9;
-  --ion-color-light-rgb: 241, 245, 249;
-  --ion-color-light-contrast: #1e293b;
-  --ion-color-light-shade: #d4dae3;
-  --ion-color-light-tint: #f3f6fa;
+  // —— Neutros cálidos (familia stone) ——
+  --ion-color-light: #f5f4f2;
+  --ion-color-light-rgb: 245, 244, 242;
+  --ion-color-light-contrast: #1c1917;
+  --ion-color-light-shade: #d8d6d3;
+  --ion-color-light-tint: #f7f6f4;
 
-  --ion-color-medium: #64748b;
-  --ion-color-medium-rgb: 100, 116, 139;
+  --ion-color-medium: #78716c;
+  --ion-color-medium-rgb: 120, 113, 108;
   --ion-color-medium-contrast: #ffffff;
-  --ion-color-medium-shade: #586579;
-  --ion-color-medium-tint: #748297;
+  --ion-color-medium-shade: #6a635f;
+  --ion-color-medium-tint: #867f7b;
 
-  --ion-color-dark: #0f172a;
-  --ion-color-dark-rgb: 15, 23, 42;
+  --ion-color-dark: #1c1917;
+  --ion-color-dark-rgb: 28, 25, 23;
   --ion-color-dark-contrast: #ffffff;
-  --ion-color-dark-shade: #0d1526;
-  --ion-color-dark-tint: #27303f;
+  --ion-color-dark-shade: #191614;
+  --ion-color-dark-tint: #33302e;
 
-  // Fondo y superficies (modo claro)
-  --ion-background-color: #f8fafc;
-  --ion-background-color-rgb: 248, 250, 252;
-  --ion-text-color: #0f172a;
-  --ion-text-color-rgb: 15, 23, 42;
+  // —— Superficies (modo claro) ——
+  --ion-background-color: #faf9f7;
+  --ion-background-color-rgb: 250, 249, 247;
+  --ion-text-color: #1c1917;
+  --ion-text-color-rgb: 28, 25, 23;
 
   --ion-card-background: #ffffff;
   --ion-item-background: #ffffff;
-  --ion-toolbar-background: #e85d04;
-  --ion-toolbar-color: #ffffff;
+  --ion-toolbar-background: #ffffff;
+  --ion-toolbar-color: #1c1917;
   --ion-tab-bar-background: #ffffff;
-  --ion-tab-bar-color: #94a3b8;
-  --ion-tab-bar-color-selected: #e85d04;
+  --ion-tab-bar-color: #a8a29e;
+  --ion-tab-bar-color-selected: #e8590c;
 
-  // Border radius global
-  --ion-border-radius: 12px;
+  // —— Tipografía ——
+  --font-display: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+  --ion-font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  // Font
-  --ion-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  // —— Sistema (radios, easing, sombras tintadas) ——
+  --radius-card: 18px;
+  --radius-control: 14px;
+  --radius-input: 12px;
+  --ion-border-radius: 14px;
+  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --shadow-sm: 0 1px 2px rgba(40, 24, 8, 0.06), 0 1px 3px rgba(40, 24, 8, 0.05);
+  --shadow-md: 0 2px 6px rgba(40, 24, 8, 0.06), 0 8px 24px rgba(40, 24, 8, 0.08);
+  --shadow-accent: 0 8px 24px rgba(232, 89, 12, 0.28);
+  --hairline: rgba(28, 25, 23, 0.08);
 }
 
-// Modo oscuro automático por sistema
+// —— Modo oscuro: charcoal cálido (armoniza con el naranja) ——
 @media (prefers-color-scheme: dark) {
   :root {
-    --ion-background-color: #0f172a;
-    --ion-background-color-rgb: 15, 23, 42;
-    --ion-text-color: #f1f5f9;
-    --ion-text-color-rgb: 241, 245, 249;
+    --ion-background-color: #17130f;
+    --ion-background-color-rgb: 23, 19, 15;
+    --ion-text-color: #f5f3f0;
+    --ion-text-color-rgb: 245, 243, 240;
 
-    --ion-card-background: #1e293b;
-    --ion-item-background: #1e293b;
-    --ion-toolbar-background: #1e293b;
-    --ion-tab-bar-background: #1e293b;
-    --ion-tab-bar-color: #64748b;
-    --ion-tab-bar-color-selected: #e85d04;
+    --ion-card-background: #211c18;
+    --ion-item-background: #211c18;
+    --ion-toolbar-background: #1c1814;
+    --ion-toolbar-color: #f5f3f0;
+    --ion-tab-bar-background: #1c1814;
+    --ion-tab-bar-color: #8a817b;
+    --ion-tab-bar-color-selected: #f97316;
 
-    --ion-color-step-50:  #1a2740;
-    --ion-color-step-100: #253350;
-    --ion-color-step-150: #304060;
-    --ion-color-step-200: #3a4c6f;
-    --ion-color-step-250: #45597f;
-    --ion-color-step-300: #50668f;
-    --ion-color-step-350: #5a729e;
-    --ion-color-step-400: #657fae;
-    --ion-color-step-450: #708bbe;
-    --ion-color-step-500: #7a98cd;
-    --ion-color-step-550: #85a5dd;
-    --ion-color-step-600: #90b1ed;
-    --ion-color-step-650: #9bbdf9;
-    --ion-color-step-700: #a6c6f9;
-    --ion-color-step-750: #b1d0f9;
-    --ion-color-step-800: #bcd9f9;
-    --ion-color-step-850: #c7e3f9;
-    --ion-color-step-900: #d2ecf9;
-    --ion-color-step-950: #ddf5f9;
+    --ion-color-light: #2a2420;
+    --ion-color-light-rgb: 42, 36, 32;
+    --ion-color-light-contrast: #f5f3f0;
+    --ion-color-light-shade: #252019;
+    --ion-color-light-tint: #352e28;
+
+    --ion-color-medium: #a8a29e;
+    --ion-color-medium-rgb: 168, 162, 158;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.4);
+    --hairline: rgba(255, 255, 255, 0.08);
   }
 }

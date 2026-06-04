@@ -1,0 +1,76 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/portal"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Mis citas</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar(); $event.target.complete()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="ion-padding">
+    <ion-button expand="block" (click)="abrirForm()" *ngIf="!mostrarForm">
+      <ion-icon name="add-outline" slot="start"></ion-icon>
+      Solicitar cita
+    </ion-button>
+  </div>
+
+  <!-- Formulario de solicitud -->
+  <ion-card *ngIf="mostrarForm">
+    <ion-card-header><ion-card-title>Solicitar cita</ion-card-title></ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-select label="Moto (opcional)" labelPlacement="floating" [(ngModel)]="nueva.moto_id" interface="action-sheet">
+          <ion-select-option [value]="null">Sin especificar</ion-select-option>
+          <ion-select-option *ngFor="let m of motos" [value]="m.id">{{ m.marca }} {{ m.modelo }}<span *ngIf="m.placa"> · {{ m.placa }}</span></ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Fecha" labelPlacement="floating" type="date" [min]="hoy" [(ngModel)]="nueva.fecha"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Hora" labelPlacement="floating" type="time" [(ngModel)]="nueva.hora"></ion-input>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-textarea label="Motivo" labelPlacement="floating" [(ngModel)]="nueva.motivo" rows="3"
+          placeholder="Ej: cambio de aceite, ruido en el motor..."></ion-textarea>
+      </ion-item>
+
+      <ion-button expand="block" class="ion-margin-top" (click)="solicitar()" [disabled]="!valido || enviando">
+        <ion-spinner *ngIf="enviando" name="crescent" slot="start"></ion-spinner>
+        {{ enviando ? 'Enviando...' : 'Enviar solicitud' }}
+      </ion-button>
+      <ion-button expand="block" fill="clear" color="medium" (click)="mostrarForm = false" [disabled]="enviando">
+        Cancelar
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <div class="ion-padding ion-text-center" *ngIf="cargando" style="padding-top:20px">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <!-- Lista de citas -->
+  <ion-list *ngIf="!cargando && citas.length">
+    <ion-item *ngFor="let c of citas" lines="full">
+      <ion-icon name="calendar-outline" slot="start" [color]="estadoColor[c.estado]"></ion-icon>
+      <ion-label class="ion-text-wrap">
+        <h2>{{ c.fecha | date:'EEEE dd/MM/yyyy' }} · {{ c.hora }}</h2>
+        <p *ngIf="c.marca">{{ c.marca }} {{ c.modelo }}</p>
+        <p>{{ c.motivo }}</p>
+      </ion-label>
+      <ion-badge slot="end" [color]="estadoColor[c.estado]">{{ estadoLabel[c.estado] }}</ion-badge>
+    </ion-item>
+  </ion-list>
+
+  <div class="empty-state" *ngIf="!cargando && citas.length === 0 && !mostrarForm">
+    <ion-icon name="calendar-outline"></ion-icon>
+    <p>No tenés citas. Solicitá una y el taller la confirmará.</p>
+  </div>
+
+  <div style="height:30px"></div>
+</ion-content>

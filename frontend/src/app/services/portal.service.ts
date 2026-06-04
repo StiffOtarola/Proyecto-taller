@@ -57,6 +57,18 @@ export class PortalService {
     return this.http.post(`${this.url}/ordenes/${id}/rechazar`, { motivo });
   }
 
+  getMotos(): Observable<{ data: any[] }> {
+    return this.http.get<{ data: any[] }>(`${this.url}/motos`);
+  }
+
+  getCitas(): Observable<{ data: any[] }> {
+    return this.http.get<{ data: any[] }>(`${this.url}/citas`);
+  }
+
+  crearCita(data: { moto_id?: number | null; fecha: string; hora: string; motivo: string }): Observable<{ data: any }> {
+    return this.http.post<{ data: any }>(`${this.url}/citas`, data);
+  }
+
   private getClienteGuardado(): ClientePortal | null {
     try {
       const raw = localStorage.getItem(CLIENTE_KEY);

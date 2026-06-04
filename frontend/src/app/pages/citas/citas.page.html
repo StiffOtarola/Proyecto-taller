@@ -38,6 +38,10 @@
           <p>{{ c.fecha | date:'dd/MM/yyyy' }} a las {{ c.hora }}</p>
           <p *ngIf="c.marca">{{ c.marca }} {{ c.modelo }}</p>
           <p>{{ c.motivo | slice:0:60 }}</p>
+          <ion-chip *ngIf="!c.usuario_nombre" color="tertiary" class="chip-cliente">
+            <ion-icon name="person-outline"></ion-icon>
+            <ion-label>Solicitada por el cliente</ion-label>
+          </ion-chip>
         </ion-label>
         <ion-badge slot="end" [color]="
           c.estado === 'confirmada' ? 'success' :

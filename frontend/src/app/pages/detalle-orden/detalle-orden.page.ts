@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AlertController, LoadingController, ToastController } from '@ionic/angular';
+import { ActionSheetController, AlertController, LoadingController, ToastController } from '@ionic/angular';
 import { OrdenesService } from '../../services/ordenes.service';
 import { UsuariosService } from '../../services/usuarios.service';
 import { GarantiasService } from '../../services/garantias.service';
@@ -9,6 +9,7 @@ import { Orden, OrdenAvance, OrdenRepuesto, OrdenChecklist, OrdenFoto, EstadoOrd
 import { Garantia, EstadoGarantia, ESTADO_GARANTIA_CONFIG } from '../../models/garantia.model';
 import { Usuario } from '../../models/usuario.model';
 import { comprimirImagen } from '../../shared/image.util';
+import { WA_MENSAJES, mensajeSugerido, abrirWhatsApp, WaContexto } from '../../shared/whatsapp.util';
 
 @Component({ standalone: false,
   selector: 'app-detalle-orden',
@@ -72,7 +73,8 @@ export class DetalleOrdenPage implements OnInit {
     public auth: AuthService,
     private alert: AlertController,
     private loading: LoadingController,
-    private toast: ToastController
+    private toast: ToastController,
+    private actionSheet: ActionSheetController
   ) {}
 
   ngOnInit() {
@@ -373,6 +375,33 @@ export class DetalleOrdenPage implements OnInit {
       },
       error: err => this.mostrarAlertError(err.error?.error),
     });
+  }
+
+  // ===== Notificar al cliente por WhatsApp (click-to-send) =====
+  async notificarWhatsApp() {
+    if (!this.orden?.cliente_telefono) {
+      this.mostrarAlertError('El cliente no tiene teléfono registrado');
+      return;
+    }
+    const ctx: WaContexto = {
+      nombre: this.orden.cliente_nombre || '',
+      marca: this.orden.marca,
+      modelo: this.orden.modelo,
+      numero_orden: this.orden.numero_orden,
+      total: this.totalOrden,
+      portalLink: `${location.origin}/portal/login`,
+    };
+    const sugerido = mensajeSugerido(this.orden.estado);
+
+    const buttons = WA_MENSAJES.map(m => ({
+      text: m.key === sugerido ? `${m.label}  ·  sugerido` : m.label,
+      icon: 'logo-whatsapp',
+      handler: () => abrirWhatsApp(this.orden!.cliente_telefono!, m.build(ctx)),
+    }));
+    buttons.push({ text: 'Cancelar', icon: 'close', role: 'cancel' } as any);
+
+    const sheet = await this.actionSheet.create({ header: 'Notificar al cliente', buttons });
+    await sheet.present();
   }
 
   irAGarantias() { this.router.navigate(['/garantias']); }

@@ -5,6 +5,7 @@ import { ClientesService } from '../../services/clientes.service';
 import { Cliente } from '../../models/cliente.model';
 import { Moto } from '../../models/moto.model';
 import { Orden } from '../../models/orden.model';
+import { abrirWhatsApp } from '../../shared/whatsapp.util';
 
 @Component({ standalone: false,
   selector: 'app-cliente-detalle',
@@ -101,13 +102,12 @@ export class ClienteDetallePage implements OnInit {
       `Hola ${this.cliente!.nombre}, ya podés seguir el estado de tu moto en línea:\n` +
       `${url}\n\nUsuario: ${this.cliente!.email}\nContraseña: ${password}\n\n` +
       `Ahí vas a ver el avance y aprobar presupuestos.`;
-    const tel = (this.cliente!.telefono || '').replace(/\D/g, '');
     const a = await this.alert.create({
       header: 'Portal activado',
       message: 'Enviá las credenciales al cliente por WhatsApp.',
       buttons: [
         { text: 'Cerrar', role: 'cancel' },
-        { text: 'Enviar por WhatsApp', handler: () => { window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`, '_blank'); } },
+        { text: 'Enviar por WhatsApp', handler: () => { abrirWhatsApp(this.cliente!.telefono || '', msg); } },
       ],
     });
     await a.present();

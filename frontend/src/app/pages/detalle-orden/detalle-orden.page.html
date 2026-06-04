@@ -4,6 +4,11 @@
       <ion-back-button defaultHref="/tabs/ordenes"></ion-back-button>
     </ion-buttons>
     <ion-title>{{ orden?.numero_orden || 'Orden' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="notificarWhatsApp()" title="Notificar por WhatsApp" *ngIf="orden?.cliente_telefono">
+        <ion-icon slot="icon-only" name="logo-whatsapp"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 

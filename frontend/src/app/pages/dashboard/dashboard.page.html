@@ -169,6 +169,13 @@
             <span class="kpi-lbl">Repuestos pendientes</span>
           </div>
         </ion-col>
+        <ion-col size="6">
+          <div class="kpi-card">
+            <ion-icon name="star-outline" color="warning"></ion-icon>
+            <span class="kpi-num">{{ resumen.satisfaccion_promedio ? (resumen.satisfaccion_promedio + ' ★') : '—' }}</span>
+            <span class="kpi-lbl">Satisfacción ({{ resumen.satisfaccion_total || 0 }})</span>
+          </div>
+        </ion-col>
       </ion-row>
     </ion-grid>
 

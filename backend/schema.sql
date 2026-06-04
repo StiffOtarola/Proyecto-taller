@@ -107,6 +107,8 @@ CREATE TABLE IF NOT EXISTS ordenes_trabajo (
   metodo_pago           ENUM('efectivo','sinpe','tarjeta','transferencia') NULL,
   garantia_dias         INT DEFAULT 0,
   observaciones_finales TEXT,
+  calificacion          TINYINT NULL,
+  comentario_satisfaccion TEXT,
   created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (moto_id)          REFERENCES motos(id),

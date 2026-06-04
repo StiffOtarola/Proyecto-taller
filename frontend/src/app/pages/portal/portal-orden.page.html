@@ -111,6 +111,36 @@
       </ion-list>
     </ion-card>
 
+    <!-- Encuesta de satisfacción -->
+    <ion-card *ngIf="puedeCalificar" class="encuesta-card">
+      <ion-card-header><ion-card-title>¿Cómo fue tu experiencia?</ion-card-title></ion-card-header>
+      <ion-card-content>
+        <div class="estrellas">
+          <ion-icon *ngFor="let s of [1,2,3,4,5]"
+            [name]="s <= calificacionSel ? 'star' : 'star-outline'"
+            (click)="calificacionSel = s"></ion-icon>
+        </div>
+        <ion-item lines="none">
+          <ion-textarea label="Comentario (opcional)" labelPlacement="floating"
+            [(ngModel)]="comentarioEncuesta" rows="2"></ion-textarea>
+        </ion-item>
+        <ion-button expand="block" class="ion-margin-top" (click)="enviarEncuesta()" [disabled]="!calificacionSel">
+          Enviar calificación
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Calificación ya enviada -->
+    <ion-card *ngIf="orden.estado === 'entregada' && orden.calificacion" class="encuesta-card">
+      <ion-card-content>
+        <p class="gracias-calif">Tu calificación</p>
+        <div class="estrellas readonly">
+          <ion-icon *ngFor="let s of [1,2,3,4,5]" [name]="s <= orden.calificacion ? 'star' : 'star-outline'"></ion-icon>
+        </div>
+        <p *ngIf="orden.comentario_satisfaccion" class="comentario-calif">"{{ orden.comentario_satisfaccion }}"</p>
+      </ion-card-content>
+    </ion-card>
+
     <div style="height:30px"></div>
   </div>
 </ion-content>

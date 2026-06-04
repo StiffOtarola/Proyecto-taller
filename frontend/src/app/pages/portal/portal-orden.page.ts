@@ -42,8 +42,28 @@ export class PortalOrdenPage implements OnInit {
     });
   }
 
+  // encuesta de satisfacción
+  calificacionSel = 0;
+  comentarioEncuesta = '';
+
   estadoLabel(e: string) { return ESTADO_CONFIG[e as EstadoOrden]?.label ?? e; }
   estadoColor(e: string) { return ESTADO_CONFIG[e as EstadoOrden]?.color ?? 'medium'; }
+
+  get puedeCalificar(): boolean {
+    return this.orden?.estado === 'entregada' && !this.orden?.calificacion;
+  }
+
+  enviarEncuesta() {
+    if (!this.calificacionSel) return;
+    this.portal.enviarEncuesta(this.orden.id, this.calificacionSel, this.comentarioEncuesta).subscribe({
+      next: () => {
+        this.orden.calificacion = this.calificacionSel;
+        this.orden.comentario_satisfaccion = this.comentarioEncuesta;
+        this.mostrarToast('¡Gracias por tu opinión!');
+      },
+      error: (err: any) => this.mostrarToast(err.error?.error || 'No se pudo enviar', 'danger'),
+    });
+  }
 
   // índice de la etapa actual dentro del flujo (para marcar completadas)
   get etapaActual(): number {

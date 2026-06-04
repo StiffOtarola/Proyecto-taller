@@ -52,6 +52,10 @@ async function ensureSchema() {
       "ENUM('pendiente','aprobado','rechazado') NOT NULL DEFAULT 'pendiente'"
     );
     await addColumnIfMissing('ordenes_trabajo', 'motivo_rechazo', 'TEXT NULL');
+
+    // Encuesta de satisfacción del cliente al entregar.
+    await addColumnIfMissing('ordenes_trabajo', 'calificacion', 'TINYINT NULL');
+    await addColumnIfMissing('ordenes_trabajo', 'comentario_satisfaccion', 'TEXT NULL');
   } catch (err) {
     console.error('⚠️  Auto-migración falló:', err.code || err.message);
   }

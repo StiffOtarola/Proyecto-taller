@@ -31,6 +31,9 @@ router.get('/resumen', async (req, res) => {
     const [[{ repuestos_pendientes }]] = await pool.query(
       "SELECT COUNT(*) AS repuestos_pendientes FROM orden_repuestos r JOIN ordenes_trabajo o ON o.id = r.orden_id WHERE r.estado IN ('pendiente','pedido_especial') AND o.estado NOT IN ('entregada','cancelada')"
     );
+    const [[satisfaccion]] = await pool.query(
+      'SELECT ROUND(AVG(calificacion), 1) AS promedio, COUNT(calificacion) AS total FROM ordenes_trabajo WHERE calificacion IS NOT NULL'
+    );
     const [[conversion]] = await pool.query(
       `SELECT
          (SELECT COUNT(DISTINCT orden_id) FROM orden_tiempos WHERE etapa = 'diagnostico') AS con_diagnostico,
@@ -53,6 +56,8 @@ router.get('/resumen', async (req, res) => {
         tiempo_promedio_horas,
         repuestos_pendientes,
         conversion_pct,
+        satisfaccion_promedio: satisfaccion.promedio,
+        satisfaccion_total: satisfaccion.total,
         ordenes_por_estado,
       },
     });

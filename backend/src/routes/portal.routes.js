@@ -58,7 +58,7 @@ router.get('/ordenes/:id', async (req, res) => {
               (o.costo_mano_obra + o.costo_repuestos - o.descuento) AS total,
               o.aprobacion_cliente, o.motivo_rechazo, o.tiempo_estimado_horas,
               o.fecha_ingreso, o.fecha_estimada_entrega, o.fecha_entrega_real,
-              o.metodo_pago, o.garantia_dias,
+              o.metodo_pago, o.garantia_dias, o.calificacion, o.comentario_satisfaccion,
               m.marca, m.modelo, m.placa, m.anio,
               u.nombre AS tecnico_nombre
        FROM ordenes_trabajo o
@@ -106,6 +106,30 @@ router.post('/ordenes/:id/rechazar', async (req, res) => {
     const ok = await actualizarAprobacion(req.params.id, req.cliente.id, 'rechazado', req.body.motivo || null);
     if (!ok) return res.status(400).json({ error: 'La orden no está esperando aprobación' });
     res.json({ message: 'Presupuesto rechazado' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/portal/ordenes/:id/encuesta — calificación de satisfacción (1-5)
+router.post('/ordenes/:id/encuesta', async (req, res) => {
+  try {
+    const calificacion = Number(req.body.calificacion);
+    if (!(calificacion >= 1 && calificacion <= 5)) {
+      return res.status(400).json({ error: 'La calificación debe ser de 1 a 5' });
+    }
+    const [[orden]] = await pool.query(
+      "SELECT id, calificacion FROM ordenes_trabajo WHERE id = ? AND cliente_id = ? AND estado = 'entregada'",
+      [req.params.id, req.cliente.id]
+    );
+    if (!orden) return res.status(404).json({ error: 'Orden no encontrada o no entregada' });
+    if (orden.calificacion) return res.status(400).json({ error: 'Ya calificaste esta orden' });
+
+    await pool.query(
+      'UPDATE ordenes_trabajo SET calificacion = ?, comentario_satisfaccion = ? WHERE id = ?',
+      [calificacion, req.body.comentario || null, req.params.id]
+    );
+    res.json({ message: '¡Gracias por tu opinión!' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

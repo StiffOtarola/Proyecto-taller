@@ -69,6 +69,10 @@ export class PortalService {
     return this.http.post<{ data: any }>(`${this.url}/citas`, data);
   }
 
+  enviarEncuesta(id: number, calificacion: number, comentario?: string): Observable<any> {
+    return this.http.post(`${this.url}/ordenes/${id}/encuesta`, { calificacion, comentario });
+  }
+
   private getClienteGuardado(): ClientePortal | null {
     try {
       const raw = localStorage.getItem(CLIENTE_KEY);

@@ -1,9 +1,6 @@
 <ion-header>
-  <ion-toolbar color="primary">
-    <ion-title>
-      <ion-icon name="construct-outline" style="margin-right:6px;vertical-align:middle"></ion-icon>
-      Mi Taller
-    </ion-title>
+  <ion-toolbar>
+    <ion-title>Mi Taller</ion-title>
     <ion-buttons slot="end">
       <ion-button routerLink="/portal/citas" title="Mis citas">
         <ion-icon slot="icon-only" name="calendar-outline"></ion-icon>
@@ -20,62 +17,74 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <div class="saludo ion-padding-horizontal" *ngIf="portal.getCliente() as c">
-    <p>Hola, <strong>{{ c.nombre }}</strong> 👋</p>
-  </div>
-
-  <!-- Fidelización -->
-  <div *ngIf="fidelidad" class="fidelidad-portal" [class.lograda]="fidelidad.cortesia_disponible">
-    <div class="fid-head">
-      <ion-icon [name]="fidelidad.cortesia_disponible ? 'gift' : 'ribbon-outline'"></ion-icon>
-      <span *ngIf="fidelidad.cortesia_disponible"><strong>¡Tenés una cortesía disponible!</strong> Mostrala en tu próxima visita.</span>
-      <span *ngIf="!fidelidad.cortesia_disponible">Te faltan <strong>{{ fidelidad.faltan }}</strong> visita(s) para una cortesía</span>
+  <div class="portal">
+    <div class="greet" *ngIf="portal.getCliente() as c">
+      <h1>Hola, {{ c.nombre }} 👋</h1>
     </div>
-    <div class="fid-barra"><div class="fid-fill" [style.width.%]="progresoFidelidad * 100"></div></div>
-  </div>
 
-  <!-- Promociones activas -->
-  <div *ngIf="promos.length" class="promos-wrap">
-    <p class="promos-titulo"><ion-icon name="pricetags-outline"></ion-icon> Promociones</p>
-    <div class="promos-scroll">
-      <div class="promo-mini" *ngFor="let p of promos">
-        <ion-badge *ngIf="p.descuento" color="light">-{{ p.descuento }}%</ion-badge>
-        <strong>{{ p.titulo }}</strong>
-        <span>{{ p.descripcion }}</span>
+    <!-- Fidelización -->
+    <section *ngIf="fidelidad" class="fid-section">
+      <span class="section-label">Resumen de fidelidad</span>
+      <div class="fid-card" [class.lograda]="fidelidad.cortesia_disponible">
+        <div class="fid-glow"></div>
+        <p class="fid-text">
+          <ion-icon [name]="fidelidad.cortesia_disponible ? 'gift' : 'ribbon-outline'"></ion-icon>
+          <span *ngIf="fidelidad.cortesia_disponible"><strong>¡Tenés una cortesía disponible!</strong></span>
+          <span *ngIf="!fidelidad.cortesia_disponible">Te faltan <strong>{{ fidelidad.faltan }}</strong> visita(s) para una cortesía</span>
+        </p>
+        <div class="fid-blocks">
+          <span class="blk" *ngFor="let on of bloques" [class.on]="on"></span>
+        </div>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <div class="ion-padding ion-text-center" *ngIf="cargando" style="padding-top:40px">
-    <ion-spinner name="crescent"></ion-spinner>
-  </div>
+    <!-- Promociones -->
+    <section *ngIf="promos.length" class="ofertas-section">
+      <span class="section-label">Ofertas</span>
+      <div class="promos-scroll">
+        <div class="promo-card" *ngFor="let p of promos; let i = index" [class]="'g' + (i % 4)">
+          <ion-icon name="pricetag" class="promo-ico"></ion-icon>
+          <ion-badge *ngIf="p.descuento" class="promo-desc">-{{ p.descuento }}%</ion-badge>
+          <strong>{{ p.titulo }}</strong>
+          <span>{{ p.descripcion }}</span>
+        </div>
+      </div>
+    </section>
 
-  <div *ngIf="!cargando">
-    <ion-list style="padding:0 8px">
-      <ion-card *ngFor="let o of ordenes" button (click)="abrir(o.id)" class="orden-card">
-        <div class="estado-bar" [style.background]="'var(--ion-color-' + (o.estado | estadoColor) + ')'"></div>
-        <ion-card-content>
-          <div class="orden-top">
-            <span class="orden-numero">{{ o.numero_orden }}</span>
-            <ion-badge [color]="o.estado | estadoColor">{{ o.estado | estadoLabel }}</ion-badge>
+    <!-- Mis órdenes -->
+    <section class="ordenes-section">
+      <span class="section-label">Mis órdenes</span>
+
+      <div class="ion-text-center" *ngIf="cargando" style="padding:30px 0">
+        <ion-spinner name="crescent"></ion-spinner>
+      </div>
+
+      <div class="orden-list" *ngIf="!cargando">
+        <div class="orden-card" *ngFor="let o of ordenes" (click)="abrir(o.id)">
+          <div class="accent-bar" [class.urgente]="requiereAprobacion(o)"></div>
+          <div class="orden-body">
+            <div class="orden-top">
+              <h4>{{ o.marca }} {{ o.modelo }}</h4>
+              <span class="orden-num mono">{{ o.numero_orden }}</span>
+            </div>
+            <p class="orden-problema"><span class="k">Problema:</span> {{ o.problema_reportado }}</p>
+
+            <div class="req-aprob" *ngIf="requiereAprobacion(o)">
+              Requiere tu aprobación <ion-icon name="alert-circle"></ion-icon>
+            </div>
+            <span class="pill" *ngIf="!requiereAprobacion(o)"
+                  [ngClass]="{'green': o.estado==='entregada' || o.estado==='lista_entrega', 'rose': o.estado!=='entregada' && o.estado!=='lista_entrega'}">
+              {{ o.estado | estadoLabel }}
+            </span>
           </div>
-          <p class="orden-moto"><ion-icon name="bicycle-outline"></ion-icon> {{ o.marca }} {{ o.modelo }}
-            <span *ngIf="o.placa"> · {{ o.placa }}</span></p>
-          <p class="orden-problema">{{ o.problema_reportado }}</p>
+        </div>
 
-          <div class="aprobacion-aviso" *ngIf="o.estado === 'esperando_aprobacion' && o.aprobacion_cliente === 'pendiente'">
-            <ion-icon name="alert-circle"></ion-icon> Requiere tu aprobación
-          </div>
-
-          <p class="orden-fecha"><ion-icon name="time-outline"></ion-icon> Ingresó {{ o.fecha_ingreso | date:'dd/MM/yyyy' }}</p>
-        </ion-card-content>
-      </ion-card>
-    </ion-list>
-
-    <div class="empty-state" *ngIf="ordenes.length === 0">
-      <ion-icon name="bicycle-outline"></ion-icon>
-      <p>No tenés órdenes registradas</p>
-    </div>
+        <div class="empty-state" *ngIf="ordenes.length === 0">
+          <ion-icon name="bicycle-outline"></ion-icon>
+          <p>No tenés órdenes registradas</p>
+        </div>
+      </div>
+    </section>
 
     <div style="height:40px"></div>
   </div>

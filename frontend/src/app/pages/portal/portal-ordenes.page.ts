@@ -36,6 +36,19 @@ export class PortalOrdenesPage implements OnInit {
     return hechas / this.fidelidad.meta;
   }
 
+  // Bloques segmentados de la barra de fidelidad (estilo del export)
+  get bloques(): boolean[] {
+    if (!this.fidelidad) return [];
+    const total = this.fidelidad.meta || 0;
+    const hechas = this.fidelidad.cortesia_disponible ? total : (total - this.fidelidad.faltan);
+    return Array.from({ length: total }, (_, i) => i < hechas);
+  }
+
+  // ¿La orden requiere aprobación del cliente?
+  requiereAprobacion(o: any): boolean {
+    return o.estado === 'esperando_aprobacion' && o.aprobacion_cliente === 'pendiente';
+  }
+
   abrir(id: number) { this.router.navigate(['/portal/orden', id]); }
 
   logout() {

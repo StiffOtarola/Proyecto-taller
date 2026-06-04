@@ -1,5 +1,5 @@
 <ion-header>
-  <ion-toolbar color="primary">
+  <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/portal"></ion-back-button>
     </ion-buttons>
@@ -12,134 +12,125 @@
     <ion-spinner name="crescent"></ion-spinner>
   </div>
 
-  <div *ngIf="!cargando && orden">
-    <!-- Cabecera -->
-    <ion-card>
-      <ion-card-header>
-        <ion-badge [color]="estadoColor(orden.estado)">{{ estadoLabel(orden.estado) }}</ion-badge>
-        <ion-card-title>{{ orden.marca }} {{ orden.modelo }} {{ orden.anio }}</ion-card-title>
-        <ion-card-subtitle *ngIf="orden.placa">{{ orden.placa }}</ion-card-subtitle>
-      </ion-card-header>
-      <ion-card-content>
-        <p><strong>Problema:</strong> {{ orden.problema_reportado }}</p>
-        <p *ngIf="orden.tecnico_nombre"><strong>Técnico:</strong> {{ orden.tecnico_nombre }}</p>
-        <p *ngIf="orden.fecha_estimada_entrega"><strong>Entrega estimada:</strong> {{ orden.fecha_estimada_entrega | date:'dd/MM/yyyy' }}</p>
-      </ion-card-content>
-    </ion-card>
+  <div *ngIf="!cargando && orden" class="po">
 
-    <!-- Aprobación de presupuesto -->
-    <ion-card *ngIf="esperandoAprobacion" class="aprobacion-card">
-      <ion-card-header>
-        <ion-card-title><ion-icon name="document-text-outline"></ion-icon> Presupuesto para aprobar</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <p *ngIf="orden.diagnostico" class="diag"><strong>Diagnóstico:</strong> {{ orden.diagnostico }}</p>
-        <div class="costos">
-          <div><span>Mano de obra</span><strong>₡{{ orden.costo_mano_obra | number:'1.0-0' }}</strong></div>
-          <div><span>Repuestos</span><strong>₡{{ orden.costo_repuestos | number:'1.0-0' }}</strong></div>
-          <div *ngIf="orden.descuento"><span>Descuento</span><strong>-₡{{ orden.descuento | number:'1.0-0' }}</strong></div>
-          <div class="total"><span>Total</span><strong>₡{{ orden.total | number:'1.0-0' }}</strong></div>
-        </div>
+    <!-- Hero -->
+    <div class="po-hero">
+      <span class="status-pill" [ngClass]="estadoColor(orden.estado)">{{ estadoLabel(orden.estado) }}</span>
+      <h2 class="po-model">{{ orden.marca }} {{ orden.modelo }} {{ orden.anio }}</h2>
+      <span class="placa-pill mono" *ngIf="orden.placa">{{ orden.placa }}</span>
+    </div>
+
+    <!-- Info -->
+    <section class="card po-info">
+      <p><span class="k">Problema</span>{{ orden.problema_reportado }}</p>
+      <p *ngIf="orden.tecnico_nombre"><span class="k">Técnico</span>{{ orden.tecnico_nombre }}</p>
+      <p *ngIf="orden.fecha_estimada_entrega"><span class="k">Entrega estimada</span>{{ orden.fecha_estimada_entrega | date:'dd/MM/yyyy' }}</p>
+    </section>
+
+    <!-- Presupuesto para aprobar -->
+    <section class="card aprob-card" *ngIf="esperandoAprobacion">
+      <div class="aprob-head">
+        <ion-icon name="document-text-outline"></ion-icon>
+        <span>Presupuesto para aprobar</span>
+      </div>
+      <p *ngIf="orden.diagnostico" class="diag">{{ orden.diagnostico }}</p>
+      <div class="cost-row"><span>Mano de obra</span><span class="mono">₡{{ orden.costo_mano_obra | number:'1.0-0' }}</span></div>
+      <div class="cost-row"><span>Repuestos</span><span class="mono">₡{{ orden.costo_repuestos | number:'1.0-0' }}</span></div>
+      <div class="cost-row neg" *ngIf="orden.descuento"><span>Descuento</span><span class="mono">-₡{{ orden.descuento | number:'1.0-0' }}</span></div>
+      <div class="cost-total"><span>Total</span><span class="mono">₡{{ orden.total | number:'1.0-0' }}</span></div>
+
+      <div class="aprob-actions">
         <ion-button expand="block" color="success" (click)="aprobar()">
           <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon> Aprobar
         </ion-button>
         <ion-button expand="block" fill="outline" color="danger" (click)="rechazar()">
           <ion-icon name="close-circle-outline" slot="start"></ion-icon> Rechazar
         </ion-button>
-      </ion-card-content>
-    </ion-card>
+      </div>
+    </section>
 
     <!-- Resultado de aprobación -->
-    <ion-card *ngIf="orden.aprobacion_cliente === 'aprobado'" class="estado-aprob aprobado">
-      <ion-card-content><ion-icon name="checkmark-circle"></ion-icon> Presupuesto aprobado por vos</ion-card-content>
-    </ion-card>
-    <ion-card *ngIf="orden.aprobacion_cliente === 'rechazado'" class="estado-aprob rechazado">
-      <ion-card-content>
-        <ion-icon name="close-circle"></ion-icon> Rechazaste el presupuesto
+    <section class="card banner ok" *ngIf="orden.aprobacion_cliente === 'aprobado'">
+      <ion-icon name="checkmark-circle"></ion-icon>
+      <div><strong>Presupuesto aprobado por vos</strong></div>
+    </section>
+    <section class="card banner no" *ngIf="orden.aprobacion_cliente === 'rechazado'">
+      <ion-icon name="close-circle"></ion-icon>
+      <div>
+        <strong>Rechazaste el presupuesto</strong>
         <p *ngIf="orden.motivo_rechazo">{{ orden.motivo_rechazo }}</p>
-      </ion-card-content>
-    </ion-card>
+      </div>
+    </section>
 
-    <!-- Línea de tiempo de estados -->
-    <ion-card>
-      <ion-card-header><ion-card-title>Seguimiento</ion-card-title></ion-card-header>
-      <ion-card-content>
-        <div class="timeline">
-          <div class="paso" *ngFor="let etapa of flujo; let i = index"
-               [class.completado]="i < etapaActual" [class.actual]="i === etapaActual">
-            <div class="punto">
-              <ion-icon *ngIf="i < etapaActual" name="checkmark"></ion-icon>
-            </div>
-            <span class="etapa-label">{{ estadoLabel(etapa) }}</span>
+    <!-- Seguimiento -->
+    <section class="card">
+      <span class="section-label">Seguimiento</span>
+      <div class="track">
+        <div class="track-step" *ngFor="let etapa of flujo; let i = index"
+             [class.done]="i < etapaActual" [class.now]="i === etapaActual">
+          <div class="track-dot">
+            <ion-icon *ngIf="i < etapaActual" name="checkmark"></ion-icon>
           </div>
+          <span class="track-label">{{ estadoLabel(etapa) }}</span>
         </div>
-      </ion-card-content>
-    </ion-card>
+      </div>
+    </section>
 
     <!-- Avances -->
-    <ion-card *ngIf="orden.avances?.length">
-      <ion-card-header><ion-card-title>Avances</ion-card-title></ion-card-header>
-      <ion-list>
-        <ion-item *ngFor="let a of orden.avances" lines="inset">
-          <ion-label class="ion-text-wrap">
-            <p class="avance-fecha">{{ a.created_at | date:'dd/MM/yyyy HH:mm' }}</p>
-            <p>{{ a.descripcion }}</p>
-          </ion-label>
-        </ion-item>
-      </ion-list>
-    </ion-card>
+    <section class="card" *ngIf="orden.avances?.length">
+      <span class="section-label">Avances</span>
+      <div class="timeline">
+        <div class="tl-item done" *ngFor="let a of orden.avances">
+          <div class="avance-fecha mono">{{ a.created_at | date:'dd/MM/yyyy HH:mm' }}</div>
+          <p class="tl-desc">{{ a.descripcion }}</p>
+        </div>
+      </div>
+    </section>
 
     <!-- Fotos -->
-    <ion-card *ngIf="orden.fotos?.length">
-      <ion-card-header><ion-card-title>Fotos</ion-card-title></ion-card-header>
-      <ion-card-content>
-        <div class="foto-grid">
-          <div class="foto-thumb" *ngFor="let f of orden.fotos">
-            <img [src]="f.url" (click)="verFoto(f.url)" alt="foto" />
-          </div>
+    <section class="card" *ngIf="orden.fotos?.length">
+      <span class="section-label">Fotos</span>
+      <div class="foto-grid">
+        <div class="foto-thumb" *ngFor="let f of orden.fotos">
+          <img [src]="f.url" (click)="verFoto(f.url)" alt="foto" />
         </div>
-      </ion-card-content>
-    </ion-card>
+      </div>
+    </section>
 
     <!-- Entrega -->
-    <ion-card *ngIf="orden.estado === 'entregada'">
-      <ion-card-header><ion-card-title>Entrega</ion-card-title></ion-card-header>
-      <ion-list>
-        <ion-item><ion-label>Total</ion-label><ion-note slot="end"><strong>₡{{ orden.total | number:'1.0-0' }}</strong></ion-note></ion-item>
-        <ion-item *ngIf="orden.garantia_dias"><ion-label>Garantía</ion-label><ion-note slot="end">{{ orden.garantia_dias }} días</ion-note></ion-item>
-        <ion-item *ngIf="orden.fecha_entrega_real" lines="none"><ion-label>Entregada</ion-label><ion-note slot="end">{{ orden.fecha_entrega_real | date:'dd/MM/yyyy' }}</ion-note></ion-item>
-      </ion-list>
-    </ion-card>
+    <section class="card" *ngIf="orden.estado === 'entregada'">
+      <span class="section-label">Entrega</span>
+      <div class="cost-row"><span>Total</span><span class="mono">₡{{ orden.total | number:'1.0-0' }}</span></div>
+      <div class="cost-row" *ngIf="orden.garantia_dias"><span>Garantía</span><span class="mono">{{ orden.garantia_dias }} días</span></div>
+      <div class="cost-row" *ngIf="orden.fecha_entrega_real"><span>Entregada</span><span class="mono">{{ orden.fecha_entrega_real | date:'dd/MM/yyyy' }}</span></div>
+    </section>
 
-    <!-- Encuesta de satisfacción -->
-    <ion-card *ngIf="puedeCalificar" class="encuesta-card">
-      <ion-card-header><ion-card-title>¿Cómo fue tu experiencia?</ion-card-title></ion-card-header>
-      <ion-card-content>
-        <div class="estrellas">
-          <ion-icon *ngFor="let s of [1,2,3,4,5]"
-            [name]="s <= calificacionSel ? 'star' : 'star-outline'"
-            (click)="calificacionSel = s"></ion-icon>
-        </div>
-        <ion-item lines="none">
-          <ion-textarea label="Comentario (opcional)" labelPlacement="floating"
-            [(ngModel)]="comentarioEncuesta" rows="2"></ion-textarea>
-        </ion-item>
-        <ion-button expand="block" class="ion-margin-top" (click)="enviarEncuesta()" [disabled]="!calificacionSel">
-          Enviar calificación
-        </ion-button>
-      </ion-card-content>
-    </ion-card>
+    <!-- Encuesta -->
+    <section class="card encuesta" *ngIf="puedeCalificar">
+      <span class="section-label">¿Cómo fue tu experiencia?</span>
+      <div class="estrellas">
+        <ion-icon *ngFor="let s of [1,2,3,4,5]"
+          [name]="s <= calificacionSel ? 'star' : 'star-outline'"
+          (click)="calificacionSel = s"></ion-icon>
+      </div>
+      <ion-item lines="none">
+        <ion-textarea label="Comentario (opcional)" labelPlacement="floating"
+          [(ngModel)]="comentarioEncuesta" rows="2"></ion-textarea>
+      </ion-item>
+      <ion-button expand="block" class="ion-margin-top" (click)="enviarEncuesta()" [disabled]="!calificacionSel">
+        Enviar calificación
+      </ion-button>
+    </section>
 
     <!-- Calificación ya enviada -->
-    <ion-card *ngIf="orden.estado === 'entregada' && orden.calificacion" class="encuesta-card">
-      <ion-card-content>
-        <p class="gracias-calif">Tu calificación</p>
-        <div class="estrellas readonly">
-          <ion-icon *ngFor="let s of [1,2,3,4,5]" [name]="s <= orden.calificacion ? 'star' : 'star-outline'"></ion-icon>
-        </div>
-        <p *ngIf="orden.comentario_satisfaccion" class="comentario-calif">"{{ orden.comentario_satisfaccion }}"</p>
-      </ion-card-content>
-    </ion-card>
+    <section class="card encuesta" *ngIf="orden.estado === 'entregada' && orden.calificacion">
+      <p class="gracias-calif">Tu calificación</p>
+      <div class="estrellas readonly">
+        <ion-icon *ngFor="let s of [1,2,3,4,5]" [name]="s <= orden.calificacion ? 'star' : 'star-outline'"></ion-icon>
+      </div>
+      <p *ngIf="orden.comentario_satisfaccion" class="comentario-calif">"{{ orden.comentario_satisfaccion }}"</p>
+    </section>
 
     <div style="height:30px"></div>
   </div>

@@ -1,5 +1,5 @@
 <ion-header>
-  <ion-toolbar color="primary">
+  <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/portal"></ion-back-button>
     </ion-buttons>
@@ -12,17 +12,20 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <div class="ion-padding">
-    <ion-button expand="block" (click)="abrirForm()" *ngIf="!mostrarForm">
+  <div class="citas">
+    <div class="intro">
+      <h2>Agendá tu mantenimiento</h2>
+      <p>Reservá tu hora y el taller la confirmará.</p>
+    </div>
+
+    <ion-button expand="block" (click)="abrirForm()" *ngIf="!mostrarForm" class="cta-upper">
       <ion-icon name="add-outline" slot="start"></ion-icon>
       Solicitar cita
     </ion-button>
-  </div>
 
-  <!-- Formulario de solicitud -->
-  <ion-card *ngIf="mostrarForm">
-    <ion-card-header><ion-card-title>Solicitar cita</ion-card-title></ion-card-header>
-    <ion-card-content>
+    <!-- Formulario -->
+    <section class="card" *ngIf="mostrarForm">
+      <span class="section-label">Solicitar cita</span>
       <ion-item>
         <ion-select label="Moto (opcional)" labelPlacement="floating" [(ngModel)]="nueva.moto_id" interface="action-sheet">
           <ion-select-option [value]="null">Sin especificar</ion-select-option>
@@ -47,30 +50,35 @@
       <ion-button expand="block" fill="clear" color="medium" (click)="mostrarForm = false" [disabled]="enviando">
         Cancelar
       </ion-button>
-    </ion-card-content>
-  </ion-card>
+    </section>
 
-  <div class="ion-padding ion-text-center" *ngIf="cargando" style="padding-top:20px">
-    <ion-spinner name="crescent"></ion-spinner>
+    <div class="ion-text-center" *ngIf="cargando" style="padding:24px 0">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+
+    <!-- Lista de citas -->
+    <div class="cita-list" *ngIf="!cargando && citas.length">
+      <span class="section-label">Tus próximas citas</span>
+      <div class="cita-row" *ngFor="let c of citas">
+        <div class="cita-ico" [ngClass]="estadoColor[c.estado]">
+          <ion-icon name="calendar"></ion-icon>
+        </div>
+        <div class="cita-meta">
+          <h4>{{ c.fecha | date:'EEEE dd/MM' }} · {{ c.hora }}</h4>
+          <p *ngIf="c.marca">{{ c.marca }} {{ c.modelo }}</p>
+          <p class="motivo">{{ c.motivo }}</p>
+        </div>
+        <span class="pill" [ngClass]="{'green': estadoColor[c.estado]==='success', 'amber': estadoColor[c.estado]==='warning', 'gris': estadoColor[c.estado]==='medium' || estadoColor[c.estado]==='danger'}">
+          {{ estadoLabel[c.estado] }}
+        </span>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="!cargando && citas.length === 0 && !mostrarForm">
+      <ion-icon name="calendar-outline"></ion-icon>
+      <p>No tenés citas. Solicitá una y el taller la confirmará.</p>
+    </div>
+
+    <div style="height:30px"></div>
   </div>
-
-  <!-- Lista de citas -->
-  <ion-list *ngIf="!cargando && citas.length">
-    <ion-item *ngFor="let c of citas" lines="full">
-      <ion-icon name="calendar-outline" slot="start" [color]="estadoColor[c.estado]"></ion-icon>
-      <ion-label class="ion-text-wrap">
-        <h2>{{ c.fecha | date:'EEEE dd/MM/yyyy' }} · {{ c.hora }}</h2>
-        <p *ngIf="c.marca">{{ c.marca }} {{ c.modelo }}</p>
-        <p>{{ c.motivo }}</p>
-      </ion-label>
-      <ion-badge slot="end" [color]="estadoColor[c.estado]">{{ estadoLabel[c.estado] }}</ion-badge>
-    </ion-item>
-  </ion-list>
-
-  <div class="empty-state" *ngIf="!cargando && citas.length === 0 && !mostrarForm">
-    <ion-icon name="calendar-outline"></ion-icon>
-    <p>No tenés citas. Solicitá una y el taller la confirmará.</p>
-  </div>
-
-  <div style="height:30px"></div>
 </ion-content>

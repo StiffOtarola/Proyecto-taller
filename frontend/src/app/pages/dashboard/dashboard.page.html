@@ -1,13 +1,7 @@
 <ion-header>
-  <ion-toolbar color="primary">
-    <ion-title>
-      <ion-icon name="construct-outline" style="margin-right:6px;vertical-align:middle"></ion-icon>
-      TallerMS
-    </ion-title>
+  <ion-toolbar>
+    <ion-title>TallerMS</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="irNuevaOrden()" title="Nueva Orden">
-        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
-      </ion-button>
       <ion-button [routerLink]="['/garantias']" title="Garantías">
         <ion-icon slot="icon-only" name="shield-checkmark-outline"></ion-icon>
       </ion-button>
@@ -29,247 +23,153 @@
     <ion-refresher-content pullingIcon="chevron-down" refreshingSpinner="crescent"></ion-refresher-content>
   </ion-refresher>
 
-  <div *ngIf="!cargando && resumen">
-    <!-- Header de bienvenida -->
-    <div class="dash-header ion-padding-horizontal">
-      <p class="bienvenida">
-        Hola, <strong>{{ auth.getUsuario()?.nombre }}</strong>
-        <ion-badge color="primary" style="margin-left:8px;vertical-align:middle">
-          {{ auth.getUsuario()?.rol | titlecase }}
-        </ion-badge>
-      </p>
+  <div *ngIf="!cargando && resumen" class="dash">
+
+    <!-- Saludo -->
+    <div class="greet">
+      <div class="greet-l">
+        <h1>Hola, {{ auth.getUsuario()?.nombre }}</h1>
+        <span class="role-chip">{{ auth.getUsuario()?.rol | titlecase }}</span>
+      </div>
+      <span class="greet-date mono">{{ fechaHoy }}</span>
     </div>
 
-    <!-- Stats principales -->
-    <ion-grid>
-      <ion-row>
-        <ion-col size="6">
-          <ion-card color="primary" class="stat-card" button routerLink="/tabs/ordenes">
-            <ion-card-content>
-              <div class="stat-number">{{ resumen.motos_activas }}</div>
-              <div class="stat-label">En taller</div>
-              <ion-icon name="bicycle-outline"></ion-icon>
-            </ion-card-content>
-          </ion-card>
-        </ion-col>
-        <ion-col size="6">
-          <ion-card [color]="resumen.motos_atrasadas > 0 ? 'danger' : 'success'" class="stat-card">
-            <ion-card-content>
-              <div class="stat-number">{{ resumen.motos_atrasadas }}</div>
-              <div class="stat-label">Atrasadas</div>
-              <ion-icon [name]="resumen.motos_atrasadas > 0 ? 'warning-outline' : 'checkmark-circle-outline'"></ion-icon>
-            </ion-card-content>
-          </ion-card>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
+    <!-- Stat cards -->
+    <div class="stat-row">
+      <div class="stat-card accent press" routerLink="/tabs/ordenes">
+        <div class="stat-number">{{ resumen.motos_activas }}</div>
+        <div class="stat-label">En taller</div>
+      </div>
+      <div class="stat-card accent">
+        <div class="stat-number">{{ resumen.motos_atrasadas }}</div>
+        <div class="stat-label">Atrasadas</div>
+      </div>
+    </div>
 
-    <!-- Facturación del día -->
-    <ion-card>
-      <ion-card-content>
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <div>
-            <p style="margin:0;font-size:12px;font-weight:600;color:var(--ion-color-medium);text-transform:uppercase;letter-spacing:0.5px">Facturación hoy</p>
-            <p style="margin:4px 0 0;font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--ion-color-success)">
-              ₡{{ resumen.facturacion_hoy | number:'1.0-0' }}
-            </p>
-          </div>
-          <div style="width:52px;height:52px;background:rgba(22,163,74,.12);border-radius:14px;display:flex;align-items:center;justify-content:center">
-            <ion-icon name="cash-outline" style="font-size:26px;color:var(--ion-color-success)"></ion-icon>
-          </div>
+    <!-- Facturación -->
+    <section class="card fact-card">
+      <div class="card-head">
+        <span class="section-label">Facturación</span>
+        <span class="fact-ico mono">₡</span>
+      </div>
+      <div class="fact-main">
+        <div>
+          <div class="fact-total mono">₡{{ resumen.facturacion_hoy | number:'1.0-0' }}</div>
+          <p class="fact-sub">Total diario</p>
         </div>
-        <div class="factura-periodo">
-          <div>
-            <span>Semana</span>
-            <strong>₡{{ resumen.facturacion_semana | number:'1.0-0' }}</strong>
-          </div>
-          <div>
-            <span>Mes</span>
-            <strong>₡{{ resumen.facturacion_mes | number:'1.0-0' }}</strong>
-          </div>
+      </div>
+      <div class="fact-grid">
+        <div class="fact-cell">
+          <span>Semanal</span>
+          <strong class="mono">₡{{ resumen.facturacion_semana | number:'1.0-0' }}</strong>
         </div>
-      </ion-card-content>
-    </ion-card>
+        <div class="fact-cell">
+          <span>Mensual</span>
+          <strong class="mono">₡{{ resumen.facturacion_mes | number:'1.0-0' }}</strong>
+        </div>
+      </div>
+    </section>
 
     <!-- Semáforo de entregas -->
-    <div class="ion-padding-horizontal ion-padding-top">
-      <p class="seccion-titulo">Semáforo de entregas</p>
-    </div>
-    <ion-grid style="padding:0 8px 4px">
-      <ion-row>
-        <ion-col size="4">
-          <div class="semaforo-pill rojo">
-            <span class="num">{{ countRojo }}</span>
-            <span class="lbl">Atrasadas</span>
-          </div>
-        </ion-col>
-        <ion-col size="4">
-          <div class="semaforo-pill amarillo">
-            <span class="num">{{ countAmarillo }}</span>
-            <span class="lbl">Por vencer</span>
-          </div>
-        </ion-col>
-        <ion-col size="4">
-          <div class="semaforo-pill verde">
-            <span class="num">{{ countVerde }}</span>
-            <span class="lbl">A tiempo</span>
-          </div>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
+    <section class="card">
+      <span class="section-label">Semáforo de entregas</span>
+      <div class="seg-pills">
+        <button [class.active]="filtroSemaforo==='rojo'" (click)="filtroSemaforo='rojo'">
+          Atrasado <span class="cnt" [class.on]="filtroSemaforo==='rojo'">{{ countRojo }}</span>
+        </button>
+        <button [class.active]="filtroSemaforo==='amarillo'" (click)="filtroSemaforo='amarillo'">
+          Por vencer <span class="cnt" [class.on]="filtroSemaforo==='amarillo'">{{ countAmarillo }}</span>
+        </button>
+        <button [class.active]="filtroSemaforo==='verde'" (click)="filtroSemaforo='verde'">
+          A tiempo <span class="cnt" [class.on]="filtroSemaforo==='verde'">{{ countVerde }}</span>
+        </button>
+      </div>
 
-    <!-- Lista de órdenes ordenadas por urgencia -->
-    <ion-card *ngIf="atrasos.length">
-      <ion-list>
-        <ion-item *ngFor="let a of atrasos" button (click)="abrirOrden(a.id)" lines="inset">
-          <div slot="start" class="semaforo-dot" [class.rojo]="semaforo(a.dias_restantes)==='rojo'"
-               [class.amarillo]="semaforo(a.dias_restantes)==='amarillo'"
-               [class.verde]="semaforo(a.dias_restantes)==='verde'"
-               [class.gris]="semaforo(a.dias_restantes)==='gris'"></div>
-          <ion-label>
-            <h2>{{ a.numero_orden }} · {{ a.marca }} {{ a.modelo }}</h2>
-            <p>{{ a.cliente_nombre }} {{ a.cliente_apellido }}
-               <span *ngIf="a.tecnico_nombre"> · {{ a.tecnico_nombre }}</span></p>
-          </ion-label>
-          <ion-badge slot="end" [color]="semaforoColor(a.dias_restantes)">
-            {{ semaforoTexto(a.dias_restantes) }}
-          </ion-badge>
-        </ion-item>
-      </ion-list>
-    </ion-card>
+      <div class="bike-list">
+        <div class="bike-row" *ngFor="let a of atrasosFiltrados" (click)="abrirOrden(a.id)">
+          <div class="bike-l">
+            <div class="bike-ico"><ion-icon name="bicycle"></ion-icon></div>
+            <div class="bike-meta">
+              <span class="bike-id mono">{{ a.numero_orden }}</span>
+              <h4>{{ a.marca }} {{ a.modelo }}</h4>
+            </div>
+          </div>
+          <span class="tag" [ngClass]="semaforo(a.dias_restantes)">{{ semaforoTexto(a.dias_restantes) }}</span>
+        </div>
+        <div class="bike-empty" *ngIf="!atrasosFiltrados.length">
+          <ion-icon name="checkmark-circle-outline"></ion-icon>
+          Sin órdenes en este estado
+        </div>
+      </div>
+    </section>
 
-    <!-- KPIs operativos -->
-    <div class="ion-padding-horizontal ion-padding-top">
-      <p class="seccion-titulo">Indicadores</p>
+    <!-- KPIs -->
+    <span class="section-label pad">KPI</span>
+    <div class="kpi-grid">
+      <div class="kpi">
+        <span class="kpi-lbl">Ticket promedio</span>
+        <span class="kpi-num">₡{{ resumen.ticket_promedio | number:'1.0-0' }}</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-lbl">Reparación prom.</span>
+        <span class="kpi-num">{{ resumen.tiempo_promedio_horas || 0 }}h</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-lbl">Conversión</span>
+        <span class="kpi-num">{{ resumen.conversion_pct }}%</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-lbl">Satisfacción</span>
+        <span class="kpi-num">{{ resumen.satisfaccion_promedio ? (resumen.satisfaccion_promedio + '★') : '—' }}</span>
+      </div>
     </div>
-    <ion-grid style="padding:0 8px 8px">
-      <ion-row>
-        <ion-col size="6">
-          <div class="kpi-card">
-            <ion-icon name="pricetag-outline" color="primary"></ion-icon>
-            <span class="kpi-num">₡{{ resumen.ticket_promedio | number:'1.0-0' }}</span>
-            <span class="kpi-lbl">Ticket promedio</span>
-          </div>
-        </ion-col>
-        <ion-col size="6">
-          <div class="kpi-card">
-            <ion-icon name="time-outline" color="secondary"></ion-icon>
-            <span class="kpi-num">{{ resumen.tiempo_promedio_horas || 0 }}h</span>
-            <span class="kpi-lbl">Reparación promedio</span>
-          </div>
-        </ion-col>
-        <ion-col size="6">
-          <div class="kpi-card">
-            <ion-icon name="trending-up-outline" color="success"></ion-icon>
-            <span class="kpi-num">{{ resumen.conversion_pct }}%</span>
-            <span class="kpi-lbl">Diagnóstico → reparación</span>
-          </div>
-        </ion-col>
-        <ion-col size="6">
-          <div class="kpi-card">
-            <ion-icon name="cube-outline" [color]="resumen.repuestos_pendientes > 0 ? 'warning' : 'medium'"></ion-icon>
-            <span class="kpi-num">{{ resumen.repuestos_pendientes }}</span>
-            <span class="kpi-lbl">Repuestos pendientes</span>
-          </div>
-        </ion-col>
-        <ion-col size="6">
-          <div class="kpi-card">
-            <ion-icon name="star-outline" color="warning"></ion-icon>
-            <span class="kpi-num">{{ resumen.satisfaccion_promedio ? (resumen.satisfaccion_promedio + ' ★') : '—' }}</span>
-            <span class="kpi-lbl">Satisfacción ({{ resumen.satisfaccion_total || 0 }})</span>
-          </div>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
 
-    <!-- Acciones rápidas -->
-    <div class="ion-padding-horizontal ion-padding-top">
-      <p style="font-size:12px;font-weight:700;color:var(--ion-color-medium);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Acciones rápidas</p>
-    </div>
-    <ion-grid style="padding:0 8px 8px">
-      <ion-row>
-        <ion-col size="6">
-          <ion-button expand="block" fill="outline" color="primary" (click)="irNuevaOrden()" style="--border-radius:12px;height:52px">
-            <ion-icon name="add-circle-outline" slot="start"></ion-icon>
-            Nueva Orden
-          </ion-button>
-        </ion-col>
-        <ion-col size="6">
-          <ion-button expand="block" fill="outline" color="secondary" routerLink="/tabs/citas" style="--border-radius:12px;height:52px">
-            <ion-icon name="calendar-outline" slot="start"></ion-icon>
-            Nueva Cita
-          </ion-button>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
+    <!-- Tiempo por etapa -->
+    <section class="card" *ngIf="tiempos.length">
+      <span class="section-label">Tiempo por etapa</span>
+      <div class="etapa-list">
+        <div class="etapa-row" *ngFor="let t of tiempos">
+          <span class="etapa-name">{{ etapaLabel[t.etapa] || t.etapa }}</span>
+          <span class="etapa-horas mono">{{ t.horas_promedio || 0 }}h</span>
+        </div>
+      </div>
+    </section>
 
     <!-- Órdenes por estado -->
-    <ion-card *ngIf="resumen.ordenes_por_estado?.length">
-      <ion-card-header>
-        <ion-card-title>Estado del taller</ion-card-title>
-      </ion-card-header>
-      <ion-list>
-        <ion-item *ngFor="let item of resumen.ordenes_por_estado" lines="inset" button routerLink="/tabs/ordenes">
-          <div slot="start" class="estado-dot" [style.background]="'var(--ion-color-' + (item.estado | estadoColor) + ')'"></div>
-          <ion-label>{{ item.estado | estadoLabel }}</ion-label>
-          <ion-badge slot="end" [color]="item.estado | estadoColor">{{ item.total }}</ion-badge>
-        </ion-item>
-      </ion-list>
-    </ion-card>
+    <section class="card" *ngIf="resumen.ordenes_por_estado?.length">
+      <span class="section-label">Estado del taller</span>
+      <div class="estado-list">
+        <div class="estado-row" *ngFor="let item of resumen.ordenes_por_estado" routerLink="/tabs/ordenes">
+          <span class="estado-dot" [style.background]="'var(--ion-color-' + (item.estado | estadoColor) + ')'"></span>
+          <span class="estado-name">{{ item.estado | estadoLabel }}</span>
+          <ion-badge [color]="item.estado | estadoColor">{{ item.total }}</ion-badge>
+        </div>
+      </div>
+    </section>
 
-    <!-- Productividad técnicos -->
-    <ion-card *ngIf="tecnicos.length">
-      <ion-card-header>
-        <ion-card-title>Técnicos</ion-card-title>
-      </ion-card-header>
-      <ion-list>
-        <ion-item *ngFor="let t of tecnicos" lines="inset">
-          <div slot="start" class="avatar-circle">{{ t.nombre.charAt(0) }}</div>
-          <ion-label>
-            <h2>{{ t.nombre }}</h2>
-            <p>{{ t.ordenes_completadas }} completadas · {{ t.horas_promedio || 0 }}h promedio</p>
-          </ion-label>
-        </ion-item>
-      </ion-list>
-    </ion-card>
-
-    <!-- Tiempo promedio por etapa (cuellos de botella) -->
-    <ion-card *ngIf="tiempos.length">
-      <ion-card-header>
-        <ion-card-title>Tiempo por etapa</ion-card-title>
-        <ion-card-subtitle>Promedio de horas — detecta cuellos de botella</ion-card-subtitle>
-      </ion-card-header>
-      <ion-list>
-        <ion-item *ngFor="let t of tiempos" lines="inset">
-          <ion-label>
-            <h3>{{ etapaLabel[t.etapa] || t.etapa }}</h3>
-            <p>{{ t.total }} orden{{ t.total !== 1 ? 'es' : '' }}</p>
-          </ion-label>
-          <ion-note slot="end" class="etapa-horas">{{ t.horas_promedio || 0 }}h</ion-note>
-        </ion-item>
-      </ion-list>
-    </ion-card>
+    <!-- Técnicos -->
+    <section class="card" *ngIf="tecnicos.length">
+      <span class="section-label">Técnicos</span>
+      <div class="tec-list">
+        <div class="tec-row" *ngFor="let t of tecnicos">
+          <div class="avatar-circle">{{ t.nombre.charAt(0) }}</div>
+          <div class="tec-meta">
+            <h4>{{ t.nombre }}</h4>
+            <p>{{ t.ordenes_completadas }} completadas · {{ t.horas_promedio || 0 }}h prom.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Reportes / exportación -->
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>Reportes</ion-card-title>
-        <ion-card-subtitle>Exportar a CSV (Excel)</ion-card-subtitle>
-      </ion-card-header>
-      <ion-card-content>
-        <ion-button expand="block" fill="outline" (click)="exportarOrdenes()" [disabled]="exportando" class="ion-margin-bottom">
-          <ion-icon name="list-outline" slot="start"></ion-icon> Órdenes
-        </ion-button>
-        <ion-button expand="block" fill="outline" color="success" (click)="exportarFacturacion()" [disabled]="exportando" class="ion-margin-bottom">
-          <ion-icon name="cash-outline" slot="start"></ion-icon> Facturación
-        </ion-button>
-        <ion-button expand="block" fill="outline" color="secondary" (click)="exportarProductividad()" [disabled]="exportando">
-          <ion-icon name="people-outline" slot="start"></ion-icon> Productividad
-        </ion-button>
-      </ion-card-content>
-    </ion-card>
+    <span class="section-label pad">Reportes</span>
+    <div class="export-row">
+      <button class="btn-out" (click)="exportarOrdenes()" [disabled]="exportando">Órdenes</button>
+      <button class="btn-rose" (click)="exportarFacturacion()" [disabled]="exportando">Facturación</button>
+    </div>
+    <button class="btn-out wide" (click)="exportarProductividad()" [disabled]="exportando">Productividad</button>
 
-    <div style="height: 80px"></div>
+    <div style="height: 90px"></div>
   </div>
 
   <div class="ion-padding ion-text-center" *ngIf="cargando" style="padding-top:40px">

@@ -2,7 +2,10 @@
   <div class="login-container">
     <div class="login-header">
       <div class="logo-wrapper">
-        <ion-icon name="construct-outline"></ion-icon>
+        <span class="logo-cross">
+          <ion-icon name="build" class="ico-wrench"></ion-icon>
+          <ion-icon name="hammer" class="ico-hammer"></ion-icon>
+        </span>
       </div>
       <h1>TallerMS</h1>
       <p>Sistema de Gestión de Taller</p>
@@ -11,7 +14,7 @@
     <ion-card>
       <ion-card-content>
         <ion-item lines="full">
-          <ion-label position="stacked">Email</ion-label>
+          <ion-label position="stacked">Correo</ion-label>
           <ion-input
             type="email"
             [(ngModel)]="email"
@@ -25,15 +28,20 @@
           <ion-input
             type="password"
             [(ngModel)]="password"
+            placeholder="••••••••"
             (keyup.enter)="login()">
           </ion-input>
         </ion-item>
 
-        <ion-button expand="block" class="ion-margin-top" (click)="login()">
-          Iniciar Sesión
+        <ion-button expand="block" (click)="login()">
+          Ingresar
           <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
         </ion-button>
       </ion-card-content>
     </ion-card>
+
+    <a class="portal-link" routerLink="/portal/login">
+      ¿Sos cliente? Ingresá al portal
+    </a>
   </div>
 </ion-content>

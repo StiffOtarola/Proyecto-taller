@@ -1,31 +1,34 @@
-<ion-content class="portal-login-content">
-  <div class="portal-login-wrap">
-    <div class="logo-wrapper">
-      <ion-icon name="construct"></ion-icon>
+<ion-content class="login-content">
+  <div class="login-container">
+    <div class="login-header">
+      <div class="logo-wrapper">
+        <span class="logo-cross">
+          <ion-icon name="build" class="ico-wrench"></ion-icon>
+          <ion-icon name="hammer" class="ico-hammer"></ion-icon>
+        </span>
+      </div>
+      <h1>Mi Taller</h1>
+      <p>Seguí el estado de tu moto</p>
     </div>
-    <h1>Mi Taller</h1>
-    <p class="subtitulo">Seguí el estado de tu moto</p>
 
     <ion-card>
       <ion-card-content>
         <ion-item lines="full">
-          <ion-input label="Correo" labelPlacement="floating" type="email"
-            [(ngModel)]="email" autocomplete="email" placeholder="tu@correo.com"></ion-input>
+          <ion-label position="stacked">Correo</ion-label>
+          <ion-input type="email" [(ngModel)]="email" autocomplete="email" placeholder="tu@correo.com"></ion-input>
         </ion-item>
         <ion-item lines="none">
-          <ion-input label="Contraseña" labelPlacement="floating" type="password"
-            [(ngModel)]="password" (keyup.enter)="ingresar()"></ion-input>
+          <ion-label position="stacked">Contraseña</ion-label>
+          <ion-input type="password" [(ngModel)]="password" placeholder="••••••••" (keyup.enter)="ingresar()"></ion-input>
         </ion-item>
 
-        <ion-button expand="block" class="ion-margin-top" (click)="ingresar()"
-          [disabled]="!email || !password">
+        <ion-button expand="block" (click)="ingresar()" [disabled]="!email || !password">
           Ingresar
+          <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
         </ion-button>
       </ion-card-content>
     </ion-card>
 
-    <ion-button fill="clear" size="small" color="medium" (click)="irLoginPersonal()">
-      ¿Sos del personal? Ingresá aquí
-    </ion-button>
+    <a class="portal-link" (click)="irLoginPersonal()">¿Sos del personal? Ingresá aquí</a>
   </div>
 </ion-content>

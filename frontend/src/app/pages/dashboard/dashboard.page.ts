@@ -19,6 +19,15 @@ export class DashboardPage implements OnInit {
   tiempos: any[] = [];
   cargando = true;
 
+  // Fecha legible para el encabezado (estilo del export)
+  fechaHoy = new Date().toLocaleDateString('es-CR', { weekday: 'short', day: 'numeric', month: 'short' });
+
+  // Filtro de píldoras del semáforo
+  filtroSemaforo: 'rojo' | 'amarillo' | 'verde' = 'rojo';
+  get atrasosFiltrados(): any[] {
+    return this.atrasos.filter(a => this.semaforo(a.dias_restantes) === this.filtroSemaforo);
+  }
+
   // Etiquetas legibles para las etapas en la tabla de tiempos
   readonly etapaLabel: Record<string, string> = {
     recepcion: 'Recepción',

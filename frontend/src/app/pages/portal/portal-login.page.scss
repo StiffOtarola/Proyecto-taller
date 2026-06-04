@@ -1,58 +1,30 @@
-.portal-login-content {
-  --background: radial-gradient(120% 90% at 50% 0%, #2a221c 0%, #17130f 60%);
-}
-
-.portal-login-wrap {
-  min-height: 100%;
+// Logo: llave + martillo cruzados en carmesí
+.logo-cross {
+  position: relative;
+  width: 44px;
+  height: 44px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+
+  ion-icon { position: absolute; }
+  .ico-wrench { font-size: 36px; color: var(--ion-color-primary); transform: rotate(-18deg); }
+  .ico-hammer { font-size: 26px; color: var(--ion-color-primary-tint); transform: rotate(72deg) translateX(2px); }
+}
+
+.portal-link {
+  display: block;
   text-align: center;
-}
+  margin-top: 22px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #a3a3a3;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: #404040;
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
 
-.logo-wrapper {
-  width: 76px;
-  height: 76px;
-  border-radius: 22px;
-  background: var(--ion-color-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 12px 30px rgba(232, 93, 4, .45);
-  margin-bottom: 18px;
-
-  ion-icon {
-    font-size: 38px;
-    color: #fff;
-  }
-}
-
-h1 {
-  color: #fff;
-  font-size: 26px;
-  font-weight: 800;
-  margin: 0;
-}
-
-.subtitulo {
-  color: rgba(255, 255, 255, .6);
-  font-size: 14px;
-  margin: 4px 0 24px;
-}
-
-ion-card {
-  width: 100%;
-  max-width: 400px;
-  --background: rgba(255, 255, 255, .07);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, .1);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, .4) !important;
-  border-radius: 18px;
-
-  ion-item {
-    --background: transparent;
-    --color: #fff;
-  }
+  &:active { color: var(--ion-color-primary-tint); }
 }

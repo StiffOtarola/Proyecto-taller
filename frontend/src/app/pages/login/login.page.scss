@@ -1,1 +1,39 @@
-// Estilos en global.scss bajo .login-content
+// Logo: llave + martillo cruzados en carmesí (estilo del export)
+.logo-cross {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  ion-icon {
+    position: absolute;
+  }
+  .ico-wrench {
+    font-size: 36px;
+    color: var(--ion-color-primary);
+    transform: rotate(-18deg);
+  }
+  .ico-hammer {
+    font-size: 26px;
+    color: var(--ion-color-primary-tint);
+    transform: rotate(72deg) translateX(2px);
+  }
+}
+
+.portal-link {
+  display: block;
+  text-align: center;
+  margin-top: 22px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #a3a3a3;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: #404040;
+  position: relative;
+  z-index: 1;
+
+  &:active { color: var(--ion-color-primary-tint); }
+}

@@ -1,7 +1,18 @@
 .ot {
-  max-width: 520px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: 8px 16px 0;
+}
+
+// Hero y WhatsApp van centrados angostos; las tarjetas fluyen en columnas
+.ot-hero, .wa-wrap { max-width: 680px; margin-left: auto; margin-right: auto; }
+
+@media (min-width: 860px) {
+  .ot-grid {
+    column-count: 2;
+    column-gap: 16px;
+  }
+  .ot-grid > .card { break-inside: avoid; }
 }
 
 // Tarjeta base de sección

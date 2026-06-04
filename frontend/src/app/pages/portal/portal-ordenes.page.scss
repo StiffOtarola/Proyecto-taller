@@ -1,7 +1,17 @@
 .portal {
-  max-width: 520px;
+  max-width: 880px;
   margin: 0 auto;
   padding: 6px 16px 0;
+}
+
+// En tablet/desktop las órdenes fluyen en 2 columnas
+@media (min-width: 720px) {
+  .orden-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 14px;
+  }
+  .empty-state { grid-column: 1 / -1; }
 }
 
 .greet {

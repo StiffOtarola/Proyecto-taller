@@ -139,3 +139,19 @@
     margin-bottom: 20px;
   }
 }
+
+// Responsive: en tablet/desktop la lista se vuelve grilla multi-columna
+@media (min-width: 820px) {
+  ion-content ion-list {
+    max-width: 1240px;
+    margin-left: auto;
+    margin-right: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 14px;
+    padding: 10px 16px !important;
+  }
+  .orden-item { margin-bottom: 0; }
+  .empty-state { grid-column: 1 / -1; }
+  .ordenes-count { max-width: 1240px; margin: 0 auto; }
+}

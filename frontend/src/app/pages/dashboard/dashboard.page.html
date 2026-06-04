@@ -46,6 +46,8 @@
       </div>
     </div>
 
+    <div class="dash-grid">
+
     <!-- Facturación -->
     <section class="card fact-card">
       <div class="card-head">
@@ -104,8 +106,9 @@
     </section>
 
     <!-- KPIs -->
-    <span class="section-label pad">KPI</span>
-    <div class="kpi-grid">
+    <section class="card kpi-card">
+      <span class="section-label">KPI</span>
+      <div class="kpi-grid">
       <div class="kpi">
         <span class="kpi-lbl">Ticket promedio</span>
         <span class="kpi-num">₡{{ resumen.ticket_promedio | number:'1.0-0' }}</span>
@@ -122,7 +125,8 @@
         <span class="kpi-lbl">Satisfacción</span>
         <span class="kpi-num">{{ resumen.satisfaccion_promedio ? (resumen.satisfaccion_promedio + '★') : '—' }}</span>
       </div>
-    </div>
+      </div>
+    </section>
 
     <!-- Tiempo por etapa -->
     <section class="card" *ngIf="tiempos.length">
@@ -162,12 +166,16 @@
     </section>
 
     <!-- Reportes / exportación -->
-    <span class="section-label pad">Reportes</span>
-    <div class="export-row">
-      <button class="btn-out" (click)="exportarOrdenes()" [disabled]="exportando">Órdenes</button>
-      <button class="btn-rose" (click)="exportarFacturacion()" [disabled]="exportando">Facturación</button>
-    </div>
-    <button class="btn-out wide" (click)="exportarProductividad()" [disabled]="exportando">Productividad</button>
+    <section class="card reportes-card">
+      <span class="section-label">Reportes</span>
+      <div class="export-row">
+        <button class="btn-out" (click)="exportarOrdenes()" [disabled]="exportando">Órdenes</button>
+        <button class="btn-rose" (click)="exportarFacturacion()" [disabled]="exportando">Facturación</button>
+      </div>
+      <button class="btn-out wide" (click)="exportarProductividad()" [disabled]="exportando">Productividad</button>
+    </section>
+
+    </div><!-- /dash-grid -->
 
     <div style="height: 90px"></div>
   </div>

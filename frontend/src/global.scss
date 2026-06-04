@@ -551,3 +551,28 @@ ion-toast {
 
 ion-grid { padding: 0 8px; }
 ion-col { padding: 4px 8px; }
+
+// ————————————————————————————————
+// Responsive — mobile-first por defecto; en tablet/desktop aprovechar el ancho.
+// Las pantallas con grilla propia (dashboard, detalle, portal) usan div.card y
+// se ensanchan en su propio SCSS; acá centramos las páginas de ion-card/ion-list.
+// ————————————————————————————————
+@media (min-width: 768px) {
+  // Tarjetas sueltas (formularios, fichas): centrar a un ancho cómodo de lectura
+  ion-card {
+    max-width: 860px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  // Listas planas (clientes, usuarios, motos, citas): centrar la columna
+  ion-content > ion-list,
+  ion-content > div > ion-list {
+    max-width: 920px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  // Toolbars/segmentos/searchbars: alinear el contenido al mismo eje central
+  ion-content.ion-padding { --padding-start: 24px; --padding-end: 24px; }
+}

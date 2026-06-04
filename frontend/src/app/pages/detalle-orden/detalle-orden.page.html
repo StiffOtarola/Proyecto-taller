@@ -23,6 +23,8 @@
       <p class="ot-cliente">{{ orden.cliente_nombre }} {{ orden.cliente_apellido }} · {{ orden.cliente_telefono }}</p>
     </div>
 
+    <div class="ot-grid">
+
     <!-- Info -->
     <section class="card ot-info">
       <p><span class="k">Problema</span>{{ orden.problema_reportado }}</p>
@@ -332,6 +334,8 @@
         </div>
       </div>
     </section>
+
+    </div><!-- /ot-grid -->
 
     <!-- WhatsApp -->
     <div class="wa-wrap" *ngIf="orden.cliente_telefono">

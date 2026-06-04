@@ -1,7 +1,22 @@
 .dash {
-  max-width: 520px;
+  max-width: 1240px;
   margin: 0 auto;
   padding: 8px 16px 0;
+}
+
+// Grilla responsive de tarjetas (masonry): 1 col móvil, 2 tablet, 3 desktop
+.dash-grid > .card { margin-bottom: 16px; }
+
+@media (min-width: 820px) {
+  .dash-grid {
+    column-count: 2;
+    column-gap: 16px;
+  }
+  .dash-grid > .card { break-inside: avoid; }
+}
+
+@media (min-width: 1280px) {
+  .dash-grid { column-count: 3; }
 }
 
 // Tarjeta base (divs de sección)

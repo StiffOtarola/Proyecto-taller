@@ -331,6 +331,9 @@ router.get('/:id/checklist', async (req, res) => {
   }
 });
 
+// Fidelización: cada cuántas entregas el cliente gana una cortesía
+const VISITAS_PARA_CORTESIA = 7;
+
 // PATCH /api/ordenes/:id/cerrar
 router.patch('/:id/cerrar', requireRol('jefe_taller'), async (req, res) => {
   try {
@@ -340,7 +343,21 @@ router.patch('/:id/cerrar', requireRol('jefe_taller'), async (req, res) => {
        observaciones_finales=?, fecha_entrega_real=NOW() WHERE id=?`,
       [metodo_pago || null, garantia_dias || 0, observaciones_finales || null, req.params.id]
     );
-    res.json({ message: 'Orden cerrada y entregada' });
+
+    // Fidelización: contar la visita una sola vez por orden y otorgar cortesía cada N entregas
+    const [[orden]] = await pool.query('SELECT cliente_id, visita_contada FROM ordenes_trabajo WHERE id = ?', [req.params.id]);
+    let cortesiaGanada = false;
+    if (orden && !orden.visita_contada) {
+      await pool.query('UPDATE ordenes_trabajo SET visita_contada = 1 WHERE id = ?', [req.params.id]);
+      await pool.query('UPDATE clientes SET visitas = visitas + 1 WHERE id = ?', [orden.cliente_id]);
+      const [[cli]] = await pool.query('SELECT visitas FROM clientes WHERE id = ?', [orden.cliente_id]);
+      if (cli && cli.visitas > 0 && cli.visitas % VISITAS_PARA_CORTESIA === 0) {
+        await pool.query('UPDATE clientes SET cortesia_disponible = 1 WHERE id = ?', [orden.cliente_id]);
+        cortesiaGanada = true;
+      }
+    }
+
+    res.json({ message: 'Orden cerrada y entregada', cortesia_ganada: cortesiaGanada });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

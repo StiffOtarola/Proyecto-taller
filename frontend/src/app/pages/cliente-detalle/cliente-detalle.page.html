@@ -38,6 +38,24 @@
     </ion-list>
   </ion-card>
 
+  <!-- Fidelización -->
+  <ion-card class="fidelidad-card" [class.con-cortesia]="cliente!.cortesia_disponible">
+    <ion-card-content>
+      <div class="fidelidad-row">
+        <ion-icon [name]="cliente!.cortesia_disponible ? 'gift' : 'ribbon-outline'"
+          [color]="cliente!.cortesia_disponible ? 'success' : 'primary'"></ion-icon>
+        <div class="fidelidad-info">
+          <strong>Fidelización</strong>
+          <span>{{ cliente!.visitas || 0 }} visita(s)</span>
+          <span *ngIf="cliente!.cortesia_disponible" class="cortesia-on">¡Cortesía disponible!</span>
+        </div>
+        <ion-button *ngIf="cliente!.cortesia_disponible" size="small" color="success" (click)="canjearCortesia()">
+          Canjear
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
   <!-- Acceso al portal del cliente -->
   <ion-card>
     <ion-card-content>

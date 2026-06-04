@@ -135,6 +135,26 @@ router.post('/ordenes/:id/encuesta', async (req, res) => {
   }
 });
 
+// GET /api/portal/fidelidad — estado de fidelización del cliente
+const VISITAS_PARA_CORTESIA = 7;
+router.get('/fidelidad', async (req, res) => {
+  try {
+    const [[cli]] = await pool.query('SELECT visitas, cortesia_disponible FROM clientes WHERE id = ?', [req.cliente.id]);
+    const visitas = cli?.visitas || 0;
+    const faltan = cli?.cortesia_disponible ? 0 : (VISITAS_PARA_CORTESIA - (visitas % VISITAS_PARA_CORTESIA)) % VISITAS_PARA_CORTESIA || VISITAS_PARA_CORTESIA;
+    res.json({
+      data: {
+        visitas,
+        cortesia_disponible: !!cli?.cortesia_disponible,
+        meta: VISITAS_PARA_CORTESIA,
+        faltan: cli?.cortesia_disponible ? 0 : faltan,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/portal/promos — promociones activas (visibles para el cliente)
 router.get('/promos', async (req, res) => {
   try {

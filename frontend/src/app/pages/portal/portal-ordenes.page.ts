@@ -11,6 +11,7 @@ import { PortalService } from '../../services/portal.service';
 export class PortalOrdenesPage implements OnInit {
   ordenes: any[] = [];
   promos: any[] = [];
+  fidelidad: { visitas: number; cortesia_disponible: boolean; meta: number; faltan: number } | null = null;
   cargando = true;
 
   constructor(public portal: PortalService, private router: Router) {}
@@ -25,6 +26,14 @@ export class PortalOrdenesPage implements OnInit {
       error: () => { this.cargando = false; },
     });
     this.portal.getPromos().subscribe(res => this.promos = res.data);
+    this.portal.getFidelidad().subscribe(res => this.fidelidad = res.data);
+  }
+
+  get progresoFidelidad(): number {
+    if (!this.fidelidad) return 0;
+    if (this.fidelidad.cortesia_disponible) return 1;
+    const hechas = this.fidelidad.meta - this.fidelidad.faltan;
+    return hechas / this.fidelidad.meta;
   }
 
   abrir(id: number) { this.router.navigate(['/portal/orden', id]); }

@@ -7,6 +7,7 @@ router.use(auth);
 
 // Columnas seguras (nunca exponer password_hash); tiene_portal indica si el acceso está activo.
 const COLS = `id, nombre, apellido, telefono, email, cedula, direccion, activo, created_at, updated_at,
+              visitas, cortesia_disponible,
               (password_hash IS NOT NULL) AS tiene_portal`;
 
 router.get('/', async (req, res) => {
@@ -49,6 +50,19 @@ router.get('/:id', async (req, res) => {
     const [[cliente]] = await pool.query(`SELECT ${COLS} FROM clientes WHERE id = ? AND activo = 1`, [req.params.id]);
     if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
     res.json({ data: cliente });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/clientes/:id/cortesia — canjea (consume) la cortesía de fidelización
+router.patch('/:id/cortesia', async (req, res) => {
+  try {
+    const [[cliente]] = await pool.query('SELECT cortesia_disponible FROM clientes WHERE id = ? AND activo = 1', [req.params.id]);
+    if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
+    if (!cliente.cortesia_disponible) return res.status(400).json({ error: 'El cliente no tiene cortesía disponible' });
+    await pool.query('UPDATE clientes SET cortesia_disponible = 0 WHERE id = ?', [req.params.id]);
+    res.json({ message: 'Cortesía canjeada' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

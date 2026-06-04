@@ -40,4 +40,8 @@ export class ClientesService {
   setPortal(id: number, data: { password?: string; activar?: boolean }): Observable<{ message: string }> {
     return this.http.patch<{ message: string }>(`${this.url}/${id}/portal`, data);
   }
+
+  canjearCortesia(id: number): Observable<{ message: string }> {
+    return this.http.patch<{ message: string }>(`${this.url}/${id}/cortesia`, {});
+  }
 }

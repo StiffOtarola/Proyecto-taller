@@ -8,5 +8,7 @@ export interface Cliente {
   direccion?: string | null;
   activo?: number;
   tiene_portal?: number;
+  visitas?: number;
+  cortesia_disponible?: number;
   created_at?: string;
 }

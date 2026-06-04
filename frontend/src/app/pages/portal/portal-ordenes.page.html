@@ -24,6 +24,16 @@
     <p>Hola, <strong>{{ c.nombre }}</strong> 👋</p>
   </div>
 
+  <!-- Fidelización -->
+  <div *ngIf="fidelidad" class="fidelidad-portal" [class.lograda]="fidelidad.cortesia_disponible">
+    <div class="fid-head">
+      <ion-icon [name]="fidelidad.cortesia_disponible ? 'gift' : 'ribbon-outline'"></ion-icon>
+      <span *ngIf="fidelidad.cortesia_disponible"><strong>¡Tenés una cortesía disponible!</strong> Mostrala en tu próxima visita.</span>
+      <span *ngIf="!fidelidad.cortesia_disponible">Te faltan <strong>{{ fidelidad.faltan }}</strong> visita(s) para una cortesía</span>
+    </div>
+    <div class="fid-barra"><div class="fid-fill" [style.width.%]="progresoFidelidad * 100"></div></div>
+  </div>
+
   <!-- Promociones activas -->
   <div *ngIf="promos.length" class="promos-wrap">
     <p class="promos-titulo"><ion-icon name="pricetags-outline"></ion-icon> Promociones</p>

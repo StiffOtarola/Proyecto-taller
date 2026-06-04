@@ -42,6 +42,26 @@ export class ClienteDetallePage implements OnInit {
   abrirOrden(id: number) { this.router.navigate(['/detalle-orden', id]); }
   abrirHistorial(moto: Moto) { this.router.navigate(['/moto-historial', moto.id]); }
 
+  async canjearCortesia() {
+    const conf = await this.alert.create({
+      header: 'Canjear cortesía',
+      message: `¿Confirmás el uso de la cortesía de ${this.cliente!.nombre}? Se aplicará a un servicio.`,
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Canjear',
+          handler: () => {
+            this.clienteSvc.canjearCortesia(this.cliente!.id!).subscribe({
+              next: () => { this.cliente!.cortesia_disponible = 0; this.mostrarToast('Cortesía canjeada'); },
+              error: err => this.mostrarToast(err.error?.error || 'Error', 'danger'),
+            });
+          },
+        },
+      ],
+    });
+    await conf.present();
+  }
+
   // ===== Acceso al portal del cliente =====
   async activarPortal() {
     if (!this.cliente?.email) {

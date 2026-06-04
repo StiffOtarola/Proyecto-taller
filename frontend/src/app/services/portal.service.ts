@@ -77,6 +77,10 @@ export class PortalService {
     return this.http.get<{ data: any[] }>(`${this.url}/promos`);
   }
 
+  getFidelidad(): Observable<{ data: { visitas: number; cortesia_disponible: boolean; meta: number; faltan: number } }> {
+    return this.http.get<{ data: any }>(`${this.url}/fidelidad`);
+  }
+
   private getClienteGuardado(): ClientePortal | null {
     try {
       const raw = localStorage.getItem(CLIENTE_KEY);

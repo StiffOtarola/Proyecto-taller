@@ -1,0 +1,31 @@
+<ion-content class="portal-login-content">
+  <div class="portal-login-wrap">
+    <div class="logo-wrapper">
+      <ion-icon name="construct"></ion-icon>
+    </div>
+    <h1>Mi Taller</h1>
+    <p class="subtitulo">Seguí el estado de tu moto</p>
+
+    <ion-card>
+      <ion-card-content>
+        <ion-item lines="full">
+          <ion-input label="Correo" labelPlacement="floating" type="email"
+            [(ngModel)]="email" autocomplete="email" placeholder="tu@correo.com"></ion-input>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-input label="Contraseña" labelPlacement="floating" type="password"
+            [(ngModel)]="password" (keyup.enter)="ingresar()"></ion-input>
+        </ion-item>
+
+        <ion-button expand="block" class="ion-margin-top" (click)="ingresar()"
+          [disabled]="!email || !password">
+          Ingresar
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-button fill="clear" size="small" color="medium" (click)="irLoginPersonal()">
+      ¿Sos del personal? Ingresá aquí
+    </ion-button>
+  </div>
+</ion-content>

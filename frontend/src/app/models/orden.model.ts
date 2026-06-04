@@ -25,6 +25,8 @@ export interface Orden {
   descuento?: number;
   total?: number;
   aprobado_por_cliente?: number;
+  aprobacion_cliente?: 'pendiente' | 'aprobado' | 'rechazado';
+  motivo_rechazo?: string | null;
   fecha_aprobacion?: string | null;
   fecha_ingreso?: string;
   fecha_estimada_entrega?: string | null;

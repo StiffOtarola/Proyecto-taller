@@ -7,5 +7,6 @@ export interface Cliente {
   cedula?: string | null;
   direccion?: string | null;
   activo?: number;
+  tiene_portal?: number;
   created_at?: string;
 }

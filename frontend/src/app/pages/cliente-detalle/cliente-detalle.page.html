@@ -38,6 +38,32 @@
     </ion-list>
   </ion-card>
 
+  <!-- Acceso al portal del cliente -->
+  <ion-card>
+    <ion-card-content>
+      <div class="portal-row">
+        <div class="portal-info">
+          <ion-icon [name]="cliente!.tiene_portal ? 'shield-checkmark' : 'shield-outline'"
+            [color]="cliente!.tiene_portal ? 'success' : 'medium'"></ion-icon>
+          <div>
+            <strong>Portal del cliente</strong>
+            <span *ngIf="cliente!.tiene_portal" class="activo">Acceso activado</span>
+            <span *ngIf="!cliente!.tiene_portal" class="inactivo">Sin acceso</span>
+          </div>
+        </div>
+      </div>
+      <div class="portal-acciones">
+        <ion-button size="small" fill="outline" (click)="activarPortal()">
+          <ion-icon [name]="cliente!.tiene_portal ? 'key-outline' : 'add-outline'" slot="start"></ion-icon>
+          {{ cliente!.tiene_portal ? 'Cambiar contraseña' : 'Activar acceso' }}
+        </ion-button>
+        <ion-button *ngIf="cliente!.tiene_portal" size="small" fill="clear" color="danger" (click)="desactivarPortal()">
+          Desactivar
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
   <!-- Motos -->
   <ion-card>
     <ion-card-header>

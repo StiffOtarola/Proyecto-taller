@@ -30,16 +30,17 @@ CREATE TABLE IF NOT EXISTS usuarios (
 );
 
 CREATE TABLE IF NOT EXISTS clientes (
-  id         INT AUTO_INCREMENT PRIMARY KEY,
-  nombre     VARCHAR(100) NOT NULL,
-  apellido   VARCHAR(100) NOT NULL,
-  telefono   VARCHAR(20) NOT NULL,
-  email      VARCHAR(100),
-  cedula     VARCHAR(20),
-  direccion  TEXT,
-  activo     TINYINT(1) DEFAULT 1,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  nombre        VARCHAR(100) NOT NULL,
+  apellido      VARCHAR(100) NOT NULL,
+  telefono      VARCHAR(20) NOT NULL,
+  email         VARCHAR(100),
+  cedula        VARCHAR(20),
+  direccion     TEXT,
+  password_hash VARCHAR(255) NULL,  -- acceso opcional al portal del cliente
+  activo        TINYINT(1) DEFAULT 1,
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS motos (
@@ -97,6 +98,8 @@ CREATE TABLE IF NOT EXISTS ordenes_trabajo (
   costo_repuestos       DECIMAL(10,2) DEFAULT 0,
   descuento             DECIMAL(10,2) DEFAULT 0,
   aprobado_por_cliente  TINYINT(1) DEFAULT 0,
+  aprobacion_cliente    ENUM('pendiente','aprobado','rechazado') NOT NULL DEFAULT 'pendiente',
+  motivo_rechazo        TEXT,
   fecha_aprobacion      TIMESTAMP NULL,
   fecha_ingreso         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   fecha_estimada_entrega DATE,

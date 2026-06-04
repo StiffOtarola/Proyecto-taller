@@ -1,0 +1,84 @@
+.saludo {
+  padding-top: 12px;
+  p { font-size: 16px; margin: 0; }
+}
+
+.orden-card {
+  display: flex;
+  align-items: stretch;
+  margin: 8px 0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.estado-bar {
+  width: 5px;
+  flex-shrink: 0;
+}
+
+.orden-card ion-card-content {
+  flex: 1;
+}
+
+.orden-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.orden-numero {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ion-color-primary);
+}
+
+.orden-moto {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 4px;
+
+  ion-icon { font-size: 15px; color: var(--ion-color-primary); }
+}
+
+.orden-problema {
+  font-size: 13px;
+  color: var(--ion-color-medium);
+  margin: 0 0 6px;
+  line-height: 1.4;
+}
+
+.aprobacion-aviso {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ion-color-tertiary);
+  background: rgba(112, 69, 246, .1);
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin: 8px 0;
+}
+
+.orden-fecha {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--ion-color-medium);
+  margin: 6px 0 0;
+
+  ion-icon { font-size: 13px; }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--ion-color-medium);
+
+  ion-icon { font-size: 56px; opacity: .4; display: block; margin: 0 auto 12px; }
+}

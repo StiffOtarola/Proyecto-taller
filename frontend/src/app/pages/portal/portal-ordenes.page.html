@@ -1,0 +1,57 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>
+      <ion-icon name="construct-outline" style="margin-right:6px;vertical-align:middle"></ion-icon>
+      Mi Taller
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="logout()">
+        <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar(); $event.target.complete()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="saludo ion-padding-horizontal" *ngIf="portal.getCliente() as c">
+    <p>Hola, <strong>{{ c.nombre }}</strong> 👋</p>
+  </div>
+
+  <div class="ion-padding ion-text-center" *ngIf="cargando" style="padding-top:40px">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <div *ngIf="!cargando">
+    <ion-list style="padding:0 8px">
+      <ion-card *ngFor="let o of ordenes" button (click)="abrir(o.id)" class="orden-card">
+        <div class="estado-bar" [style.background]="'var(--ion-color-' + (o.estado | estadoColor) + ')'"></div>
+        <ion-card-content>
+          <div class="orden-top">
+            <span class="orden-numero">{{ o.numero_orden }}</span>
+            <ion-badge [color]="o.estado | estadoColor">{{ o.estado | estadoLabel }}</ion-badge>
+          </div>
+          <p class="orden-moto"><ion-icon name="bicycle-outline"></ion-icon> {{ o.marca }} {{ o.modelo }}
+            <span *ngIf="o.placa"> · {{ o.placa }}</span></p>
+          <p class="orden-problema">{{ o.problema_reportado }}</p>
+
+          <div class="aprobacion-aviso" *ngIf="o.estado === 'esperando_aprobacion' && o.aprobacion_cliente === 'pendiente'">
+            <ion-icon name="alert-circle"></ion-icon> Requiere tu aprobación
+          </div>
+
+          <p class="orden-fecha"><ion-icon name="time-outline"></ion-icon> Ingresó {{ o.fecha_ingreso | date:'dd/MM/yyyy' }}</p>
+        </ion-card-content>
+      </ion-card>
+    </ion-list>
+
+    <div class="empty-state" *ngIf="ordenes.length === 0">
+      <ion-icon name="bicycle-outline"></ion-icon>
+      <p>No tenés órdenes registradas</p>
+    </div>
+
+    <div style="height:40px"></div>
+  </div>
+</ion-content>

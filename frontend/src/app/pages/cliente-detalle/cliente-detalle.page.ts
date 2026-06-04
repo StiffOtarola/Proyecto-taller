@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AlertController, ToastController } from '@ionic/angular';
 import { ClientesService } from '../../services/clientes.service';
 import { Cliente } from '../../models/cliente.model';
 import { Moto } from '../../models/moto.model';
@@ -19,11 +20,17 @@ export class ClienteDetallePage implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private clienteSvc: ClientesService
+    private clienteSvc: ClientesService,
+    private alert: AlertController,
+    private toast: ToastController
   ) {}
 
   ngOnInit() {
     const id = +(this.route.snapshot.paramMap.get('id') || 0);
+    this.recargar(id);
+  }
+
+  recargar(id: number) {
     this.clienteSvc.getById(id).subscribe(res => { this.cliente = res.data; this.cargando = false; });
     this.clienteSvc.getMotos(id).subscribe(res => this.motos = res.data);
     this.clienteSvc.getOrdenes(id).subscribe(res => this.ordenes = res.data);
@@ -33,4 +40,86 @@ export class ClienteDetallePage implements OnInit {
   nuevaMoto() { this.router.navigate(['/moto-form'], { queryParams: { cliente_id: this.cliente!.id } }); }
   abrirOrden(id: number) { this.router.navigate(['/detalle-orden', id]); }
   abrirHistorial(moto: Moto) { this.router.navigate(['/moto-historial', moto.id]); }
+
+  // ===== Acceso al portal del cliente =====
+  async activarPortal() {
+    if (!this.cliente?.email) {
+      this.mostrarAlert('Falta email', 'El cliente necesita un correo registrado para acceder al portal. Editá el cliente y agregá su email.');
+      return;
+    }
+    const a = await this.alert.create({
+      header: this.cliente.tiene_portal ? 'Cambiar contraseña' : 'Activar portal',
+      message: `Definí una contraseña para que ${this.cliente.nombre} acceda al portal con su correo ${this.cliente.email}.`,
+      inputs: [{ name: 'password', type: 'password', placeholder: 'Contraseña (mín. 6 caracteres)' }],
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Guardar',
+          handler: (data) => {
+            if (!data.password || data.password.length < 6) {
+              this.mostrarToast('La contraseña debe tener al menos 6 caracteres', 'danger');
+              return false;
+            }
+            this.clienteSvc.setPortal(this.cliente!.id!, { password: data.password }).subscribe({
+              next: () => {
+                this.cliente!.tiene_portal = 1;
+                this.compartirCredenciales(data.password);
+              },
+              error: err => this.mostrarToast(err.error?.error || 'Error', 'danger'),
+            });
+            return true;
+          },
+        },
+      ],
+    });
+    await a.present();
+  }
+
+  async desactivarPortal() {
+    const conf = await this.alert.create({
+      header: 'Desactivar portal',
+      message: '¿Quitar el acceso del cliente al portal?',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Desactivar', role: 'destructive',
+          handler: () => {
+            this.clienteSvc.setPortal(this.cliente!.id!, { activar: false }).subscribe({
+              next: () => { this.cliente!.tiene_portal = 0; this.mostrarToast('Acceso desactivado'); },
+            });
+          },
+        },
+      ],
+    });
+    await conf.present();
+  }
+
+  // Abre WhatsApp con las credenciales y el link del portal para enviárselas al cliente
+  async compartirCredenciales(password: string) {
+    const url = `${location.origin}/portal/login`;
+    const msg =
+      `Hola ${this.cliente!.nombre}, ya podés seguir el estado de tu moto en línea:\n` +
+      `${url}\n\nUsuario: ${this.cliente!.email}\nContraseña: ${password}\n\n` +
+      `Ahí vas a ver el avance y aprobar presupuestos.`;
+    const tel = (this.cliente!.telefono || '').replace(/\D/g, '');
+    const a = await this.alert.create({
+      header: 'Portal activado',
+      message: 'Enviá las credenciales al cliente por WhatsApp.',
+      buttons: [
+        { text: 'Cerrar', role: 'cancel' },
+        { text: 'Enviar por WhatsApp', handler: () => { window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`, '_blank'); } },
+      ],
+    });
+    await a.present();
+  }
+
+  private async mostrarToast(message: string, color = 'success') {
+    const t = await this.toast.create({ message, duration: 2200, color });
+    await t.present();
+  }
+
+  private async mostrarAlert(header: string, message: string) {
+    const a = await this.alert.create({ header, message, buttons: ['OK'] });
+    await a.present();
+  }
 }

@@ -26,6 +26,7 @@ app.use('/api/citas',     require('./routes/citas.routes'));
 app.use('/api/usuarios',  require('./routes/usuarios.routes'));
 app.use('/api/dashboard', require('./routes/dashboard.routes'));
 app.use('/api/garantias', require('./routes/garantias.routes'));
+app.use('/api/portal',    require('./routes/portal.routes'));
 
 app.use('/api', (err, req, res, next) => {
   console.error('Error:', err.message);

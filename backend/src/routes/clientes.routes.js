@@ -1,13 +1,18 @@
 const router = require('express').Router();
+const bcrypt = require('bcrypt');
 const { pool } = require('../db/pool');
 const auth = require('../middleware/auth');
 
 router.use(auth);
 
+// Columnas seguras (nunca exponer password_hash); tiene_portal indica si el acceso está activo.
+const COLS = `id, nombre, apellido, telefono, email, cedula, direccion, activo, created_at, updated_at,
+              (password_hash IS NOT NULL) AS tiene_portal`;
+
 router.get('/', async (req, res) => {
   try {
     const { q } = req.query;
-    let sql = 'SELECT * FROM clientes WHERE activo = 1';
+    let sql = `SELECT ${COLS} FROM clientes WHERE activo = 1`;
     const params = [];
     if (q) {
       sql += ' AND (nombre LIKE ? OR apellido LIKE ? OR telefono LIKE ? OR cedula LIKE ?)';
@@ -41,9 +46,32 @@ router.post('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const [[cliente]] = await pool.query('SELECT * FROM clientes WHERE id = ? AND activo = 1', [req.params.id]);
+    const [[cliente]] = await pool.query(`SELECT ${COLS} FROM clientes WHERE id = ? AND activo = 1`, [req.params.id]);
     if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
     res.json({ data: cliente });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/clientes/:id/portal — activa/define o desactiva el acceso al portal del cliente
+router.patch('/:id/portal', async (req, res) => {
+  try {
+    const { password, activar } = req.body;
+    const [[cliente]] = await pool.query('SELECT id, email FROM clientes WHERE id = ? AND activo = 1', [req.params.id]);
+    if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
+
+    if (activar === false) {
+      await pool.query('UPDATE clientes SET password_hash = NULL WHERE id = ?', [req.params.id]);
+      return res.json({ message: 'Acceso al portal desactivado' });
+    }
+    if (!cliente.email) return res.status(400).json({ error: 'El cliente necesita un email para acceder al portal' });
+    if (!password || password.length < 6) {
+      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    }
+    const hash = await bcrypt.hash(password, 10);
+    await pool.query('UPDATE clientes SET password_hash = ? WHERE id = ?', [hash, req.params.id]);
+    res.json({ message: 'Acceso al portal activado' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -42,8 +42,31 @@ async function ensureSchema() {
         FOREIGN KEY (garantia_id) REFERENCES garantias(id)
       )
     `);
+
+    // Portal del cliente: contraseña opcional para acceso al seguimiento.
+    await addColumnIfMissing('clientes', 'password_hash', 'VARCHAR(255) NULL');
+
+    // Aprobación digital del presupuesto por parte del cliente.
+    await addColumnIfMissing(
+      'ordenes_trabajo', 'aprobacion_cliente',
+      "ENUM('pendiente','aprobado','rechazado') NOT NULL DEFAULT 'pendiente'"
+    );
+    await addColumnIfMissing('ordenes_trabajo', 'motivo_rechazo', 'TEXT NULL');
   } catch (err) {
     console.error('⚠️  Auto-migración falló:', err.code || err.message);
+  }
+}
+
+// Agrega una columna solo si no existe (idempotente, no destructivo).
+async function addColumnIfMissing(tabla, columna, definicion) {
+  const [[existe]] = await pool.query(
+    `SELECT COUNT(*) AS n FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+    [tabla, columna]
+  );
+  if (!existe.n) {
+    await pool.query(`ALTER TABLE ${tabla} ADD COLUMN ${columna} ${definicion}`);
+    console.log(`🔧 Migración: ${tabla}.${columna} agregada`);
   }
 }
 

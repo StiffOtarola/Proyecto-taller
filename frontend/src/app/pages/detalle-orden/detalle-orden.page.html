@@ -30,6 +30,27 @@
     </ion-card-content>
   </ion-card>
 
+  <!-- Aprobación del cliente (portal) -->
+  <ion-card *ngIf="orden.aprobacion_cliente && orden.aprobacion_cliente !== 'pendiente'"
+            class="aprob-cliente" [class.aprobado]="orden.aprobacion_cliente === 'aprobado'"
+            [class.rechazado]="orden.aprobacion_cliente === 'rechazado'">
+    <ion-card-content>
+      <ion-icon [name]="orden.aprobacion_cliente === 'aprobado' ? 'checkmark-circle' : 'close-circle'"></ion-icon>
+      <div>
+        <strong *ngIf="orden.aprobacion_cliente === 'aprobado'">Presupuesto aprobado por el cliente</strong>
+        <strong *ngIf="orden.aprobacion_cliente === 'rechazado'">Presupuesto rechazado por el cliente</strong>
+        <p *ngIf="orden.motivo_rechazo">{{ orden.motivo_rechazo }}</p>
+      </div>
+    </ion-card-content>
+  </ion-card>
+  <ion-card *ngIf="orden.estado === 'esperando_aprobacion' && (!orden.aprobacion_cliente || orden.aprobacion_cliente === 'pendiente')"
+            class="aprob-cliente pendiente">
+    <ion-card-content>
+      <ion-icon name="hourglass-outline"></ion-icon>
+      <div><strong>Esperando que el cliente apruebe en el portal</strong></div>
+    </ion-card-content>
+  </ion-card>
+
   <!-- Cambiar estado -->
   <ion-card *ngIf="siguientes.length > 0">
     <ion-card-header><ion-card-title>Cambiar estado</ion-card-title></ion-card-header>

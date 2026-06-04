@@ -50,6 +50,21 @@
   opacity: 0.85;
 }
 
+// Aprobación del cliente (portal)
+.aprob-cliente ion-card-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  ion-icon { font-size: 26px; flex-shrink: 0; }
+  strong { font-size: 14px; }
+  p { width: 100%; margin: 4px 0 0; font-size: 13px; color: var(--ion-color-medium); }
+}
+.aprob-cliente.aprobado { ion-icon, strong { color: var(--ion-color-success); } }
+.aprob-cliente.rechazado { ion-icon, strong { color: var(--ion-color-danger); } }
+.aprob-cliente.pendiente { ion-icon, strong { color: var(--ion-color-tertiary); } }
+
 // Garantía
 .garantia-estado {
   display: flex;

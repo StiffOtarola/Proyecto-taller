@@ -9,6 +9,10 @@ const routes: Routes = [
     loadChildren: () => import('./pages/login/login.module').then(m => m.LoginPageModule),
   },
   {
+    path: 'portal',
+    loadChildren: () => import('./pages/portal/portal.module').then(m => m.PortalPageModule),
+  },
+  {
     path: 'tabs',
     canActivate: [AuthGuard],
     loadChildren: () => import('./pages/tabs/tabs.module').then(m => m.TabsPageModule),

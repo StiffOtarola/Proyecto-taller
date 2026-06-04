@@ -36,4 +36,8 @@ export class ClientesService {
   getOrdenes(id: number): Observable<{ data: Orden[] }> {
     return this.http.get<{ data: Orden[] }>(`${this.url}/${id}/ordenes`);
   }
+
+  setPortal(id: number, data: { password?: string; activar?: boolean }): Observable<{ message: string }> {
+    return this.http.patch<{ message: string }>(`${this.url}/${id}/portal`, data);
+  }
 }

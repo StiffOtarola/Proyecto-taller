@@ -56,6 +56,24 @@ async function ensureSchema() {
     // Encuesta de satisfacción del cliente al entregar.
     await addColumnIfMissing('ordenes_trabajo', 'calificacion', 'TINYINT NULL');
     await addColumnIfMissing('ordenes_trabajo', 'comentario_satisfaccion', 'TEXT NULL');
+
+    // Promociones (marketing).
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS promos (
+        id          INT AUTO_INCREMENT PRIMARY KEY,
+        titulo      VARCHAR(150) NOT NULL,
+        descripcion TEXT NOT NULL,
+        descuento   INT DEFAULT 0,
+        activa      TINYINT(1) DEFAULT 1,
+        created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Fidelización: visitas del cliente y cortesía disponible cada N entregas.
+    await addColumnIfMissing('clientes', 'visitas', 'INT DEFAULT 0');
+    await addColumnIfMissing('clientes', 'cortesia_disponible', 'TINYINT(1) DEFAULT 0');
+    await addColumnIfMissing('ordenes_trabajo', 'visita_contada', 'TINYINT(1) DEFAULT 0');
   } catch (err) {
     console.error('⚠️  Auto-migración falló:', err.code || err.message);
   }

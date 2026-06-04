@@ -73,6 +73,10 @@ export class PortalService {
     return this.http.post(`${this.url}/ordenes/${id}/encuesta`, { calificacion, comentario });
   }
 
+  getPromos(): Observable<{ data: any[] }> {
+    return this.http.get<{ data: any[] }>(`${this.url}/promos`);
+  }
+
   private getClienteGuardado(): ClientePortal | null {
     try {
       const raw = localStorage.getItem(CLIENTE_KEY);

@@ -24,6 +24,18 @@
     <p>Hola, <strong>{{ c.nombre }}</strong> 👋</p>
   </div>
 
+  <!-- Promociones activas -->
+  <div *ngIf="promos.length" class="promos-wrap">
+    <p class="promos-titulo"><ion-icon name="pricetags-outline"></ion-icon> Promociones</p>
+    <div class="promos-scroll">
+      <div class="promo-mini" *ngFor="let p of promos">
+        <ion-badge *ngIf="p.descuento" color="light">-{{ p.descuento }}%</ion-badge>
+        <strong>{{ p.titulo }}</strong>
+        <span>{{ p.descripcion }}</span>
+      </div>
+    </div>
+  </div>
+
   <div class="ion-padding ion-text-center" *ngIf="cargando" style="padding-top:40px">
     <ion-spinner name="crescent"></ion-spinner>
   </div>

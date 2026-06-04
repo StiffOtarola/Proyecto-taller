@@ -135,6 +135,16 @@ router.post('/ordenes/:id/encuesta', async (req, res) => {
   }
 });
 
+// GET /api/portal/promos — promociones activas (visibles para el cliente)
+router.get('/promos', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT id, titulo, descripcion, descuento FROM promos WHERE activa = 1 ORDER BY created_at DESC');
+    res.json({ data: rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/portal/motos — motos del cliente (para asociar a una cita)
 router.get('/motos', async (req, res) => {
   try {

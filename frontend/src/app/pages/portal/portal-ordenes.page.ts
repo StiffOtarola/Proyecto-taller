@@ -10,6 +10,7 @@ import { PortalService } from '../../services/portal.service';
 })
 export class PortalOrdenesPage implements OnInit {
   ordenes: any[] = [];
+  promos: any[] = [];
   cargando = true;
 
   constructor(public portal: PortalService, private router: Router) {}
@@ -23,6 +24,7 @@ export class PortalOrdenesPage implements OnInit {
       next: res => { this.ordenes = res.data; this.cargando = false; },
       error: () => { this.cargando = false; },
     });
+    this.portal.getPromos().subscribe(res => this.promos = res.data);
   }
 
   abrir(id: number) { this.router.navigate(['/portal/orden', id]); }

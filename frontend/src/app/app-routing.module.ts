@@ -82,6 +82,11 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     loadChildren: () => import('./pages/factura/factura.module').then(m => m.FacturaPageModule),
   },
+  {
+    path: 'promociones',
+    canActivate: [AuthGuard],
+    loadChildren: () => import('./pages/promos/promos.module').then(m => m.PromosPageModule),
+  },
 ];
 
 @NgModule({

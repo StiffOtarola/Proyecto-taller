@@ -1,0 +1,53 @@
+.promo-card {
+  margin: 10px 8px;
+  border-radius: 14px;
+  transition: opacity .2s;
+
+  &.inactiva { opacity: .55; }
+}
+
+.promo-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.promo-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  strong { font-size: 16px; }
+}
+
+.promo-desc {
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  margin: 8px 0;
+  line-height: 1.4;
+}
+
+.promo-acciones {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.promo-estado {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ion-color-medium);
+  &.on { color: var(--ion-color-success); }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--ion-color-medium);
+
+  ion-icon { font-size: 56px; opacity: .4; display: block; margin: 0 auto 12px; }
+  p { font-size: 14px; }
+}

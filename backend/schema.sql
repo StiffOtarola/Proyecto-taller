@@ -4,6 +4,7 @@
 -- Para local: conectar a la DB proyecto_taller antes de ejecutar
 -- =============================================
 
+DROP TABLE IF EXISTS promos;
 DROP TABLE IF EXISTS garantia_fotos;
 DROP TABLE IF EXISTS garantias;
 DROP TABLE IF EXISTS orden_checklist;
@@ -38,6 +39,8 @@ CREATE TABLE IF NOT EXISTS clientes (
   cedula        VARCHAR(20),
   direccion     TEXT,
   password_hash VARCHAR(255) NULL,  -- acceso opcional al portal del cliente
+  visitas       INT DEFAULT 0,            -- fidelización: entregas acumuladas
+  cortesia_disponible TINYINT(1) DEFAULT 0, -- fidelización: cortesía ganada
   activo        TINYINT(1) DEFAULT 1,
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -109,6 +112,7 @@ CREATE TABLE IF NOT EXISTS ordenes_trabajo (
   observaciones_finales TEXT,
   calificacion          TINYINT NULL,
   comentario_satisfaccion TEXT,
+  visita_contada        TINYINT(1) DEFAULT 0,
   created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (moto_id)          REFERENCES motos(id),
@@ -194,4 +198,14 @@ CREATE TABLE IF NOT EXISTS garantia_fotos (
   descripcion VARCHAR(200),
   created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (garantia_id) REFERENCES garantias(id)
+);
+
+CREATE TABLE IF NOT EXISTS promos (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  titulo      VARCHAR(150) NOT NULL,
+  descripcion TEXT NOT NULL,
+  descuento   INT DEFAULT 0,
+  activa      TINYINT(1) DEFAULT 1,
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

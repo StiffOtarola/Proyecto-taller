@@ -1,0 +1,97 @@
+<ion-header class="no-print">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-button (click)="volver()"><ion-icon slot="icon-only" name="arrow-back"></ion-icon></ion-button>
+    </ion-buttons>
+    <ion-title>Factura</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="imprimir()">
+        <ion-icon slot="start" name="print-outline"></ion-icon> Imprimir / PDF
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="ion-padding ion-text-center" *ngIf="cargando" style="padding-top:40px">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <div class="factura" *ngIf="!cargando && orden">
+    <!-- Encabezado -->
+    <div class="fac-header">
+      <div class="fac-marca">
+        <h1>TallerMS</h1>
+        <p>Taller de Motocicletas</p>
+      </div>
+      <div class="fac-num">
+        <span class="etiqueta">Orden</span>
+        <strong>{{ orden.numero_orden }}</strong>
+        <p *ngIf="orden.fecha_entrega_real">{{ orden.fecha_entrega_real | date:'dd/MM/yyyy' }}</p>
+        <p *ngIf="!orden.fecha_entrega_real">{{ orden.fecha_ingreso | date:'dd/MM/yyyy' }}</p>
+      </div>
+    </div>
+
+    <!-- Datos cliente / moto -->
+    <div class="fac-datos">
+      <div>
+        <span class="etiqueta">Cliente</span>
+        <p><strong>{{ orden.cliente_nombre }} {{ orden.cliente_apellido }}</strong></p>
+        <p *ngIf="orden.cliente_telefono">{{ orden.cliente_telefono }}</p>
+      </div>
+      <div>
+        <span class="etiqueta">Vehículo</span>
+        <p><strong>{{ orden.marca }} {{ orden.modelo }} {{ orden.anio }}</strong></p>
+        <p *ngIf="orden.placa">Placa: {{ orden.placa }}</p>
+      </div>
+    </div>
+
+    <!-- Trabajo realizado -->
+    <div class="fac-seccion" *ngIf="orden.diagnostico">
+      <span class="etiqueta">Diagnóstico</span>
+      <p>{{ orden.diagnostico }}</p>
+    </div>
+
+    <!-- Detalle -->
+    <table class="fac-tabla">
+      <thead>
+        <tr>
+          <th>Descripción</th>
+          <th class="num">Cant.</th>
+          <th class="num">Unitario</th>
+          <th class="num">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Mano de obra</td>
+          <td class="num">1</td>
+          <td class="num">₡{{ orden.costo_mano_obra | number:'1.0-0' }}</td>
+          <td class="num">₡{{ orden.costo_mano_obra | number:'1.0-0' }}</td>
+        </tr>
+        <tr *ngFor="let r of repuestos">
+          <td>{{ r.nombre }}</td>
+          <td class="num">{{ r.cantidad }}</td>
+          <td class="num">₡{{ r.costo_unitario | number:'1.0-0' }}</td>
+          <td class="num">₡{{ r.cantidad * r.costo_unitario | number:'1.0-0' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Totales -->
+    <div class="fac-totales">
+      <div><span>Mano de obra</span><span>₡{{ orden.costo_mano_obra | number:'1.0-0' }}</span></div>
+      <div><span>Repuestos</span><span>₡{{ totalRepuestos | number:'1.0-0' }}</span></div>
+      <div *ngIf="orden.descuento"><span>Descuento</span><span>-₡{{ orden.descuento | number:'1.0-0' }}</span></div>
+      <div class="total"><span>TOTAL</span><span>₡{{ total | number:'1.0-0' }}</span></div>
+    </div>
+
+    <!-- Pie -->
+    <div class="fac-pie">
+      <p *ngIf="orden.metodo_pago"><strong>Método de pago:</strong> {{ orden.metodo_pago | titlecase }}</p>
+      <p *ngIf="orden.garantia_dias"><strong>Garantía:</strong> {{ orden.garantia_dias }} días</p>
+      <p *ngIf="orden.observaciones_finales">{{ orden.observaciones_finales }}</p>
+      <p class="gracias">¡Gracias por su preferencia!</p>
+    </div>
+  </div>
+</ion-content>

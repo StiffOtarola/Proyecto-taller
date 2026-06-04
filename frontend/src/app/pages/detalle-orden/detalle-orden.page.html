@@ -94,11 +94,17 @@
         <ion-label>Descuento</ion-label>
         <ion-note slot="end" color="danger">-₡{{ orden.descuento | number:'1.0-0' }}</ion-note>
       </ion-item>
-      <ion-item>
+      <ion-item lines="none">
         <ion-label><strong>Total</strong></ion-label>
         <ion-note slot="end"><strong>₡{{ totalOrden | number:'1.0-0' }}</strong></ion-note>
       </ion-item>
     </ion-list>
+    <ion-card-content>
+      <ion-button expand="block" fill="outline" (click)="verFactura()">
+        <ion-icon name="print-outline" slot="start"></ion-icon>
+        Factura / Imprimir
+      </ion-button>
+    </ion-card-content>
   </ion-card>
 
   <!-- Checklist de entrega + Facturación -->

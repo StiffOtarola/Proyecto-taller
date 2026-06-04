@@ -240,6 +240,25 @@
       </ion-list>
     </ion-card>
 
+    <!-- Reportes / exportación -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Reportes</ion-card-title>
+        <ion-card-subtitle>Exportar a CSV (Excel)</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-button expand="block" fill="outline" (click)="exportarOrdenes()" [disabled]="exportando" class="ion-margin-bottom">
+          <ion-icon name="list-outline" slot="start"></ion-icon> Órdenes
+        </ion-button>
+        <ion-button expand="block" fill="outline" color="success" (click)="exportarFacturacion()" [disabled]="exportando" class="ion-margin-bottom">
+          <ion-icon name="cash-outline" slot="start"></ion-icon> Facturación
+        </ion-button>
+        <ion-button expand="block" fill="outline" color="secondary" (click)="exportarProductividad()" [disabled]="exportando">
+          <ion-icon name="people-outline" slot="start"></ion-icon> Productividad
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
     <div style="height: 80px"></div>
   </div>
 

@@ -406,5 +406,7 @@ export class DetalleOrdenPage implements OnInit {
 
   irAGarantias() { this.router.navigate(['/garantias']); }
 
+  verFactura() { this.router.navigate(['/factura', this.orden!.id]); }
+
   volver() { this.router.navigate(['/tabs/ordenes']); }
 }

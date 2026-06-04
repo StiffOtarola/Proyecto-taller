@@ -1,7 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { ToastController } from '@ionic/angular';
 import { AuthService } from '../../services/auth.service';
 import { DashboardService } from '../../services/dashboard.service';
+import { OrdenesService } from '../../services/ordenes.service';
+import { ESTADO_CONFIG, EstadoOrden } from '../../models/orden.model';
+import { descargarCSV, fechaCorta } from '../../shared/csv.util';
 
 @Component({ standalone: false,
   selector: 'app-dashboard',
@@ -25,9 +29,13 @@ export class DashboardPage implements OnInit {
     lista_entrega: 'Lista para entrega',
   };
 
+  exportando = false;
+
   constructor(
     public auth: AuthService,
     private dashSvc: DashboardService,
+    private ordenSvc: OrdenesService,
+    private toast: ToastController,
     private router: Router
   ) {}
 
@@ -85,6 +93,102 @@ export class DashboardPage implements OnInit {
 
   abrirOrden(id: number) {
     this.router.navigate(['/detalle-orden', id]);
+  }
+
+  // ===== Exportación de reportes a CSV (Excel) =====
+  private hoy() { return new Date().toISOString().slice(0, 10); }
+
+  private estadoTexto(e?: string) { return ESTADO_CONFIG[e as EstadoOrden]?.label ?? e ?? ''; }
+
+  exportarOrdenes() {
+    this.exportando = true;
+    this.ordenSvc.getAll().subscribe({
+      next: res => {
+        const filas = res.data.map(o => ({
+          numero_orden: o.numero_orden,
+          estado: this.estadoTexto(o.estado),
+          cliente: `${o.cliente_nombre || ''} ${o.cliente_apellido || ''}`.trim(),
+          moto: `${o.marca || ''} ${o.modelo || ''}`.trim(),
+          placa: o.placa || '',
+          tecnico: o.tecnico_nombre || '',
+          ingreso: fechaCorta(o.fecha_ingreso),
+          entrega_estimada: fechaCorta(o.fecha_estimada_entrega),
+          mano_obra: o.costo_mano_obra || 0,
+          repuestos: o.costo_repuestos || 0,
+          descuento: o.descuento || 0,
+          total: (o.costo_mano_obra || 0) + (o.costo_repuestos || 0) - (o.descuento || 0),
+        }));
+        descargarCSV(`ordenes_${this.hoy()}`, [
+          { key: 'numero_orden', label: 'Orden' },
+          { key: 'estado', label: 'Estado' },
+          { key: 'cliente', label: 'Cliente' },
+          { key: 'moto', label: 'Moto' },
+          { key: 'placa', label: 'Placa' },
+          { key: 'tecnico', label: 'Técnico' },
+          { key: 'ingreso', label: 'Ingreso' },
+          { key: 'entrega_estimada', label: 'Entrega estimada' },
+          { key: 'mano_obra', label: 'Mano de obra' },
+          { key: 'repuestos', label: 'Repuestos' },
+          { key: 'descuento', label: 'Descuento' },
+          { key: 'total', label: 'Total' },
+        ], filas);
+        this.exportando = false;
+        this.mostrarToast(`${filas.length} órdenes exportadas`);
+      },
+      error: () => { this.exportando = false; this.mostrarToast('No se pudo exportar', 'danger'); },
+    });
+  }
+
+  exportarFacturacion() {
+    this.exportando = true;
+    this.ordenSvc.getAll({ estado: 'entregada' }).subscribe({
+      next: res => {
+        const filas = res.data.map(o => ({
+          numero_orden: o.numero_orden,
+          cliente: `${o.cliente_nombre || ''} ${o.cliente_apellido || ''}`.trim(),
+          moto: `${o.marca || ''} ${o.modelo || ''}`.trim(),
+          entrega: fechaCorta(o.fecha_entrega_real),
+          metodo_pago: o.metodo_pago || '',
+          mano_obra: o.costo_mano_obra || 0,
+          repuestos: o.costo_repuestos || 0,
+          descuento: o.descuento || 0,
+          total: (o.costo_mano_obra || 0) + (o.costo_repuestos || 0) - (o.descuento || 0),
+        }));
+        descargarCSV(`facturacion_${this.hoy()}`, [
+          { key: 'numero_orden', label: 'Orden' },
+          { key: 'cliente', label: 'Cliente' },
+          { key: 'moto', label: 'Moto' },
+          { key: 'entrega', label: 'Entrega' },
+          { key: 'metodo_pago', label: 'Método de pago' },
+          { key: 'mano_obra', label: 'Mano de obra' },
+          { key: 'repuestos', label: 'Repuestos' },
+          { key: 'descuento', label: 'Descuento' },
+          { key: 'total', label: 'Total' },
+        ], filas);
+        this.exportando = false;
+        this.mostrarToast(`${filas.length} facturas exportadas`);
+      },
+      error: () => { this.exportando = false; this.mostrarToast('No se pudo exportar', 'danger'); },
+    });
+  }
+
+  exportarProductividad() {
+    if (!this.tecnicos.length) { this.mostrarToast('Sin datos de técnicos', 'warning'); return; }
+    descargarCSV(`productividad_${this.hoy()}`, [
+      { key: 'nombre', label: 'Técnico' },
+      { key: 'ordenes_completadas', label: 'Órdenes completadas' },
+      { key: 'horas_promedio', label: 'Horas promedio' },
+    ], this.tecnicos.map(t => ({
+      nombre: t.nombre,
+      ordenes_completadas: t.ordenes_completadas || 0,
+      horas_promedio: t.horas_promedio || 0,
+    })));
+    this.mostrarToast('Productividad exportada');
+  }
+
+  private async mostrarToast(message: string, color = 'success') {
+    const t = await this.toast.create({ message, duration: 2000, color });
+    await t.present();
   }
 
   logout() {

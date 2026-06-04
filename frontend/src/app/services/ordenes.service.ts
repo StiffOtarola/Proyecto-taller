@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Orden, OrdenAvance, OrdenRepuesto, EstadoOrden } from '../models/orden.model';
+import { Orden, OrdenAvance, OrdenRepuesto, OrdenFoto, EstadoOrden } from '../models/orden.model';
 
 @Injectable({ providedIn: 'root' })
 export class OrdenesService {
@@ -71,5 +71,17 @@ export class OrdenesService {
 
   cerrar(id: number, data: { metodo_pago: string; garantia_dias: number; observaciones_finales?: string }): Observable<any> {
     return this.http.patch(`${this.url}/${id}/cerrar`, data);
+  }
+
+  getFotos(id: number): Observable<{ data: OrdenFoto[] }> {
+    return this.http.get<{ data: OrdenFoto[] }>(`${this.url}/${id}/fotos`);
+  }
+
+  addFoto(id: number, foto: { url: string; tipo: string; descripcion?: string }): Observable<{ data: OrdenFoto }> {
+    return this.http.post<{ data: OrdenFoto }>(`${this.url}/${id}/fotos`, foto);
+  }
+
+  deleteFoto(ordenId: number, fotoId: number): Observable<any> {
+    return this.http.delete(`${this.url}/${ordenId}/fotos/${fotoId}`);
   }
 }

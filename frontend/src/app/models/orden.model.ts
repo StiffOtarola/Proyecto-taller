@@ -64,6 +64,15 @@ export interface OrdenRepuesto {
   estado?: string;
 }
 
+export interface OrdenFoto {
+  id?: number;
+  orden_id?: number;
+  url: string;          // data URL base64
+  tipo: 'ingreso' | 'diagnostico' | 'avance' | 'entrega';
+  descripcion?: string | null;
+  created_at?: string;
+}
+
 export interface OrdenChecklist {
   prueba_realizada: boolean;
   lavado: boolean;

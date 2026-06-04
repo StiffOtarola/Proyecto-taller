@@ -4,7 +4,7 @@ import { AlertController, LoadingController, ToastController } from '@ionic/angu
 import { OrdenesService } from '../../services/ordenes.service';
 import { UsuariosService } from '../../services/usuarios.service';
 import { AuthService } from '../../services/auth.service';
-import { Orden, OrdenAvance, OrdenRepuesto, OrdenChecklist, EstadoOrden, ESTADO_CONFIG } from '../../models/orden.model';
+import { Orden, OrdenAvance, OrdenRepuesto, OrdenChecklist, OrdenFoto, EstadoOrden, ESTADO_CONFIG } from '../../models/orden.model';
 import { Usuario } from '../../models/usuario.model';
 
 @Component({ standalone: false,
@@ -16,8 +16,19 @@ export class DetalleOrdenPage implements OnInit {
   orden: Orden | null = null;
   avances: OrdenAvance[] = [];
   repuestos: OrdenRepuesto[] = [];
+  fotos: OrdenFoto[] = [];
   tecnicos: Usuario[] = [];
   cargando = true;
+
+  tipoFoto: OrdenFoto['tipo'] = 'ingreso';
+  subiendoFoto = false;
+
+  readonly tiposFoto: { valor: OrdenFoto['tipo']; label: string }[] = [
+    { valor: 'ingreso', label: 'Ingreso' },
+    { valor: 'diagnostico', label: 'Diagnóstico' },
+    { valor: 'avance', label: 'Avance' },
+    { valor: 'entrega', label: 'Entrega' },
+  ];
 
   nuevoAvance = '';
   nuevoRepuesto: OrdenRepuesto = { nombre: '', cantidad: 1, costo_unitario: 0 };
@@ -69,6 +80,7 @@ export class DetalleOrdenPage implements OnInit {
     });
     this.ordenSvc.getAvances(id).subscribe(res => this.avances = res.data);
     this.ordenSvc.getRepuestos(id).subscribe(res => this.repuestos = res.data);
+    this.ordenSvc.getFotos(id).subscribe(res => this.fotos = res.data);
     this.ordenSvc.getChecklist(id).subscribe(res => {
       if (res.data) {
         this.checklist = {
@@ -242,6 +254,107 @@ export class DetalleOrdenPage implements OnInit {
         },
       });
     });
+  }
+
+  // ===== Fotos de evidencia =====
+  get fotosPorTipo(): { tipo: string; label: string; fotos: OrdenFoto[] }[] {
+    return this.tiposFoto
+      .map(t => ({ tipo: t.valor, label: t.label, fotos: this.fotos.filter(f => f.tipo === t.valor) }))
+      .filter(g => g.fotos.length > 0);
+  }
+
+  async onArchivoSeleccionado(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.mostrarAlertError('El archivo debe ser una imagen');
+      input.value = '';
+      return;
+    }
+
+    this.subiendoFoto = true;
+    try {
+      const dataUrl = await this.comprimirImagen(file);
+      this.ordenSvc.addFoto(this.orden!.id!, { url: dataUrl, tipo: this.tipoFoto }).subscribe({
+        next: res => {
+          this.fotos.push(res.data);
+          this.subiendoFoto = false;
+          this.mostrarToast('Foto agregada');
+        },
+        error: err => {
+          this.subiendoFoto = false;
+          this.mostrarAlertError(err.error?.error || 'No se pudo subir la foto');
+        },
+      });
+    } catch {
+      this.subiendoFoto = false;
+      this.mostrarAlertError('No se pudo procesar la imagen');
+    }
+    input.value = '';
+  }
+
+  // Redimensiona a máx 1024px y comprime a JPEG q0.7 para reducir el peso del base64
+  private comprimirImagen(file: File, maxLado = 1024, calidad = 0.7): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > height && width > maxLado) {
+            height = Math.round((height * maxLado) / width);
+            width = maxLado;
+          } else if (height > maxLado) {
+            width = Math.round((width * maxLado) / height);
+            height = maxLado;
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return reject();
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', calidad));
+        };
+        img.onerror = reject;
+        img.src = reader.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async verFoto(foto: OrdenFoto) {
+    const a = await this.alert.create({
+      cssClass: 'foto-preview-alert',
+      message: `<img src="${foto.url}" style="width:100%;border-radius:8px" />`,
+      buttons: ['Cerrar'],
+    });
+    await a.present();
+  }
+
+  async eliminarFoto(foto: OrdenFoto) {
+    const conf = await this.alert.create({
+      header: 'Eliminar foto',
+      message: '¿Eliminar esta evidencia?',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Eliminar',
+          role: 'destructive',
+          handler: () => {
+            this.ordenSvc.deleteFoto(this.orden!.id!, foto.id!).subscribe({
+              next: () => {
+                this.fotos = this.fotos.filter(f => f.id !== foto.id);
+                this.mostrarToast('Foto eliminada');
+              },
+            });
+          },
+        },
+      ],
+    });
+    await conf.present();
   }
 
   private async mostrarToast(msg: string) {

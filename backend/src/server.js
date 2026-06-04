@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const { testConnection } = require('./db/pool');
+const { ensureSchema } = require('./db/auto-migrate');
 
 const app = express();
 const frontendDist = path.join(__dirname, '../../frontend/www');
@@ -13,7 +14,7 @@ if (!hasFrontend) {
   app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:8100' }));
 }
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 app.get('/api/health', (req, res) => res.json({ ok: true, ts: new Date().toISOString() }));
 
@@ -44,4 +45,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
   console.log(`🚀 Servidor en http://localhost:${PORT}`);
   await testConnection();
+  await ensureSchema();
 });

@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS orden_avances (
 CREATE TABLE IF NOT EXISTS orden_fotos (
   id          INT AUTO_INCREMENT PRIMARY KEY,
   orden_id    INT NOT NULL,
-  url         VARCHAR(500) NOT NULL,
+  url         MEDIUMTEXT NOT NULL,
   tipo        ENUM('ingreso','diagnostico','avance','entrega') DEFAULT 'ingreso',
   descripcion VARCHAR(200),
   created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

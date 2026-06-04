@@ -254,6 +254,46 @@
       </ion-item>
     </ion-list>
   </ion-card>
+
+  <!-- Fotos / Evidencia -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="camera-outline" style="vertical-align:middle;margin-right:6px"></ion-icon>
+        Evidencia fotográfica
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-segment [(ngModel)]="tipoFoto" scrollable="true" class="ion-margin-bottom">
+        <ion-segment-button *ngFor="let t of tiposFoto" [value]="t.valor">
+          <ion-label>{{ t.label }}</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+
+      <!-- input nativo oculto, disparado por el botón -->
+      <input #fileInput type="file" accept="image/*" capture="environment"
+             hidden (change)="onArchivoSeleccionado($event)" />
+      <ion-button expand="block" fill="outline" (click)="fileInput.click()" [disabled]="subiendoFoto">
+        <ion-spinner *ngIf="subiendoFoto" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!subiendoFoto" name="camera-outline" slot="start"></ion-icon>
+        {{ subiendoFoto ? 'Subiendo...' : 'Agregar foto (' + tipoFoto + ')' }}
+      </ion-button>
+
+      <p *ngIf="fotos.length === 0" class="sin-fotos">Sin fotos registradas</p>
+
+      <div *ngFor="let grupo of fotosPorTipo" class="foto-grupo">
+        <p class="foto-grupo-titulo">{{ grupo.label }} ({{ grupo.fotos.length }})</p>
+        <div class="foto-grid">
+          <div class="foto-thumb" *ngFor="let f of grupo.fotos">
+            <img [src]="f.url" (click)="verFoto(f)" alt="evidencia" />
+            <ion-button class="foto-del" fill="clear" size="small" (click)="eliminarFoto(f)">
+              <ion-icon name="close-circle" color="danger"></ion-icon>
+            </ion-button>
+          </div>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
 </ion-content>
 
 <ion-content *ngIf="cargando" class="ion-padding ion-text-center">

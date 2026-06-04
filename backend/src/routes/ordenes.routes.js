@@ -346,4 +346,45 @@ router.patch('/:id/cerrar', requireRol('jefe_taller'), async (req, res) => {
   }
 });
 
+// POST /api/ordenes/:id/fotos — guarda una foto (data URL base64) como evidencia
+router.post('/:id/fotos', async (req, res) => {
+  try {
+    const { url, tipo, descripcion } = req.body;
+    if (!url) return res.status(400).json({ error: 'Imagen requerida' });
+    const tiposValidos = ['ingreso', 'diagnostico', 'avance', 'entrega'];
+    const tipoFinal = tiposValidos.includes(tipo) ? tipo : 'ingreso';
+    const [result] = await pool.query(
+      'INSERT INTO orden_fotos (orden_id, url, tipo, descripcion) VALUES (?, ?, ?, ?)',
+      [req.params.id, url, tipoFinal, descripcion || null]
+    );
+    const [[nueva]] = await pool.query('SELECT * FROM orden_fotos WHERE id = ?', [result.insertId]);
+    res.status(201).json({ data: nueva, message: 'Foto agregada' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/ordenes/:id/fotos
+router.get('/:id/fotos', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM orden_fotos WHERE orden_id = ? ORDER BY created_at ASC',
+      [req.params.id]
+    );
+    res.json({ data: rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/ordenes/:id/fotos/:fid
+router.delete('/:id/fotos/:fid', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM orden_fotos WHERE id = ? AND orden_id = ?', [req.params.fid, req.params.id]);
+    res.json({ message: 'Foto eliminada' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

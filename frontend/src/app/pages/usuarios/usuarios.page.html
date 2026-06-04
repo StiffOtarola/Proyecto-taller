@@ -47,7 +47,15 @@
   </ion-card>
 
   <!-- Lista de usuarios -->
-  <div class="ion-text-center" *ngIf="cargando"><ion-spinner></ion-spinner></div>
+  <div class="skeleton-wrap sk-clientes" *ngIf="cargando">
+    <div class="sk-row" *ngFor="let i of [1,2,3,4]">
+      <div class="skeleton sk-av"></div>
+      <div class="sk-col">
+        <div class="skeleton skeleton-line sk-50"></div>
+        <div class="skeleton skeleton-line sk-35"></div>
+      </div>
+    </div>
+  </div>
 
   <ion-list *ngIf="!cargando">
     <ion-item *ngFor="let u of usuarios">

@@ -36,8 +36,9 @@
     </ion-card-content>
   </ion-card>
 
-  <div class="ion-padding ion-text-center" *ngIf="cargando" style="padding-top:20px">
-    <ion-spinner name="crescent"></ion-spinner>
+  <div class="skeleton-wrap" *ngIf="cargando" style="max-width:880px">
+    <div class="skeleton" style="height:118px;border-radius:24px;margin-bottom:14px"></div>
+    <div class="skeleton" style="height:118px;border-radius:24px"></div>
   </div>
 
   <div *ngIf="!cargando">

@@ -349,6 +349,15 @@
   </div>
 </ion-content>
 
-<ion-content *ngIf="cargando" class="ion-padding ion-text-center">
-  <ion-spinner></ion-spinner>
+<ion-content *ngIf="cargando">
+  <div class="ot">
+    <div style="text-align:center;padding:18px 8px">
+      <div class="skeleton skeleton-pill" style="margin:0 auto 14px"></div>
+      <div class="skeleton skeleton-line sk-50" style="height:22px;margin:0 auto 8px"></div>
+      <div class="skeleton skeleton-line sk-35" style="height:12px;margin:0 auto"></div>
+    </div>
+    <div class="skeleton" style="height:118px;border-radius:24px;margin-bottom:14px"></div>
+    <div class="skeleton" style="height:168px;border-radius:24px;margin-bottom:14px"></div>
+    <div class="skeleton" style="height:140px;border-radius:24px"></div>
+  </div>
 </ion-content>

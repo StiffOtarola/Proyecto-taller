@@ -52,8 +52,10 @@
       </ion-button>
     </section>
 
-    <div class="ion-text-center" *ngIf="cargando" style="padding:24px 0">
-      <ion-spinner name="crescent"></ion-spinner>
+    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px;margin-top:22px">
+      <div class="skeleton" style="height:80px;border-radius:18px"></div>
+      <div class="skeleton" style="height:80px;border-radius:18px"></div>
+      <div class="skeleton" style="height:80px;border-radius:18px"></div>
     </div>
 
     <!-- Lista de citas -->

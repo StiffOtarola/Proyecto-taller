@@ -19,8 +19,14 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <div class="ion-padding ion-text-center" *ngIf="cargando">
-    <ion-spinner></ion-spinner>
+  <div class="skeleton-wrap sk-clientes" *ngIf="cargando">
+    <div class="sk-row" *ngFor="let i of [1,2,3,4,5]">
+      <div class="skeleton sk-av"></div>
+      <div class="sk-col">
+        <div class="skeleton skeleton-line sk-50"></div>
+        <div class="skeleton skeleton-line sk-35"></div>
+      </div>
+    </div>
   </div>
 
   <ion-list *ngIf="!cargando">

@@ -19,7 +19,7 @@
 
   <div class="portal">
     <div class="greet" *ngIf="portal.getCliente() as c">
-      <h1>Hola, {{ c.nombre }} 👋</h1>
+      <h1>Hola, {{ c.nombre }}</h1>
     </div>
 
     <!-- Fidelización -->
@@ -55,8 +55,9 @@
     <section class="ordenes-section">
       <span class="section-label">Mis órdenes</span>
 
-      <div class="ion-text-center" *ngIf="cargando" style="padding:30px 0">
-        <ion-spinner name="crescent"></ion-spinner>
+      <div class="orden-list" *ngIf="cargando">
+        <div class="skeleton" style="height:118px;border-radius:24px"></div>
+        <div class="skeleton" style="height:118px;border-radius:24px"></div>
       </div>
 
       <div class="orden-list" *ngIf="!cargando">

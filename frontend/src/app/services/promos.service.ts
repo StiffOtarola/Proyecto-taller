@@ -8,6 +8,7 @@ export interface Promo {
   titulo: string;
   descripcion: string;
   descuento?: number;
+  imagen?: string | null;
   activa?: number;
   created_at?: string;
 }

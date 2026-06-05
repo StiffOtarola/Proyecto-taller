@@ -3,6 +3,7 @@ const { pool } = require('../db/pool');
 const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
+const { notificarCambioEstado } = require('../utils/notificaciones');
 
 // Panel del mecánico: opera sobre SUS citas asignadas. Accesible a técnico o superior.
 router.use(auth, requireRol('tecnico'));
@@ -122,6 +123,7 @@ router.patch('/citas/:id/estado', async (req, res) => {
     params.push(req.params.id);
 
     await pool.query(`UPDATE citas SET ${sets.join(', ')} WHERE id = ?`, params);
+    await notificarCambioEstado(req.params.id, estado);
     res.json({ message: 'Estado actualizado' });
   } catch (err) {
     fail(res, err);

@@ -31,6 +31,13 @@
       <ion-item lines="none">
         <ion-input label="Descuento (%)" labelPlacement="floating" type="number" [(ngModel)]="nueva.descuento"></ion-input>
       </ion-item>
+      <div class="img-field">
+        <label class="img-btn">
+          <ion-icon name="image-outline"></ion-icon> {{ nueva.imagen ? 'Cambiar imagen' : 'Subir imagen (opcional)' }}
+          <input type="file" accept="image/*" (change)="onImagen($event)" hidden />
+        </label>
+        <img *ngIf="nueva.imagen" [src]="nueva.imagen" class="img-preview" alt="" />
+      </div>
       <ion-button expand="block" class="ion-margin-top" (click)="crear()" [disabled]="!valido">Publicar</ion-button>
       <ion-button expand="block" fill="clear" color="medium" (click)="mostrarForm = false">Cancelar</ion-button>
     </ion-card-content>

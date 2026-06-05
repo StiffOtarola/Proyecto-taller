@@ -135,6 +135,25 @@ async function ensureSchema() {
       `);
       console.log('🔧 Migración: citas.estado → nuevo flujo del mecánico');
     }
+
+    // Portal v2: feed de notificaciones de avance para el cliente.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS notificaciones (
+        id         INT AUTO_INCREMENT PRIMARY KEY,
+        cliente_id INT NOT NULL,
+        cita_id    INT,
+        titulo     VARCHAR(150) NOT NULL,
+        mensaje    VARCHAR(255) NOT NULL,
+        leida      TINYINT(1) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_cliente (cliente_id),
+        FOREIGN KEY (cliente_id) REFERENCES clientes(id),
+        FOREIGN KEY (cita_id)    REFERENCES citas(id)
+      )
+    `);
+
+    // Ofertas con imagen (data URL base64).
+    await addColumnIfMissing('promos', 'imagen', 'MEDIUMTEXT NULL');
   } catch (err) {
     console.error('⚠️  Auto-migración falló:', err.code || err.message);
   }

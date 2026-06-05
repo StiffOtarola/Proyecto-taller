@@ -94,12 +94,32 @@ export class PortalService {
     return this.http.post<{ data: any }>(`${this.url}/motos`, data);
   }
 
+  editarMoto(id: number, data: { marca: string; modelo: string; placa: string; anio?: number | null; color?: string; kilometraje_actual?: number | null }): Observable<{ data: any }> {
+    return this.http.put<{ data: any }>(`${this.url}/motos/${id}`, data);
+  }
+
   getCitas(): Observable<{ data: any[] }> {
     return this.http.get<{ data: any[] }>(`${this.url}/citas`);
   }
 
-  crearCita(data: { moto_id?: number | null; fecha: string; hora: string; motivo: string; tipo_servicio?: string | null }): Observable<{ data: any }> {
+  crearCita(data: { moto_id: number; fecha: string; hora: string; tipo_servicio: string; descripcion?: string }): Observable<{ data: any }> {
     return this.http.post<{ data: any }>(`${this.url}/citas`, data);
+  }
+
+  getResumen(): Observable<{ data: any }> {
+    return this.http.get<{ data: any }>(`${this.url}/resumen`);
+  }
+
+  getNotificaciones(): Observable<{ data: any[] }> {
+    return this.http.get<{ data: any[] }>(`${this.url}/notificaciones`);
+  }
+
+  leerNotificaciones(): Observable<any> {
+    return this.http.post(`${this.url}/notificaciones/leer`, {});
+  }
+
+  getDisponibilidad(fecha: string): Observable<{ data: { horas: string[]; max: number; ocupacion: Record<string, number> } }> {
+    return this.http.get<{ data: any }>(`${this.url}/disponibilidad`, { params: { fecha } as any });
   }
 
   calificarCita(id: number, calificacion: number, comentario?: string): Observable<any> {

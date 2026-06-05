@@ -1,0 +1,37 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Ofertas</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar(); $event.target.complete()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="ofertas">
+    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:12px">
+      <div class="skeleton" style="height:96px;border-radius:20px"></div>
+      <div class="skeleton" style="height:96px;border-radius:20px"></div>
+    </div>
+
+    <div class="oferta" *ngFor="let p of promos" (click)="toggle(p.id)" [class.abierta]="abierta.has(p.id)">
+      <img *ngIf="p.imagen" [src]="p.imagen" alt="" class="of-img" />
+      <div class="of-body">
+        <div class="of-head">
+          <strong>{{ p.titulo }}</strong>
+          <ion-badge *ngIf="p.descuento" color="primary">-{{ p.descuento }}%</ion-badge>
+        </div>
+        <p class="of-desc" [class.full]="abierta.has(p.id)">{{ p.descripcion }}</p>
+        <span class="of-toggle">{{ abierta.has(p.id) ? 'Ver menos' : 'Ver más' }}</span>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="!cargando && promos.length === 0">
+      <ion-icon name="pricetags-outline"></ion-icon>
+      <p>No hay ofertas por ahora. ¡Volvé pronto!</p>
+    </div>
+
+    <div style="height:30px"></div>
+  </div>
+</ion-content>

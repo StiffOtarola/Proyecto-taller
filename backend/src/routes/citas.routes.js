@@ -3,6 +3,7 @@ const { pool } = require('../db/pool');
 const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
+const { notificarCambioEstado } = require('../utils/notificaciones');
 
 const ESTADOS = ['agendado', 'en_revision', 'en_mantenimiento', 'listo', 'entregado', 'cancelado'];
 
@@ -87,6 +88,7 @@ router.patch('/:id/estado', async (req, res) => {
     const { estado } = req.body;
     if (!ESTADOS.includes(estado)) return res.status(400).json({ error: 'Estado inválido' });
     await pool.query('UPDATE citas SET estado = ? WHERE id = ?', [estado, req.params.id]);
+    await notificarCambioEstado(req.params.id, estado);
     res.json({ message: 'Estado de cita actualizado' });
   } catch (err) {
     fail(res, err);

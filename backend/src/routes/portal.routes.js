@@ -7,6 +7,9 @@ const authCliente = require('../middleware/auth-cliente');
 const { emailValido } = require('../utils/validar');
 const { consumir } = require('../utils/rate-limit');
 const { enviarCodigoReset } = require('../services/mailer');
+const { SERVICIOS, HORAS, MAX_POR_HORA } = require('../utils/servicios');
+
+const META_CORTESIA = 7; // cada 7 citas, la 7ª es cortesía
 
 // Firma el JWT del cliente y arma el payload estándar.
 function tokenCliente(cliente) {
@@ -158,6 +161,89 @@ router.post('/recuperar/confirmar', async (req, res) => {
 // Todo lo de abajo requiere token de cliente
 router.use(authCliente);
 
+// GET /api/portal/resumen — métricas del inicio del cliente
+router.get('/resumen', async (req, res) => {
+  try {
+    const id = req.cliente.id;
+    const [[{ citas_totales }]] = await pool.query('SELECT COUNT(*) AS citas_totales FROM citas WHERE cliente_id = ?', [id]);
+    const [[{ citas_pendientes }]] = await pool.query(
+      "SELECT COUNT(*) AS citas_pendientes FROM citas WHERE cliente_id = ? AND estado NOT IN ('entregado','cancelado')",
+      [id]
+    );
+    const [[{ motos_registradas }]] = await pool.query('SELECT COUNT(*) AS motos_registradas FROM motos WHERE cliente_id = ? AND activa = 1', [id]);
+    const [[{ total_pagado }]] = await pool.query(
+      "SELECT COALESCE(SUM(monto), 0) AS total_pagado FROM citas WHERE cliente_id = ? AND estado = 'entregado'",
+      [id]
+    );
+    const [[{ completadas }]] = await pool.query(
+      "SELECT COUNT(*) AS completadas FROM citas WHERE cliente_id = ? AND estado = 'entregado'",
+      [id]
+    );
+    const ciclo = completadas % META_CORTESIA;
+    const cortesia_disponible = completadas > 0 && ciclo === META_CORTESIA - 1;
+    const [[proxima_cita]] = await pool.query(
+      `SELECT ci.id, ci.fecha, ci.hora, ci.tipo_servicio, ci.estado,
+              m.marca, m.modelo, m.placa, t.nombre AS tecnico_nombre
+       FROM citas ci
+       LEFT JOIN motos m ON m.id = ci.moto_id
+       LEFT JOIN usuarios t ON t.id = ci.tecnico_id
+       WHERE ci.cliente_id = ? AND ci.estado NOT IN ('entregado','cancelado')
+       ORDER BY ci.fecha ASC, ci.hora ASC LIMIT 1`,
+      [id]
+    );
+    res.json({
+      data: {
+        citas_totales, citas_pendientes, motos_registradas, total_pagado,
+        recompensas: { completadas, ciclo, meta: META_CORTESIA, faltan: cortesia_disponible ? 0 : (META_CORTESIA - 1 - ciclo), cortesia_disponible },
+        proxima_cita: proxima_cita || null,
+      },
+    });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// GET /api/portal/notificaciones — feed de avances del cliente
+router.get('/notificaciones', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, cita_id, titulo, mensaje, leida, created_at FROM notificaciones WHERE cliente_id = ? ORDER BY created_at DESC LIMIT 50',
+      [req.cliente.id]
+    );
+    res.json({ data: rows });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// POST /api/portal/notificaciones/leer — marca todas como leídas
+router.post('/notificaciones/leer', async (req, res) => {
+  try {
+    await pool.query('UPDATE notificaciones SET leida = 1 WHERE cliente_id = ? AND leida = 0', [req.cliente.id]);
+    res.json({ message: 'Notificaciones leídas' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// GET /api/portal/disponibilidad?fecha= — conteo de citas por hora ese día
+router.get('/disponibilidad', async (req, res) => {
+  try {
+    const { fecha } = req.query;
+    if (!fecha) return res.status(400).json({ error: 'Fecha requerida' });
+    const [rows] = await pool.query(
+      `SELECT TIME_FORMAT(hora, '%H:%i') AS hora, COUNT(*) AS n
+       FROM citas WHERE fecha = ? AND estado != 'cancelado' GROUP BY 1`,
+      [fecha]
+    );
+    const ocupacion = {};
+    for (const r of rows) ocupacion[r.hora] = r.n;
+    res.json({ data: { horas: HORAS, max: MAX_POR_HORA, ocupacion } });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
 // GET /api/portal/ordenes — órdenes del cliente autenticado
 router.get('/ordenes', async (req, res) => {
   try {
@@ -286,7 +372,7 @@ router.get('/fidelidad', async (req, res) => {
 // GET /api/portal/promos — promociones activas (visibles para el cliente)
 router.get('/promos', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT id, titulo, descripcion, descuento FROM promos WHERE activa = 1 ORDER BY created_at DESC');
+    const [rows] = await pool.query('SELECT id, titulo, descripcion, descuento, imagen FROM promos WHERE activa = 1 ORDER BY created_at DESC');
     res.json({ data: rows });
   } catch (err) {
     fail(res, err);
@@ -336,6 +422,38 @@ router.post('/motos', async (req, res) => {
   }
 });
 
+// PUT /api/portal/motos/:id — el cliente edita su propia moto
+router.put('/motos/:id', async (req, res) => {
+  try {
+    const { marca, modelo, placa, anio, color, kilometraje_actual } = req.body;
+    if (!marca || !modelo || !placa) {
+      return res.status(400).json({ error: 'Marca, modelo y placa son requeridos' });
+    }
+    // La moto debe ser del cliente
+    const [[moto]] = await pool.query('SELECT id FROM motos WHERE id = ? AND cliente_id = ? AND activa = 1', [req.params.id, req.cliente.id]);
+    if (!moto) return res.status(404).json({ error: 'Moto no encontrada' });
+    // Placa duplicada (excluyendo la propia)
+    const [[dup]] = await pool.query(
+      `SELECT id FROM motos WHERE activa = 1 AND id <> ?
+         AND UPPER(REPLACE(REPLACE(placa, ' ', ''), '-', '')) = UPPER(REPLACE(REPLACE(?, ' ', ''), '-', ''))`,
+      [req.params.id, placa]
+    );
+    if (dup) return res.status(409).json({ error: 'Esa placa ya está registrada en el taller' });
+
+    await pool.query(
+      'UPDATE motos SET marca = ?, modelo = ?, placa = ?, anio = ?, color = ?, kilometraje_actual = ? WHERE id = ?',
+      [marca, modelo, placa, anio || null, color || null, kilometraje_actual || 0, req.params.id]
+    );
+    const [[actualizada]] = await pool.query(
+      'SELECT id, marca, modelo, placa, anio, color, kilometraje_actual FROM motos WHERE id = ?',
+      [req.params.id]
+    );
+    res.json({ data: actualizada, message: 'Moto actualizada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
 // GET /api/portal/citas — citas del cliente
 router.get('/citas', async (req, res) => {
   try {
@@ -360,21 +478,36 @@ router.get('/citas', async (req, res) => {
 // POST /api/portal/citas — el cliente solicita una cita (queda pendiente de confirmar)
 router.post('/citas', async (req, res) => {
   try {
-    const { moto_id, fecha, hora, motivo, tipo_servicio } = req.body;
-    if (!fecha || !hora || !motivo) {
-      return res.status(400).json({ error: 'Fecha, hora y motivo son requeridos' });
+    const { moto_id, fecha, hora, tipo_servicio, descripcion } = req.body;
+    if (!moto_id || !fecha || !hora || !tipo_servicio) {
+      return res.status(400).json({ error: 'Moto, servicio, fecha y hora son requeridos' });
+    }
+    if (!SERVICIOS.includes(tipo_servicio)) {
+      return res.status(400).json({ error: 'Servicio no válido' });
+    }
+    if (!HORAS.includes(hora)) {
+      return res.status(400).json({ error: 'La hora debe ser entre las 8:00 y las 16:00' });
     }
     if (fecha < new Date().toISOString().slice(0, 10)) {
       return res.status(400).json({ error: 'La fecha no puede ser en el pasado' });
     }
-    // Si indica moto, validar que sea suya
-    if (moto_id) {
-      const [[moto]] = await pool.query('SELECT id FROM motos WHERE id = ? AND cliente_id = ?', [moto_id, req.cliente.id]);
-      if (!moto) return res.status(400).json({ error: 'Moto no válida' });
+    // La moto debe ser del cliente
+    const [[moto]] = await pool.query('SELECT id FROM motos WHERE id = ? AND cliente_id = ?', [moto_id, req.cliente.id]);
+    if (!moto) return res.status(400).json({ error: 'Moto no válida' });
+
+    // Cupo: máximo MAX_POR_HORA citas por franja (sin contar canceladas)
+    const [[{ ocupadas }]] = await pool.query(
+      "SELECT COUNT(*) AS ocupadas FROM citas WHERE fecha = ? AND TIME_FORMAT(hora,'%H:%i') = ? AND estado != 'cancelado'",
+      [fecha, hora]
+    );
+    if (ocupadas >= MAX_POR_HORA) {
+      return res.status(400).json({ error: 'Esa hora ya no está disponible, elegí otra.' });
     }
+
+    const motivo = (descripcion || '').trim() || tipo_servicio;
     const [result] = await pool.query(
       "INSERT INTO citas (cliente_id, moto_id, fecha, hora, motivo, tipo_servicio, estado) VALUES (?, ?, ?, ?, ?, ?, 'agendado')",
-      [req.cliente.id, moto_id || null, fecha, hora, motivo, tipo_servicio || null]
+      [req.cliente.id, moto_id, fecha, hora, motivo, tipo_servicio]
     );
     const [[nueva]] = await pool.query(
       `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado, m.marca, m.modelo, m.placa

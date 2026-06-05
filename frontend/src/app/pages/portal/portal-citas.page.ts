@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { ToastController } from '@ionic/angular';
+import { ToastController, AlertController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
+import { FLUJO_CITA, ESTADO_CITA_LABEL } from '../../utils/servicios';
 
 @Component({
   standalone: false,
@@ -10,34 +11,14 @@ import { PortalService } from '../../services/portal.service';
 })
 export class PortalCitasPage implements OnInit {
   citas: any[] = [];
-  motos: any[] = [];
   cargando = true;
+  vista: 'pendientes' | 'historial' = 'pendientes';
+  reporteAbierto = new Set<number>();
 
-  mostrarForm = false;
-  enviando = false;
-  hoy = new Date().toISOString().slice(0, 10);
-  nueva = { moto_id: null as number | null, fecha: '', hora: '', motivo: '', tipo_servicio: null as string | null };
-  tiposServicio = ['Mantenimiento preventivo', 'Cambio de aceite', 'Frenos', 'Llantas', 'Sistema eléctrico', 'Afinamiento', 'Diagnóstico', 'Otro'];
+  readonly flujo = FLUJO_CITA;
+  readonly estadoLabel = ESTADO_CITA_LABEL;
 
-  // Estados del flujo que ve el cliente.
-  readonly estadoPill: Record<string, string> = {
-    agendado: 'gris',
-    en_revision: 'amber',
-    en_mantenimiento: 'rose',
-    listo: 'indigo',
-    entregado: 'green',
-    cancelado: 'gris',
-  };
-  readonly estadoLabel: Record<string, string> = {
-    agendado: 'Agendada',
-    en_revision: 'En revisión',
-    en_mantenimiento: 'En mantenimiento',
-    listo: 'Lista para entrega',
-    entregado: 'Entregada',
-    cancelado: 'Cancelada',
-  };
-
-  constructor(private portal: PortalService, private toast: ToastController) {}
+  constructor(private portal: PortalService, private toast: ToastController, private alert: AlertController) {}
 
   ngOnInit() { this.cargar(); }
   ionViewWillEnter() { this.cargar(); }
@@ -45,48 +26,61 @@ export class PortalCitasPage implements OnInit {
   cargar() {
     this.cargando = true;
     this.portal.getCitas().subscribe({
-      next: res => { this.citas = res.data; this.cargando = false; },
+      next: r => { this.citas = r.data; this.cargando = false; },
       error: () => { this.cargando = false; },
     });
-    this.portal.getMotos().subscribe(res => this.motos = res.data);
   }
 
-  abrirForm() {
-    this.nueva = { moto_id: null, fecha: '', hora: '', motivo: '', tipo_servicio: null };
-    this.mostrarForm = true;
+  get pendientes(): any[] {
+    return this.citas.filter(c => !['entregado', 'cancelado'].includes(c.estado));
+  }
+  get historial(): any[] {
+    return this.citas.filter(c => ['entregado', 'cancelado'].includes(c.estado));
+  }
+  get totalPagado(): number {
+    return this.historial.filter(c => c.estado === 'entregado').reduce((s, c) => s + Number(c.monto || 0), 0);
   }
 
-  // El cliente califica su cita ya entregada (1-5 estrellas).
-  calificar(cita: any, estrellas: number) {
-    this.portal.calificarCita(cita.id, estrellas).subscribe({
-      next: () => { cita.calificacion = estrellas; this.mostrarToast('¡Gracias por tu opinión!'); },
-      error: err => this.mostrarToast(err.error?.error || 'No se pudo calificar', 'danger'),
+  // Índice del estado en el flujo (para la barra de progreso). -1 si cancelado.
+  pasoActual(estado: string): number {
+    return this.flujo.indexOf(estado);
+  }
+  progresoPct(estado: string): number {
+    const i = this.pasoActual(estado);
+    if (i < 0) return 0;
+    return Math.round((i / (this.flujo.length - 1)) * 100);
+  }
+
+  toggleReporte(id: number) {
+    this.reporteAbierto.has(id) ? this.reporteAbierto.delete(id) : this.reporteAbierto.add(id);
+  }
+
+  async calificar(cita: any) {
+    const al = await this.alert.create({
+      header: '¿Cómo fue el servicio?',
+      inputs: [1, 2, 3, 4, 5].map(n => ({ type: 'radio' as const, label: '★'.repeat(n) + ` (${n})`, value: n })),
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Enviar', handler: (n) => this.enviarCalif(cita, n) },
+      ],
+    });
+    await al.present();
+  }
+
+  private enviarCalif(cita: any, n: number) {
+    if (!n) return;
+    this.portal.calificarCita(cita.id, n).subscribe({
+      next: async () => {
+        cita.calificacion = n;
+        const t = await this.toast.create({ message: '¡Gracias por tu opinión!', duration: 2000, color: 'success' });
+        await t.present();
+      },
+      error: async (err) => {
+        const t = await this.toast.create({ message: err.error?.error || 'No se pudo calificar', duration: 2200, color: 'danger' });
+        await t.present();
+      },
     });
   }
 
-  get valido(): boolean {
-    return !!this.nueva.fecha && !!this.nueva.hora && !!this.nueva.motivo.trim();
-  }
-
-  solicitar() {
-    if (!this.valido) return;
-    this.enviando = true;
-    this.portal.crearCita(this.nueva).subscribe({
-      next: res => {
-        this.citas.unshift(res.data);
-        this.mostrarForm = false;
-        this.enviando = false;
-        this.mostrarToast('Solicitud enviada. El taller la confirmará.');
-      },
-      error: err => {
-        this.enviando = false;
-        this.mostrarToast(err.error?.error || 'No se pudo enviar', 'danger');
-      },
-    });
-  }
-
-  private async mostrarToast(message: string, color = 'success') {
-    const t = await this.toast.create({ message, duration: 2400, color });
-    await t.present();
-  }
+  estrellas(n: number): string { return '★'.repeat(n) + '☆'.repeat(5 - n); }
 }

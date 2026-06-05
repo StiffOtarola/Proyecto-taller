@@ -13,7 +13,7 @@ export class PromosPage implements OnInit {
   cargando = true;
 
   mostrarForm = false;
-  nueva: Promo = { titulo: '', descripcion: '', descuento: 0, activa: 1 };
+  nueva: Promo = { titulo: '', descripcion: '', descuento: 0, activa: 1, imagen: null };
 
   constructor(
     private promosSvc: PromosService,
@@ -33,8 +33,17 @@ export class PromosPage implements OnInit {
   }
 
   abrirForm() {
-    this.nueva = { titulo: '', descripcion: '', descuento: 0, activa: 1 };
+    this.nueva = { titulo: '', descripcion: '', descuento: 0, activa: 1, imagen: null };
     this.mostrarForm = true;
+  }
+
+  // Lee el archivo elegido y lo guarda como data URL base64.
+  onImagen(event: any) {
+    const file = event?.target?.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => { this.nueva.imagen = reader.result as string; };
+    reader.readAsDataURL(file);
   }
 
   get valido(): boolean {

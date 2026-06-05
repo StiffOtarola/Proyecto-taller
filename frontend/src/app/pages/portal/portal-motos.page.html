@@ -1,8 +1,5 @@
 <ion-header>
   <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/portal"></ion-back-button>
-    </ion-buttons>
     <ion-title>Mis motos</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -25,7 +22,7 @@
 
     <!-- Formulario -->
     <section class="card" *ngIf="mostrarForm">
-      <span class="section-label">Nueva moto</span>
+      <span class="section-label">{{ editandoId ? 'Editar moto' : 'Nueva moto' }}</span>
       <ion-item>
         <ion-input label="Marca *" labelPlacement="floating" [(ngModel)]="nueva.marca" placeholder="Ej: Honda"></ion-input>
       </ion-item>
@@ -45,11 +42,11 @@
         <ion-input label="Kilometraje (opcional)" labelPlacement="floating" type="number" inputmode="numeric" [(ngModel)]="nueva.kilometraje" placeholder="Ej: 12500"></ion-input>
       </ion-item>
 
-      <ion-button expand="block" class="ion-margin-top" (click)="agregar()" [disabled]="!valido || enviando">
+      <ion-button expand="block" class="ion-margin-top" (click)="guardar()" [disabled]="!valido || enviando">
         <ion-spinner *ngIf="enviando" name="crescent" slot="start"></ion-spinner>
-        {{ enviando ? 'Guardando...' : 'Guardar moto' }}
+        {{ enviando ? 'Guardando...' : (editandoId ? 'Guardar cambios' : 'Guardar moto') }}
       </ion-button>
-      <ion-button expand="block" fill="clear" color="medium" (click)="mostrarForm = false" [disabled]="enviando">
+      <ion-button expand="block" fill="clear" color="medium" (click)="cerrarForm()" [disabled]="enviando">
         Cancelar
       </ion-button>
     </section>
@@ -70,6 +67,9 @@
           <h4>{{ m.marca }} {{ m.modelo }}</h4>
           <p><span class="placa mono">{{ m.placa }}</span><span *ngIf="m.anio"> · {{ m.anio }}</span><span *ngIf="m.color"> · {{ m.color }}</span><span *ngIf="m.kilometraje_actual"> · {{ m.kilometraje_actual | number }} km</span></p>
         </div>
+        <ion-button fill="clear" size="small" (click)="editar(m)" title="Editar">
+          <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+        </ion-button>
       </div>
     </div>
 

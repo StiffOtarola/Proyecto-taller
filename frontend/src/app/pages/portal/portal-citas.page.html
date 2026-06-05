@@ -1,9 +1,6 @@
 <ion-header>
   <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/portal"></ion-back-button>
-    </ion-buttons>
-    <ion-title>Mis citas</ion-title>
+    <ion-title>Mis Citas</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -13,88 +10,79 @@
   </ion-refresher>
 
   <div class="citas">
-    <div class="intro">
-      <h2>Agendá tu mantenimiento</h2>
-      <p>Reservá tu hora y el taller la confirmará.</p>
+    <ion-segment [(ngModel)]="vista" mode="md" class="seg">
+      <ion-segment-button value="pendientes"><ion-label>Pendientes</ion-label></ion-segment-button>
+      <ion-segment-button value="historial"><ion-label>Historial</ion-label></ion-segment-button>
+    </ion-segment>
+
+    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+      <div class="skeleton" style="height:130px;border-radius:20px"></div>
+      <div class="skeleton" style="height:130px;border-radius:20px"></div>
     </div>
 
-    <ion-button expand="block" (click)="abrirForm()" *ngIf="!mostrarForm" class="cta-upper">
-      <ion-icon name="add-outline" slot="start"></ion-icon>
-      Solicitar cita
-    </ion-button>
-
-    <!-- Formulario -->
-    <section class="card" *ngIf="mostrarForm">
-      <span class="section-label">Solicitar cita</span>
-      <ion-item>
-        <ion-select label="Moto (opcional)" labelPlacement="floating" [(ngModel)]="nueva.moto_id" interface="action-sheet">
-          <ion-select-option [value]="null">Sin especificar</ion-select-option>
-          <ion-select-option *ngFor="let m of motos" [value]="m.id">{{ m.marca }} {{ m.modelo }}<span *ngIf="m.placa"> · {{ m.placa }}</span></ion-select-option>
-        </ion-select>
-      </ion-item>
-      <ion-item>
-        <ion-input label="Fecha" labelPlacement="floating" type="date" [min]="hoy" [(ngModel)]="nueva.fecha"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-input label="Hora" labelPlacement="floating" type="time" [(ngModel)]="nueva.hora"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-select label="Tipo de servicio" labelPlacement="floating" [(ngModel)]="nueva.tipo_servicio" interface="action-sheet">
-          <ion-select-option *ngFor="let t of tiposServicio" [value]="t">{{ t }}</ion-select-option>
-        </ion-select>
-      </ion-item>
-      <ion-item lines="none">
-        <ion-textarea label="Notas" labelPlacement="floating" [(ngModel)]="nueva.motivo" rows="3"
-          placeholder="Contanos el detalle: ruido, síntomas, etc."></ion-textarea>
-      </ion-item>
-
-      <ion-button expand="block" class="ion-margin-top" (click)="solicitar()" [disabled]="!valido || enviando">
-        <ion-spinner *ngIf="enviando" name="crescent" slot="start"></ion-spinner>
-        {{ enviando ? 'Enviando...' : 'Enviar solicitud' }}
-      </ion-button>
-      <ion-button expand="block" fill="clear" color="medium" (click)="mostrarForm = false" [disabled]="enviando">
-        Cancelar
-      </ion-button>
-    </section>
-
-    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px;margin-top:22px">
-      <div class="skeleton" style="height:80px;border-radius:18px"></div>
-      <div class="skeleton" style="height:80px;border-radius:18px"></div>
-      <div class="skeleton" style="height:80px;border-radius:18px"></div>
-    </div>
-
-    <!-- Lista de citas -->
-    <div class="cita-list" *ngIf="!cargando && citas.length">
-      <span class="section-label">Tus citas</span>
-      <div class="cita-row" *ngFor="let c of citas">
-        <div class="cita-ico">
-          <ion-icon name="calendar"></ion-icon>
+    <!-- PENDIENTES con barra de progreso -->
+    <div *ngIf="!cargando && vista === 'pendientes'">
+      <div class="cita-card" *ngFor="let c of pendientes">
+        <div class="cc-top">
+          <h4>{{ c.marca }} {{ c.modelo }}</h4>
+          <span class="pill rose">{{ estadoLabel[c.estado] }}</span>
         </div>
-        <div class="cita-meta">
-          <h4>{{ c.fecha | date:'EEEE dd/MM' }} · {{ c.hora }}</h4>
-          <p *ngIf="c.marca">{{ c.marca }} {{ c.modelo }}</p>
-          <p *ngIf="c.tipo_servicio" class="servicio">{{ c.tipo_servicio }}</p>
-          <p class="motivo">{{ c.motivo }}</p>
-          <p *ngIf="c.tecnico_nombre" class="tecnico"><ion-icon name="construct-outline"></ion-icon> {{ c.tecnico_nombre }}</p>
+        <p class="cc-sub">{{ c.tipo_servicio || c.motivo }} · {{ c.fecha | date:'dd/MM' }} · {{ c.hora }}</p>
 
-          <!-- Calificar cuando ya está entregada -->
-          <div class="calificar" *ngIf="c.estado === 'entregado' && !c.calificacion">
-            <span>¿Cómo estuvo el servicio?</span>
-            <div class="estrellas">
-              <ion-icon *ngFor="let n of [1,2,3,4,5]" name="star-outline" (click)="calificar(c, n)"></ion-icon>
+        <!-- Barra de progreso -->
+        <div class="prog">
+          <div class="prog-bar"><div class="prog-fill" [style.width.%]="progresoPct(c.estado)"></div></div>
+          <div class="prog-steps">
+            <div class="step" *ngFor="let s of flujo; let i = index" [class.done]="i <= pasoActual(c.estado)">
+              <span class="dot"></span>
+              <span class="st-lbl">{{ estadoLabel[s] }}</span>
             </div>
           </div>
-          <div class="calif-hecha" *ngIf="c.calificacion">
-            <ion-icon *ngFor="let n of [1,2,3,4,5]" [name]="n <= c.calificacion ? 'star' : 'star-outline'"></ion-icon>
-          </div>
         </div>
-        <span class="pill" [ngClass]="estadoPill[c.estado]">{{ estadoLabel[c.estado] }}</span>
+        <p class="cc-tec" *ngIf="c.tecnico_nombre"><ion-icon name="person-outline"></ion-icon> {{ c.tecnico_nombre }}</p>
+      </div>
+      <div class="empty-state" *ngIf="pendientes.length === 0">
+        <ion-icon name="checkmark-done-circle-outline"></ion-icon>
+        <p>No tenés citas pendientes.</p>
       </div>
     </div>
 
-    <div class="empty-state" *ngIf="!cargando && citas.length === 0 && !mostrarForm">
-      <ion-icon name="calendar-outline"></ion-icon>
-      <p>No tenés citas. Solicitá una y el taller la confirmará.</p>
+    <!-- HISTORIAL con reporte -->
+    <div *ngIf="!cargando && vista === 'historial'">
+      <div class="total-pagado" *ngIf="totalPagado > 0">
+        <span>Total pagado</span>
+        <strong class="mono">{{ totalPagado | currency:'CRC':'symbol-narrow':'1.0-0' }}</strong>
+      </div>
+
+      <div class="cita-card" *ngFor="let c of historial">
+        <div class="cc-top">
+          <h4>{{ c.marca }} {{ c.modelo }}</h4>
+          <span class="pill" [ngClass]="c.estado === 'entregado' ? 'green' : 'gris'">{{ estadoLabel[c.estado] }}</span>
+        </div>
+        <p class="cc-sub">{{ c.tipo_servicio || c.motivo }} · {{ c.fecha | date:'dd/MM/yyyy' }}</p>
+
+        <div class="cc-acciones" *ngIf="c.estado === 'entregado'">
+          <ion-button size="small" fill="outline" (click)="toggleReporte(c.id)">
+            <ion-icon name="document-text-outline" slot="start"></ion-icon> Reporte
+          </ion-button>
+          <ion-button size="small" *ngIf="!c.calificacion" (click)="calificar(c)">
+            <ion-icon name="star-outline" slot="start"></ion-icon> Calificar
+          </ion-button>
+          <span class="calif" *ngIf="c.calificacion">{{ estrellas(c.calificacion) }}</span>
+        </div>
+
+        <!-- Desglose -->
+        <div class="reporte" *ngIf="reporteAbierto.has(c.id)">
+          <div class="rep-row"><span>Servicio</span><span>{{ c.tipo_servicio || c.motivo }}</span></div>
+          <div class="rep-row"><span>Fecha</span><span>{{ c.fecha | date:'dd/MM/yyyy' }}</span></div>
+          <div class="rep-row"><span>Mecánico</span><span>{{ c.tecnico_nombre || '—' }}</span></div>
+          <div class="rep-row total"><span>Total</span><span class="mono">{{ (c.monto || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div>
+        </div>
+      </div>
+      <div class="empty-state" *ngIf="historial.length === 0">
+        <ion-icon name="time-outline"></ion-icon>
+        <p>Todavía no tenés citas completadas.</p>
+      </div>
     </div>
 
     <div style="height:30px"></div>

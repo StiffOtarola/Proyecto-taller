@@ -14,6 +14,7 @@ export class PortalMotosPage implements OnInit {
 
   mostrarForm = false;
   enviando = false;
+  editandoId: number | null = null;
   nueva = { marca: '', modelo: '', placa: '', anio: null as number | null, color: '', kilometraje: null as number | null };
 
   constructor(private portal: PortalService, private toast: ToastController) {}
@@ -30,35 +31,57 @@ export class PortalMotosPage implements OnInit {
   }
 
   abrirForm() {
+    this.editandoId = null;
     this.nueva = { marca: '', modelo: '', placa: '', anio: null, color: '', kilometraje: null };
     this.mostrarForm = true;
   }
+
+  editar(m: any) {
+    this.editandoId = m.id;
+    this.nueva = {
+      marca: m.marca, modelo: m.modelo, placa: m.placa,
+      anio: m.anio || null, color: m.color || '', kilometraje: m.kilometraje_actual || null,
+    };
+    this.mostrarForm = true;
+  }
+
+  cerrarForm() { this.mostrarForm = false; this.editandoId = null; }
 
   // Marca, modelo y placa son obligatorios.
   get valido(): boolean {
     return !!(this.nueva.marca.trim() && this.nueva.modelo.trim() && this.nueva.placa.trim());
   }
 
-  agregar() {
+  guardar() {
     if (!this.valido) { this.mostrarToast('Marca, modelo y placa son obligatorios', 'warning'); return; }
     this.enviando = true;
-    this.portal.crearMoto({
+    const datos = {
       marca: this.nueva.marca.trim(),
       modelo: this.nueva.modelo.trim(),
       placa: this.nueva.placa.trim().toUpperCase(),
       anio: this.nueva.anio || null,
       color: this.nueva.color.trim() || undefined,
       kilometraje_actual: this.nueva.kilometraje || 0,
-    }).subscribe({
+    };
+    const op = this.editandoId
+      ? this.portal.editarMoto(this.editandoId, datos)
+      : this.portal.crearMoto(datos);
+    op.subscribe({
       next: res => {
-        this.motos.unshift(res.data);
-        this.mostrarForm = false;
+        if (this.editandoId) {
+          const i = this.motos.findIndex(m => m.id === this.editandoId);
+          if (i >= 0) this.motos[i] = res.data;
+          this.mostrarToast('Moto actualizada');
+        } else {
+          this.motos.unshift(res.data);
+          this.mostrarToast('Moto registrada');
+        }
+        this.cerrarForm();
         this.enviando = false;
-        this.mostrarToast('Moto registrada');
       },
       error: err => {
         this.enviando = false;
-        this.mostrarToast(err.error?.error || 'No se pudo registrar la moto', 'danger');
+        this.mostrarToast(err.error?.error || 'No se pudo guardar la moto', 'danger');
       },
     });
   }

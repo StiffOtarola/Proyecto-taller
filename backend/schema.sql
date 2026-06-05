@@ -226,7 +226,22 @@ CREATE TABLE IF NOT EXISTS promos (
   titulo      VARCHAR(150) NOT NULL,
   descripcion TEXT NOT NULL,
   descuento   INT DEFAULT 0,
+  imagen      MEDIUMTEXT,                 -- data URL base64 de la oferta
   activa      TINYINT(1) DEFAULT 1,
   created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Feed de notificaciones de avance para el cliente (portal).
+CREATE TABLE IF NOT EXISTS notificaciones (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  cliente_id INT NOT NULL,
+  cita_id    INT,
+  titulo     VARCHAR(150) NOT NULL,
+  mensaje    VARCHAR(255) NOT NULL,
+  leida      TINYINT(1) DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_cliente (cliente_id),
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id),
+  FOREIGN KEY (cita_id)    REFERENCES citas(id)
 );

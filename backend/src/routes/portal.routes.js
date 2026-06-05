@@ -27,6 +27,74 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// POST /api/portal/registro — auto-registro del cliente (público)
+router.post('/registro', async (req, res) => {
+  try {
+    const { nombre, apellido, telefono, email, cedula, password } = req.body;
+    if (!nombre || !apellido || !telefono || !email || !password) {
+      return res.status(400).json({ error: 'Nombre, apellido, teléfono, correo y contraseña son requeridos' });
+    }
+    if (password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+
+    const [[existente]] = await pool.query('SELECT id, password_hash FROM clientes WHERE email = ? AND activo = 1', [email]);
+    const hash = await bcrypt.hash(password, 10);
+    let clienteId;
+
+    if (existente) {
+      if (existente.password_hash) {
+        return res.status(409).json({ error: 'Ese correo ya tiene una cuenta. Iniciá sesión.' });
+      }
+      // El taller ya tenía registrado al cliente: "reclama" la cuenta definiendo su contraseña
+      await pool.query(
+        'UPDATE clientes SET password_hash = ?, cedula = COALESCE(cedula, ?) WHERE id = ?',
+        [hash, cedula || null, existente.id]
+      );
+      clienteId = existente.id;
+    } else {
+      const [result] = await pool.query(
+        'INSERT INTO clientes (nombre, apellido, telefono, email, cedula, password_hash) VALUES (?, ?, ?, ?, ?, ?)',
+        [nombre, apellido, telefono, email, cedula || null, hash]
+      );
+      clienteId = result.insertId;
+    }
+
+    const [[cliente]] = await pool.query('SELECT id, nombre, apellido FROM clientes WHERE id = ?', [clienteId]);
+    const payload = { id: cliente.id, tipo: 'cliente', nombre: cliente.nombre, apellido: cliente.apellido };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '8h' });
+    res.status(201).json({ data: { token, cliente: payload } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/portal/recuperar — restablecer contraseña verificando correo + teléfono (público)
+router.post('/recuperar', async (req, res) => {
+  try {
+    const { email, telefono, password } = req.body;
+    if (!email || !telefono || !password) {
+      return res.status(400).json({ error: 'Correo, teléfono y nueva contraseña son requeridos' });
+    }
+    if (password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+
+    const [[cliente]] = await pool.query(
+      `SELECT id, nombre, apellido FROM clientes
+       WHERE email = ? AND activo = 1
+         AND REPLACE(REPLACE(telefono, ' ', ''), '-', '') = REPLACE(REPLACE(?, ' ', ''), '-', '')`,
+      [email, telefono]
+    );
+    if (!cliente) return res.status(404).json({ error: 'No encontramos una cuenta con ese correo y teléfono' });
+
+    const hash = await bcrypt.hash(password, 10);
+    await pool.query('UPDATE clientes SET password_hash = ? WHERE id = ?', [hash, cliente.id]);
+
+    const payload = { id: cliente.id, tipo: 'cliente', nombre: cliente.nombre, apellido: cliente.apellido };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '8h' });
+    res.json({ data: { token, cliente: payload } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Todo lo de abajo requiere token de cliente
 router.use(authCliente);
 

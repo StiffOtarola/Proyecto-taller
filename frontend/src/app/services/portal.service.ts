@@ -31,6 +31,24 @@ export class PortalService {
     );
   }
 
+  registro(data: { nombre: string; apellido: string; telefono: string; email: string; cedula?: string; password: string }): Observable<{ data: { token: string; cliente: ClientePortal } }> {
+    return this.http.post<{ data: { token: string; cliente: ClientePortal } }>(`${this.url}/registro`, data).pipe(
+      tap(res => this.guardarSesion(res.data.token, res.data.cliente))
+    );
+  }
+
+  recuperar(data: { email: string; telefono: string; password: string }): Observable<{ data: { token: string; cliente: ClientePortal } }> {
+    return this.http.post<{ data: { token: string; cliente: ClientePortal } }>(`${this.url}/recuperar`, data).pipe(
+      tap(res => this.guardarSesion(res.data.token, res.data.cliente))
+    );
+  }
+
+  private guardarSesion(token: string, cliente: ClientePortal) {
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(CLIENTE_KEY, JSON.stringify(cliente));
+    this.clienteSubject.next(cliente);
+  }
+
   logout() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(CLIENTE_KEY);

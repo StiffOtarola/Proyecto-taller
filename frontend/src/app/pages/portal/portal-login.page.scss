@@ -27,4 +27,19 @@
   cursor: pointer;
 
   &:active { color: var(--ion-color-primary-tint); }
+
+  // CTA principal: "Crear una cuenta"
+  &.strong {
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration-color: var(--ion-color-primary);
+    text-underline-offset: 5px;
+  }
+  // Links secundarios (olvidé contraseña / personal)
+  &.sub {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #8a8a8a;
+  }
 }

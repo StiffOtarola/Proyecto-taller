@@ -1,0 +1,54 @@
+<ion-content class="login-content">
+  <div class="login-container">
+    <div class="login-header">
+      <div class="logo-wrapper">
+        <span class="logo-cross">
+          <ion-icon name="build" class="ico-wrench"></ion-icon>
+          <ion-icon name="hammer" class="ico-hammer"></ion-icon>
+        </span>
+      </div>
+      <h1>Crear cuenta</h1>
+      <p>Seguí el estado de tu moto</p>
+    </div>
+
+    <ion-card>
+      <ion-card-content>
+        <ion-item lines="full">
+          <ion-label position="stacked">Nombre</ion-label>
+          <ion-input [(ngModel)]="nombre" autocomplete="given-name"></ion-input>
+        </ion-item>
+        <ion-item lines="full">
+          <ion-label position="stacked">Apellido</ion-label>
+          <ion-input [(ngModel)]="apellido" autocomplete="family-name"></ion-input>
+        </ion-item>
+        <ion-item lines="full">
+          <ion-label position="stacked">Teléfono</ion-label>
+          <ion-input type="tel" [(ngModel)]="telefono" placeholder="8888-1234"></ion-input>
+        </ion-item>
+        <ion-item lines="full">
+          <ion-label position="stacked">Correo</ion-label>
+          <ion-input type="email" [(ngModel)]="email" autocomplete="email" placeholder="tu@correo.com"></ion-input>
+        </ion-item>
+        <ion-item lines="full">
+          <ion-label position="stacked">Cédula (opcional)</ion-label>
+          <ion-input [(ngModel)]="cedula" placeholder="1-2345-6789"></ion-input>
+        </ion-item>
+        <ion-item lines="full">
+          <ion-label position="stacked">Contraseña</ion-label>
+          <ion-input type="password" [(ngModel)]="password" placeholder="Mínimo 6 caracteres"></ion-input>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label position="stacked">Confirmar contraseña</ion-label>
+          <ion-input type="password" [(ngModel)]="confirmar" (keyup.enter)="registrar()"></ion-input>
+        </ion-item>
+
+        <ion-button expand="block" (click)="registrar()" [disabled]="!valido">
+          Crear cuenta
+          <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <a class="portal-link" (click)="irLogin()">¿Ya tenés cuenta? Iniciá sesión</a>
+  </div>
+</ion-content>

@@ -46,8 +46,10 @@ if (hasFrontend) {
 }
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, async () => {
-  console.log(`🚀 Servidor en http://localhost:${PORT}`);
+// Corre la auto-migración ANTES de aceptar requests, así no hay una ventana
+// donde la base esté a medio migrar mientras el server ya responde.
+(async () => {
   await testConnection();
   await ensureSchema();
-});
+  app.listen(PORT, () => console.log(`🚀 Servidor en http://localhost:${PORT}`));
+})();

@@ -72,8 +72,12 @@ CREATE TABLE IF NOT EXISTS motos (
   kilometraje_actual INT DEFAULT 0,
   foto_url           VARCHAR(500),
   activa             TINYINT(1) DEFAULT 1,
+  -- Placa normalizada (sin espacios/guiones, mayúsculas) con índice único:
+  -- evita duplicados a nivel de base, no solo en la app.
+  placa_norm         VARCHAR(32) AS (UPPER(REPLACE(REPLACE(placa,' ',''),'-',''))) STORED,
   created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_motos_placa_norm (placa_norm),
   FOREIGN KEY (cliente_id) REFERENCES clientes(id)
 );
 
@@ -93,8 +97,10 @@ CREATE TABLE IF NOT EXISTS citas (
   comentario_satisfaccion TEXT,
   fecha_inicio  TIMESTAMP NULL,                       -- al empezar el trabajo
   fecha_fin     TIMESTAMP NULL,                       -- al entregar
+  orden_id      INT,                                  -- orden de trabajo generada/enlazada
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_citas_fecha_hora (fecha, hora),
   FOREIGN KEY (cliente_id) REFERENCES clientes(id),
   FOREIGN KEY (moto_id)    REFERENCES motos(id),
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id),

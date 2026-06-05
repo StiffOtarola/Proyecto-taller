@@ -8,8 +8,13 @@ const { emailValido } = require('../utils/validar');
 const { consumir } = require('../utils/rate-limit');
 const { enviarCodigoReset } = require('../services/mailer');
 const { SERVICIOS, HORAS, MAX_POR_HORA } = require('../utils/servicios');
+const { recompensas } = require('../utils/recompensas');
 
-const META_CORTESIA = 7; // cada 7 citas, la 7ª es cortesía
+// Fecha de hoy en zona de Costa Rica (UTC-6, sin horario de verano).
+// Evita rechazar/permitir un día de más cuando el server corre en UTC.
+function hoyCR() {
+  return new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
 
 // Firma el JWT del cliente y arma el payload estándar.
 function tokenCliente(cliente) {
@@ -50,6 +55,12 @@ router.post('/registro', async (req, res) => {
     }
     if (!emailValido(email)) return res.status(400).json({ error: 'El correo no tiene un formato válido' });
     if (password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+
+    // Rate-limit por correo: frena el sondeo de cuentas existentes vía el 409 de abajo.
+    const limite = consumir(`registro:${String(email).trim().toLowerCase()}`, { porMinuto: 3, porHora: 20 });
+    if (!limite.ok) {
+      return res.status(429).json({ error: `Demasiados intentos. Esperá ${limite.retryAfter}s e intentá de nuevo.` });
+    }
 
     const [[existente]] = await pool.query('SELECT id, password_hash FROM clientes WHERE email = ? AND activo = 1', [email]);
     const hash = await bcrypt.hash(password, 10);
@@ -179,8 +190,6 @@ router.get('/resumen', async (req, res) => {
       "SELECT COUNT(*) AS completadas FROM citas WHERE cliente_id = ? AND estado = 'entregado'",
       [id]
     );
-    const ciclo = completadas % META_CORTESIA;
-    const cortesia_disponible = completadas > 0 && ciclo === META_CORTESIA - 1;
     const [[proxima_cita]] = await pool.query(
       `SELECT ci.id, ci.fecha, ci.hora, ci.tipo_servicio, ci.estado,
               m.marca, m.modelo, m.placa, t.nombre AS tecnico_nombre
@@ -194,7 +203,7 @@ router.get('/resumen', async (req, res) => {
     res.json({
       data: {
         citas_totales, citas_pendientes, motos_registradas, total_pagado,
-        recompensas: { completadas, ciclo, meta: META_CORTESIA, faltan: cortesia_disponible ? 0 : (META_CORTESIA - 1 - ciclo), cortesia_disponible },
+        recompensas: recompensas(completadas),
         proxima_cita: proxima_cita || null,
       },
     });
@@ -349,20 +358,18 @@ router.post('/ordenes/:id/encuesta', async (req, res) => {
   }
 });
 
-// GET /api/portal/fidelidad — estado de fidelización del cliente
-const VISITAS_PARA_CORTESIA = 7;
+// GET /api/portal/fidelidad — estado de fidelización del cliente.
+// Misma fuente de verdad que /resumen: citas entregadas (no el viejo contador
+// por órdenes), para que ambas pantallas siempre coincidan.
 router.get('/fidelidad', async (req, res) => {
   try {
-    const [[cli]] = await pool.query('SELECT visitas, cortesia_disponible FROM clientes WHERE id = ?', [req.cliente.id]);
-    const visitas = cli?.visitas || 0;
-    const faltan = cli?.cortesia_disponible ? 0 : (VISITAS_PARA_CORTESIA - (visitas % VISITAS_PARA_CORTESIA)) % VISITAS_PARA_CORTESIA || VISITAS_PARA_CORTESIA;
+    const [[{ completadas }]] = await pool.query(
+      "SELECT COUNT(*) AS completadas FROM citas WHERE cliente_id = ? AND estado = 'entregado'",
+      [req.cliente.id]
+    );
+    const r = recompensas(completadas);
     res.json({
-      data: {
-        visitas,
-        cortesia_disponible: !!cli?.cortesia_disponible,
-        meta: VISITAS_PARA_CORTESIA,
-        faltan: cli?.cortesia_disponible ? 0 : faltan,
-      },
+      data: { visitas: r.completadas, cortesia_disponible: r.cortesia_disponible, meta: r.meta, faltan: r.faltan },
     });
   } catch (err) {
     fail(res, err);
@@ -488,33 +495,53 @@ router.post('/citas', async (req, res) => {
     if (!HORAS.includes(hora)) {
       return res.status(400).json({ error: 'La hora debe ser entre las 8:00 y las 16:00' });
     }
-    if (fecha < new Date().toISOString().slice(0, 10)) {
+    if (fecha < hoyCR()) {
       return res.status(400).json({ error: 'La fecha no puede ser en el pasado' });
     }
+
+    // Anti-spam: limita cuántas citas pide un mismo cliente.
+    const limite = consumir(`cita:${req.cliente.id}`, { porMinuto: 3, porHora: 15 });
+    if (!limite.ok) {
+      return res.status(429).json({ error: `Estás agendando muy seguido. Esperá ${limite.retryAfter}s.` });
+    }
+
     // La moto debe ser del cliente
     const [[moto]] = await pool.query('SELECT id FROM motos WHERE id = ? AND cliente_id = ?', [moto_id, req.cliente.id]);
     if (!moto) return res.status(400).json({ error: 'Moto no válida' });
 
-    // Cupo: máximo MAX_POR_HORA citas por franja (sin contar canceladas)
-    const [[{ ocupadas }]] = await pool.query(
-      "SELECT COUNT(*) AS ocupadas FROM citas WHERE fecha = ? AND TIME_FORMAT(hora,'%H:%i') = ? AND estado != 'cancelado'",
-      [fecha, hora]
-    );
-    if (ocupadas >= MAX_POR_HORA) {
-      return res.status(400).json({ error: 'Esa hora ya no está disponible, elegí otra.' });
-    }
-
     const motivo = (descripcion || '').trim() || tipo_servicio;
-    const [result] = await pool.query(
-      "INSERT INTO citas (cliente_id, moto_id, fecha, hora, motivo, tipo_servicio, estado) VALUES (?, ?, ?, ?, ?, ?, 'agendado')",
-      [req.cliente.id, moto_id, fecha, hora, motivo, tipo_servicio]
-    );
-    const [[nueva]] = await pool.query(
-      `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado, m.marca, m.modelo, m.placa
-       FROM citas ci LEFT JOIN motos m ON m.id = ci.moto_id WHERE ci.id = ?`,
-      [result.insertId]
-    );
-    res.status(201).json({ data: nueva, message: 'Solicitud de cita enviada' });
+
+    // Cupo atómico: una transacción bloquea el rango (fecha,hora) con FOR UPDATE,
+    // cuenta y recién ahí inserta. Dos solicitudes simultáneas se serializan, así
+    // nunca se superan las MAX_POR_HORA citas por franja (evita la carrera del COUNT+INSERT).
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      const [[{ ocupadas }]] = await conn.query(
+        "SELECT COUNT(*) AS ocupadas FROM citas WHERE fecha = ? AND hora = ? AND estado != 'cancelado' FOR UPDATE",
+        [fecha, hora]
+      );
+      if (ocupadas >= MAX_POR_HORA) {
+        await conn.rollback();
+        return res.status(400).json({ error: 'Esa hora ya no está disponible, elegí otra.' });
+      }
+      const [result] = await conn.query(
+        "INSERT INTO citas (cliente_id, moto_id, fecha, hora, motivo, tipo_servicio, estado) VALUES (?, ?, ?, ?, ?, ?, 'agendado')",
+        [req.cliente.id, moto_id, fecha, hora, motivo, tipo_servicio]
+      );
+      const [[nueva]] = await conn.query(
+        `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado, m.marca, m.modelo, m.placa
+         FROM citas ci LEFT JOIN motos m ON m.id = ci.moto_id WHERE ci.id = ?`,
+        [result.insertId]
+      );
+      await conn.commit();
+      res.status(201).json({ data: nueva, message: 'Solicitud de cita enviada' });
+    } catch (e) {
+      await conn.rollback();
+      throw e;
+    } finally {
+      conn.release();
+    }
   } catch (err) {
     fail(res, err);
   }

@@ -29,6 +29,17 @@ router.get('/resumen', async (req, res) => {
     const [[{ tiempo_promedio_horas }]] = await pool.query(
       "SELECT ROUND(AVG(TIMESTAMPDIFF(HOUR, fecha_ingreso, fecha_entrega_real)), 1) AS tiempo_promedio_horas FROM ordenes_trabajo WHERE estado = 'entregada' AND fecha_entrega_real IS NOT NULL"
     );
+    // Ingresos por citas (lo que cobra el mecánico al entregar una cita).
+    // Es un canal de facturación distinto al de las órdenes de trabajo.
+    const [[{ ingresos_citas_hoy }]] = await pool.query(
+      "SELECT COALESCE(SUM(monto), 0) AS ingresos_citas_hoy FROM citas WHERE estado = 'entregado' AND DATE(fecha_fin) = CURDATE()"
+    );
+    const [[{ ingresos_citas_mes }]] = await pool.query(
+      "SELECT COALESCE(SUM(monto), 0) AS ingresos_citas_mes FROM citas WHERE estado = 'entregado' AND MONTH(fecha_fin) = MONTH(CURDATE()) AND YEAR(fecha_fin) = YEAR(CURDATE())"
+    );
+    const [[{ citas_entregadas_mes }]] = await pool.query(
+      "SELECT COUNT(*) AS citas_entregadas_mes FROM citas WHERE estado = 'entregado' AND MONTH(fecha_fin) = MONTH(CURDATE()) AND YEAR(fecha_fin) = YEAR(CURDATE())"
+    );
     const [[{ repuestos_pendientes }]] = await pool.query(
       "SELECT COUNT(*) AS repuestos_pendientes FROM orden_repuestos r JOIN ordenes_trabajo o ON o.id = r.orden_id WHERE r.estado IN ('pendiente','pedido_especial') AND o.estado NOT IN ('entregada','cancelada')"
     );
@@ -53,6 +64,9 @@ router.get('/resumen', async (req, res) => {
         facturacion_hoy,
         facturacion_semana,
         facturacion_mes,
+        ingresos_citas_hoy,
+        ingresos_citas_mes,
+        citas_entregadas_mes,
         ticket_promedio,
         tiempo_promedio_horas,
         repuestos_pendientes,

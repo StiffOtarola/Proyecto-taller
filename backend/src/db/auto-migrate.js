@@ -154,8 +154,51 @@ async function ensureSchema() {
 
     // Ofertas con imagen (data URL base64).
     await addColumnIfMissing('promos', 'imagen', 'MEDIUMTEXT NULL');
+
+    // Puente cita ↔ orden: una cita puede generar/enlazar una orden de trabajo.
+    await addColumnIfMissing('citas', 'orden_id', 'INT NULL');
+
+    // Índice (fecha,hora) en citas: acelera la disponibilidad y permite que el
+    // bloqueo de rango (FOR UPDATE) del control de cupo sea preciso.
+    await crearIndiceSiFalta('citas', 'idx_citas_fecha_hora', '(fecha, hora)');
+
+    // Placa única a nivel de base (no solo en la app). Columna generada normalizada
+    // (sin espacios/guiones, mayúsculas) + índice único. Se guarda cada paso por
+    // separado para que, si hay placas duplicadas heredadas, el índice falle sin
+    // abortar el resto de la migración (la validación de la app sigue cubriendo).
+    await tryStep('motos.placa_norm', () =>
+      addColumnIfMissing(
+        'motos', 'placa_norm',
+        "VARCHAR(32) AS (UPPER(REPLACE(REPLACE(placa,' ',''),'-',''))) STORED"
+      )
+    );
+    await tryStep('uq_motos_placa_norm', () =>
+      crearIndiceSiFalta('motos', 'uq_motos_placa_norm', '(placa_norm)', { unico: true })
+    );
   } catch (err) {
     console.error('⚠️  Auto-migración falló:', err.code || err.message);
+  }
+}
+
+// Ejecuta un paso aislado: si falla, lo loguea y sigue (no aborta la migración).
+async function tryStep(label, fn) {
+  try {
+    await fn();
+  } catch (err) {
+    console.error(`⚠️  Migración (${label}) omitida:`, err.code || err.message);
+  }
+}
+
+// Crea un índice solo si no existe (idempotente). `opts.unico` para índice único.
+async function crearIndiceSiFalta(tabla, nombre, columnas, { unico = false } = {}) {
+  const [[existe]] = await pool.query(
+    `SELECT COUNT(*) AS n FROM information_schema.STATISTICS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?`,
+    [tabla, nombre]
+  );
+  if (!existe.n) {
+    await pool.query(`CREATE ${unico ? 'UNIQUE ' : ''}INDEX ${nombre} ON ${tabla} ${columnas}`);
+    console.log(`🔧 Migración: índice ${nombre} en ${tabla} creado`);
   }
 }
 

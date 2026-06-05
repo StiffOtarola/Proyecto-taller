@@ -87,6 +87,15 @@ router.patch('/:id/estado', async (req, res) => {
   try {
     const { estado } = req.body;
     if (!ESTADOS.includes(estado)) return res.status(400).json({ error: 'Estado inválido' });
+
+    const [[cita]] = await pool.query('SELECT id, tecnico_id FROM citas WHERE id = ?', [req.params.id]);
+    if (!cita) return res.status(404).json({ error: 'Cita no encontrada' });
+
+    // Un técnico solo puede mover SUS citas; jefe_taller+ (y recepción) pueden cualquiera.
+    if (req.usuario.rol === 'tecnico' && cita.tecnico_id !== req.usuario.id) {
+      return res.status(403).json({ error: 'Solo podés cambiar el estado de tus citas asignadas' });
+    }
+
     await pool.query('UPDATE citas SET estado = ? WHERE id = ?', [estado, req.params.id]);
     await notificarCambioEstado(req.params.id, estado);
     res.json({ message: 'Estado de cita actualizado' });

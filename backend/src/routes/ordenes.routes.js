@@ -71,29 +71,35 @@ router.post('/', async (req, res) => {
 
     const numero_orden = await generarNumeroOrden();
 
-    const [result] = await pool.query(
-      `INSERT INTO ordenes_trabajo
-        (numero_orden, moto_id, cliente_id, recepcionista_id, problema_reportado,
-         kilometraje_ingreso, nivel_combustible, accesorios_entregados, estado_fisico,
-         prioridad, categoria, fecha_estimada_entrega)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        numero_orden, moto_id, cliente_id, req.usuario.id, problema_reportado,
-        kilometraje_ingreso || null, nivel_combustible || 'cuarto',
-        accesorios_entregados || null, estado_fisico || null,
-        prioridad || 'normal', categoria || 'diagnostico',
-        fecha_estimada_entrega || null,
-      ]
-    );
-
-    // Registrar tiempo inicial
-    await pool.query(
-      'INSERT INTO orden_tiempos (orden_id, etapa) VALUES (?, ?)',
-      [result.insertId, 'recepcion']
-    );
-
-    const [[nueva]] = await pool.query('SELECT * FROM ordenes_trabajo WHERE id = ?', [result.insertId]);
-    res.status(201).json({ data: nueva, message: 'Orden creada' });
+    // Orden + su tiempo inicial en una sola transacción: si algo falla, no queda
+    // una orden sin etapa de recepción registrada.
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      const [result] = await conn.query(
+        `INSERT INTO ordenes_trabajo
+          (numero_orden, moto_id, cliente_id, recepcionista_id, problema_reportado,
+           kilometraje_ingreso, nivel_combustible, accesorios_entregados, estado_fisico,
+           prioridad, categoria, fecha_estimada_entrega)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          numero_orden, moto_id, cliente_id, req.usuario.id, problema_reportado,
+          kilometraje_ingreso || null, nivel_combustible || 'cuarto',
+          accesorios_entregados || null, estado_fisico || null,
+          prioridad || 'normal', categoria || 'diagnostico',
+          fecha_estimada_entrega || null,
+        ]
+      );
+      await conn.query('INSERT INTO orden_tiempos (orden_id, etapa) VALUES (?, ?)', [result.insertId, 'recepcion']);
+      const [[nueva]] = await conn.query('SELECT * FROM ordenes_trabajo WHERE id = ?', [result.insertId]);
+      await conn.commit();
+      res.status(201).json({ data: nueva, message: 'Orden creada' });
+    } catch (e) {
+      await conn.rollback();
+      throw e;
+    } finally {
+      conn.release();
+    }
   } catch (err) {
     fail(res, err);
   }
@@ -124,8 +130,9 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// PUT /api/ordenes/:id
-router.put('/:id', async (req, res) => {
+// PUT /api/ordenes/:id — edita diagnóstico y costos (mano de obra, repuestos, descuento).
+// Toca plata: lo limita a técnico o superior (recepción no edita montos).
+router.put('/:id', requireRol('tecnico'), async (req, res) => {
   try {
     const {
       diagnostico, tiempo_estimado_horas, costo_mano_obra, costo_repuestos, descuento,
@@ -338,30 +345,37 @@ const VISITAS_PARA_CORTESIA = 7;
 
 // PATCH /api/ordenes/:id/cerrar
 router.patch('/:id/cerrar', requireRol('jefe_taller'), async (req, res) => {
+  const conn = await pool.getConnection();
   try {
     const { metodo_pago, garantia_dias, observaciones_finales } = req.body;
-    await pool.query(
+    // Cierre + fidelización en una transacción: la visita se cuenta exactamente una
+    // vez y la cortesía se otorga de forma consistente (sin estados a medias).
+    await conn.beginTransaction();
+    await conn.query(
       `UPDATE ordenes_trabajo SET estado='entregada', metodo_pago=?, garantia_dias=?,
        observaciones_finales=?, fecha_entrega_real=NOW() WHERE id=?`,
       [metodo_pago || null, garantia_dias || 0, observaciones_finales || null, req.params.id]
     );
 
-    // Fidelización: contar la visita una sola vez por orden y otorgar cortesía cada N entregas
-    const [[orden]] = await pool.query('SELECT cliente_id, visita_contada FROM ordenes_trabajo WHERE id = ?', [req.params.id]);
+    const [[orden]] = await conn.query('SELECT cliente_id, visita_contada FROM ordenes_trabajo WHERE id = ? FOR UPDATE', [req.params.id]);
     let cortesiaGanada = false;
     if (orden && !orden.visita_contada) {
-      await pool.query('UPDATE ordenes_trabajo SET visita_contada = 1 WHERE id = ?', [req.params.id]);
-      await pool.query('UPDATE clientes SET visitas = visitas + 1 WHERE id = ?', [orden.cliente_id]);
-      const [[cli]] = await pool.query('SELECT visitas FROM clientes WHERE id = ?', [orden.cliente_id]);
+      await conn.query('UPDATE ordenes_trabajo SET visita_contada = 1 WHERE id = ?', [req.params.id]);
+      await conn.query('UPDATE clientes SET visitas = visitas + 1 WHERE id = ?', [orden.cliente_id]);
+      const [[cli]] = await conn.query('SELECT visitas FROM clientes WHERE id = ?', [orden.cliente_id]);
       if (cli && cli.visitas > 0 && cli.visitas % VISITAS_PARA_CORTESIA === 0) {
-        await pool.query('UPDATE clientes SET cortesia_disponible = 1 WHERE id = ?', [orden.cliente_id]);
+        await conn.query('UPDATE clientes SET cortesia_disponible = 1 WHERE id = ?', [orden.cliente_id]);
         cortesiaGanada = true;
       }
     }
 
+    await conn.commit();
     res.json({ message: 'Orden cerrada y entregada', cortesia_ganada: cortesiaGanada });
   } catch (err) {
+    await conn.rollback();
     fail(res, err);
+  } finally {
+    conn.release();
   }
 });
 

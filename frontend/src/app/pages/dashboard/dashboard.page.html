@@ -69,6 +69,14 @@
           <span>Mensual</span>
           <strong class="mono">₡{{ resumen.facturacion_mes | number:'1.0-0' }}</strong>
         </div>
+        <div class="fact-cell">
+          <span>Citas hoy</span>
+          <strong class="mono">₡{{ resumen.ingresos_citas_hoy | number:'1.0-0' }}</strong>
+        </div>
+        <div class="fact-cell">
+          <span>Citas mes</span>
+          <strong class="mono">₡{{ resumen.ingresos_citas_mes | number:'1.0-0' }}</strong>
+        </div>
       </div>
     </section>
 

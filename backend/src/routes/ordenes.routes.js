@@ -7,13 +7,23 @@ const requireRol = require('../middleware/roles');
 router.use(auth);
 
 // Generar numero_orden: OT-YYYY-XXXX
+// Usa un contador atómico (INSERT ... ON DUPLICATE KEY UPDATE con LAST_INSERT_ID)
+// para que dos órdenes simultáneas nunca obtengan el mismo número.
+// El INSERT y el SELECT deben correr en la MISMA conexión (LAST_INSERT_ID es por conexión).
 async function generarNumeroOrden() {
   const year = new Date().getFullYear();
-  const [[{ count }]] = await pool.query(
-    'SELECT COUNT(*) as count FROM ordenes_trabajo WHERE YEAR(created_at) = ?',
-    [year]
-  );
-  return `OT-${year}-${String(count + 1).padStart(4, '0')}`;
+  const conn = await pool.getConnection();
+  try {
+    await conn.query(
+      `INSERT INTO orden_contadores (anio, ultimo) VALUES (?, LAST_INSERT_ID(1))
+       ON DUPLICATE KEY UPDATE ultimo = LAST_INSERT_ID(ultimo + 1)`,
+      [year]
+    );
+    const [[{ n }]] = await conn.query('SELECT LAST_INSERT_ID() AS n');
+    return `OT-${year}-${String(n).padStart(4, '0')}`;
+  } finally {
+    conn.release();
+  }
 }
 
 // GET /api/ordenes
@@ -292,18 +302,9 @@ router.delete('/:id/repuestos/:rid', async (req, res) => {
   }
 });
 
-// PATCH /api/ordenes/:id/aprobar
-router.patch('/:id/aprobar', async (req, res) => {
-  try {
-    await pool.query(
-      'UPDATE ordenes_trabajo SET aprobado_por_cliente = 1, fecha_aprobacion = NOW() WHERE id = ?',
-      [req.params.id]
-    );
-    res.json({ message: 'Orden aprobada por el cliente' });
-  } catch (err) {
-    fail(res, err);
-  }
-});
+// Nota: la aprobación del presupuesto la hace el cliente desde el portal
+// (POST /api/portal/ordenes/:id/aprobar|rechazar), que actualiza el ENUM
+// `aprobacion_cliente` — única fuente de verdad que muestra toda la UI.
 
 // POST /GET /api/ordenes/:id/checklist
 router.post('/:id/checklist', async (req, res) => {

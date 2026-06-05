@@ -72,6 +72,19 @@ async function ensureSchema() {
     await addColumnIfMissing('ordenes_trabajo', 'calificacion', 'TINYINT NULL');
     await addColumnIfMissing('ordenes_trabajo', 'comentario_satisfaccion', 'TEXT NULL');
 
+    // Contador atómico por año para numero_orden (evita la condición de carrera de COUNT(*)).
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS orden_contadores (
+        anio   INT PRIMARY KEY,
+        ultimo INT NOT NULL DEFAULT 0
+      )
+    `);
+    // Siembra el contador con el último correlativo ya usado por año (idempotente).
+    await pool.query(`
+      INSERT IGNORE INTO orden_contadores (anio, ultimo)
+      SELECT YEAR(created_at), COUNT(*) FROM ordenes_trabajo GROUP BY YEAR(created_at)
+    `);
+
     // Promociones (marketing).
     await pool.query(`
       CREATE TABLE IF NOT EXISTS promos (

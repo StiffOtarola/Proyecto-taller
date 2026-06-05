@@ -8,31 +8,55 @@
         </span>
       </div>
       <h1>Recuperar acceso</h1>
-      <p>Verificá tu identidad para crear una nueva contraseña</p>
+      <p *ngIf="paso === 1">Te enviaremos un código a tu correo</p>
+      <p *ngIf="paso === 2">Escribí el código que te llegó y tu nueva contraseña</p>
     </div>
 
-    <ion-card>
+    <!-- Paso 1: pedir el código -->
+    <ion-card *ngIf="paso === 1">
+      <ion-card-content>
+        <ion-item lines="none">
+          <ion-label position="stacked">Correo</ion-label>
+          <ion-input type="email" [(ngModel)]="email" autocomplete="email" placeholder="tu@correo.com" (keyup.enter)="solicitar()"></ion-input>
+        </ion-item>
+
+        <ion-button expand="block" (click)="solicitar()" [disabled]="!emailOk">
+          Enviar código
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Paso 2: verificar código y nueva contraseña -->
+    <ion-card *ngIf="paso === 2">
       <ion-card-content>
         <ion-item lines="full">
-          <ion-label position="stacked">Correo</ion-label>
-          <ion-input type="email" [(ngModel)]="email" autocomplete="email" placeholder="tu@correo.com"></ion-input>
-        </ion-item>
-        <ion-item lines="full">
-          <ion-label position="stacked">Teléfono registrado</ion-label>
-          <ion-input type="tel" [(ngModel)]="telefono" placeholder="8888-1234"></ion-input>
+          <ion-label position="stacked">Código de 6 dígitos</ion-label>
+          <ion-input type="text" inputmode="numeric" maxlength="6" [(ngModel)]="codigo" placeholder="000000"></ion-input>
         </ion-item>
         <ion-item lines="full">
           <ion-label position="stacked">Nueva contraseña</ion-label>
-          <ion-input type="password" [(ngModel)]="password" placeholder="Mínimo 6 caracteres"></ion-input>
+          <ion-input [type]="verPass ? 'text' : 'password'" [(ngModel)]="password" placeholder="Mínimo 6 caracteres">
+            <ion-button fill="clear" slot="end" (click)="verPass = !verPass" aria-label="Mostrar contraseña">
+              <ion-icon slot="icon-only" [name]="verPass ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </ion-button>
+          </ion-input>
         </ion-item>
         <ion-item lines="none">
           <ion-label position="stacked">Confirmar contraseña</ion-label>
-          <ion-input type="password" [(ngModel)]="confirmar" (keyup.enter)="recuperar()"></ion-input>
+          <ion-input [type]="verConfirmar ? 'text' : 'password'" [(ngModel)]="confirmar" (keyup.enter)="confirmar_()">
+            <ion-button fill="clear" slot="end" (click)="verConfirmar = !verConfirmar" aria-label="Mostrar contraseña">
+              <ion-icon slot="icon-only" [name]="verConfirmar ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </ion-button>
+          </ion-input>
         </ion-item>
 
-        <ion-button expand="block" (click)="recuperar()" [disabled]="!valido">
+        <ion-button expand="block" (click)="confirmar_()" [disabled]="!validoPaso2">
           Restablecer contraseña
         </ion-button>
+
+        <a class="portal-link sub" [class.disabled]="cooldown > 0" (click)="reenviar()">
+          {{ cooldown > 0 ? 'Reenviar código en ' + cooldown + 's' : 'Reenviar código' }}
+        </a>
       </ion-card-content>
     </ion-card>
 

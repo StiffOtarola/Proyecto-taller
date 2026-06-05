@@ -46,6 +46,21 @@ async function ensureSchema() {
     // Portal del cliente: contraseña opcional para acceso al seguimiento.
     await addColumnIfMissing('clientes', 'password_hash', 'VARCHAR(255) NULL');
 
+    // Códigos de recuperación de contraseña (olvidé mi contraseña) enviados por correo.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS password_reset_codes (
+        id         INT AUTO_INCREMENT PRIMARY KEY,
+        cliente_id INT NOT NULL,
+        code_hash  VARCHAR(255) NOT NULL,
+        expires_at DATETIME NOT NULL,
+        used       TINYINT(1) DEFAULT 0,
+        attempts   INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_cliente (cliente_id),
+        FOREIGN KEY (cliente_id) REFERENCES clientes(id)
+      )
+    `);
+
     // Aprobación digital del presupuesto por parte del cliente.
     await addColumnIfMissing(
       'ordenes_trabajo', 'aprobacion_cliente',

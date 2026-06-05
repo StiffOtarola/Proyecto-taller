@@ -42,4 +42,10 @@
     font-size: 12px;
     color: #8a8a8a;
   }
+  // Reenviar deshabilitado durante el cooldown
+  &.disabled {
+    opacity: 0.45;
+    pointer-events: none;
+    cursor: default;
+  }
 }

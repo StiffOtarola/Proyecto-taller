@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoadingController, ToastController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
+import { emailValido } from '../../utils/validar';
 
 @Component({
   standalone: false,
@@ -17,6 +18,8 @@ export class PortalRegistroPage {
   cedula = '';
   password = '';
   confirmar = '';
+  verPass = false;
+  verConfirmar = false;
 
   constructor(
     private portal: PortalService,
@@ -27,11 +30,12 @@ export class PortalRegistroPage {
 
   get valido(): boolean {
     return !!(this.nombre.trim() && this.apellido.trim() && this.telefono.trim() &&
-      this.email.trim() && this.password.length >= 6 && this.password === this.confirmar);
+      emailValido(this.email) && this.password.length >= 6 && this.password === this.confirmar);
   }
 
   async registrar() {
     if (!this.valido) {
+      if (this.email.trim() && !emailValido(this.email)) return this.mostrar('Ingresá un correo válido', 'warning');
       if (this.password && this.password.length < 6) return this.mostrar('La contraseña debe tener al menos 6 caracteres', 'warning');
       if (this.password !== this.confirmar) return this.mostrar('Las contraseñas no coinciden', 'warning');
       return;

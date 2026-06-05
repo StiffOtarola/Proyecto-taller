@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoadingController, ToastController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
+import { emailValido } from '../../utils/validar';
 
 @Component({
   standalone: false,
@@ -12,6 +13,7 @@ import { PortalService } from '../../services/portal.service';
 export class PortalLoginPage {
   email = '';
   password = '';
+  verPass = false;
 
   constructor(
     private portal: PortalService,
@@ -22,6 +24,10 @@ export class PortalLoginPage {
 
   async ingresar() {
     if (!this.email || !this.password) return;
+    if (!emailValido(this.email)) {
+      const t = await this.toast.create({ message: 'Ingresá un correo válido', duration: 2500, color: 'warning' });
+      return await t.present();
+    }
     const l = await this.loading.create({ message: 'Ingresando...' });
     await l.present();
     this.portal.login(this.email.trim(), this.password).subscribe({

@@ -37,8 +37,14 @@ export class PortalService {
     );
   }
 
-  recuperar(data: { email: string; telefono: string; password: string }): Observable<{ data: { token: string; cliente: ClientePortal } }> {
-    return this.http.post<{ data: { token: string; cliente: ClientePortal } }>(`${this.url}/recuperar`, data).pipe(
+  // Paso 1: pide que envíen un código de recuperación al correo (respuesta genérica).
+  solicitarCodigo(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.url}/recuperar/solicitar`, { email });
+  }
+
+  // Paso 2: valida el código y define la nueva contraseña (auto-login).
+  confirmarRecuperacion(data: { email: string; codigo: string; password: string }): Observable<{ data: { token: string; cliente: ClientePortal } }> {
+    return this.http.post<{ data: { token: string; cliente: ClientePortal } }>(`${this.url}/recuperar/confirmar`, data).pipe(
       tap(res => this.guardarSesion(res.data.token, res.data.cliente))
     );
   }

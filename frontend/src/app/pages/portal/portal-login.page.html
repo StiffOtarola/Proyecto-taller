@@ -19,7 +19,11 @@
         </ion-item>
         <ion-item lines="none">
           <ion-label position="stacked">Contraseña</ion-label>
-          <ion-input type="password" [(ngModel)]="password" placeholder="••••••••" (keyup.enter)="ingresar()"></ion-input>
+          <ion-input [type]="verPass ? 'text' : 'password'" [(ngModel)]="password" placeholder="••••••••" (keyup.enter)="ingresar()">
+            <ion-button fill="clear" slot="end" (click)="verPass = !verPass" aria-label="Mostrar contraseña">
+              <ion-icon slot="icon-only" [name]="verPass ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </ion-button>
+          </ion-input>
         </ion-item>
 
         <ion-button expand="block" (click)="ingresar()" [disabled]="!email || !password">

@@ -35,11 +35,19 @@
         </ion-item>
         <ion-item lines="full">
           <ion-label position="stacked">Contraseña</ion-label>
-          <ion-input type="password" [(ngModel)]="password" placeholder="Mínimo 6 caracteres"></ion-input>
+          <ion-input [type]="verPass ? 'text' : 'password'" [(ngModel)]="password" placeholder="Mínimo 6 caracteres">
+            <ion-button fill="clear" slot="end" (click)="verPass = !verPass" aria-label="Mostrar contraseña">
+              <ion-icon slot="icon-only" [name]="verPass ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </ion-button>
+          </ion-input>
         </ion-item>
         <ion-item lines="none">
           <ion-label position="stacked">Confirmar contraseña</ion-label>
-          <ion-input type="password" [(ngModel)]="confirmar" (keyup.enter)="registrar()"></ion-input>
+          <ion-input [type]="verConfirmar ? 'text' : 'password'" [(ngModel)]="confirmar" (keyup.enter)="registrar()">
+            <ion-button fill="clear" slot="end" (click)="verConfirmar = !verConfirmar" aria-label="Mostrar contraseña">
+              <ion-icon slot="icon-only" [name]="verConfirmar ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </ion-button>
+          </ion-input>
         </ion-item>
 
         <ion-button expand="block" (click)="registrar()" [disabled]="!valido">

@@ -3,12 +3,23 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { pool } = require('../db/pool');
 const authCliente = require('../middleware/auth-cliente');
+const { emailValido } = require('../utils/validar');
+const { consumir } = require('../utils/rate-limit');
+const { enviarCodigoReset } = require('../services/mailer');
+
+// Firma el JWT del cliente y arma el payload estándar.
+function tokenCliente(cliente) {
+  const payload = { id: cliente.id, tipo: 'cliente', nombre: cliente.nombre, apellido: cliente.apellido };
+  const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '8h' });
+  return { payload, token };
+}
 
 // POST /api/portal/login — login del cliente con email + contraseña
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email y contraseña requeridos' });
+    if (!emailValido(email)) return res.status(400).json({ error: 'El correo no tiene un formato válido' });
     const [[cliente]] = await pool.query(
       'SELECT * FROM clientes WHERE email = ? AND activo = 1',
       [email]
@@ -19,8 +30,7 @@ router.post('/login', async (req, res) => {
     const ok = await bcrypt.compare(password, cliente.password_hash);
     if (!ok) return res.status(401).json({ error: 'Credenciales incorrectas' });
 
-    const payload = { id: cliente.id, tipo: 'cliente', nombre: cliente.nombre, apellido: cliente.apellido };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '8h' });
+    const { payload, token } = tokenCliente(cliente);
     res.json({ data: { token, cliente: payload } });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -34,6 +44,7 @@ router.post('/registro', async (req, res) => {
     if (!nombre || !apellido || !telefono || !email || !password) {
       return res.status(400).json({ error: 'Nombre, apellido, teléfono, correo y contraseña son requeridos' });
     }
+    if (!emailValido(email)) return res.status(400).json({ error: 'El correo no tiene un formato válido' });
     if (password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
 
     const [[existente]] = await pool.query('SELECT id, password_hash FROM clientes WHERE email = ? AND activo = 1', [email]);
@@ -59,36 +70,84 @@ router.post('/registro', async (req, res) => {
     }
 
     const [[cliente]] = await pool.query('SELECT id, nombre, apellido FROM clientes WHERE id = ?', [clienteId]);
-    const payload = { id: cliente.id, tipo: 'cliente', nombre: cliente.nombre, apellido: cliente.apellido };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '8h' });
+    const { payload, token } = tokenCliente(cliente);
     res.status(201).json({ data: { token, cliente: payload } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// POST /api/portal/recuperar — restablecer contraseña verificando correo + teléfono (público)
-router.post('/recuperar', async (req, res) => {
+// POST /api/portal/recuperar/solicitar — envía un código de 6 dígitos al correo (público)
+// Respuesta genérica siempre (anti-enumeración de cuentas).
+const MSG_GENERICO = 'Si la cuenta existe, te enviamos un código a tu correo.';
+router.post('/recuperar/solicitar', async (req, res) => {
   try {
-    const { email, telefono, password } = req.body;
-    if (!email || !telefono || !password) {
-      return res.status(400).json({ error: 'Correo, teléfono y nueva contraseña son requeridos' });
+    const { email } = req.body;
+    if (!emailValido(email)) return res.status(400).json({ error: 'El correo no tiene un formato válido' });
+
+    const clave = String(email).trim().toLowerCase();
+    const limite = consumir(`reset:${clave}`, { porMinuto: 1, porHora: 5 });
+    if (!limite.ok) {
+      return res.status(429).json({ error: `Esperá ${limite.retryAfter}s antes de pedir otro código.` });
     }
+
+    const [[cliente]] = await pool.query(
+      'SELECT id, nombre, apellido FROM clientes WHERE email = ? AND activo = 1 AND password_hash IS NOT NULL',
+      [email]
+    );
+
+    if (cliente) {
+      const codigo = String(Math.floor(100000 + Math.random() * 900000)); // 6 dígitos
+      const codeHash = await bcrypt.hash(codigo, 10);
+      // Invalida códigos previos y guarda el nuevo (vence en 10 min).
+      await pool.query('UPDATE password_reset_codes SET used = 1 WHERE cliente_id = ? AND used = 0', [cliente.id]);
+      await pool.query(
+        'INSERT INTO password_reset_codes (cliente_id, code_hash, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE))',
+        [cliente.id, codeHash]
+      );
+      await enviarCodigoReset(email, cliente.nombre, codigo);
+    }
+
+    res.json({ message: MSG_GENERICO });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/portal/recuperar/confirmar — valida el código y define la nueva contraseña (público)
+router.post('/recuperar/confirmar', async (req, res) => {
+  try {
+    const { email, codigo, password } = req.body;
+    if (!emailValido(email)) return res.status(400).json({ error: 'El correo no tiene un formato válido' });
+    if (!codigo || !password) return res.status(400).json({ error: 'Código y nueva contraseña son requeridos' });
     if (password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
 
     const [[cliente]] = await pool.query(
-      `SELECT id, nombre, apellido FROM clientes
-       WHERE email = ? AND activo = 1
-         AND REPLACE(REPLACE(telefono, ' ', ''), '-', '') = REPLACE(REPLACE(?, ' ', ''), '-', '')`,
-      [email, telefono]
+      'SELECT id, nombre, apellido FROM clientes WHERE email = ? AND activo = 1 AND password_hash IS NOT NULL',
+      [email]
     );
-    if (!cliente) return res.status(404).json({ error: 'No encontramos una cuenta con ese correo y teléfono' });
+    const ERR_CODIGO = 'Código inválido o expirado';
+    if (!cliente) return res.status(400).json({ error: ERR_CODIGO });
+
+    const [[reg]] = await pool.query(
+      `SELECT id, code_hash, attempts FROM password_reset_codes
+       WHERE cliente_id = ? AND used = 0 AND expires_at > NOW()
+       ORDER BY created_at DESC LIMIT 1`,
+      [cliente.id]
+    );
+    if (!reg || reg.attempts >= 5) return res.status(400).json({ error: ERR_CODIGO });
+
+    const ok = await bcrypt.compare(String(codigo).trim(), reg.code_hash);
+    if (!ok) {
+      await pool.query('UPDATE password_reset_codes SET attempts = attempts + 1 WHERE id = ?', [reg.id]);
+      return res.status(400).json({ error: ERR_CODIGO });
+    }
 
     const hash = await bcrypt.hash(password, 10);
     await pool.query('UPDATE clientes SET password_hash = ? WHERE id = ?', [hash, cliente.id]);
+    await pool.query('UPDATE password_reset_codes SET used = 1 WHERE id = ?', [reg.id]);
 
-    const payload = { id: cliente.id, tipo: 'cliente', nombre: cliente.nombre, apellido: cliente.apellido };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '8h' });
+    const { payload, token } = tokenCliente(cliente);
     res.json({ data: { token, cliente: payload } });
   } catch (err) {
     res.status(500).json({ error: err.message });

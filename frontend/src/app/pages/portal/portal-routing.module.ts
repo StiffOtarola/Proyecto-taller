@@ -7,6 +7,7 @@ import { PortalRecuperarPage } from './portal-recuperar.page';
 import { PortalOrdenesPage } from './portal-ordenes.page';
 import { PortalOrdenPage } from './portal-orden.page';
 import { PortalCitasPage } from './portal-citas.page';
+import { PortalMotosPage } from './portal-motos.page';
 
 const routes: Routes = [
   { path: 'login', component: PortalLoginPage },
@@ -15,6 +16,7 @@ const routes: Routes = [
   { path: '', component: PortalOrdenesPage, canActivate: [PortalGuard] },
   { path: 'orden/:id', component: PortalOrdenPage, canActivate: [PortalGuard] },
   { path: 'citas', component: PortalCitasPage, canActivate: [PortalGuard] },
+  { path: 'motos', component: PortalMotosPage, canActivate: [PortalGuard] },
 ];
 
 @NgModule({

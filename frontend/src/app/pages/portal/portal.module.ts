@@ -6,10 +6,11 @@ import { PortalRecuperarPage } from './portal-recuperar.page';
 import { PortalOrdenesPage } from './portal-ordenes.page';
 import { PortalOrdenPage } from './portal-orden.page';
 import { PortalCitasPage } from './portal-citas.page';
+import { PortalMotosPage } from './portal-motos.page';
 import { SharedModule } from '../../shared/shared.module';
 
 @NgModule({
   imports: [SharedModule, PortalPageRoutingModule],
-  declarations: [PortalLoginPage, PortalRegistroPage, PortalRecuperarPage, PortalOrdenesPage, PortalOrdenPage, PortalCitasPage],
+  declarations: [PortalLoginPage, PortalRegistroPage, PortalRecuperarPage, PortalOrdenesPage, PortalOrdenPage, PortalCitasPage, PortalMotosPage],
 })
 export class PortalPageModule {}

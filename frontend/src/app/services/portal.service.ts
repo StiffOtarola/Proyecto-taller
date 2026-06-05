@@ -90,6 +90,10 @@ export class PortalService {
     return this.http.get<{ data: any[] }>(`${this.url}/motos`);
   }
 
+  crearMoto(data: { marca: string; modelo: string; placa: string; anio?: number | null; color?: string }): Observable<{ data: any }> {
+    return this.http.post<{ data: any }>(`${this.url}/motos`, data);
+  }
+
   getCitas(): Observable<{ data: any[] }> {
     return this.http.get<{ data: any[] }>(`${this.url}/citas`);
   }

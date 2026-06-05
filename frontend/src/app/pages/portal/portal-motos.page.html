@@ -1,0 +1,80 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/portal"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Mis motos</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar(); $event.target.complete()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="motos">
+    <div class="intro">
+      <h2>Tus motos</h2>
+      <p>Registrá tus motos para asociarlas a tus citas y órdenes.</p>
+    </div>
+
+    <ion-button expand="block" (click)="abrirForm()" *ngIf="!mostrarForm" class="cta-upper">
+      <ion-icon name="add-outline" slot="start"></ion-icon>
+      Agregar moto
+    </ion-button>
+
+    <!-- Formulario -->
+    <section class="card" *ngIf="mostrarForm">
+      <span class="section-label">Nueva moto</span>
+      <ion-item>
+        <ion-input label="Marca *" labelPlacement="floating" [(ngModel)]="nueva.marca" placeholder="Ej: Honda"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Modelo *" labelPlacement="floating" [(ngModel)]="nueva.modelo" placeholder="Ej: CB 125F"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Placa *" labelPlacement="floating" [(ngModel)]="nueva.placa" placeholder="Ej: MOT-123" class="upper"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Año (opcional)" labelPlacement="floating" type="number" inputmode="numeric" [(ngModel)]="nueva.anio" placeholder="Ej: 2021"></ion-input>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-input label="Color (opcional)" labelPlacement="floating" [(ngModel)]="nueva.color" placeholder="Ej: Rojo"></ion-input>
+      </ion-item>
+
+      <ion-button expand="block" class="ion-margin-top" (click)="agregar()" [disabled]="!valido || enviando">
+        <ion-spinner *ngIf="enviando" name="crescent" slot="start"></ion-spinner>
+        {{ enviando ? 'Guardando...' : 'Guardar moto' }}
+      </ion-button>
+      <ion-button expand="block" fill="clear" color="medium" (click)="mostrarForm = false" [disabled]="enviando">
+        Cancelar
+      </ion-button>
+    </section>
+
+    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px;margin-top:22px">
+      <div class="skeleton" style="height:78px;border-radius:18px"></div>
+      <div class="skeleton" style="height:78px;border-radius:18px"></div>
+    </div>
+
+    <!-- Lista de motos -->
+    <div class="moto-list" *ngIf="!cargando && motos.length">
+      <span class="section-label">Registradas</span>
+      <div class="moto-row" *ngFor="let m of motos">
+        <div class="moto-ico">
+          <ion-icon name="bicycle"></ion-icon>
+        </div>
+        <div class="moto-meta">
+          <h4>{{ m.marca }} {{ m.modelo }}</h4>
+          <p><span class="placa mono">{{ m.placa }}</span><span *ngIf="m.anio"> · {{ m.anio }}</span><span *ngIf="m.color"> · {{ m.color }}</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="!cargando && motos.length === 0 && !mostrarForm">
+      <ion-icon name="bicycle-outline"></ion-icon>
+      <p>Todavía no registraste ninguna moto.</p>
+    </div>
+
+    <div style="height:30px"></div>
+  </div>
+</ion-content>

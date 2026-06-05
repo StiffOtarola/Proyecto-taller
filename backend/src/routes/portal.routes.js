@@ -305,6 +305,36 @@ router.get('/motos', async (req, res) => {
   }
 });
 
+// POST /api/portal/motos — el cliente registra una moto propia
+// Obligatorios: marca, modelo, placa. Evita placas duplicadas.
+router.post('/motos', async (req, res) => {
+  try {
+    const { marca, modelo, placa, anio, color } = req.body;
+    if (!marca || !modelo || !placa) {
+      return res.status(400).json({ error: 'Marca, modelo y placa son requeridos' });
+    }
+    // Bloquea placas ya registradas (normaliza espacios y guiones).
+    const [[existe]] = await pool.query(
+      `SELECT id FROM motos WHERE activa = 1
+         AND UPPER(REPLACE(REPLACE(placa, ' ', ''), '-', '')) = UPPER(REPLACE(REPLACE(?, ' ', ''), '-', ''))`,
+      [placa]
+    );
+    if (existe) return res.status(409).json({ error: 'Esa placa ya está registrada en el taller' });
+
+    const [result] = await pool.query(
+      'INSERT INTO motos (cliente_id, marca, modelo, placa, anio, color) VALUES (?, ?, ?, ?, ?, ?)',
+      [req.cliente.id, marca, modelo, placa, anio || null, color || null]
+    );
+    const [[nueva]] = await pool.query(
+      'SELECT id, marca, modelo, placa, anio, color FROM motos WHERE id = ?',
+      [result.insertId]
+    );
+    res.status(201).json({ data: nueva, message: 'Moto registrada' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/portal/citas — citas del cliente
 router.get('/citas', async (req, res) => {
   try {

@@ -289,7 +289,7 @@ router.put('/:id/repuestos/:rid', async (req, res) => {
 });
 
 // DELETE /api/ordenes/:id/repuestos/:rid
-router.delete('/:id/repuestos/:rid', async (req, res) => {
+router.delete('/:id/repuestos/:rid', requireRol('jefe_taller'), async (req, res) => {
   try {
     await pool.query('DELETE FROM orden_repuestos WHERE id=? AND orden_id=?', [req.params.rid, req.params.id]);
     await pool.query(
@@ -397,7 +397,7 @@ router.get('/:id/fotos', async (req, res) => {
 });
 
 // DELETE /api/ordenes/:id/fotos/:fid
-router.delete('/:id/fotos/:fid', async (req, res) => {
+router.delete('/:id/fotos/:fid', requireRol('jefe_taller'), async (req, res) => {
   try {
     await pool.query('DELETE FROM orden_fotos WHERE id = ? AND orden_id = ?', [req.params.fid, req.params.id]);
     res.json({ message: 'Foto eliminada' });

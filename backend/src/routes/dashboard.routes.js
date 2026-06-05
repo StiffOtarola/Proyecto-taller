@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { pool } = require('../db/pool');
+const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
 
@@ -62,7 +63,7 @@ router.get('/resumen', async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -84,7 +85,7 @@ router.get('/atrasos', async (req, res) => {
     );
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -102,7 +103,7 @@ router.get('/tecnicos', async (req, res) => {
     );
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -118,7 +119,7 @@ router.get('/tiempos', async (req, res) => {
     );
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 

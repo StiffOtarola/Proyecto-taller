@@ -2,6 +2,7 @@ const router = require('express').Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { pool } = require('../db/pool');
+const { fail } = require('../utils/responder');
 const authCliente = require('../middleware/auth-cliente');
 const { emailValido } = require('../utils/validar');
 const { consumir } = require('../utils/rate-limit');
@@ -33,7 +34,7 @@ router.post('/login', async (req, res) => {
     const { payload, token } = tokenCliente(cliente);
     res.json({ data: { token, cliente: payload } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -73,7 +74,7 @@ router.post('/registro', async (req, res) => {
     const { payload, token } = tokenCliente(cliente);
     res.status(201).json({ data: { token, cliente: payload } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -110,7 +111,7 @@ router.post('/recuperar/solicitar', async (req, res) => {
 
     res.json({ message: MSG_GENERICO });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -150,7 +151,7 @@ router.post('/recuperar/confirmar', async (req, res) => {
     const { payload, token } = tokenCliente(cliente);
     res.json({ data: { token, cliente: payload } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -172,7 +173,7 @@ router.get('/ordenes', async (req, res) => {
     );
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -212,7 +213,7 @@ router.get('/ordenes/:id', async (req, res) => {
     );
     res.json({ data: { ...orden, avances, repuestos, fotos } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -223,7 +224,7 @@ router.post('/ordenes/:id/aprobar', async (req, res) => {
     if (!ok) return res.status(400).json({ error: 'La orden no está esperando aprobación' });
     res.json({ message: 'Presupuesto aprobado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -234,7 +235,7 @@ router.post('/ordenes/:id/rechazar', async (req, res) => {
     if (!ok) return res.status(400).json({ error: 'La orden no está esperando aprobación' });
     res.json({ message: 'Presupuesto rechazado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -258,7 +259,7 @@ router.post('/ordenes/:id/encuesta', async (req, res) => {
     );
     res.json({ message: '¡Gracias por tu opinión!' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -278,7 +279,7 @@ router.get('/fidelidad', async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -288,7 +289,7 @@ router.get('/promos', async (req, res) => {
     const [rows] = await pool.query('SELECT id, titulo, descripcion, descuento FROM promos WHERE activa = 1 ORDER BY created_at DESC');
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -301,7 +302,7 @@ router.get('/motos', async (req, res) => {
     );
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -331,7 +332,7 @@ router.post('/motos', async (req, res) => {
     );
     res.status(201).json({ data: nueva, message: 'Moto registrada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -349,7 +350,7 @@ router.get('/citas', async (req, res) => {
     );
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -379,7 +380,7 @@ router.post('/citas', async (req, res) => {
     );
     res.status(201).json({ data: nueva, message: 'Solicitud de cita enviada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 

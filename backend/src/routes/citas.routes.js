@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { pool } = require('../db/pool');
+const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 
 router.use(auth);
@@ -22,7 +23,7 @@ router.get('/', async (req, res) => {
     const [rows] = await pool.query(sql, params);
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -39,7 +40,7 @@ router.post('/', async (req, res) => {
     const [[nueva]] = await pool.query('SELECT * FROM citas WHERE id = ?', [result.insertId]);
     res.status(201).json({ data: nueva, message: 'Cita creada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -57,7 +58,7 @@ router.get('/:id', async (req, res) => {
     if (!cita) return res.status(404).json({ error: 'Cita no encontrada' });
     res.json({ data: cita });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -71,7 +72,7 @@ router.put('/:id', async (req, res) => {
     const [[actualizada]] = await pool.query('SELECT * FROM citas WHERE id = ?', [req.params.id]);
     res.json({ data: actualizada, message: 'Cita actualizada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -83,7 +84,7 @@ router.patch('/:id/estado', async (req, res) => {
     await pool.query('UPDATE citas SET estado = ? WHERE id = ?', [estado, req.params.id]);
     res.json({ message: 'Estado de cita actualizado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 

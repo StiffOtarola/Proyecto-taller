@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { pool } = require('../db/pool');
+const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 
 router.use(auth);
@@ -20,7 +21,7 @@ router.get('/', async (req, res) => {
     const [rows] = await pool.query(sql, params);
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -30,6 +31,15 @@ router.post('/', async (req, res) => {
     if (!cliente_id || !marca || !modelo) {
       return res.status(400).json({ error: 'cliente_id, marca y modelo son requeridos' });
     }
+    // Evita placas duplicadas (normaliza espacios y guiones), igual que en el portal.
+    if (placa) {
+      const [[dup]] = await pool.query(
+        `SELECT id FROM motos WHERE activa = 1
+           AND UPPER(REPLACE(REPLACE(placa, ' ', ''), '-', '')) = UPPER(REPLACE(REPLACE(?, ' ', ''), '-', ''))`,
+        [placa]
+      );
+      if (dup) return res.status(409).json({ error: 'Esa placa ya está registrada' });
+    }
     const [result] = await pool.query(
       `INSERT INTO motos (cliente_id, marca, modelo, anio, placa, color, numero_motor, numero_chasis, kilometraje_actual, foto_url)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -38,7 +48,7 @@ router.post('/', async (req, res) => {
     const [[nueva]] = await pool.query('SELECT * FROM motos WHERE id = ?', [result.insertId]);
     res.status(201).json({ data: nueva, message: 'Moto registrada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -52,7 +62,7 @@ router.get('/:id', async (req, res) => {
     if (!moto) return res.status(404).json({ error: 'Moto no encontrada' });
     res.json({ data: moto });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -67,7 +77,7 @@ router.put('/:id', async (req, res) => {
     const [[actualizada]] = await pool.query('SELECT * FROM motos WHERE id = ?', [req.params.id]);
     res.json({ data: actualizada, message: 'Moto actualizada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -86,7 +96,7 @@ router.get('/:id/historial', async (req, res) => {
     );
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 

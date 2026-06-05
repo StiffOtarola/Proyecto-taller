@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const bcrypt = require('bcrypt');
 const { pool } = require('../db/pool');
+const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
 
@@ -13,7 +14,7 @@ router.get('/', async (req, res) => {
     );
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -35,7 +36,7 @@ router.post('/', async (req, res) => {
     res.status(201).json({ data: nuevo, message: 'Usuario creado' });
   } catch (err) {
     if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'El email ya está registrado' });
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -49,7 +50,7 @@ router.put('/:id', async (req, res) => {
     );
     res.json({ data: actualizado, message: 'Usuario actualizado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -59,7 +60,7 @@ router.patch('/:id/activo', async (req, res) => {
     await pool.query('UPDATE usuarios SET activo = ? WHERE id = ?', [activo ? 1 : 0, req.params.id]);
     res.json({ message: activo ? 'Usuario activado' : 'Usuario desactivado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 

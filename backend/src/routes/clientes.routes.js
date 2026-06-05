@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const bcrypt = require('bcrypt');
 const { pool } = require('../db/pool');
+const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 
 router.use(auth);
@@ -24,7 +25,7 @@ router.get('/', async (req, res) => {
     const [rows] = await pool.query(sql, params);
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -41,7 +42,7 @@ router.post('/', async (req, res) => {
     const [[nuevo]] = await pool.query('SELECT * FROM clientes WHERE id = ?', [result.insertId]);
     res.status(201).json({ data: nuevo, message: 'Cliente creado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -51,7 +52,7 @@ router.get('/:id', async (req, res) => {
     if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
     res.json({ data: cliente });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -64,7 +65,7 @@ router.patch('/:id/cortesia', async (req, res) => {
     await pool.query('UPDATE clientes SET cortesia_disponible = 0 WHERE id = ?', [req.params.id]);
     res.json({ message: 'Cortesía canjeada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -87,7 +88,7 @@ router.patch('/:id/portal', async (req, res) => {
     await pool.query('UPDATE clientes SET password_hash = ? WHERE id = ?', [hash, req.params.id]);
     res.json({ message: 'Acceso al portal activado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -101,7 +102,7 @@ router.put('/:id', async (req, res) => {
     const [[actualizado]] = await pool.query('SELECT * FROM clientes WHERE id = ?', [req.params.id]);
     res.json({ data: actualizado, message: 'Cliente actualizado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -113,7 +114,7 @@ router.get('/:id/motos', async (req, res) => {
     );
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -131,7 +132,7 @@ router.get('/:id/ordenes', async (req, res) => {
     );
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 

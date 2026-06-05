@@ -2,8 +2,10 @@ const router = require('express').Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../db/pool');
+const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const { emailValido } = require('../utils/validar');
+const { consumir } = require('../utils/rate-limit');
 
 function firmar(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '8h' });
@@ -20,6 +22,12 @@ router.post('/login', async (req, res) => {
     }
     if (!emailValido(email)) {
       return res.status(400).json({ error: 'El correo no tiene un formato válido' });
+    }
+
+    // Anti fuerza-bruta: limita intentos por correo (10/min, 60/hora).
+    const limite = consumir(`login:${String(email).trim().toLowerCase()}`, { porMinuto: 10, porHora: 60 });
+    if (!limite.ok) {
+      return res.status(429).json({ error: `Demasiados intentos. Esperá ${limite.retryAfter}s e intentá de nuevo.` });
     }
 
     // 1) Personal del taller (usuarios)
@@ -44,7 +52,7 @@ router.post('/login', async (req, res) => {
 
     return res.status(401).json({ error: 'Credenciales incorrectas' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -57,7 +65,7 @@ router.get('/me', auth, async (req, res) => {
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
     res.json({ data: usuario });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 

@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { pool } = require('../db/pool');
+const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
 
@@ -11,7 +12,7 @@ router.get('/', async (req, res) => {
     const [rows] = await pool.query('SELECT * FROM promos ORDER BY created_at DESC');
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -27,7 +28,7 @@ router.post('/', requireRol('admin'), async (req, res) => {
     const [[nueva]] = await pool.query('SELECT * FROM promos WHERE id = ?', [result.insertId]);
     res.status(201).json({ data: nueva, message: 'Promoción creada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -38,7 +39,7 @@ router.patch('/:id/toggle', requireRol('admin'), async (req, res) => {
     if (!promo) return res.status(404).json({ error: 'Promoción no encontrada' });
     res.json({ data: promo, message: promo.activa ? 'Promoción activada' : 'Promoción desactivada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -47,7 +48,7 @@ router.delete('/:id', requireRol('admin'), async (req, res) => {
     await pool.query('DELETE FROM promos WHERE id = ?', [req.params.id]);
     res.json({ message: 'Promoción eliminada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 

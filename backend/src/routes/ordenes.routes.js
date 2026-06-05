@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { pool } = require('../db/pool');
+const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
 
@@ -41,7 +42,7 @@ router.get('/', async (req, res) => {
     const [rows] = await pool.query(sql, params);
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -84,7 +85,7 @@ router.post('/', async (req, res) => {
     const [[nueva]] = await pool.query('SELECT * FROM ordenes_trabajo WHERE id = ?', [result.insertId]);
     res.status(201).json({ data: nueva, message: 'Orden creada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -109,7 +110,7 @@ router.get('/:id', async (req, res) => {
     if (!orden) return res.status(404).json({ error: 'Orden no encontrada' });
     res.json({ data: orden });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -137,7 +138,7 @@ router.put('/:id', async (req, res) => {
     const [[actualizada]] = await pool.query('SELECT * FROM ordenes_trabajo WHERE id = ?', [req.params.id]);
     res.json({ data: actualizada, message: 'Orden actualizada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -178,7 +179,7 @@ router.patch('/:id/estado', async (req, res) => {
 
     res.json({ data: { estado }, message: 'Estado actualizado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -189,7 +190,7 @@ router.patch('/:id/tecnico', requireRol('jefe_taller'), async (req, res) => {
     await pool.query('UPDATE ordenes_trabajo SET tecnico_id = ? WHERE id = ?', [tecnico_id || null, req.params.id]);
     res.json({ message: 'Técnico asignado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -205,7 +206,7 @@ router.post('/:id/avances', async (req, res) => {
     const [[nuevo]] = await pool.query('SELECT * FROM orden_avances WHERE id = ?', [result.insertId]);
     res.status(201).json({ data: nuevo, message: 'Avance registrado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -220,7 +221,7 @@ router.get('/:id/avances', async (req, res) => {
     );
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -241,7 +242,7 @@ router.post('/:id/repuestos', async (req, res) => {
     const [[nuevo]] = await pool.query('SELECT * FROM orden_repuestos WHERE id = ?', [result.insertId]);
     res.status(201).json({ data: nuevo, message: 'Repuesto agregado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -254,7 +255,7 @@ router.get('/:id/repuestos', async (req, res) => {
     );
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -273,7 +274,7 @@ router.put('/:id/repuestos/:rid', async (req, res) => {
     const [[actualizado]] = await pool.query('SELECT * FROM orden_repuestos WHERE id = ?', [req.params.rid]);
     res.json({ data: actualizado, message: 'Repuesto actualizado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -287,7 +288,7 @@ router.delete('/:id/repuestos/:rid', async (req, res) => {
     );
     res.json({ message: 'Repuesto eliminado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -300,7 +301,7 @@ router.patch('/:id/aprobar', async (req, res) => {
     );
     res.json({ message: 'Orden aprobada por el cliente' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -318,7 +319,7 @@ router.post('/:id/checklist', async (req, res) => {
     );
     res.json({ message: 'Checklist guardado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -327,7 +328,7 @@ router.get('/:id/checklist', async (req, res) => {
     const [[checklist]] = await pool.query('SELECT * FROM orden_checklist WHERE orden_id = ?', [req.params.id]);
     res.json({ data: checklist || null });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -359,7 +360,7 @@ router.patch('/:id/cerrar', requireRol('jefe_taller'), async (req, res) => {
 
     res.json({ message: 'Orden cerrada y entregada', cortesia_ganada: cortesiaGanada });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -377,7 +378,7 @@ router.post('/:id/fotos', async (req, res) => {
     const [[nueva]] = await pool.query('SELECT * FROM orden_fotos WHERE id = ?', [result.insertId]);
     res.status(201).json({ data: nueva, message: 'Foto agregada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -390,7 +391,7 @@ router.get('/:id/fotos', async (req, res) => {
     );
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -400,7 +401,7 @@ router.delete('/:id/fotos/:fid', async (req, res) => {
     await pool.query('DELETE FROM orden_fotos WHERE id = ? AND orden_id = ?', [req.params.fid, req.params.id]);
     res.json({ message: 'Foto eliminada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 

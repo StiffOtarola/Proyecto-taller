@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { pool } = require('../db/pool');
+const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
 
@@ -38,7 +39,7 @@ router.get('/', async (req, res) => {
     const [rows] = await pool.query(sql, params);
     res.json({ data: rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -50,7 +51,7 @@ router.get('/:id', async (req, res) => {
     const [fotos] = await pool.query('SELECT * FROM garantia_fotos WHERE garantia_id = ? ORDER BY created_at ASC', [req.params.id]);
     res.json({ data: { ...garantia, fotos } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -74,7 +75,7 @@ router.post('/', async (req, res) => {
     const [[nueva]] = await pool.query(SELECT_GARANTIA + ' WHERE g.id = ?', [result.insertId]);
     res.status(201).json({ data: nueva, message: 'Reclamo de garantía registrado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -99,7 +100,7 @@ router.patch('/:id/estado', requireRol('jefe_taller'), async (req, res) => {
     const [[actualizada]] = await pool.query(SELECT_GARANTIA + ' WHERE g.id = ?', [req.params.id]);
     res.json({ data: actualizada, message: 'Trámite actualizado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -115,7 +116,7 @@ router.post('/:id/fotos', async (req, res) => {
     const [[nueva]] = await pool.query('SELECT * FROM garantia_fotos WHERE id = ?', [result.insertId]);
     res.status(201).json({ data: nueva, message: 'Evidencia agregada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 
@@ -125,7 +126,7 @@ router.delete('/:id/fotos/:fid', async (req, res) => {
     await pool.query('DELETE FROM garantia_fotos WHERE id = ? AND garantia_id = ?', [req.params.fid, req.params.id]);
     res.json({ message: 'Evidencia eliminada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    fail(res, err);
   }
 });
 

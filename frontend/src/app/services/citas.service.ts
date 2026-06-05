@@ -9,7 +9,7 @@ export class CitasService {
   private url = `${environment.apiUrl}/citas`;
   constructor(private http: HttpClient) {}
 
-  getAll(params?: { fecha?: string; estado?: string }): Observable<{ data: Cita[] }> {
+  getAll(params?: { fecha?: string; estado?: string; tecnico_id?: number }): Observable<{ data: Cita[] }> {
     return this.http.get<{ data: Cita[] }>(this.url, { params: params as any });
   }
 
@@ -27,5 +27,9 @@ export class CitasService {
 
   cambiarEstado(id: number, estado: string): Observable<any> {
     return this.http.patch(`${this.url}/${id}/estado`, { estado });
+  }
+
+  asignar(id: number, tecnico_id: number | null): Observable<any> {
+    return this.http.patch(`${this.url}/${id}/asignar`, { tecnico_id });
   }
 }

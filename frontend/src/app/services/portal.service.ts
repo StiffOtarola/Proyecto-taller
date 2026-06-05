@@ -98,8 +98,12 @@ export class PortalService {
     return this.http.get<{ data: any[] }>(`${this.url}/citas`);
   }
 
-  crearCita(data: { moto_id?: number | null; fecha: string; hora: string; motivo: string }): Observable<{ data: any }> {
+  crearCita(data: { moto_id?: number | null; fecha: string; hora: string; motivo: string; tipo_servicio?: string | null }): Observable<{ data: any }> {
     return this.http.post<{ data: any }>(`${this.url}/citas`, data);
+  }
+
+  calificarCita(id: number, calificacion: number, comentario?: string): Observable<any> {
+    return this.http.post(`${this.url}/citas/${id}/calificar`, { calificacion, comentario });
   }
 
   enviarEncuesta(id: number, calificacion: number, comentario?: string): Observable<any> {

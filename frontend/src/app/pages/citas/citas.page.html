@@ -8,11 +8,12 @@
     </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
-    <ion-segment [(ngModel)]="filtroEstado" (ngModelChange)="cargar()">
+    <ion-segment [(ngModel)]="filtroEstado" (ngModelChange)="cargar()" scrollable>
       <ion-segment-button value=""><ion-label>Todas</ion-label></ion-segment-button>
-      <ion-segment-button value="pendiente"><ion-label>Pendientes</ion-label></ion-segment-button>
-      <ion-segment-button value="confirmada"><ion-label>Confirmadas</ion-label></ion-segment-button>
-      <ion-segment-button value="completada"><ion-label>Completadas</ion-label></ion-segment-button>
+      <ion-segment-button value="agendado"><ion-label>Agendadas</ion-label></ion-segment-button>
+      <ion-segment-button value="en_revision"><ion-label>En revisión</ion-label></ion-segment-button>
+      <ion-segment-button value="en_mantenimiento"><ion-label>Mantenim.</ion-label></ion-segment-button>
+      <ion-segment-button value="entregado"><ion-label>Entregadas</ion-label></ion-segment-button>
     </ion-segment>
   </ion-toolbar>
 </ion-header>
@@ -35,38 +36,31 @@
   <ion-list *ngIf="!cargando">
     <ion-item-sliding *ngFor="let c of citas">
       <ion-item>
-        <ion-icon name="calendar-outline" slot="start" [color]="
-          c.estado === 'confirmada' ? 'success' :
-          c.estado === 'cancelada' ? 'danger' :
-          c.estado === 'completada' ? 'medium' : 'primary'"></ion-icon>
+        <ion-icon name="calendar-outline" slot="start" [color]="estadoColor[c.estado!]"></ion-icon>
         <ion-label>
           <h2>{{ c.cliente_nombre }} {{ c.cliente_apellido }}</h2>
           <p>{{ c.fecha | date:'dd/MM/yyyy' }} a las {{ c.hora }}</p>
-          <p *ngIf="c.marca">{{ c.marca }} {{ c.modelo }}</p>
+          <p *ngIf="c.marca">{{ c.marca }} {{ c.modelo }}<span *ngIf="c.tipo_servicio"> · {{ c.tipo_servicio }}</span></p>
           <p>{{ c.motivo | slice:0:60 }}</p>
-          <ion-chip *ngIf="!c.usuario_nombre" color="tertiary" class="chip-cliente">
+          <ion-chip *ngIf="c.tecnico_nombre" color="tertiary" class="chip-cliente">
+            <ion-icon name="construct-outline"></ion-icon>
+            <ion-label>{{ c.tecnico_nombre }}</ion-label>
+          </ion-chip>
+          <ion-chip *ngIf="!c.tecnico_nombre" color="medium" class="chip-cliente">
             <ion-icon name="person-outline"></ion-icon>
-            <ion-label>Solicitada por el cliente</ion-label>
+            <ion-label>Sin asignar</ion-label>
           </ion-chip>
         </ion-label>
-        <ion-badge slot="end" [color]="
-          c.estado === 'confirmada' ? 'success' :
-          c.estado === 'cancelada' ? 'danger' :
-          c.estado === 'completada' ? 'medium' : 'primary'">
-          {{ c.estado }}
-        </ion-badge>
+        <ion-badge slot="end" [color]="estadoColor[c.estado!]">{{ estadoLabel[c.estado!] }}</ion-badge>
       </ion-item>
       <ion-item-options side="end">
         <ion-item-option (click)="editarCita(c.id!)">
           <ion-icon name="create-outline"></ion-icon>
         </ion-item-option>
-        <ion-item-option color="success" (click)="cambiarEstado(c, 'confirmada')" *ngIf="c.estado === 'pendiente'">
-          <ion-icon name="checkmark-outline"></ion-icon>
+        <ion-item-option color="tertiary" (click)="asignarTecnico(c)" *ngIf="auth.tieneRol('jefe_taller','admin','gerencia')">
+          <ion-icon name="construct-outline"></ion-icon>
         </ion-item-option>
-        <ion-item-option color="success" (click)="cambiarEstado(c, 'completada')" *ngIf="c.estado === 'confirmada'">
-          <ion-icon name="checkmark-done-outline"></ion-icon>
-        </ion-item-option>
-        <ion-item-option color="danger" (click)="cambiarEstado(c, 'cancelada')">
+        <ion-item-option color="danger" (click)="cambiarEstado(c, 'cancelado')" *ngIf="c.estado !== 'entregado' && c.estado !== 'cancelado'">
           <ion-icon name="close-outline"></ion-icon>
         </ion-item-option>
       </ion-item-options>

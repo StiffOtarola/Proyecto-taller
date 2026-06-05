@@ -40,7 +40,22 @@
     </ion-item>
 
     <ion-item>
-      <ion-label position="stacked">Motivo *</ion-label>
+      <ion-label position="stacked">Tipo de servicio</ion-label>
+      <ion-select [(ngModel)]="form.tipo_servicio" interface="action-sheet" placeholder="Seleccionar servicio">
+        <ion-select-option *ngFor="let t of tiposServicio" [value]="t">{{ t }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item *ngIf="auth.tieneRol('jefe_taller','admin','gerencia')">
+      <ion-label position="stacked">Técnico asignado</ion-label>
+      <ion-select [(ngModel)]="form.tecnico_id" interface="action-sheet" placeholder="Sin asignar">
+        <ion-select-option [value]="null">Sin asignar</ion-select-option>
+        <ion-select-option *ngFor="let t of tecnicos" [value]="t.id">{{ t.nombre }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Motivo / Notas *</ion-label>
       <ion-textarea [(ngModel)]="form.motivo" rows="3" placeholder="Motivo de la cita..."></ion-textarea>
     </ion-item>
   </ion-list>

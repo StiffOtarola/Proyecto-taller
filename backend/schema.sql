@@ -78,19 +78,27 @@ CREATE TABLE IF NOT EXISTS motos (
 );
 
 CREATE TABLE IF NOT EXISTS citas (
-  id         INT AUTO_INCREMENT PRIMARY KEY,
-  cliente_id INT NOT NULL,
-  moto_id    INT,
-  usuario_id INT,
-  fecha      DATE NOT NULL,
-  hora       TIME NOT NULL,
-  motivo     TEXT NOT NULL,
-  estado     ENUM('pendiente','confirmada','cancelada','completada') DEFAULT 'pendiente',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  cliente_id    INT NOT NULL,
+  moto_id       INT,
+  usuario_id    INT,
+  tecnico_id    INT,                                  -- mecánico asignado
+  fecha         DATE NOT NULL,
+  hora          TIME NOT NULL,
+  motivo        TEXT NOT NULL,                        -- notas del cliente
+  tipo_servicio VARCHAR(100),                         -- tipo de servicio elegido
+  estado        ENUM('agendado','en_revision','en_mantenimiento','listo','entregado','cancelado') NOT NULL DEFAULT 'agendado',
+  monto         DECIMAL(10,2) DEFAULT 0,              -- plata cobrada (la anota el mecánico)
+  calificacion  TINYINT,                              -- la pone el cliente (1-5)
+  comentario_satisfaccion TEXT,
+  fecha_inicio  TIMESTAMP NULL,                       -- al empezar el trabajo
+  fecha_fin     TIMESTAMP NULL,                       -- al entregar
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (cliente_id) REFERENCES clientes(id),
   FOREIGN KEY (moto_id)    REFERENCES motos(id),
-  FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+  FOREIGN KEY (tecnico_id) REFERENCES usuarios(id)
 );
 
 CREATE TABLE IF NOT EXISTS ordenes_trabajo (

@@ -102,6 +102,39 @@ async function ensureSchema() {
     await addColumnIfMissing('clientes', 'visitas', 'INT DEFAULT 0');
     await addColumnIfMissing('clientes', 'cortesia_disponible', 'TINYINT(1) DEFAULT 0');
     await addColumnIfMissing('ordenes_trabajo', 'visita_contada', 'TINYINT(1) DEFAULT 0');
+
+    // Panel del mecánico: la cita es la unidad de trabajo del técnico.
+    await addColumnIfMissing('citas', 'tecnico_id', 'INT NULL');
+    await addColumnIfMissing('citas', 'tipo_servicio', 'VARCHAR(100) NULL');
+    await addColumnIfMissing('citas', 'monto', 'DECIMAL(10,2) DEFAULT 0');
+    await addColumnIfMissing('citas', 'calificacion', 'TINYINT NULL');
+    await addColumnIfMissing('citas', 'comentario_satisfaccion', 'TEXT NULL');
+    await addColumnIfMissing('citas', 'fecha_inicio', 'TIMESTAMP NULL');
+    await addColumnIfMissing('citas', 'fecha_fin', 'TIMESTAMP NULL');
+
+    // Nuevos estados de la cita (flujo que ve el cliente en el portal).
+    // Idempotente: solo migra si el enum todavía tiene los estados viejos.
+    const [[citaEstado]] = await pool.query(
+      `SELECT COLUMN_TYPE FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'citas' AND COLUMN_NAME = 'estado'`
+    );
+    if (citaEstado && citaEstado.COLUMN_TYPE.includes('pendiente')) {
+      await pool.query('ALTER TABLE citas MODIFY COLUMN estado VARCHAR(20)');
+      await pool.query(`
+        UPDATE citas SET estado = CASE estado
+          WHEN 'pendiente'  THEN 'agendado'
+          WHEN 'confirmada' THEN 'agendado'
+          WHEN 'completada' THEN 'entregado'
+          WHEN 'cancelada'  THEN 'cancelado'
+          ELSE estado END
+      `);
+      await pool.query(`
+        ALTER TABLE citas MODIFY COLUMN estado
+          ENUM('agendado','en_revision','en_mantenimiento','listo','entregado','cancelado')
+          NOT NULL DEFAULT 'agendado'
+      `);
+      console.log('🔧 Migración: citas.estado → nuevo flujo del mecánico');
+    }
   } catch (err) {
     console.error('⚠️  Auto-migración falló:', err.code || err.message);
   }

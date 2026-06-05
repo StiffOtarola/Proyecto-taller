@@ -38,9 +38,14 @@
       <ion-item>
         <ion-input label="Hora" labelPlacement="floating" type="time" [(ngModel)]="nueva.hora"></ion-input>
       </ion-item>
+      <ion-item>
+        <ion-select label="Tipo de servicio" labelPlacement="floating" [(ngModel)]="nueva.tipo_servicio" interface="action-sheet">
+          <ion-select-option *ngFor="let t of tiposServicio" [value]="t">{{ t }}</ion-select-option>
+        </ion-select>
+      </ion-item>
       <ion-item lines="none">
-        <ion-textarea label="Motivo" labelPlacement="floating" [(ngModel)]="nueva.motivo" rows="3"
-          placeholder="Ej: cambio de aceite, ruido en el motor..."></ion-textarea>
+        <ion-textarea label="Notas" labelPlacement="floating" [(ngModel)]="nueva.motivo" rows="3"
+          placeholder="Contanos el detalle: ruido, síntomas, etc."></ion-textarea>
       </ion-item>
 
       <ion-button expand="block" class="ion-margin-top" (click)="solicitar()" [disabled]="!valido || enviando">
@@ -60,19 +65,30 @@
 
     <!-- Lista de citas -->
     <div class="cita-list" *ngIf="!cargando && citas.length">
-      <span class="section-label">Tus próximas citas</span>
+      <span class="section-label">Tus citas</span>
       <div class="cita-row" *ngFor="let c of citas">
-        <div class="cita-ico" [ngClass]="estadoColor[c.estado]">
+        <div class="cita-ico">
           <ion-icon name="calendar"></ion-icon>
         </div>
         <div class="cita-meta">
           <h4>{{ c.fecha | date:'EEEE dd/MM' }} · {{ c.hora }}</h4>
           <p *ngIf="c.marca">{{ c.marca }} {{ c.modelo }}</p>
+          <p *ngIf="c.tipo_servicio" class="servicio">{{ c.tipo_servicio }}</p>
           <p class="motivo">{{ c.motivo }}</p>
+          <p *ngIf="c.tecnico_nombre" class="tecnico"><ion-icon name="construct-outline"></ion-icon> {{ c.tecnico_nombre }}</p>
+
+          <!-- Calificar cuando ya está entregada -->
+          <div class="calificar" *ngIf="c.estado === 'entregado' && !c.calificacion">
+            <span>¿Cómo estuvo el servicio?</span>
+            <div class="estrellas">
+              <ion-icon *ngFor="let n of [1,2,3,4,5]" name="star-outline" (click)="calificar(c, n)"></ion-icon>
+            </div>
+          </div>
+          <div class="calif-hecha" *ngIf="c.calificacion">
+            <ion-icon *ngFor="let n of [1,2,3,4,5]" [name]="n <= c.calificacion ? 'star' : 'star-outline'"></ion-icon>
+          </div>
         </div>
-        <span class="pill" [ngClass]="{'green': estadoColor[c.estado]==='success', 'amber': estadoColor[c.estado]==='warning', 'gris': estadoColor[c.estado]==='medium' || estadoColor[c.estado]==='danger'}">
-          {{ estadoLabel[c.estado] }}
-        </span>
+        <span class="pill" [ngClass]="estadoPill[c.estado]">{{ estadoLabel[c.estado] }}</span>
       </div>
     </div>
 

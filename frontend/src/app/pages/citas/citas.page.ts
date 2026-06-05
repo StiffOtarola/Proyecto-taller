@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
 import { CitasService } from '../../services/citas.service';
+import { DashboardService } from '../../services/dashboard.service';
+import { AuthService } from '../../services/auth.service';
 import { Cita } from '../../models/cita.model';
 
 @Component({ standalone: false,
@@ -11,12 +13,32 @@ import { Cita } from '../../models/cita.model';
 })
 export class CitasPage implements OnInit {
   citas: Cita[] = [];
+  tecnicos: any[] = [];
   cargando = true;
   filtroEstado = '';
   fechaHoy = new Date().toISOString().split('T')[0];
 
+  readonly estadoLabel: Record<string, string> = {
+    agendado: 'Agendado',
+    en_revision: 'En revisión',
+    en_mantenimiento: 'En mantenimiento',
+    listo: 'Listo',
+    entregado: 'Entregado',
+    cancelado: 'Cancelado',
+  };
+  readonly estadoColor: Record<string, string> = {
+    agendado: 'primary',
+    en_revision: 'warning',
+    en_mantenimiento: 'tertiary',
+    listo: 'secondary',
+    entregado: 'success',
+    cancelado: 'danger',
+  };
+
   constructor(
     private citaSvc: CitasService,
+    private dashSvc: DashboardService,
+    public auth: AuthService,
     private router: Router,
     private alert: AlertController,
     private toast: ToastController
@@ -33,6 +55,10 @@ export class CitasPage implements OnInit {
       next: res => { this.citas = res.data; this.cargando = false; },
       error: () => { this.cargando = false; },
     });
+    // Lista de técnicos para asignar (solo jefe+ puede).
+    if (this.auth.tieneRol('jefe_taller', 'admin', 'gerencia') && !this.tecnicos.length) {
+      this.dashSvc.getTecnicos().subscribe({ next: res => this.tecnicos = res.data });
+    }
   }
 
   nuevaCita() { this.router.navigate(['/cita-form']); }
@@ -43,6 +69,37 @@ export class CitasPage implements OnInit {
       next: async () => {
         cita.estado = estado as any;
         const t = await this.toast.create({ message: 'Estado actualizado', duration: 1500, color: 'success' });
+        await t.present();
+      },
+    });
+  }
+
+  // El jefe de taller asigna la cita a un técnico (radio con los técnicos activos).
+  async asignarTecnico(cita: Cita) {
+    if (!this.tecnicos.length) {
+      const t = await this.toast.create({ message: 'No hay técnicos disponibles', duration: 2000, color: 'warning' });
+      return await t.present();
+    }
+    const al = await this.alert.create({
+      header: 'Asignar técnico',
+      inputs: this.tecnicos.map(tc => ({
+        type: 'radio' as const, label: tc.nombre, value: tc.id, checked: cita.tecnico_id === tc.id,
+      })),
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Asignar', handler: (id) => this.guardarAsignacion(cita, id) },
+      ],
+    });
+    await al.present();
+  }
+
+  private guardarAsignacion(cita: Cita, tecnicoId: number) {
+    if (!tecnicoId) return;
+    this.citaSvc.asignar(cita.id!, tecnicoId).subscribe({
+      next: async () => {
+        cita.tecnico_id = tecnicoId;
+        cita.tecnico_nombre = this.tecnicos.find(t => t.id === tecnicoId)?.nombre;
+        const t = await this.toast.create({ message: 'Técnico asignado', duration: 1500, color: 'success' });
         await t.present();
       },
     });

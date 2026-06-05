@@ -1,0 +1,41 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/mecanico"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Agenda de la semana</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="mec">
+    <div class="sem-nav">
+      <ion-button fill="clear" size="small" (click)="cambiarSemana(-1)"><ion-icon slot="icon-only" name="chevron-back"></ion-icon></ion-button>
+      <span class="sem-rango">{{ rango }}</span>
+      <ion-button fill="clear" size="small" (click)="cambiarSemana(1)"><ion-icon slot="icon-only" name="chevron-forward"></ion-icon></ion-button>
+    </div>
+
+    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px">
+      <div class="skeleton" style="height:70px;border-radius:16px"></div>
+      <div class="skeleton" style="height:70px;border-radius:16px"></div>
+      <div class="skeleton" style="height:70px;border-radius:16px"></div>
+    </div>
+
+    <div class="dia-list" *ngIf="!cargando">
+      <div class="dia" *ngFor="let d of dias">
+        <div class="dia-head"><span>{{ d.etiqueta }}</span><span class="dia-count" *ngIf="d.citas.length">{{ d.citas.length }}</span></div>
+        <div class="dia-vacio" *ngIf="d.citas.length === 0">Sin citas</div>
+        <div class="ag-cita" *ngFor="let c of d.citas">
+          <span class="ag-hora mono">{{ c.hora }}</span>
+          <div class="ag-info">
+            <strong>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}</strong>
+            <span *ngIf="c.tipo_servicio">{{ c.tipo_servicio }}</span>
+          </div>
+          <span class="pill" [ngClass]="estadoPill[c.estado]">{{ estadoLabel[c.estado] }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:30px"></div>
+  </div>
+</ion-content>

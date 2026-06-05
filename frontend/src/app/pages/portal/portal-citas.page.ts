@@ -16,19 +16,25 @@ export class PortalCitasPage implements OnInit {
   mostrarForm = false;
   enviando = false;
   hoy = new Date().toISOString().slice(0, 10);
-  nueva = { moto_id: null as number | null, fecha: '', hora: '', motivo: '' };
+  nueva = { moto_id: null as number | null, fecha: '', hora: '', motivo: '', tipo_servicio: null as string | null };
+  tiposServicio = ['Mantenimiento preventivo', 'Cambio de aceite', 'Frenos', 'Llantas', 'Sistema eléctrico', 'Afinamiento', 'Diagnóstico', 'Otro'];
 
-  readonly estadoColor: Record<string, string> = {
-    pendiente: 'warning',
-    confirmada: 'success',
-    cancelada: 'danger',
-    completada: 'medium',
+  // Estados del flujo que ve el cliente.
+  readonly estadoPill: Record<string, string> = {
+    agendado: 'gris',
+    en_revision: 'amber',
+    en_mantenimiento: 'rose',
+    listo: 'indigo',
+    entregado: 'green',
+    cancelado: 'gris',
   };
   readonly estadoLabel: Record<string, string> = {
-    pendiente: 'Pendiente',
-    confirmada: 'Confirmada',
-    cancelada: 'Cancelada',
-    completada: 'Completada',
+    agendado: 'Agendada',
+    en_revision: 'En revisión',
+    en_mantenimiento: 'En mantenimiento',
+    listo: 'Lista para entrega',
+    entregado: 'Entregada',
+    cancelado: 'Cancelada',
   };
 
   constructor(private portal: PortalService, private toast: ToastController) {}
@@ -46,8 +52,16 @@ export class PortalCitasPage implements OnInit {
   }
 
   abrirForm() {
-    this.nueva = { moto_id: null, fecha: '', hora: '', motivo: '' };
+    this.nueva = { moto_id: null, fecha: '', hora: '', motivo: '', tipo_servicio: null };
     this.mostrarForm = true;
+  }
+
+  // El cliente califica su cita ya entregada (1-5 estrellas).
+  calificar(cita: any, estrellas: number) {
+    this.portal.calificarCita(cita.id, estrellas).subscribe({
+      next: () => { cita.calificacion = estrellas; this.mostrarToast('¡Gracias por tu opinión!'); },
+      error: err => this.mostrarToast(err.error?.error || 'No se pudo calificar', 'danger'),
+    });
   }
 
   get valido(): boolean {

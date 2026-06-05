@@ -1,0 +1,103 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Mi taller</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="irAgenda()" title="Agenda de la semana">
+        <ion-icon slot="icon-only" name="calendar-number-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="logout()" title="Salir">
+        <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar(); $event.target.complete()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="mec">
+    <div class="greet"><h1>Hola, {{ nombre }}</h1><p>Tu trabajo de hoy</p></div>
+
+    <!-- KPIs del día -->
+    <div class="kpi-grid">
+      <div class="stat-card"><span class="num mono">{{ resumen?.citas_hoy ?? 0 }}</span><span class="lbl">Citas hoy</span></div>
+      <div class="stat-card"><span class="num mono">{{ resumen?.completadas_hoy ?? 0 }}</span><span class="lbl">Completadas</span></div>
+      <div class="stat-card"><span class="num mono">{{ resumen?.en_proceso ?? 0 }}</span><span class="lbl">En proceso</span></div>
+    </div>
+
+    <!-- Promedios -->
+    <span class="section-label">Tus promedios</span>
+    <div class="kpi-grid">
+      <div class="stat-card"><span class="num mono">{{ (resumen?.monto_promedio || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span><span class="lbl">Por cita</span></div>
+      <div class="stat-card"><span class="num mono">{{ formatMin(resumen?.tiempo_promedio_min) }}</span><span class="lbl">Tiempo prom.</span></div>
+      <div class="stat-card">
+        <span class="num stars">{{ estrellas(resumen?.calificacion_promedio ?? null) }}</span>
+        <span class="lbl">{{ resumen?.calificacion_promedio ? (resumen?.calificacion_promedio + ' (' + resumen?.calificacion_total + ')') : 'Calificación' }}</span>
+      </div>
+    </div>
+
+    <!-- Filtro -->
+    <ion-segment [(ngModel)]="vista" mode="md" class="seg">
+      <ion-segment-button value="hoy"><ion-label>Hoy</ion-label></ion-segment-button>
+      <ion-segment-button value="pendientes"><ion-label>Pendientes</ion-label></ion-segment-button>
+      <ion-segment-button value="todas"><ion-label>Todas</ion-label></ion-segment-button>
+    </ion-segment>
+
+    <!-- Skeletons -->
+    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px;margin-top:6px">
+      <div class="skeleton" style="height:120px;border-radius:20px"></div>
+      <div class="skeleton" style="height:120px;border-radius:20px"></div>
+    </div>
+
+    <!-- Lista de citas -->
+    <div class="cita-list" *ngIf="!cargando">
+      <div class="cita-card" *ngFor="let c of citasFiltradas">
+        <div class="cc-top">
+          <div class="cc-moto">
+            <h4>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}</h4>
+            <span class="cc-placa mono" *ngIf="c.placa">{{ c.placa }}</span>
+          </div>
+          <span class="pill" [ngClass]="estadoPill[c.estado]">{{ estadoLabel[c.estado] }}</span>
+        </div>
+
+        <div class="cc-meta">
+          <span *ngIf="c.tipo_servicio"><ion-icon name="construct-outline"></ion-icon> {{ c.tipo_servicio }}</span>
+          <span><ion-icon name="calendar-outline"></ion-icon> {{ c.fecha | date:'dd/MM' }} · {{ c.hora }}</span>
+          <span><ion-icon name="person-outline"></ion-icon> {{ c.cliente_nombre }} {{ c.cliente_apellido }}</span>
+          <span *ngIf="c.monto > 0" class="cc-monto mono">{{ c.monto | currency:'CRC':'symbol-narrow':'1.0-0' }}</span>
+        </div>
+
+        <!-- Ver notas -->
+        <button class="cc-notas-btn" (click)="toggleNotas(c.id)">
+          <ion-icon [name]="notasAbiertas.has(c.id) ? 'chevron-up' : 'document-text-outline'"></ion-icon>
+          {{ notasAbiertas.has(c.id) ? 'Ocultar notas' : 'Ver notas' }}
+        </button>
+        <p class="cc-notas" *ngIf="notasAbiertas.has(c.id)">{{ c.motivo || 'Sin notas' }}</p>
+
+        <!-- Cambiar estado -->
+        <div class="cc-acciones" *ngIf="siguientes[c.estado]?.length">
+          <ion-button *ngFor="let s of siguientes[c.estado]" size="small"
+            [fill]="s === 'cancelado' ? 'clear' : 'solid'"
+            [color]="s === 'cancelado' ? 'medium' : 'primary'"
+            (click)="cambiarEstado(c, s)">
+            {{ estadoLabel[s] }}
+          </ion-button>
+        </div>
+
+        <!-- Calificación recibida -->
+        <div class="cc-calif" *ngIf="c.calificacion">
+          <span class="stars">{{ estrellas(c.calificacion) }}</span> del cliente
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="citasFiltradas.length === 0">
+        <ion-icon name="construct-outline"></ion-icon>
+        <p>No tenés citas {{ vista === 'hoy' ? 'para hoy' : (vista === 'pendientes' ? 'en proceso' : 'asignadas') }}.</p>
+      </div>
+    </div>
+
+    <div style="height:36px"></div>
+  </div>
+</ion-content>

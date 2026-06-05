@@ -16,6 +16,11 @@ const routes: Routes = [
     loadChildren: () => import('./pages/tabs/tabs.module').then(m => m.TabsPageModule),
   },
   {
+    path: 'mecanico',
+    canActivate: [AuthGuard],
+    loadChildren: () => import('./pages/mecanico/mecanico.module').then(m => m.MecanicoPageModule),
+  },
+  {
     path: 'nueva-orden',
     canActivate: [AuthGuard],
     loadChildren: () => import('./pages/nueva-orden/nueva-orden.module').then(m => m.NuevaOrdenPageModule),

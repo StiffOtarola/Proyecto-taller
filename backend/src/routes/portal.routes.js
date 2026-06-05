@@ -340,10 +340,13 @@ router.post('/motos', async (req, res) => {
 router.get('/citas', async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.estado,
-              m.marca, m.modelo, m.placa
+      `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado,
+              ci.monto, ci.calificacion,
+              m.marca, m.modelo, m.placa,
+              t.nombre AS tecnico_nombre
        FROM citas ci
        LEFT JOIN motos m ON m.id = ci.moto_id
+       LEFT JOIN usuarios t ON t.id = ci.tecnico_id
        WHERE ci.cliente_id = ?
        ORDER BY ci.fecha DESC, ci.hora DESC`,
       [req.cliente.id]
@@ -357,7 +360,7 @@ router.get('/citas', async (req, res) => {
 // POST /api/portal/citas — el cliente solicita una cita (queda pendiente de confirmar)
 router.post('/citas', async (req, res) => {
   try {
-    const { moto_id, fecha, hora, motivo } = req.body;
+    const { moto_id, fecha, hora, motivo, tipo_servicio } = req.body;
     if (!fecha || !hora || !motivo) {
       return res.status(400).json({ error: 'Fecha, hora y motivo son requeridos' });
     }
@@ -370,15 +373,39 @@ router.post('/citas', async (req, res) => {
       if (!moto) return res.status(400).json({ error: 'Moto no válida' });
     }
     const [result] = await pool.query(
-      "INSERT INTO citas (cliente_id, moto_id, fecha, hora, motivo, estado) VALUES (?, ?, ?, ?, ?, 'pendiente')",
-      [req.cliente.id, moto_id || null, fecha, hora, motivo]
+      "INSERT INTO citas (cliente_id, moto_id, fecha, hora, motivo, tipo_servicio, estado) VALUES (?, ?, ?, ?, ?, ?, 'agendado')",
+      [req.cliente.id, moto_id || null, fecha, hora, motivo, tipo_servicio || null]
     );
     const [[nueva]] = await pool.query(
-      `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.estado, m.marca, m.modelo, m.placa
+      `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado, m.marca, m.modelo, m.placa
        FROM citas ci LEFT JOIN motos m ON m.id = ci.moto_id WHERE ci.id = ?`,
       [result.insertId]
     );
     res.status(201).json({ data: nueva, message: 'Solicitud de cita enviada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// POST /api/portal/citas/:id/calificar — el cliente puntúa su cita ya entregada (1-5)
+router.post('/citas/:id/calificar', async (req, res) => {
+  try {
+    const calificacion = Number(req.body.calificacion);
+    if (!(calificacion >= 1 && calificacion <= 5)) {
+      return res.status(400).json({ error: 'La calificación debe ser de 1 a 5' });
+    }
+    const [[cita]] = await pool.query(
+      "SELECT id, calificacion FROM citas WHERE id = ? AND cliente_id = ? AND estado = 'entregado'",
+      [req.params.id, req.cliente.id]
+    );
+    if (!cita) return res.status(404).json({ error: 'Cita no encontrada o no entregada' });
+    if (cita.calificacion) return res.status(400).json({ error: 'Ya calificaste esta cita' });
+
+    await pool.query(
+      'UPDATE citas SET calificacion = ?, comentario_satisfaccion = ? WHERE id = ?',
+      [calificacion, req.body.comentario || null, req.params.id]
+    );
+    res.json({ message: '¡Gracias por tu opinión!' });
   } catch (err) {
     fail(res, err);
   }

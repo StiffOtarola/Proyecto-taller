@@ -1,0 +1,115 @@
+.mec {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 14px 16px 0;
+}
+
+.greet {
+  margin: 4px 2px 16px;
+  h1 { font-family: var(--font-display); font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
+  p { font-size: 13px; color: var(--n-500); margin: 2px 0 0; }
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.stat-card {
+  background: var(--ion-card-background);
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  box-shadow: var(--shadow-xs);
+  padding: 14px 12px;
+  display: flex; flex-direction: column; gap: 4px;
+  text-align: center;
+  .num { font-family: var(--font-display); font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  .num.stars { color: var(--amber-700); font-size: 18px; letter-spacing: 1px; }
+  .lbl { font-size: 11px; color: var(--n-500); text-transform: uppercase; letter-spacing: 0.04em; }
+}
+
+.section-label { display: block; margin: 6px 2px 8px; }
+
+.seg { margin: 4px 0 14px; }
+
+.cita-list { display: flex; flex-direction: column; gap: 12px; }
+
+@media (min-width: 720px) {
+  .cita-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+}
+
+.cita-card {
+  background: var(--ion-card-background);
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+
+  .cc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .cc-moto h4 { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+  .cc-placa { font-size: 12px; color: var(--rose-600); background: var(--rose-50); padding: 1px 7px; border-radius: 6px; letter-spacing: .04em; }
+
+  .cc-meta {
+    display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0 4px;
+    span { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--n-500); }
+    ion-icon { font-size: 14px; }
+    .cc-monto { color: var(--emerald-700); font-weight: 700; }
+  }
+
+  .cc-notas-btn {
+    background: none; border: none; padding: 6px 0; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12.5px; font-weight: 600; color: var(--ion-color-primary);
+    ion-icon { font-size: 15px; }
+  }
+  .cc-notas { margin: 2px 0 6px; font-size: 13px; color: var(--n-600); background: var(--n-50); border-radius: 12px; padding: 10px 12px; }
+
+  .cc-acciones { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .cc-acciones ion-button { --border-radius: 12px; margin: 0; }
+
+  .cc-calif { margin-top: 10px; font-size: 12px; color: var(--n-500); .stars { color: var(--amber-700); letter-spacing: 1px; } }
+}
+
+// Píldora neutra (no existe en global)
+.pill.gris { background: var(--n-100); color: var(--n-500); }
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center; padding: 50px 24px; color: var(--n-400);
+  ion-icon { font-size: 52px; opacity: .4; display: block; margin: 0 auto 12px; }
+  p { font-size: 14px; }
+}
+
+// ---- Agenda semanal ----
+.sem-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+  .sem-rango { font-family: var(--font-display); font-weight: 700; font-size: 16px; text-transform: capitalize; }
+}
+
+.dia-list { display: flex; flex-direction: column; gap: 14px; }
+
+.dia {
+  .dia-head {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+    font-weight: 700; font-size: 14px; text-transform: capitalize;
+    .dia-count { background: var(--ion-color-primary); color: #fff; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 1px 8px; }
+  }
+  .dia-vacio { font-size: 12px; color: var(--n-400); padding: 4px 2px 8px; }
+}
+
+.ag-cita {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--ion-card-background);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  box-shadow: var(--shadow-xs);
+  padding: 10px 14px; margin-bottom: 8px;
+  .ag-hora { font-size: 13px; font-weight: 700; color: var(--ion-color-primary); min-width: 48px; }
+  .ag-info { flex: 1; min-width: 0; display: flex; flex-direction: column;
+    strong { font-size: 13.5px; }
+    span { font-size: 12px; color: var(--n-500); }
+  }
+}

@@ -27,7 +27,12 @@ export class PortalLoginPage implements OnInit {
   ngOnInit() {
     // Si ya hay una sesión activa, mandamos a la zona que corresponde.
     if (this.portal.isLoggedIn()) this.router.navigate(['/portal'], { replaceUrl: true });
-    else if (this.auth.isLoggedIn()) this.router.navigate(['/tabs'], { replaceUrl: true });
+    else if (this.auth.isLoggedIn()) this.router.navigate([this.rutaStaff()], { replaceUrl: true });
+  }
+
+  // El técnico tiene su propio panel; el resto del personal va al dashboard.
+  private rutaStaff(): string {
+    return this.auth.getUsuario()?.rol === 'tecnico' ? '/mecanico' : '/tabs';
   }
 
   async ingresar() {
@@ -43,7 +48,7 @@ export class PortalLoginPage implements OnInit {
         await l.dismiss();
         if (res.data.tipo === 'staff' && res.data.usuario) {
           this.auth.aplicarSesionStaff(res.data.token, res.data.usuario);
-          this.router.navigate(['/tabs'], { replaceUrl: true });
+          this.router.navigate([this.rutaStaff()], { replaceUrl: true });
         } else if (res.data.cliente) {
           this.portal.aplicarSesion(res.data.token, res.data.cliente);
           this.router.navigate(['/portal'], { replaceUrl: true });

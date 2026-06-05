@@ -49,6 +49,11 @@ export class PortalService {
     );
   }
 
+  // Guarda la sesión del cliente (la usa el login unificado cuando tipo === 'cliente').
+  aplicarSesion(token: string, cliente: ClientePortal) {
+    this.guardarSesion(token, cliente);
+  }
+
   private guardarSesion(token: string, cliente: ClientePortal) {
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(CLIENTE_KEY, JSON.stringify(cliente));

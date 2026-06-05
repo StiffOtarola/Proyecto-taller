@@ -202,7 +202,7 @@ export class DashboardPage implements OnInit {
 
   logout() {
     this.auth.logout();
-    this.router.navigate(['/login'], { replaceUrl: true });
+    this.router.navigate(['/portal/login'], { replaceUrl: true });
   }
 
   irNuevaOrden() {

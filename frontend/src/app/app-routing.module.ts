@@ -4,10 +4,8 @@ import { AuthGuard } from './guards/auth.guard';
 
 const routes: Routes = [
   { path: '', redirectTo: 'tabs', pathMatch: 'full' },
-  {
-    path: 'login',
-    loadChildren: () => import('./pages/login/login.module').then(m => m.LoginPageModule),
-  },
+  // Login unificado (personal + clientes): vive en /portal/login. /login redirige ahí.
+  { path: 'login', redirectTo: 'portal/login', pathMatch: 'full' },
   {
     path: 'portal',
     loadChildren: () => import('./pages/portal/portal.module').then(m => m.PortalPageModule),

@@ -26,6 +26,20 @@ export class AuthService {
     );
   }
 
+  // Login unificado (personal o cliente). No persiste: el llamador decide según `tipo`.
+  loginUnificado(email: string, password: string): Observable<{ data: { token: string; tipo: 'staff' | 'cliente'; usuario?: Usuario; cliente?: any } }> {
+    return this.http.post<{ data: { token: string; tipo: 'staff' | 'cliente'; usuario?: Usuario; cliente?: any } }>(
+      `${this.apiUrl}/auth/login`, { email, password }
+    );
+  }
+
+  // Guarda la sesión del personal (la usa el login unificado cuando tipo === 'staff').
+  aplicarSesionStaff(token: string, usuario: Usuario) {
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(USUARIO_KEY, JSON.stringify(usuario));
+    this.usuarioSubject.next(usuario);
+  }
+
   logout() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USUARIO_KEY);

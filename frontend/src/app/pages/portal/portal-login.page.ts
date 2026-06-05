@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoadingController, ToastController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
+import { AuthService } from '../../services/auth.service';
 import { emailValido } from '../../utils/validar';
 
 @Component({
@@ -10,17 +11,24 @@ import { emailValido } from '../../utils/validar';
   templateUrl: './portal-login.page.html',
   styleUrls: ['./portal-login.page.scss'],
 })
-export class PortalLoginPage {
+export class PortalLoginPage implements OnInit {
   email = '';
   password = '';
   verPass = false;
 
   constructor(
     private portal: PortalService,
+    private auth: AuthService,
     private router: Router,
     private loading: LoadingController,
     private toast: ToastController
   ) {}
+
+  ngOnInit() {
+    // Si ya hay una sesión activa, mandamos a la zona que corresponde.
+    if (this.portal.isLoggedIn()) this.router.navigate(['/portal'], { replaceUrl: true });
+    else if (this.auth.isLoggedIn()) this.router.navigate(['/tabs'], { replaceUrl: true });
+  }
 
   async ingresar() {
     if (!this.email || !this.password) return;
@@ -30,10 +38,16 @@ export class PortalLoginPage {
     }
     const l = await this.loading.create({ message: 'Ingresando...' });
     await l.present();
-    this.portal.login(this.email.trim(), this.password).subscribe({
-      next: async () => {
+    this.auth.loginUnificado(this.email.trim(), this.password).subscribe({
+      next: async (res) => {
         await l.dismiss();
-        this.router.navigate(['/portal'], { replaceUrl: true });
+        if (res.data.tipo === 'staff' && res.data.usuario) {
+          this.auth.aplicarSesionStaff(res.data.token, res.data.usuario);
+          this.router.navigate(['/tabs'], { replaceUrl: true });
+        } else if (res.data.cliente) {
+          this.portal.aplicarSesion(res.data.token, res.data.cliente);
+          this.router.navigate(['/portal'], { replaceUrl: true });
+        }
       },
       error: async (err) => {
         await l.dismiss();
@@ -45,9 +59,5 @@ export class PortalLoginPage {
         await t.present();
       },
     });
-  }
-
-  irLoginPersonal() {
-    this.router.navigate(['/login']);
   }
 }

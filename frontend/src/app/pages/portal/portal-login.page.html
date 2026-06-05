@@ -1,56 +1,39 @@
 <ion-content class="login-content">
-  <div class="login-wrapper">
-    <!-- Sección con imagen del taller -->
-    <div class="login-image-section">
-      <img src="assets/taller-login.jpg" alt="Taller de motocicletas" class="taller-image" />
-      <div class="image-overlay"></div>
-      <div class="branding-badge">
+  <div class="login-container">
+    <div class="login-header">
+      <div class="logo-wrapper">
         <span class="logo-cross">
           <ion-icon name="build" class="ico-wrench"></ion-icon>
           <ion-icon name="hammer" class="ico-hammer"></ion-icon>
         </span>
-        <div class="badge-text">
-          <h2>Mi Taller</h2>
-          <p>Sistema de gestión profesional</p>
-        </div>
       </div>
+      <h1>Mi Taller</h1>
+      <p>Iniciá sesión para continuar</p>
     </div>
 
-    <!-- Sección de formulario -->
-    <div class="login-form-section">
-      <div class="form-container">
-        <div class="form-header">
-          <h1>Bienvenido</h1>
-          <p>Iniciá sesión para continuar</p>
-        </div>
+    <ion-card>
+      <ion-card-content>
+        <ion-item lines="full">
+          <ion-label position="stacked">Correo</ion-label>
+          <ion-input type="email" [(ngModel)]="email" autocomplete="email" placeholder="tu@correo.com"></ion-input>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label position="stacked">Contraseña</ion-label>
+          <ion-input [type]="verPass ? 'text' : 'password'" [(ngModel)]="password" placeholder="••••••••" (keyup.enter)="ingresar()">
+            <ion-button fill="clear" slot="end" (click)="verPass = !verPass" aria-label="Mostrar contraseña">
+              <ion-icon slot="icon-only" [name]="verPass ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </ion-button>
+          </ion-input>
+        </ion-item>
 
-        <form (ngSubmit)="ingresar()" #loginForm="ngForm">
-          <ion-item lines="full" class="form-item">
-            <ion-label position="floating">Correo electrónico</ion-label>
-            <ion-input type="email" [(ngModel)]="email" name="email" autocomplete="email" placeholder="tu@correo.com"></ion-input>
-          </ion-item>
+        <ion-button expand="block" (click)="ingresar()" [disabled]="!email || !password">
+          Ingresar
+          <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
 
-          <ion-item lines="none" class="form-item">
-            <ion-label position="floating">Contraseña</ion-label>
-            <ion-input [type]="verPass ? 'text' : 'password'" [(ngModel)]="password" name="password" placeholder="••••••••">
-              <ion-button fill="clear" slot="end" (click)="verPass = !verPass" type="button" aria-label="Mostrar contraseña" class="toggle-password">
-                <ion-icon slot="icon-only" [name]="verPass ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
-              </ion-button>
-            </ion-input>
-          </ion-item>
-
-          <ion-button expand="block" type="submit" [disabled]="!email || !password" class="login-btn">
-            Ingresar
-            <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
-          </ion-button>
-        </form>
-
-        <div class="form-footer">
-          <p class="footer-text">¿No tienes cuenta?</p>
-          <a class="portal-link strong" routerLink="/portal/registro">Crear una cuenta</a>
-          <a class="portal-link sub" routerLink="/portal/recuperar">¿Olvidaste tu contraseña?</a>
-        </div>
-      </div>
-    </div>
+    <a class="portal-link strong" routerLink="/portal/registro">Crear una cuenta</a>
+    <a class="portal-link sub" routerLink="/portal/recuperar">¿Olvidaste tu contraseña?</a>
   </div>
 </ion-content>

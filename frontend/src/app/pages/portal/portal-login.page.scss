@@ -1,286 +1,51 @@
-.login-content {
-  --background: #f5f5f5;
-}
-
-.login-wrapper {
-  display: flex;
-  height: 100%;
-  width: 100%;
+// Logo: llave + martillo cruzados en carmesí
+.logo-cross {
   position: relative;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%);
-}
-
-// Sección de imagen (lado izquierdo - desktop, arriba - mobile)
-.login-image-section {
-  flex: 1;
-  position: relative;
-  display: none;
-  overflow: hidden;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-
-  @media (min-width: 768px) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .taller-image {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    z-index: 1;
-  }
-
-  .image-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 100%);
-    z-index: 2;
-  }
-
-  .branding-badge {
-    position: absolute;
-    bottom: 40px;
-    left: 40px;
-    z-index: 3;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-
-    @media (max-width: 767px) {
-      bottom: 20px;
-      left: 20px;
-      gap: 12px;
-    }
-
-    .logo-cross {
-      position: relative;
-      width: 60px;
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      backdrop-filter: blur(10px);
-      padding: 12px;
-
-      ion-icon { position: absolute; }
-      .ico-wrench { font-size: 40px; color: #ff6b35; transform: rotate(-18deg); }
-      .ico-hammer { font-size: 28px; color: #ffb347; transform: rotate(72deg) translateX(2px); }
-    }
-
-    .badge-text {
-      color: white;
-      h2 {
-        margin: 0;
-        font-size: 24px;
-        font-weight: 700;
-        letter-spacing: -0.5px;
-      }
-      p {
-        margin: 4px 0 0 0;
-        font-size: 13px;
-        opacity: 0.8;
-        font-weight: 400;
-      }
-    }
-  }
-}
-
-// Sección de formulario (lado derecho - desktop, abajo - mobile)
-.login-form-section {
-  flex: 1;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
-  min-height: 100vh;
 
-  @media (min-width: 768px) {
-    min-height: auto;
-  }
-}
-
-.form-container {
-  width: 100%;
-  max-width: 380px;
-  padding: 40px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-
-  @media (min-width: 768px) {
-    background: transparent;
-    box-shadow: none;
-    padding: 0;
-    max-width: 320px;
-  }
-}
-
-.form-header {
-  margin-bottom: 32px;
-  text-align: center;
-
-  @media (min-width: 768px) {
-    text-align: left;
-  }
-
-  h1 {
-    margin: 0 0 8px 0;
-    font-size: 28px;
-    font-weight: 700;
-    color: #1a1a1a;
-  }
-
-  p {
-    margin: 0;
-    font-size: 14px;
-    color: #6a6a6a;
-  }
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.form-item {
-  --padding-start: 0 !important;
-  --padding-end: 0 !important;
-  --inner-padding-end: 0 !important;
-
-  ion-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #404040;
-    margin-bottom: 8px;
-  }
-
-  ion-input {
-    font-size: 14px;
-    --padding-bottom: 12px;
-    --padding-top: 12px;
-    --padding-start: 12px;
-    --padding-end: 12px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    background: #fafafa;
-    transition: all 0.2s ease;
-
-    &:focus {
-      border-color: var(--ion-color-primary);
-      background: white;
-    }
-  }
-
-  .toggle-password {
-    --color: #999;
-    --padding-end: 8px;
-  }
-}
-
-.login-btn {
-  margin-top: 8px;
-  --background: var(--ion-color-primary);
-  --background-activated: var(--ion-color-primary-tint);
-  height: 44px;
-  font-weight: 600;
-  font-size: 14px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-
-  &:not([disabled]):hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
-  }
-}
-
-.form-footer {
-  margin-top: 28px;
-  text-align: center;
-  padding-top: 20px;
-  border-top: 1px solid #f0f0f0;
-}
-
-.footer-text {
-  margin: 0 0 12px 0;
-  font-size: 13px;
-  color: #6a6a6a;
+  ion-icon { position: absolute; }
+  .ico-wrench { font-size: 36px; color: var(--ion-color-primary); transform: rotate(-18deg); }
+  .ico-hammer { font-size: 26px; color: var(--ion-color-primary-tint); transform: rotate(72deg) translateX(2px); }
 }
 
 .portal-link {
   display: block;
   text-align: center;
-  margin-top: 8px;
+  margin-top: 22px;
   font-size: 13px;
   font-weight: 600;
   color: #a3a3a3;
   text-decoration: underline;
   text-underline-offset: 4px;
-  text-decoration-color: #d0d0d0;
+  text-decoration-color: #404040;
+  position: relative;
+  z-index: 1;
   cursor: pointer;
-  transition: all 0.2s ease;
 
-  &:active {
-    color: var(--ion-color-primary);
-  }
+  &:active { color: var(--ion-color-primary-tint); }
 
   // CTA principal: "Crear una cuenta"
   &.strong {
-    color: var(--ion-color-primary);
+    color: #fff;
     font-weight: 700;
     font-size: 14px;
     text-decoration-color: var(--ion-color-primary);
     text-underline-offset: 5px;
-
-    &:hover {
-      color: var(--ion-color-primary-tint);
-    }
   }
-
   // Links secundarios (olvidé contraseña / personal)
   &.sub {
-    margin-top: 10px;
+    margin-top: 12px;
     font-size: 12px;
     color: #8a8a8a;
-    text-decoration-color: #b0b0b0;
-
-    &:hover {
-      color: var(--ion-color-primary);
-    }
   }
-
-  // Deshabilitado durante el cooldown
+  // Reenviar deshabilitado durante el cooldown
   &.disabled {
     opacity: 0.45;
     pointer-events: none;
     cursor: default;
-  }
-}
-
-// Mobile-first responsive
-@media (max-width: 480px) {
-  .form-container {
-    padding: 32px 24px;
-  }
-
-  .form-header {
-    margin-bottom: 24px;
-    h1 {
-      font-size: 24px;
-    }
-  }
-
-  form {
-    gap: 12px;
   }
 }

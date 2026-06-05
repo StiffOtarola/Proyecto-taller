@@ -544,11 +544,25 @@ ion-toast {
         ion-input { color: #fff; font-weight: 500; --placeholder-color: #525252; }
       }
 
-      ion-button {
+      // CTA principal (Ingresar / Crear cuenta / Enviar código)
+      ion-button[expand="block"] {
         margin-top: 14px;
         --background: var(--ion-color-primary);
         --background-activated: var(--ion-color-primary-shade);
         --box-shadow: 0 8px 24px rgba(225, 29, 72, .35);
+      }
+
+      // Botón "ojo" para ver/ocultar la contraseña dentro del campo
+      ion-button[fill="clear"] {
+        margin: 0;
+        height: 38px;
+        --background: transparent;
+        --background-activated: transparent;
+        --background-hover: transparent;
+        --box-shadow: none;
+        --color: #8a8a8a;
+        --padding-start: 6px;
+        --padding-end: 6px;
       }
     }
   }

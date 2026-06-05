@@ -38,8 +38,11 @@
       <ion-item>
         <ion-input label="Año (opcional)" labelPlacement="floating" type="number" inputmode="numeric" [(ngModel)]="nueva.anio" placeholder="Ej: 2021"></ion-input>
       </ion-item>
-      <ion-item lines="none">
+      <ion-item>
         <ion-input label="Color (opcional)" labelPlacement="floating" [(ngModel)]="nueva.color" placeholder="Ej: Rojo"></ion-input>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-input label="Kilometraje (opcional)" labelPlacement="floating" type="number" inputmode="numeric" [(ngModel)]="nueva.kilometraje" placeholder="Ej: 12500"></ion-input>
       </ion-item>
 
       <ion-button expand="block" class="ion-margin-top" (click)="agregar()" [disabled]="!valido || enviando">
@@ -65,7 +68,7 @@
         </div>
         <div class="moto-meta">
           <h4>{{ m.marca }} {{ m.modelo }}</h4>
-          <p><span class="placa mono">{{ m.placa }}</span><span *ngIf="m.anio"> · {{ m.anio }}</span><span *ngIf="m.color"> · {{ m.color }}</span></p>
+          <p><span class="placa mono">{{ m.placa }}</span><span *ngIf="m.anio"> · {{ m.anio }}</span><span *ngIf="m.color"> · {{ m.color }}</span><span *ngIf="m.kilometraje_actual"> · {{ m.kilometraje_actual | number }} km</span></p>
         </div>
       </div>
     </div>

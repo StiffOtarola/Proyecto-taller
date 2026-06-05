@@ -296,7 +296,7 @@ router.get('/promos', async (req, res) => {
 router.get('/motos', async (req, res) => {
   try {
     const [rows] = await pool.query(
-      'SELECT id, marca, modelo, placa, anio FROM motos WHERE cliente_id = ? AND activa = 1 ORDER BY created_at DESC',
+      'SELECT id, marca, modelo, placa, anio, color, kilometraje_actual FROM motos WHERE cliente_id = ? AND activa = 1 ORDER BY created_at DESC',
       [req.cliente.id]
     );
     res.json({ data: rows });
@@ -309,7 +309,7 @@ router.get('/motos', async (req, res) => {
 // Obligatorios: marca, modelo, placa. Evita placas duplicadas.
 router.post('/motos', async (req, res) => {
   try {
-    const { marca, modelo, placa, anio, color } = req.body;
+    const { marca, modelo, placa, anio, color, kilometraje_actual } = req.body;
     if (!marca || !modelo || !placa) {
       return res.status(400).json({ error: 'Marca, modelo y placa son requeridos' });
     }
@@ -322,11 +322,11 @@ router.post('/motos', async (req, res) => {
     if (existe) return res.status(409).json({ error: 'Esa placa ya está registrada en el taller' });
 
     const [result] = await pool.query(
-      'INSERT INTO motos (cliente_id, marca, modelo, placa, anio, color) VALUES (?, ?, ?, ?, ?, ?)',
-      [req.cliente.id, marca, modelo, placa, anio || null, color || null]
+      'INSERT INTO motos (cliente_id, marca, modelo, placa, anio, color, kilometraje_actual) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [req.cliente.id, marca, modelo, placa, anio || null, color || null, kilometraje_actual || 0]
     );
     const [[nueva]] = await pool.query(
-      'SELECT id, marca, modelo, placa, anio, color FROM motos WHERE id = ?',
+      'SELECT id, marca, modelo, placa, anio, color, kilometraje_actual FROM motos WHERE id = ?',
       [result.insertId]
     );
     res.status(201).json({ data: nueva, message: 'Moto registrada' });

@@ -90,7 +90,7 @@ export class PortalService {
     return this.http.get<{ data: any[] }>(`${this.url}/motos`);
   }
 
-  crearMoto(data: { marca: string; modelo: string; placa: string; anio?: number | null; color?: string }): Observable<{ data: any }> {
+  crearMoto(data: { marca: string; modelo: string; placa: string; anio?: number | null; color?: string; kilometraje_actual?: number | null }): Observable<{ data: any }> {
     return this.http.post<{ data: any }>(`${this.url}/motos`, data);
   }
 

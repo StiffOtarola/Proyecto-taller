@@ -14,7 +14,7 @@ export class PortalMotosPage implements OnInit {
 
   mostrarForm = false;
   enviando = false;
-  nueva = { marca: '', modelo: '', placa: '', anio: null as number | null, color: '' };
+  nueva = { marca: '', modelo: '', placa: '', anio: null as number | null, color: '', kilometraje: null as number | null };
 
   constructor(private portal: PortalService, private toast: ToastController) {}
 
@@ -30,7 +30,7 @@ export class PortalMotosPage implements OnInit {
   }
 
   abrirForm() {
-    this.nueva = { marca: '', modelo: '', placa: '', anio: null, color: '' };
+    this.nueva = { marca: '', modelo: '', placa: '', anio: null, color: '', kilometraje: null };
     this.mostrarForm = true;
   }
 
@@ -48,6 +48,7 @@ export class PortalMotosPage implements OnInit {
       placa: this.nueva.placa.trim().toUpperCase(),
       anio: this.nueva.anio || null,
       color: this.nueva.color.trim() || undefined,
+      kilometraje_actual: this.nueva.kilometraje || 0,
     }).subscribe({
       next: res => {
         this.motos.unshift(res.data);

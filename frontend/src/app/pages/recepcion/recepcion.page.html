@@ -1,0 +1,102 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Recepción</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="logout()" title="Salir">
+        <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar($event)">
+    <ion-refresher-content pullingIcon="chevron-down" refreshingSpinner="crescent"></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="rec">
+    <!-- Saludo -->
+    <div class="greet">
+      <div>
+        <h1>Hola, {{ nombre }}</h1>
+        <p>Tu mostrador de hoy</p>
+      </div>
+      <span class="greet-date mono">{{ fechaHoy }}</span>
+    </div>
+
+    <!-- Skeleton -->
+    <div *ngIf="cargando">
+      <div class="stat-2x2">
+        <div class="skeleton" style="height:92px;border-radius:18px"></div>
+        <div class="skeleton" style="height:92px;border-radius:18px"></div>
+        <div class="skeleton" style="height:92px;border-radius:18px"></div>
+        <div class="skeleton" style="height:92px;border-radius:18px"></div>
+      </div>
+      <div class="skeleton" style="height:200px;border-radius:24px;margin-top:16px"></div>
+      <div class="skeleton" style="height:160px;border-radius:24px;margin-top:16px"></div>
+    </div>
+
+    <div *ngIf="!cargando">
+      <!-- 4 stat-cards -->
+      <div class="stat-2x2">
+        <div class="stat-card">
+          <span class="num mono">{{ resumen?.citas_hoy ?? 0 }}</span>
+          <span class="lbl">Citas hoy</span>
+        </div>
+        <div class="stat-card rose">
+          <span class="num mono">{{ resumen?.ordenes_activas ?? 0 }}</span>
+          <span class="lbl">Órdenes activas</span>
+        </div>
+        <div class="stat-card amber">
+          <span class="num mono">{{ resumen?.cotizaciones_pendientes ?? 0 }}</span>
+          <span class="lbl">Cotiz. pendientes</span>
+        </div>
+        <div class="stat-card">
+          <span class="num mono">{{ resumen?.mecanicos_ocupados ?? 0 }}/{{ resumen?.mecanicos_totales ?? 0 }}</span>
+          <span class="lbl">Mecánicos</span>
+        </div>
+      </div>
+
+      <!-- Citas de hoy -->
+      <section class="card">
+        <span class="section-label">Citas de hoy</span>
+        <div class="cita-list">
+          <div class="cita-row" *ngFor="let c of citas">
+            <span class="cita-hora mono">{{ c.hora?.slice(0,5) }}</span>
+            <div class="cita-info">
+              <strong>{{ c.cliente_nombre }} {{ c.cliente_apellido }}</strong>
+              <span>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}<ng-container *ngIf="c.tipo_servicio"> · {{ c.tipo_servicio }}</ng-container></span>
+            </div>
+            <span class="pill" [ngClass]="estadoPill[c.estado]">{{ estadoLabel[c.estado] }}</span>
+          </div>
+          <div class="empty-row" *ngIf="!citas.length">
+            <ion-icon name="calendar-clear-outline"></ion-icon>
+            Sin citas para hoy
+          </div>
+        </div>
+      </section>
+
+      <!-- Alertas -->
+      <section class="card">
+        <span class="section-label">Alertas recientes</span>
+        <div class="alert-list">
+          <div class="alert-row" *ngFor="let a of alertas">
+            <span class="alert-ico" [ngClass]="alertaColor(a)">
+              <ion-icon [name]="alertaIcono(a)"></ion-icon>
+            </span>
+            <div class="alert-body">
+              <p>{{ alertaTexto(a) }}</p>
+              <span class="alert-time">{{ hace(a.created_at) }}</span>
+            </div>
+          </div>
+          <div class="empty-row" *ngIf="!alertas.length">
+            <ion-icon name="notifications-off-outline"></ion-icon>
+            Sin alertas en las últimas 24 h
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div style="height:80px"></div>
+  </div>
+</ion-content>

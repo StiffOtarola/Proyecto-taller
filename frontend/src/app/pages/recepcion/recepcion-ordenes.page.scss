@@ -1,0 +1,95 @@
+.rec { max-width: 920px; margin: 0 auto; padding: 14px 16px 0; }
+
+.seg { margin: 4px 0 16px; }
+
+.orden-list { display: flex; flex-direction: column; gap: 14px; }
+
+@media (min-width: 820px) {
+  .orden-list { display: grid; grid-template-columns: repeat(2, 1fr); align-items: start; }
+}
+
+.orden-card {
+  background: var(--ion-card-background);
+  border: 1px solid var(--hairline);
+  border-radius: 24px;
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
+
+  .oc-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .oc-num { font-size: 13px; font-weight: 700; color: var(--ion-color-primary); letter-spacing: .03em; }
+  .oc-title { margin: 10px 0 0; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.3; }
+
+  .oc-meta {
+    display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0 2px;
+    span { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--n-500); }
+    ion-icon { font-size: 14px; }
+  }
+}
+
+/* Barra de progreso */
+.prog { margin: 14px 0 4px; }
+.prog-bar { height: 8px; border-radius: 99px; background: var(--n-200); overflow: hidden; }
+.prog-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--ion-color-primary), var(--ion-color-primary-tint));
+  transition: width .5s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Bloque de evidencias */
+.evid {
+  margin-top: 14px;
+  background: var(--n-50);
+  border-radius: 16px;
+  padding: 12px 14px;
+
+  .evid-head { display: flex; align-items: center; justify-content: space-between; }
+  .evid-lbl {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--n-500);
+    ion-icon { font-size: 14px; }
+  }
+  .evid-toggle {
+    background: none; border: none; cursor: pointer;
+    font-size: 12.5px; font-weight: 700; color: var(--ion-color-primary);
+  }
+}
+
+.foto-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  gap: 8px; margin: 12px 0;
+}
+.foto-thumb {
+  aspect-ratio: 1; border-radius: 10px; overflow: hidden; display: block;
+  border: 1px solid var(--hairline);
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+.foto-add {
+  aspect-ratio: 1; border-radius: 10px;
+  border: 1.5px dashed var(--ion-color-primary); background: transparent;
+  color: var(--ion-color-primary); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  ion-icon { font-size: 22px; }
+  &:disabled { opacity: .5; }
+}
+.foto-vacio { grid-column: 1 / -1; font-size: 12px; color: var(--n-400); padding: 4px 0; }
+
+.evid-actions { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+.btn-out, .btn-wa {
+  flex: 1; min-width: 130px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border-radius: 12px; padding: 9px 12px; font-size: 13px; font-weight: 700; cursor: pointer;
+  ion-icon { font-size: 16px; }
+}
+.btn-out { background: transparent; border: 1px solid var(--hairline); color: var(--n-700);
+  &:disabled { opacity: .6; } }
+.btn-wa { background: var(--ion-color-primary); border: none; color: #fff; }
+
+/* Píldoras */
+.pill.gris { background: var(--n-100); color: var(--n-500); }
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center; padding: 50px 24px; color: var(--n-400);
+  ion-icon { font-size: 52px; opacity: .4; display: block; margin: 0 auto 12px; }
+  p { font-size: 14px; }
+}

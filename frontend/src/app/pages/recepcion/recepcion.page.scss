@@ -1,0 +1,86 @@
+.rec {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 14px 16px 0;
+}
+
+.greet {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+  margin: 4px 2px 16px;
+  h1 { font-family: var(--font-display); font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
+  p { font-size: 13px; color: var(--n-500); margin: 2px 0 0; }
+  .greet-date { font-size: 12px; color: var(--n-400); text-transform: capitalize; text-align: right; max-width: 130px; }
+}
+
+/* Grilla 2×2 de stat-cards */
+.stat-2x2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.stat-card {
+  background: var(--ion-card-background);
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  box-shadow: var(--shadow-xs);
+  padding: 14px 14px;
+  display: flex; flex-direction: column; gap: 4px;
+  .num { font-family: var(--font-display); font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+  .lbl { font-size: 11px; color: var(--n-500); text-transform: uppercase; letter-spacing: 0.04em; }
+  &.rose .num { color: var(--ion-color-primary); }
+  &.amber .num { color: var(--amber-700); }
+}
+
+.card {
+  background: var(--ion-card-background);
+  border: 1px solid var(--hairline);
+  border-radius: 24px;
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
+  margin-top: 16px;
+}
+
+.section-label { display: block; margin: 0 0 12px; }
+
+/* Lista de citas de hoy */
+.cita-list { display: flex; flex-direction: column; gap: 2px; }
+.cita-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 2px;
+  & + .cita-row { border-top: 1px solid var(--hairline); }
+  .cita-hora { font-size: 14px; font-weight: 700; color: var(--ion-color-primary); min-width: 44px; }
+  .cita-info { flex: 1; min-width: 0; display: flex; flex-direction: column;
+    strong { font-size: 14px; font-weight: 600; }
+    span { font-size: 12px; color: var(--n-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  }
+}
+
+/* Lista de alertas */
+.alert-list { display: flex; flex-direction: column; gap: 12px; }
+.alert-row { display: flex; align-items: flex-start; gap: 12px; }
+.alert-ico {
+  width: 36px; height: 36px; border-radius: 11px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  ion-icon { font-size: 18px; }
+  &.rose { background: var(--rose-50); ion-icon { color: var(--ion-color-primary); } }
+  &.green { background: var(--emerald-50); ion-icon { color: var(--emerald-700); } }
+  &.amber { background: var(--amber-50); ion-icon { color: var(--amber-700); } }
+}
+.alert-body { flex: 1; min-width: 0;
+  p { margin: 0; font-size: 13.5px; color: var(--n-700); line-height: 1.35; }
+  .alert-time { font-size: 11px; color: var(--n-400); }
+}
+
+.empty-row {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  text-align: center; padding: 28px 16px; color: var(--n-400); font-size: 13px;
+  ion-icon { font-size: 34px; opacity: .4; }
+}
+
+/* Píldoras de estado */
+.pill.gris { background: var(--n-100); color: var(--n-500); }
+
+@media (min-width: 820px) {
+  .stat-2x2 { grid-template-columns: repeat(4, 1fr); }
+}

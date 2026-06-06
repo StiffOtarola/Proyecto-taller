@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './guards/auth.guard';
+import { RolHomeGuard } from './guards/rol-home.guard';
 
 const routes: Routes = [
   { path: '', redirectTo: 'tabs', pathMatch: 'full' },
@@ -12,13 +13,18 @@ const routes: Routes = [
   },
   {
     path: 'tabs',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RolHomeGuard],
     loadChildren: () => import('./pages/tabs/tabs.module').then(m => m.TabsPageModule),
   },
   {
     path: 'mecanico',
     canActivate: [AuthGuard],
     loadChildren: () => import('./pages/mecanico/mecanico.module').then(m => m.MecanicoPageModule),
+  },
+  {
+    path: 'recepcion',
+    canActivate: [AuthGuard],
+    loadChildren: () => import('./pages/recepcion/recepcion.module').then(m => m.RecepcionPageModule),
   },
   {
     path: 'nueva-orden',

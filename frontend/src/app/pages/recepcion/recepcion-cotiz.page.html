@@ -1,0 +1,145 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Cotizaciones</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar($event)">
+    <ion-refresher-content pullingIcon="chevron-down" refreshingSpinner="crescent"></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="rec">
+    <ion-segment [(ngModel)]="vista" (ionChange)="cargar()" mode="md" class="seg">
+      <ion-segment-button value="pendiente"><ion-label>Pendientes</ion-label></ion-segment-button>
+      <ion-segment-button value="enviada"><ion-label>Enviadas</ion-label></ion-segment-button>
+    </ion-segment>
+
+    <!-- Botón nueva cotización -->
+    <ion-button expand="block" fill="outline" class="btn-nueva" (click)="mostrarForm ? cerrarForm() : abrirForm()">
+      <ion-icon [name]="mostrarForm ? 'close-outline' : 'add-outline'" slot="start"></ion-icon>
+      {{ mostrarForm ? 'Cancelar' : 'Nueva cotización' }}
+    </ion-button>
+
+    <!-- Formulario nueva cotización -->
+    <section class="card form-card" *ngIf="mostrarForm">
+      <span class="section-label">Nueva cotización</span>
+
+      <div class="field">
+        <label>Cliente</label>
+        <ion-select [(ngModel)]="form.cliente_id" (ionChange)="onClienteChange()" placeholder="Elegí un cliente" interface="action-sheet">
+          <ion-select-option *ngFor="let c of clientes" [value]="c.id">{{ c.nombre }} {{ c.apellido }}</ion-select-option>
+        </ion-select>
+      </div>
+
+      <div class="field">
+        <label>Orden</label>
+        <ion-select [(ngModel)]="form.orden_id" placeholder="Orden activa del cliente" interface="action-sheet" [disabled]="!form.cliente_id">
+          <ion-select-option *ngFor="let o of ordenesCliente" [value]="o.id">{{ o.numero_orden }} — {{ o.marca }} {{ o.modelo }}</ion-select-option>
+        </ion-select>
+        <p class="hint" *ngIf="form.cliente_id && !ordenesCliente.length">Este cliente no tiene órdenes activas.</p>
+      </div>
+
+      <div class="field">
+        <label>Mecánico</label>
+        <ion-select [(ngModel)]="form.tecnico_id" placeholder="Asignar mecánico (opcional)" interface="action-sheet">
+          <ion-select-option *ngFor="let t of tecnicos" [value]="t.id">{{ t.nombre }}</ion-select-option>
+        </ion-select>
+      </div>
+
+      <label class="piezas-lbl">Piezas</label>
+      <div class="pieza-row" *ngFor="let p of form.piezas; let i = index">
+        <input type="text" [(ngModel)]="p.nombre" placeholder="Nombre de la pieza" />
+        <input type="number" [(ngModel)]="p.monto" placeholder="₡" class="monto" />
+        <button class="pieza-del" (click)="quitarPieza(i)"><ion-icon name="trash-outline"></ion-icon></button>
+      </div>
+      <button class="link-add" (click)="agregarPieza()"><ion-icon name="add"></ion-icon> Agregar pieza</button>
+
+      <div class="field">
+        <label>Mano de obra (₡)</label>
+        <input type="number" [(ngModel)]="form.mano_obra" placeholder="0" class="mo-input" />
+      </div>
+
+      <div class="form-total">
+        <span>Total estimado</span>
+        <strong class="mono">₡{{ totalForm | number:'1.0-0' }}</strong>
+      </div>
+
+      <ion-button expand="block" class="btn-guardar" (click)="guardarCotizacion()" [disabled]="!formValido || guardando">
+        {{ guardando ? 'Guardando…' : 'Guardar cotización' }}
+      </ion-button>
+    </section>
+
+    <!-- Skeleton -->
+    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:12px;margin-top:6px">
+      <div class="skeleton" style="height:170px;border-radius:24px"></div>
+      <div class="skeleton" style="height:170px;border-radius:24px"></div>
+    </div>
+
+    <!-- Lista de cotizaciones -->
+    <div class="cotiz-list" *ngIf="!cargando">
+      <div class="card cotiz-card" *ngFor="let o of cotizaciones">
+        <div class="cz-top">
+          <div>
+            <strong>{{ o.cliente_nombre }} {{ o.cliente_apellido }}</strong>
+            <p class="cz-sub">{{ o.marca }} {{ o.modelo }} · {{ o.numero_orden }}<ng-container *ngIf="o.tecnico_nombre"> · {{ o.tecnico_nombre }}</ng-container></p>
+          </div>
+          <span class="pill" [ngClass]="aprobPill[o.aprobacion_cliente]">{{ aprobLabel[o.aprobacion_cliente] }}</span>
+        </div>
+
+        <!-- Piezas -->
+        <div class="pieza-list">
+          <div class="pieza-item" *ngFor="let p of repuestos[o.id]">
+            <span class="pi-nombre">{{ p.nombre }}<span class="pi-cant" *ngIf="p.cantidad > 1"> ×{{ p.cantidad }}</span></span>
+            <span class="pi-precio mono">₡{{ (p.cantidad * p.costo_unitario) | number:'1.0-0' }}</span>
+            <button class="pi-edit" (click)="editarPieza(o, p)"><ion-icon name="create-outline"></ion-icon></button>
+          </div>
+          <div class="pieza-empty" *ngIf="!repuestos[o.id]?.length">Sin piezas cargadas</div>
+        </div>
+
+        <!-- Mano de obra -->
+        <div class="mo-row" *ngIf="editandoCostos !== o.id">
+          <span>Mano de obra</span>
+          <span class="mono">₡{{ o.costo_mano_obra | number:'1.0-0' }}</span>
+        </div>
+        <div class="mo-row" *ngIf="o.descuento > 0 && editandoCostos !== o.id">
+          <span>Descuento</span>
+          <span class="mono">− ₡{{ o.descuento | number:'1.0-0' }}</span>
+        </div>
+
+        <!-- Edición inline de costos -->
+        <div class="costos-edit" *ngIf="editandoCostos === o.id">
+          <div class="ce-field"><label>Mano de obra</label><input type="number" [(ngModel)]="costosEdit.costo_mano_obra" /></div>
+          <div class="ce-field"><label>Descuento</label><input type="number" [(ngModel)]="costosEdit.descuento" /></div>
+          <ion-button size="small" (click)="guardarCostos(o)">Guardar costos</ion-button>
+        </div>
+
+        <!-- Total -->
+        <div class="cz-total">
+          <span>Total</span>
+          <strong class="mono">₡{{ totalCotiz(o) | number:'1.0-0' }}</strong>
+        </div>
+
+        <!-- Acciones -->
+        <div class="cz-acciones">
+          <button class="act act-amber" (click)="toggleEditCostos(o)">
+            <ion-icon name="create-outline"></ion-icon> Editar
+          </button>
+          <button class="act act-rose" (click)="enviar(o)">
+            <ion-icon name="paper-plane-outline"></ion-icon> Enviar
+          </button>
+          <button class="act act-green" (click)="aprobar(o)" [disabled]="o.aprobacion_cliente === 'aprobado'">
+            <ion-icon name="checkmark-outline"></ion-icon> Aprobada
+          </button>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="!cotizaciones.length">
+        <ion-icon name="receipt-outline"></ion-icon>
+        <p>No hay cotizaciones {{ vista === 'pendiente' ? 'pendientes' : 'enviadas' }}.</p>
+      </div>
+    </div>
+
+    <div style="height:80px"></div>
+  </div>
+</ion-content>

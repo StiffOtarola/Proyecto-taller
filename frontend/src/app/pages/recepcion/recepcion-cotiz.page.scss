@@ -1,0 +1,117 @@
+.rec { max-width: 760px; margin: 0 auto; padding: 14px 16px 0; }
+
+.seg { margin: 4px 0 14px; }
+
+.btn-nueva { --border-radius: 14px; margin: 0 0 16px; }
+
+.card {
+  background: var(--ion-card-background);
+  border: 1px solid var(--hairline);
+  border-radius: 24px;
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
+}
+
+.section-label { display: block; margin: 0 0 14px; }
+
+/* Formulario nueva cotización */
+.form-card {
+  border: 1.5px solid var(--ion-color-primary);
+  margin-bottom: 16px;
+
+  .field { margin-bottom: 14px;
+    label { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--n-500); margin-bottom: 4px; }
+    ion-select { --padding-start: 12px; border: 1px solid var(--hairline); border-radius: 12px; width: 100%; }
+    .hint { font-size: 12px; color: var(--amber-700); margin: 6px 2px 0; }
+  }
+  .mo-input { width: 100%; }
+}
+
+.piezas-lbl { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--n-500); margin: 4px 0 8px; }
+
+.pieza-row {
+  display: flex; gap: 8px; margin-bottom: 8px; align-items: center;
+  input { border: 1px solid var(--hairline); border-radius: 10px; padding: 9px 11px; font-size: 14px; background: var(--ion-card-background); color: var(--ion-text-color); }
+  input:first-child { flex: 1; min-width: 0; }
+  input.monto { width: 96px; }
+  .pieza-del { background: none; border: none; color: var(--n-400); cursor: pointer; padding: 4px; ion-icon { font-size: 18px; } }
+}
+
+input.mo-input, .ce-field input {
+  border: 1px solid var(--hairline); border-radius: 10px; padding: 9px 11px; font-size: 14px;
+  background: var(--ion-card-background); color: var(--ion-text-color);
+}
+
+.link-add {
+  background: none; border: none; cursor: pointer; padding: 4px 0 10px;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 13px; font-weight: 700; color: var(--ion-color-primary);
+  ion-icon { font-size: 16px; }
+}
+
+.form-total {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 8px 0 12px; padding-top: 12px; border-top: 1px solid var(--hairline);
+  span { font-size: 13px; color: var(--n-500); }
+  strong { font-family: var(--font-display); font-size: 22px; font-weight: 800; color: var(--ion-color-primary); }
+}
+
+.btn-guardar { --border-radius: 14px; margin: 0; }
+
+/* Lista de cotizaciones */
+.cotiz-list { display: flex; flex-direction: column; gap: 14px; }
+
+.cotiz-card {
+  .cz-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+    strong { font-size: 15px; font-weight: 700; }
+    .cz-sub { margin: 3px 0 0; font-size: 12.5px; color: var(--n-500); }
+  }
+}
+
+.pieza-list { margin: 14px 0 6px; }
+.pieza-item {
+  display: flex; align-items: center; gap: 8px; padding: 6px 0;
+  & + .pieza-item { border-top: 1px solid var(--hairline); }
+  .pi-nombre { flex: 1; font-size: 13.5px; color: var(--n-700); }
+  .pi-cant { color: var(--n-400); }
+  .pi-precio { font-size: 13.5px; font-weight: 600; }
+  .pi-edit { background: none; border: none; color: var(--ion-color-primary); cursor: pointer; padding: 2px; ion-icon { font-size: 17px; } }
+}
+.pieza-empty { font-size: 12.5px; color: var(--n-400); padding: 4px 0; }
+
+.mo-row { display: flex; justify-content: space-between; font-size: 13.5px; color: var(--n-600); padding: 4px 0; }
+
+.costos-edit {
+  display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin: 8px 0;
+  .ce-field { flex: 1; min-width: 110px;
+    label { display: block; font-size: 11px; color: var(--n-500); margin-bottom: 3px; }
+    input { width: 100%; }
+  }
+  ion-button { --border-radius: 10px; margin: 0; }
+}
+
+.cz-total {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--hairline);
+  span { font-size: 13px; color: var(--n-500); }
+  strong { font-family: var(--font-display); font-size: 20px; font-weight: 800; color: var(--ion-color-primary); }
+}
+
+.cz-acciones { display: flex; gap: 8px; margin-top: 14px; }
+.act {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  border: none; border-radius: 12px; padding: 9px 8px; font-size: 13px; font-weight: 700; cursor: pointer;
+  ion-icon { font-size: 16px; }
+  &:disabled { opacity: .45; }
+}
+.act-amber { background: #faeeda; color: #854f0b; }
+.act-rose  { background: var(--ion-color-primary); color: #fff; }
+.act-green { background: #eaf3de; color: #3b6d11; }
+
+.pill.gris { background: var(--n-100); color: var(--n-500); }
+
+.empty-state {
+  text-align: center; padding: 50px 24px; color: var(--n-400);
+  ion-icon { font-size: 52px; opacity: .4; display: block; margin: 0 auto 12px; }
+  p { font-size: 14px; }
+}

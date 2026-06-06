@@ -1,0 +1,84 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Órdenes</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar($event)">
+    <ion-refresher-content pullingIcon="chevron-down" refreshingSpinner="crescent"></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="rec">
+    <ion-segment [(ngModel)]="vista" (ionChange)="cambiarVista()" mode="md" class="seg">
+      <ion-segment-button value="activas"><ion-label>Activas</ion-label></ion-segment-button>
+      <ion-segment-button value="completadas"><ion-label>Completadas</ion-label></ion-segment-button>
+    </ion-segment>
+
+    <!-- Skeleton -->
+    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:12px">
+      <div class="skeleton" style="height:150px;border-radius:24px"></div>
+      <div class="skeleton" style="height:150px;border-radius:24px"></div>
+    </div>
+
+    <div class="orden-list" *ngIf="!cargando">
+      <div class="orden-card" *ngFor="let o of ordenes">
+        <div class="oc-top">
+          <span class="oc-num mono">{{ o.numero_orden }}</span>
+          <span class="pill" [ngClass]="estadoPill[o.estado]">{{ estadoLabel[o.estado] || o.estado }}</span>
+        </div>
+
+        <h4 class="oc-title">{{ o.problema_reportado }}</h4>
+
+        <div class="oc-meta">
+          <span><ion-icon name="person-outline"></ion-icon> {{ o.cliente_nombre }} {{ o.cliente_apellido }}</span>
+          <span><ion-icon name="bicycle-outline"></ion-icon> {{ o.marca }} {{ o.modelo }}<ng-container *ngIf="o.placa"> · {{ o.placa }}</ng-container></span>
+          <span *ngIf="o.tecnico_nombre"><ion-icon name="construct-outline"></ion-icon> {{ o.tecnico_nombre }}</span>
+        </div>
+
+        <!-- Barra de progreso -->
+        <div class="prog">
+          <div class="prog-bar"><div class="prog-fill" [style.width.%]="progresoPct(o.estado)"></div></div>
+        </div>
+
+        <!-- Evidencias -->
+        <div class="evid">
+          <div class="evid-head">
+            <span class="evid-lbl"><ion-icon name="camera-outline"></ion-icon> Evidencias del mecánico ({{ o.total_fotos || 0 }})</span>
+            <button class="evid-toggle" (click)="toggleEvidencia(o)">
+              {{ abiertas.has(o.id) ? 'Ocultar' : 'Ver' }}
+            </button>
+          </div>
+
+          <div class="foto-grid" *ngIf="abiertas.has(o.id)">
+            <a class="foto-thumb" *ngFor="let f of fotos[o.id]" [href]="f.url" target="_blank">
+              <img [src]="f.url" alt="evidencia" />
+            </a>
+            <button class="foto-add" (click)="subirFoto(o)" [disabled]="subiendo.has(o.id)">
+              <ion-icon [name]="subiendo.has(o.id) ? 'hourglass-outline' : 'add'"></ion-icon>
+            </button>
+            <div class="foto-vacio" *ngIf="(fotos[o.id]?.length || 0) === 0 && !subiendo.has(o.id)">
+              Sin fotos todavía
+            </div>
+          </div>
+
+          <div class="evid-actions">
+            <button class="btn-out" (click)="subirFoto(o)" [disabled]="subiendo.has(o.id)">
+              <ion-icon name="cloud-upload-outline"></ion-icon> {{ subiendo.has(o.id) ? 'Subiendo…' : 'Subir fotos' }}
+            </button>
+            <button class="btn-wa" (click)="enviarAlCliente(o)">
+              <ion-icon name="logo-whatsapp"></ion-icon> Enviar al cliente
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="!ordenes.length">
+        <ion-icon name="clipboard-outline"></ion-icon>
+        <p>No hay órdenes {{ vista === 'activas' ? 'activas' : 'completadas' }}.</p>
+      </div>
+    </div>
+
+    <div style="height:80px"></div>
+  </div>
+</ion-content>

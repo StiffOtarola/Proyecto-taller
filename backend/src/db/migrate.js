@@ -30,6 +30,13 @@ async function run() {
   );
   console.log('✅ Usuario admin creado (admin@taller.com / Admin2024!)');
 
+  const hashRecep = await bcrypt.hash('Recep2024!', 10);
+  await conn.query(
+    'INSERT IGNORE INTO usuarios (nombre, email, password_hash, rol) VALUES (?, ?, ?, ?)',
+    ['María Recepción', 'recepcion@taller.com', hashRecep, 'recepcion']
+  );
+  console.log('✅ Usuario recepción creado (recepcion@taller.com / Recep2024!)');
+
   await conn.end();
   console.log('🎉 Migración completa');
 }

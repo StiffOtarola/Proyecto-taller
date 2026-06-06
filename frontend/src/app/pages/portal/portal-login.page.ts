@@ -30,9 +30,12 @@ export class PortalLoginPage implements OnInit {
     else if (this.auth.isLoggedIn()) this.router.navigate([this.rutaStaff()], { replaceUrl: true });
   }
 
-  // El técnico tiene su propio panel; el resto del personal va al dashboard.
+  // Cada rol arranca en su panel: técnico y recepción tienen el suyo; el resto, el dashboard.
   private rutaStaff(): string {
-    return this.auth.getUsuario()?.rol === 'tecnico' ? '/mecanico' : '/tabs';
+    const rol = this.auth.getUsuario()?.rol;
+    if (rol === 'tecnico') return '/mecanico';
+    if (rol === 'recepcion') return '/recepcion';
+    return '/tabs';
   }
 
   async ingresar() {

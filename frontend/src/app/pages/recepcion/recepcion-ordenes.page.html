@@ -51,6 +51,9 @@
               <ion-icon [name]="subiendo.has(o.id) ? 'hourglass-outline' : 'add'"></ion-icon>
             </button>
           </div>
+          <textarea class="ev-nota" rows="2" [(ngModel)]="notas[o.id]"
+            placeholder="Nota para el cliente (opcional)… se incluye en el mensaje"></textarea>
+
           <div class="ev-actions">
             <button class="btn-upload" (click)="subirFoto(o)" [disabled]="subiendo.has(o.id)">
               <ion-icon name="cloud-upload-outline"></ion-icon> {{ subiendo.has(o.id) ? 'Subiendo…' : 'Subir fotos' }}

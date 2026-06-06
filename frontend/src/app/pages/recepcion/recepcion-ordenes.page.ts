@@ -18,6 +18,8 @@ export class RecepcionOrdenesPage implements OnInit {
 
   // Fotos cargadas por orden (prefetch de las que tienen evidencia).
   fotos: Record<number, any[]> = {};
+  // Nota corta opcional que la recepción agrega al mensaje del cliente.
+  notas: Record<number, string> = {};
 
   // Flujo de estados de la OT para la barra de progreso.
   readonly flujo = ['recepcion', 'diagnostico', 'esperando_aprobacion', 'esperando_repuestos', 'en_reparacion', 'lista_entrega', 'entregada'];
@@ -103,7 +105,10 @@ export class RecepcionOrdenesPage implements OnInit {
 
   enviarAlCliente(o: any) {
     const link = `${window.location.origin}/portal`;
-    const msg = `Hola ${o.cliente_nombre}, te enviamos evidencias del avance de tu ${o.marca} ${o.modelo} (orden ${o.numero_orden}). Revisalas en el portal: ${link}`;
+    const nota = (this.notas[o.id] || '').trim();
+    const base = `Hola ${o.cliente_nombre}, novedad de tu ${o.marca} ${o.modelo} (orden ${o.numero_orden}).`;
+    const cuerpo = nota ? ` ${nota}` : ' Te enviamos evidencias del avance.';
+    const msg = `${base}${cuerpo} Revisalas en el portal: ${link}`;
     abrirWhatsApp(o.cliente_telefono, msg);
   }
 

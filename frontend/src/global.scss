@@ -452,7 +452,10 @@ ion-toast {
 // Login — negro neutro + tarjeta "marco de teléfono"
 // ————————————————————————————————
 .login-content {
-  --background: #0a0a0a;
+  // Foto del taller de fondo + velo oscuro para mantener legible la tarjeta
+  --background:
+    linear-gradient(180deg, rgba(10,10,10,.80) 0%, rgba(10,10,10,.88) 45%, rgba(10,10,10,.94) 100%),
+    url('/assets/portal/taller-bg.jpg') center / cover no-repeat fixed;
 
   .login-container {
     display: flex;

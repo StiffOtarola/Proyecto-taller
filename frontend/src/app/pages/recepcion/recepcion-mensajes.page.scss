@@ -1,7 +1,5 @@
 .rec { max-width: 760px; margin: 0 auto; padding: 14px 16px 0; }
 
-.seg { margin: 4px 0 14px; }
-
 .msg-list { display: flex; flex-direction: column; gap: 12px; }
 
 .msg-card {
@@ -40,8 +38,8 @@
   width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   font-size: 14px; font-weight: 800;
-  &.indigo { background: #eeedfe; color: #534ab7; }
-  &.green  { background: #e1f5ee; color: #0f6e56; }
+  &.rose  { background: var(--rose-50); color: var(--ion-color-primary); }
+  &.green { background: var(--emerald-50); color: var(--emerald-700); }
 }
 
 /* Envío rápido fijo abajo */

@@ -10,16 +10,16 @@
   </ion-refresher>
 
   <div class="rec">
-    <ion-segment [(ngModel)]="vista" (ionChange)="cargar()" mode="md" class="seg">
-      <ion-segment-button value="pendiente"><ion-label>Pendientes</ion-label></ion-segment-button>
-      <ion-segment-button value="enviada"><ion-label>Enviadas</ion-label></ion-segment-button>
-    </ion-segment>
+    <div class="segment">
+      <button class="seg-btn" [class.on]="vista==='pendiente'" (click)="vista='pendiente'; cargar()">Pendientes</button>
+      <button class="seg-btn" [class.on]="vista==='enviada'" (click)="vista='enviada'; cargar()">Enviadas</button>
+    </div>
 
     <!-- Botón nueva cotización -->
-    <ion-button expand="block" fill="outline" class="btn-nueva" (click)="mostrarForm ? cerrarForm() : abrirForm()">
-      <ion-icon [name]="mostrarForm ? 'close-outline' : 'add-outline'" slot="start"></ion-icon>
+    <button class="cta-outline" (click)="mostrarForm ? cerrarForm() : abrirForm()">
+      <ion-icon [name]="mostrarForm ? 'close-outline' : 'add-outline'"></ion-icon>
       {{ mostrarForm ? 'Cancelar' : 'Nueva cotización' }}
-    </ion-button>
+    </button>
 
     <!-- Formulario nueva cotización -->
     <section class="card form-card" *ngIf="mostrarForm">

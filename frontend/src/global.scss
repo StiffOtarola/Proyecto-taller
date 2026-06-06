@@ -419,7 +419,36 @@ ion-toast {
 .pill.green  { background: var(--emerald-50); color: var(--emerald-700); }
 .pill.amber  { background: var(--amber-100);  color: var(--amber-700); }
 .pill.indigo { background: var(--indigo-50);  color: var(--indigo-600); }
+.pill.gris   { background: var(--n-100);      color: var(--n-500); }
 .pill.solid  { background: var(--ion-color-primary); color: #fff; }
+
+// Segment tipo "pill" (carmesí en el activo) — usado en el panel de recepción
+.segment {
+  display: flex;
+  background: var(--n-100);
+  border-radius: var(--radius-control, 16px);
+  padding: 4px;
+  gap: 2px;
+  margin-bottom: 14px;
+}
+.seg-btn {
+  flex: 1;
+  padding: 9px 8px;
+  border: none;
+  background: none;
+  font-family: var(--font-body, inherit);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--n-500);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease, cubic-bezier(0.32, 0.72, 0, 1));
+}
+.seg-btn.on {
+  background: var(--ion-color-primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.25);
+}
 
 // Timeline vertical con línea y nodos carmesí
 .timeline {

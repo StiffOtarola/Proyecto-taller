@@ -10,10 +10,10 @@
   </ion-refresher>
 
   <div class="rec">
-    <ion-segment [(ngModel)]="vista" mode="md" class="seg">
-      <ion-segment-button value="mecanicos"><ion-label>De mecánicos</ion-label></ion-segment-button>
-      <ion-segment-button value="clientes"><ion-label>A clientes</ion-label></ion-segment-button>
-    </ion-segment>
+    <div class="segment">
+      <button class="seg-btn" [class.on]="vista==='mecanicos'" (click)="vista='mecanicos'">De mecánicos</button>
+      <button class="seg-btn" [class.on]="vista==='clientes'" (click)="vista='clientes'">A clientes</button>
+    </div>
 
     <!-- Skeleton -->
     <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:12px">
@@ -25,7 +25,7 @@
     <div class="msg-list" *ngIf="!cargando && vista === 'mecanicos'">
       <div class="msg-card" *ngFor="let a of avances">
         <div class="msg-head">
-          <span class="avatar indigo">{{ iniciales(a.tecnico_nombre) }}</span>
+          <span class="avatar rose">{{ iniciales(a.tecnico_nombre) }}</span>
           <div class="msg-who">
             <strong>{{ a.tecnico_nombre }}</strong>
             <span>{{ a.tecnico_rol }} · {{ a.numero_orden }}</span>

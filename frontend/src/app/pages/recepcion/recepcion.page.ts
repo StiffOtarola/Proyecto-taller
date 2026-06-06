@@ -43,6 +43,7 @@ export class RecepcionPage implements OnInit {
   ionViewWillEnter() { this.cargar(); }
 
   get nombre(): string { return this.auth.getUsuario()?.nombre || 'Recepción'; }
+  get primerNombre(): string { return this.nombre.split(' ')[0]; }
 
   get fechaHoy(): string {
     return new Date().toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'long' });

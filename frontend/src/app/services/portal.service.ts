@@ -70,6 +70,8 @@ export class PortalService {
   getCliente(): ClientePortal | null { return this.clienteSubject.value; }
   isLoggedIn(): boolean { return !!this.getToken(); }
 
+  // Presupuestos del cliente: aprobar/rechazar una orden enviada por recepción.
+  // Los endpoints existen en el backend; la pantalla del portal está pendiente (auditoría #2).
   getOrdenes(): Observable<{ data: any[] }> {
     return this.http.get<{ data: any[] }>(`${this.url}/ordenes`);
   }
@@ -126,16 +128,8 @@ export class PortalService {
     return this.http.post(`${this.url}/citas/${id}/calificar`, { calificacion, comentario });
   }
 
-  enviarEncuesta(id: number, calificacion: number, comentario?: string): Observable<any> {
-    return this.http.post(`${this.url}/ordenes/${id}/encuesta`, { calificacion, comentario });
-  }
-
   getPromos(): Observable<{ data: any[] }> {
     return this.http.get<{ data: any[] }>(`${this.url}/promos`);
-  }
-
-  getFidelidad(): Observable<{ data: { visitas: number; cortesia_disponible: boolean; meta: number; faltan: number } }> {
-    return this.http.get<{ data: any }>(`${this.url}/fidelidad`);
   }
 
   private getClienteGuardado(): ClientePortal | null {

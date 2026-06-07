@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './guards/auth.guard';
 import { RolHomeGuard } from './guards/rol-home.guard';
+import { RolGuard } from './guards/rol.guard';
 
 const routes: Routes = [
   { path: '', redirectTo: 'tabs', pathMatch: 'full' },
@@ -18,17 +19,20 @@ const routes: Routes = [
   },
   {
     path: 'mecanico',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RolGuard],
+    data: { roles: ['tecnico', 'jefe_taller', 'admin', 'gerencia'] },
     loadChildren: () => import('./pages/mecanico/mecanico.module').then(m => m.MecanicoPageModule),
   },
   {
     path: 'recepcion',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RolGuard],
+    data: { roles: ['recepcion', 'jefe_taller', 'admin', 'gerencia'] },
     loadChildren: () => import('./pages/recepcion/recepcion.module').then(m => m.RecepcionPageModule),
   },
   {
     path: 'nueva-orden',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RolGuard],
+    data: { roles: ['jefe_taller', 'admin', 'gerencia'] },
     loadChildren: () => import('./pages/nueva-orden/nueva-orden.module').then(m => m.NuevaOrdenPageModule),
   },
   {
@@ -68,22 +72,26 @@ const routes: Routes = [
   },
   {
     path: 'cita-form',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RolGuard],
+    data: { roles: ['jefe_taller', 'admin', 'gerencia'] },
     loadChildren: () => import('./pages/cita-form/cita-form.module').then(m => m.CitaFormPageModule),
   },
   {
     path: 'cita-form/:id',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RolGuard],
+    data: { roles: ['jefe_taller', 'admin', 'gerencia'] },
     loadChildren: () => import('./pages/cita-form/cita-form.module').then(m => m.CitaFormPageModule),
   },
   {
     path: 'usuarios',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RolGuard],
+    data: { roles: ['admin', 'gerencia'] },
     loadChildren: () => import('./pages/usuarios/usuarios.module').then(m => m.UsuariosPageModule),
   },
   {
     path: 'garantias',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RolGuard],
+    data: { roles: ['jefe_taller', 'admin', 'gerencia'] },
     loadChildren: () => import('./pages/garantias/garantias.module').then(m => m.GarantiasPageModule),
   },
   {
@@ -93,7 +101,8 @@ const routes: Routes = [
   },
   {
     path: 'promociones',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RolGuard],
+    data: { roles: ['admin', 'gerencia'] },
     loadChildren: () => import('./pages/promos/promos.module').then(m => m.PromosPageModule),
   },
 ];

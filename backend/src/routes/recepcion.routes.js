@@ -25,8 +25,18 @@ router.get('/resumen', async (req, res) => {
     const [[{ cotizaciones_pendientes }]] = await pool.query(
       "SELECT COUNT(*) AS cotizaciones_pendientes FROM ordenes_trabajo WHERE estado = 'esperando_aprobacion' AND aprobacion_cliente = 'pendiente'"
     );
+    // "Ocupado" = el técnico tiene trabajo activo en cualquiera de los dos mundos
+    // (una cita en proceso hoy, o una orden de trabajo abierta). Misma población
+    // que mecanicos_totales, así el cociente X/Y es coherente.
     const [[{ mecanicos_ocupados }]] = await pool.query(
-      "SELECT COUNT(DISTINCT tecnico_id) AS mecanicos_ocupados FROM citas WHERE fecha = CURDATE() AND estado IN ('en_revision','en_mantenimiento') AND tecnico_id IS NOT NULL"
+      `SELECT COUNT(*) AS mecanicos_ocupados FROM usuarios u
+       WHERE u.rol = 'tecnico' AND u.activo = 1 AND (
+         EXISTS (SELECT 1 FROM citas c
+                 WHERE c.tecnico_id = u.id AND c.fecha = CURDATE()
+                   AND c.estado IN ('en_revision','en_mantenimiento'))
+         OR EXISTS (SELECT 1 FROM ordenes_trabajo o
+                    WHERE o.tecnico_id = u.id AND o.estado NOT IN ('entregada','cancelada'))
+       )`
     );
     const [[{ mecanicos_totales }]] = await pool.query(
       "SELECT COUNT(*) AS mecanicos_totales FROM usuarios WHERE rol = 'tecnico' AND activo = 1"

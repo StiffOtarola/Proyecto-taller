@@ -3,9 +3,14 @@ const { pool } = require('../db/pool');
 const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
+const { soloRoles } = require('../middleware/roles');
 const { notificarCambioEstado } = require('../utils/notificaciones');
 
 const ESTADOS = ['agendado', 'en_revision', 'en_mantenimiento', 'listo', 'entregado', 'cancelado'];
+
+// Quién gestiona la agenda (crear/editar citas): mostrador y jefatura, NO el técnico.
+// El técnico solo mueve el estado de SUS citas (más abajo y en /api/mecanico).
+const GESTIONA_AGENDA = ['recepcion', 'jefe_taller', 'admin', 'gerencia'];
 
 router.use(auth);
 
@@ -34,7 +39,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', soloRoles(...GESTIONA_AGENDA), async (req, res) => {
   try {
     const { cliente_id, moto_id, fecha, hora, motivo, tipo_servicio, tecnico_id } = req.body;
     if (!cliente_id || !fecha || !hora || !motivo) {
@@ -69,7 +74,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', soloRoles(...GESTIONA_AGENDA), async (req, res) => {
   try {
     const { cliente_id, moto_id, fecha, hora, motivo, tipo_servicio, tecnico_id } = req.body;
     await pool.query(

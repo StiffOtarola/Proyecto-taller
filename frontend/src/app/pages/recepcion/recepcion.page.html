@@ -71,7 +71,16 @@
               <strong>{{ c.cliente_nombre }} {{ c.cliente_apellido }}</strong>
               <span>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}<ng-container *ngIf="c.tipo_servicio"> · {{ c.tipo_servicio }}</ng-container></span>
             </div>
-            <span class="pill" [ngClass]="estadoPill[c.estado]">{{ estadoLabel[c.estado] }}</span>
+            <div class="cita-right">
+              <span class="pill" [ngClass]="estadoPill[c.estado]">{{ estadoLabel[c.estado] }}</span>
+              <button class="cita-act ver" *ngIf="c.orden_id" (click)="verOrden(c)">
+                <ion-icon name="document-text-outline"></ion-icon> {{ c.numero_orden || 'Ver orden' }}
+              </button>
+              <button class="cita-act" *ngIf="!c.orden_id && c.estado !== 'entregado' && c.estado !== 'cancelado'"
+                      (click)="crearOrden(c)" [disabled]="creandoOrden === c.id">
+                <ion-icon name="add-circle-outline"></ion-icon> {{ creandoOrden === c.id ? 'Creando…' : 'Crear orden' }}
+              </button>
+            </div>
           </div>
           <div class="empty-row" *ngIf="!citas.length">
             <ion-icon name="calendar-clear-outline"></ion-icon>

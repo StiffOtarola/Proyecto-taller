@@ -38,6 +38,9 @@ export class MecanicoPage implements OnInit {
   readonly progreso: Record<string, number> = {
     agendado: 10, en_revision: 35, en_mantenimiento: 65, listo: 85, entregado: 100, cancelado: 0,
   };
+  // Caja de cotización de la orden vinculada.
+  readonly cotizLabel: Record<string, string> = { aprobado: 'Aprobada', rechazado: 'Rechazada', pendiente: 'Pendiente' };
+  readonly cotizPill: Record<string, string> = { aprobado: 'green', rechazado: 'rose', pendiente: 'amber' };
 
   constructor(
     private mecanico: MecanicoService,
@@ -129,6 +132,9 @@ export class MecanicoPage implements OnInit {
   }
 
   irAgenda() { this.router.navigate(['/mecanico/agenda']); }
+
+  // Cita vinculada a una orden: la orden manda, así que el mecánico la trabaja en su pantalla.
+  trabajarOrden(c: any) { this.router.navigate(['/detalle-orden', c.orden_id]); }
 
   logout() {
     this.auth.logout();

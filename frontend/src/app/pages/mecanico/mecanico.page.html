@@ -68,8 +68,21 @@
             Calificación del cliente: <span class="stars">{{ estrellas(c.calificacion) }}</span>
           </div>
 
-          <!-- Cambiar estado -->
-          <select class="est-sel" [ngModel]="c.estado" (ngModelChange)="onEstadoChange(c, $event)" *ngIf="c.estado !== 'entregado' && c.estado !== 'cancelado'">
+          <!-- Cita vinculada a una orden: caja de cotización (la orden manda) -->
+          <div class="cotiz" *ngIf="c.orden_id">
+            <div class="cotiz-top">
+              <span class="cotiz-lbl">Cotización</span>
+              <span class="pill" [ngClass]="cotizPill[c.aprobacion_cliente] || 'gris'">{{ cotizLabel[c.aprobacion_cliente] || '—' }}</span>
+            </div>
+            <div class="cotiz-total mono" *ngIf="c.orden_total > 0">{{ c.orden_total | currency:'CRC':'symbol-narrow':'1.0-0' }}</div>
+            <p class="cotiz-motivo" *ngIf="c.aprobacion_cliente === 'rechazado' && c.motivo_rechazo">“{{ c.motivo_rechazo }}”</p>
+            <button class="trabajar-btn" (click)="trabajarOrden(c)">
+              <ion-icon name="construct-outline"></ion-icon> Trabajar la orden {{ c.numero_orden }}
+            </button>
+          </div>
+
+          <!-- Cambiar estado (solo citas SIN orden: las vinculadas las maneja la orden) -->
+          <select class="est-sel" [ngModel]="c.estado" (ngModelChange)="onEstadoChange(c, $event)" *ngIf="!c.orden_id && c.estado !== 'entregado' && c.estado !== 'cancelado'">
             <option *ngFor="let e of estados" [value]="e">{{ estadoLabel[e] }}</option>
           </select>
 

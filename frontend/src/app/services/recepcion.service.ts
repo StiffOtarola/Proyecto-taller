@@ -75,6 +75,11 @@ export class RecepcionService {
     return this.http.get<{ data: any[] }>(`${this.url}/tecnicos`);
   }
 
+  // Puente cita ↔ orden: crea (o recupera) la orden de trabajo de una cita.
+  crearOrdenDesdeCita(citaId: number): Observable<{ data: { orden_id: number; numero_orden: string } }> {
+    return this.http.post<{ data: any }>(`${this.url}/citas/${citaId}/crear-orden`, {});
+  }
+
   // Clientes
   getClientes(q?: string): Observable<{ data: any[] }> {
     const params = q ? ({ q } as any) : undefined;

@@ -3,6 +3,7 @@ const { pool } = require('../db/pool');
 const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
+const { generarNumeroOrden, sincronizarCitaDesdeOrden } = require('../utils/ordenes');
 
 // Panel de recepción: intermediaria entre cliente y mecánico.
 // Accesible a recepción y superiores.
@@ -62,6 +63,7 @@ router.get('/citas-hoy', async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado, ci.monto,
+              ci.orden_id, o.numero_orden,
               c.id AS cliente_id, c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.telefono AS cliente_telefono,
               m.marca, m.modelo, m.placa,
               t.nombre AS tecnico_nombre
@@ -69,10 +71,53 @@ router.get('/citas-hoy', async (req, res) => {
        JOIN clientes c ON ci.cliente_id = c.id
        LEFT JOIN motos m ON ci.moto_id = m.id
        LEFT JOIN usuarios t ON ci.tecnico_id = t.id
+       LEFT JOIN ordenes_trabajo o ON o.id = ci.orden_id
        WHERE ci.fecha = CURDATE()
        ORDER BY ci.hora ASC`
     );
     res.json({ data: rows });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// Crear (o recuperar) la orden de trabajo de una cita: activa el puente cita ↔ orden.
+router.post('/citas/:id/crear-orden', async (req, res) => {
+  try {
+    const [[cita]] = await pool.query(
+      'SELECT id, cliente_id, moto_id, motivo, tecnico_id, orden_id FROM citas WHERE id = ?',
+      [req.params.id]
+    );
+    if (!cita) return res.status(404).json({ error: 'Cita no encontrada' });
+
+    // Idempotente: si ya tiene orden, la devuelve.
+    if (cita.orden_id) {
+      const [[o]] = await pool.query('SELECT id, numero_orden FROM ordenes_trabajo WHERE id = ?', [cita.orden_id]);
+      if (o) return res.json({ data: { orden_id: o.id, numero_orden: o.numero_orden }, message: 'La cita ya tiene una orden' });
+    }
+    if (!cita.moto_id) return res.status(400).json({ error: 'La cita no tiene una moto asociada; no se puede crear la orden' });
+
+    const numero_orden = await generarNumeroOrden();
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      const [result] = await conn.query(
+        `INSERT INTO ordenes_trabajo
+          (numero_orden, moto_id, cliente_id, recepcionista_id, tecnico_id, problema_reportado, estado)
+         VALUES (?, ?, ?, ?, ?, ?, 'diagnostico')`,
+        [numero_orden, cita.moto_id, cita.cliente_id, req.usuario.id, cita.tecnico_id || null, cita.motivo || 'Orden generada desde la cita']
+      );
+      await conn.query('INSERT INTO orden_tiempos (orden_id, etapa) VALUES (?, ?)', [result.insertId, 'diagnostico']);
+      await conn.query('UPDATE citas SET orden_id = ? WHERE id = ?', [result.insertId, req.params.id]);
+      await conn.commit();
+      await sincronizarCitaDesdeOrden(result.insertId, 'diagnostico'); // cita → en_revision + notificación
+      res.status(201).json({ data: { orden_id: result.insertId, numero_orden }, message: 'Orden creada desde la cita' });
+    } catch (e) {
+      await conn.rollback();
+      throw e;
+    } finally {
+      conn.release();
+    }
   } catch (err) {
     fail(res, err);
   }

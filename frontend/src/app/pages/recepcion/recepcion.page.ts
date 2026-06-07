@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { ToastController } from '@ionic/angular';
 import { RecepcionService, ResumenRecepcion } from '../../services/recepcion.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -33,10 +34,13 @@ export class RecepcionPage implements OnInit {
     cancelado: 'gris',
   };
 
+  creandoOrden: number | null = null;
+
   constructor(
     private rec: RecepcionService,
     private auth: AuthService,
-    private router: Router
+    private router: Router,
+    private toast: ToastController
   ) {}
 
   ngOnInit() { this.cargar(); }
@@ -88,6 +92,30 @@ export class RecepcionPage implements OnInit {
     const d = Math.round(h / 24);
     return `Hace ${d} d`;
   }
+
+  // Crea la orden de trabajo de una cita y abre su pantalla.
+  crearOrden(c: any) {
+    if (this.creandoOrden) return;
+    this.creandoOrden = c.id;
+    this.rec.crearOrdenDesdeCita(c.id).subscribe({
+      next: async (r) => {
+        this.creandoOrden = null;
+        c.orden_id = r.data.orden_id;
+        c.numero_orden = r.data.numero_orden;
+        if (c.estado === 'agendado') c.estado = 'en_revision';
+        const t = await this.toast.create({ message: `Orden ${r.data.numero_orden} creada`, duration: 1600, color: 'success' });
+        await t.present();
+        this.router.navigate(['/detalle-orden', r.data.orden_id]);
+      },
+      error: async (err) => {
+        this.creandoOrden = null;
+        const t = await this.toast.create({ message: err.error?.error || 'No se pudo crear la orden', duration: 2400, color: 'danger' });
+        await t.present();
+      },
+    });
+  }
+
+  verOrden(c: any) { this.router.navigate(['/detalle-orden', c.orden_id]); }
 
   logout() {
     this.auth.logout();

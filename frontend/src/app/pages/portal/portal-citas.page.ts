@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { ToastController, AlertController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
 import { FLUJO_CITA, ESTADO_CITA_LABEL } from '../../utils/servicios';
@@ -18,7 +19,7 @@ export class PortalCitasPage implements OnInit {
   readonly flujo = FLUJO_CITA;
   readonly estadoLabel = ESTADO_CITA_LABEL;
 
-  constructor(private portal: PortalService, private toast: ToastController, private alert: AlertController) {}
+  constructor(private portal: PortalService, private toast: ToastController, private alert: AlertController, private router: Router) {}
 
   ngOnInit() { this.cargar(); }
   ionViewWillEnter() { this.cargar(); }
@@ -83,4 +84,7 @@ export class PortalCitasPage implements OnInit {
   }
 
   estrellas(n: number): string { return '★'.repeat(n) + '☆'.repeat(5 - n); }
+
+  // El presupuesto se aprueba en Inicio (donde está el flujo aprobar/rechazar).
+  irAInicio() { this.router.navigate(['/portal/inicio']); }
 }

@@ -74,6 +74,16 @@
     strong { font-size: 14px; font-weight: 700; }
     span { font-size: 12px; color: var(--n-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   }
+  .cita-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+  .cita-act {
+    display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
+    padding: 5px 10px; border-radius: 999px; border: 1px solid var(--ion-color-primary);
+    background: var(--ion-color-primary); color: #fff; font-family: inherit; font-size: 11px; font-weight: 700;
+    ion-icon { font-size: 13px; }
+    &:active { transform: scale(.96); }
+    &:disabled { opacity: .6; }
+    &.ver { background: none; color: var(--ion-color-primary); }
+  }
 }
 
 /* Lista de alertas */

@@ -100,10 +100,11 @@ CREATE TABLE IF NOT EXISTS citas (
   comentario_satisfaccion TEXT,
   fecha_inicio  TIMESTAMP NULL,                       -- al empezar el trabajo
   fecha_fin     TIMESTAMP NULL,                       -- al entregar
-  orden_id      INT,                                  -- orden de trabajo generada/enlazada
+  orden_id      INT,                                  -- orden de trabajo generada/enlazada (puente cita ↔ orden)
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_citas_fecha_hora (fecha, hora),
+  INDEX idx_citas_orden (orden_id),
   FOREIGN KEY (cliente_id) REFERENCES clientes(id),
   FOREIGN KEY (moto_id)    REFERENCES motos(id),
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id),

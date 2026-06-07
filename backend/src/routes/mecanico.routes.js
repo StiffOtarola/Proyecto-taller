@@ -15,11 +15,15 @@ const EN_PROCESO = ['en_revision', 'en_mantenimiento'];
 const SELECT_CITA = `
   SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado,
          ci.monto, ci.calificacion, ci.comentario_satisfaccion, ci.fecha_inicio, ci.fecha_fin,
+         ci.orden_id, o.numero_orden, o.estado AS orden_estado,
+         o.aprobacion_cliente, o.motivo_rechazo,
+         (o.costo_mano_obra + o.costo_repuestos - o.descuento) AS orden_total,
          m.marca, m.modelo, m.placa,
          c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.telefono AS cliente_telefono
   FROM citas ci
   LEFT JOIN motos m    ON m.id = ci.moto_id
-  JOIN clientes c      ON c.id = ci.cliente_id`;
+  JOIN clientes c      ON c.id = ci.cliente_id
+  LEFT JOIN ordenes_trabajo o ON o.id = ci.orden_id`;
 
 // GET /api/mecanico/resumen — KPIs del técnico logueado
 router.get('/resumen', async (req, res) => {

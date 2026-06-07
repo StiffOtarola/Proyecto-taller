@@ -157,6 +157,7 @@ async function ensureSchema() {
 
     // Puente cita ↔ orden: una cita puede generar/enlazar una orden de trabajo.
     await addColumnIfMissing('citas', 'orden_id', 'INT NULL');
+    await crearIndiceSiFalta('citas', 'idx_citas_orden', '(orden_id)');
 
     // Índice (fecha,hora) en citas: acelera la disponibilidad y permite que el
     // bloqueo de rango (FOR UPDATE) del control de cupo sea preciso.

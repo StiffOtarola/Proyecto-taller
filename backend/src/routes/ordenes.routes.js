@@ -3,28 +3,9 @@ const { pool } = require('../db/pool');
 const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
+const { generarNumeroOrden, sincronizarCitaDesdeOrden } = require('../utils/ordenes');
 
 router.use(auth);
-
-// Generar numero_orden: OT-YYYY-XXXX
-// Usa un contador atómico (INSERT ... ON DUPLICATE KEY UPDATE con LAST_INSERT_ID)
-// para que dos órdenes simultáneas nunca obtengan el mismo número.
-// El INSERT y el SELECT deben correr en la MISMA conexión (LAST_INSERT_ID es por conexión).
-async function generarNumeroOrden() {
-  const year = new Date().getFullYear();
-  const conn = await pool.getConnection();
-  try {
-    await conn.query(
-      `INSERT INTO orden_contadores (anio, ultimo) VALUES (?, LAST_INSERT_ID(1))
-       ON DUPLICATE KEY UPDATE ultimo = LAST_INSERT_ID(ultimo + 1)`,
-      [year]
-    );
-    const [[{ n }]] = await conn.query('SELECT LAST_INSERT_ID() AS n');
-    return `OT-${year}-${String(n).padStart(4, '0')}`;
-  } finally {
-    conn.release();
-  }
-}
 
 // GET /api/ordenes
 router.get('/', async (req, res) => {
@@ -193,6 +174,9 @@ router.patch('/:id/estado', async (req, res) => {
     if (ETAPAS_TIEMPO.includes(estado)) {
       await pool.query('INSERT INTO orden_tiempos (orden_id, etapa) VALUES (?, ?)', [req.params.id, estado]);
     }
+
+    // Refleja el avance en la cita vinculada (si la hay) → portal del cliente + mecánico.
+    await sincronizarCitaDesdeOrden(req.params.id, estado);
 
     res.json({ data: { estado }, message: 'Estado actualizado' });
   } catch (err) {
@@ -370,6 +354,8 @@ router.patch('/:id/cerrar', requireRol('jefe_taller'), async (req, res) => {
     }
 
     await conn.commit();
+    // Refleja la entrega en la cita vinculada (si la hay): estado, fecha_fin y monto.
+    await sincronizarCitaDesdeOrden(req.params.id, 'entregada');
     res.json({ message: 'Orden cerrada y entregada', cortesia_ganada: cortesiaGanada });
   } catch (err) {
     await conn.rollback();

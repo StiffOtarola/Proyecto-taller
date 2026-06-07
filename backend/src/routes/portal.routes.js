@@ -182,13 +182,25 @@ router.get('/resumen', async (req, res) => {
       [id]
     );
     const [[{ motos_registradas }]] = await pool.query('SELECT COUNT(*) AS motos_registradas FROM motos WHERE cliente_id = ? AND activa = 1', [id]);
+    // Total pagado y visitas completadas: una sola fuente que cruza los dos mundos
+    // sin doble conteo. Cuenta citas entregadas (su monto ya = total de la orden
+    // vinculada al entregar) + órdenes entregadas SIN cita (visitas sin agenda previa).
     const [[{ total_pagado }]] = await pool.query(
-      "SELECT COALESCE(SUM(monto), 0) AS total_pagado FROM citas WHERE cliente_id = ? AND estado = 'entregado'",
-      [id]
+      `SELECT
+         (SELECT COALESCE(SUM(monto), 0) FROM citas WHERE cliente_id = ? AND estado = 'entregado')
+       + (SELECT COALESCE(SUM(costo_mano_obra + costo_repuestos - descuento), 0)
+            FROM ordenes_trabajo
+            WHERE cliente_id = ? AND estado = 'entregada'
+              AND id NOT IN (SELECT orden_id FROM citas WHERE orden_id IS NOT NULL)) AS total_pagado`,
+      [id, id]
     );
     const [[{ completadas }]] = await pool.query(
-      "SELECT COUNT(*) AS completadas FROM citas WHERE cliente_id = ? AND estado = 'entregado'",
-      [id]
+      `SELECT
+         (SELECT COUNT(*) FROM citas WHERE cliente_id = ? AND estado = 'entregado')
+       + (SELECT COUNT(*) FROM ordenes_trabajo
+            WHERE cliente_id = ? AND estado = 'entregada'
+              AND id NOT IN (SELECT orden_id FROM citas WHERE orden_id IS NOT NULL)) AS completadas`,
+      [id, id]
     );
     const [[proxima_cita]] = await pool.query(
       `SELECT ci.id, ci.fecha, ci.hora, ci.tipo_servicio, ci.estado,
@@ -364,8 +376,12 @@ router.post('/ordenes/:id/encuesta', async (req, res) => {
 router.get('/fidelidad', async (req, res) => {
   try {
     const [[{ completadas }]] = await pool.query(
-      "SELECT COUNT(*) AS completadas FROM citas WHERE cliente_id = ? AND estado = 'entregado'",
-      [req.cliente.id]
+      `SELECT
+         (SELECT COUNT(*) FROM citas WHERE cliente_id = ? AND estado = 'entregado')
+       + (SELECT COUNT(*) FROM ordenes_trabajo
+            WHERE cliente_id = ? AND estado = 'entregada'
+              AND id NOT IN (SELECT orden_id FROM citas WHERE orden_id IS NOT NULL)) AS completadas`,
+      [req.cliente.id, req.cliente.id]
     );
     const r = recompensas(completadas);
     res.json({
@@ -467,11 +483,13 @@ router.get('/citas', async (req, res) => {
     const [rows] = await pool.query(
       `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado,
               ci.monto, ci.calificacion,
+              ci.orden_id, o.numero_orden, o.estado AS orden_estado, o.aprobacion_cliente,
               m.marca, m.modelo, m.placa,
               t.nombre AS tecnico_nombre
        FROM citas ci
        LEFT JOIN motos m ON m.id = ci.moto_id
        LEFT JOIN usuarios t ON t.id = ci.tecnico_id
+       LEFT JOIN ordenes_trabajo o ON o.id = ci.orden_id
        WHERE ci.cliente_id = ?
        ORDER BY ci.fecha DESC, ci.hora DESC`,
       [req.cliente.id]

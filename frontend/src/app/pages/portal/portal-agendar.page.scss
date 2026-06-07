@@ -8,7 +8,51 @@
 
 .card {
   background: var(--ion-card-background); border: 1px solid var(--hairline);
-  border-radius: var(--radius-card); box-shadow: var(--shadow-sm); padding: 8px 16px 18px;
+  border-radius: var(--radius-card); box-shadow: var(--shadow-sm); padding: 18px 16px;
 }
 
-.hint { font-size: 12px; color: var(--n-400); padding: 4px 4px 10px; }
+/* Grupos de formulario (look del mockup) */
+.fg {
+  margin-bottom: 14px;
+  label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--n-400); margin-bottom: 6px; }
+  select, input, textarea {
+    width: 100%; padding: 11px 12px; border: 1px solid var(--hairline); border-radius: 12px;
+    font-family: inherit; font-size: 14px; background: var(--ion-card-background); color: var(--ion-text-color);
+    outline: none; transition: border-color .15s;
+    &:focus { border-color: var(--ion-color-primary); }
+  }
+  textarea { resize: none; min-height: 64px; }
+  .hint { font-size: 11px; color: var(--n-400); margin-top: 6px; }
+}
+
+/* Grilla de horas */
+.tg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.ts {
+  padding: 11px 4px; text-align: center; border-radius: 10px; cursor: pointer;
+  font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
+  border: 1px solid var(--hairline); background: var(--ion-card-background); color: var(--ion-text-color);
+  transition: all .15s;
+  &:active { transform: scale(.97); }
+  &.sel { background: var(--ion-color-primary); color: #fff; border-color: var(--ion-color-primary);
+    box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25); }
+  &.full { background: var(--n-100); color: var(--n-400); border-color: transparent;
+    text-decoration: line-through; cursor: not-allowed; }
+}
+
+.full-msg {
+  margin-top: 8px; padding: 10px 14px; border-radius: 12px; text-align: center;
+  background: #fef2f2; color: #dc2626; font-size: 12px; font-weight: 600;
+}
+
+/* CTA principal */
+.cta {
+  width: 100%; margin-top: 8px; padding: 14px; border: none; border-radius: var(--radius-pill);
+  background: var(--ion-color-primary); color: #fff; cursor: pointer;
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: var(--shadow-accent); transition: transform .15s;
+  &:active { transform: scale(.97); }
+  &:disabled { opacity: .5; box-shadow: none; }
+  ion-spinner { width: 18px; height: 18px; }
+}

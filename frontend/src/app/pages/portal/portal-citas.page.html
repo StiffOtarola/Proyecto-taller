@@ -10,10 +10,10 @@
   </ion-refresher>
 
   <div class="citas">
-    <ion-segment [(ngModel)]="vista" mode="md" class="seg">
-      <ion-segment-button value="pendientes"><ion-label>Pendientes</ion-label></ion-segment-button>
-      <ion-segment-button value="historial"><ion-label>Historial</ion-label></ion-segment-button>
-    </ion-segment>
+    <div class="segment">
+      <button class="seg-btn" [class.on]="vista==='pendientes'" (click)="vista='pendientes'">Pendientes</button>
+      <button class="seg-btn" [class.on]="vista==='historial'" (click)="vista='historial'">Completadas</button>
+    </div>
 
     <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
       <div class="skeleton" style="height:130px;border-radius:20px"></div>
@@ -23,23 +23,17 @@
     <!-- PENDIENTES con barra de progreso -->
     <div *ngIf="!cargando && vista === 'pendientes'">
       <div class="cita-card" *ngFor="let c of pendientes">
-        <div class="cc-top">
+        <div class="cita-head">
           <h4>{{ c.marca }} {{ c.modelo }}</h4>
           <span class="pill rose">{{ estadoLabel[c.estado] }}</span>
         </div>
-        <p class="cc-sub">{{ c.tipo_servicio || c.motivo }} · {{ c.fecha | date:'dd/MM' }} · {{ c.hora }}</p>
+        <p class="cita-info">{{ c.tipo_servicio || c.motivo }} · {{ c.fecha | date:'dd/MM' }} · {{ c.hora }}</p>
 
-        <!-- Barra de progreso -->
         <div class="prog">
-          <div class="prog-bar"><div class="prog-fill" [style.width.%]="progresoPct(c.estado)"></div></div>
-          <div class="prog-steps">
-            <div class="step" *ngFor="let s of flujo; let i = index" [class.done]="i <= pasoActual(c.estado)">
-              <span class="dot"></span>
-              <span class="st-lbl">{{ estadoLabel[s] }}</span>
-            </div>
-          </div>
+          <div class="pr-t"><div class="pr-f" [style.width.%]="progresoPct(c.estado)"></div></div>
+          <div class="pr-l">{{ progresoPct(c.estado) }}%</div>
         </div>
-        <p class="cc-tec" *ngIf="c.tecnico_nombre"><ion-icon name="person-outline"></ion-icon> {{ c.tecnico_nombre }}</p>
+        <p class="cita-tec" *ngIf="c.tecnico_nombre"><ion-icon name="construct-outline"></ion-icon> Mecánico: {{ c.tecnico_nombre }}</p>
       </div>
       <div class="empty-state" *ngIf="pendientes.length === 0">
         <ion-icon name="checkmark-done-circle-outline"></ion-icon>
@@ -47,36 +41,41 @@
       </div>
     </div>
 
-    <!-- HISTORIAL con reporte -->
+    <!-- COMPLETADAS / HISTORIAL con reporte -->
     <div *ngIf="!cargando && vista === 'historial'">
-      <div class="total-pagado" *ngIf="totalPagado > 0">
-        <span>Total pagado</span>
+      <div class="tp" *ngIf="totalPagado > 0">
+        <span>Total pagado en citas completadas</span>
         <strong class="mono">{{ totalPagado | currency:'CRC':'symbol-narrow':'1.0-0' }}</strong>
       </div>
 
-      <div class="cita-card" *ngFor="let c of historial">
-        <div class="cc-top">
+      <div class="cita-card" [class.cancelada]="c.estado === 'cancelado'" *ngFor="let c of historial">
+        <div class="cita-head">
           <h4>{{ c.marca }} {{ c.modelo }}</h4>
           <span class="pill" [ngClass]="c.estado === 'entregado' ? 'green' : 'gris'">{{ estadoLabel[c.estado] }}</span>
         </div>
-        <p class="cc-sub">{{ c.tipo_servicio || c.motivo }} · {{ c.fecha | date:'dd/MM/yyyy' }}</p>
+        <p class="cita-info">{{ c.tipo_servicio || c.motivo }} · {{ c.fecha | date:'dd/MM/yyyy' }}</p>
 
-        <div class="cc-acciones" *ngIf="c.estado === 'entregado'">
-          <ion-button size="small" fill="outline" (click)="toggleReporte(c.id)">
-            <ion-icon name="document-text-outline" slot="start"></ion-icon> Reporte
-          </ion-button>
-          <ion-button size="small" *ngIf="!c.calificacion" (click)="calificar(c)">
-            <ion-icon name="star-outline" slot="start"></ion-icon> Calificar
-          </ion-button>
-          <span class="calif" *ngIf="c.calificacion">{{ estrellas(c.calificacion) }}</span>
+        <div class="prog" *ngIf="c.estado === 'entregado'">
+          <div class="pr-t"><div class="pr-f" style="width:100%"></div></div>
+          <div class="pr-l">Completado ✓</div>
+        </div>
+
+        <div class="actions" *ngIf="c.estado === 'entregado'">
+          <button (click)="toggleReporte(c.id)">
+            <ion-icon name="document-text-outline"></ion-icon> {{ reporteAbierto.has(c.id) ? 'Ocultar' : 'Ver reporte' }}
+          </button>
+          <button class="btn-calif" *ngIf="!c.calificacion" (click)="calificar(c)">
+            <ion-icon name="star-outline"></ion-icon> Calificar
+          </button>
+          <span class="stars" *ngIf="c.calificacion">{{ estrellas(c.calificacion) }}</span>
         </div>
 
         <!-- Desglose -->
-        <div class="reporte" *ngIf="reporteAbierto.has(c.id)">
-          <div class="rep-row"><span>Servicio</span><span>{{ c.tipo_servicio || c.motivo }}</span></div>
-          <div class="rep-row"><span>Fecha</span><span>{{ c.fecha | date:'dd/MM/yyyy' }}</span></div>
-          <div class="rep-row"><span>Mecánico</span><span>{{ c.tecnico_nombre || '—' }}</span></div>
-          <div class="rep-row total"><span>Total</span><span class="mono">{{ (c.monto || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div>
+        <div class="rpt" *ngIf="reporteAbierto.has(c.id)">
+          <div class="rpt-r"><span>Servicio</span><span>{{ c.tipo_servicio || c.motivo }}</span></div>
+          <div class="rpt-r"><span>Fecha</span><span class="mono">{{ c.fecha | date:'dd/MM/yyyy' }}</span></div>
+          <div class="rpt-r"><span>Mecánico</span><span>{{ c.tecnico_nombre || '—' }}</span></div>
+          <div class="rpt-r total"><span>Total</span><span class="mono">{{ (c.monto || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div>
         </div>
       </div>
       <div class="empty-state" *ngIf="historial.length === 0">

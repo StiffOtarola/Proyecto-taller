@@ -20,6 +20,7 @@ export class PortalAgendarPage implements OnInit {
   ocupacion: Record<string, number> = {};
   maxPorHora = 2;
   enviando = false;
+  horaLlenaMsg = false;
 
   constructor(
     private portal: PortalService,
@@ -45,6 +46,16 @@ export class PortalAgendarPage implements OnInit {
 
   horaLlena(h: string): boolean {
     return (this.ocupacion[h] || 0) >= this.maxPorHora;
+  }
+
+  // Selección desde la grilla de horas: ignora las llenas y avisa brevemente.
+  seleccionarHora(h: string) {
+    if (this.horaLlena(h)) {
+      this.horaLlenaMsg = true;
+      setTimeout(() => (this.horaLlenaMsg = false), 2500);
+      return;
+    }
+    this.form.hora = h;
   }
 
   get valido(): boolean {

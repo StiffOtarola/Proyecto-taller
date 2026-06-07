@@ -19,6 +19,18 @@ export class PortalInicioPage implements OnInit {
   procesando = false;
   cargando = true;
   readonly estadoLabel = ESTADO_CITA_LABEL;
+  readonly fechaHoy = new Date().toLocaleDateString('es-CR', { weekday: 'short', day: 'numeric', month: 'short' });
+
+  // Tiempo relativo legible para el feed de notificaciones ("Hace 2 h").
+  hace(fecha: string): string {
+    if (!fecha) return '';
+    const min = Math.round((Date.now() - new Date(fecha).getTime()) / 60000);
+    if (min < 1) return 'Recién';
+    if (min < 60) return `Hace ${min} min`;
+    const h = Math.round(min / 60);
+    if (h < 24) return `Hace ${h} h`;
+    return `Hace ${Math.round(h / 24)} d`;
+  }
 
   constructor(
     public portal: PortalService,

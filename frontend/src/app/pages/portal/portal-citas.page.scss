@@ -1,54 +1,60 @@
 .citas { max-width: 760px; margin: 0 auto; padding: 12px 16px 0; }
 
-.seg { margin-bottom: 14px; }
+.segment { margin-bottom: 14px; }
 
 .cita-card {
   background: var(--ion-card-background); border: 1px solid var(--hairline);
   border-radius: 20px; box-shadow: var(--shadow-sm); padding: 16px; margin-bottom: 12px;
+  &.cancelada { opacity: .6; }
 
-  .cc-top { display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    h4 { margin: 0; font-size: 16px; font-weight: 700; } }
-  .cc-sub { margin: 6px 0 0; font-size: 12.5px; color: var(--n-500); }
-  .cc-tec { margin: 10px 0 0; font-size: 12px; color: var(--n-500); display: flex; align-items: center; gap: 5px; }
+  .cita-head { display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    h4 { margin: 0; font-size: 15px; font-weight: 700; } }
+  .cita-info { margin: 6px 0 0; font-size: 12px; color: var(--n-500); }
+  .cita-tec { margin: 10px 0 0; font-size: 12px; color: var(--n-500); display: flex; align-items: center; gap: 5px;
+    ion-icon { font-size: 14px; } }
 }
 
-/* Barra de progreso */
-.prog { margin-top: 14px; }
-.prog-bar { height: 8px; border-radius: 99px; background: var(--n-200); overflow: hidden; }
-.prog-fill {
-  height: 100%; border-radius: 99px;
-  background: linear-gradient(90deg, var(--ion-color-primary), var(--ion-color-primary-tint));
-  transition: width .5s cubic-bezier(.4,0,.2,1);
+/* Barra de progreso simple (look del mockup) */
+.prog { margin: 12px 0 2px; }
+.pr-t { height: 8px; border-radius: 999px; background: var(--n-200); overflow: hidden; margin-bottom: 4px; }
+.pr-f {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--ion-color-primary), #f43f5e);
+  transition: width .5s cubic-bezier(.4, 0, .2, 1);
 }
-.prog-steps { display: flex; justify-content: space-between; margin-top: 8px; }
-.step {
-  display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; text-align: center;
-  .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--n-300); transition: background .3s; }
-  .st-lbl { font-size: 9px; color: var(--n-400); line-height: 1.1; }
-  &.done .dot { background: var(--ion-color-primary); box-shadow: 0 0 0 3px var(--rose-50); }
-  &.done .st-lbl { color: var(--n-600); font-weight: 600; }
-}
+.pr-l { font-size: 10px; color: var(--n-400); }
 
-.total-pagado {
-  display: flex; align-items: center; justify-content: space-between;
+/* Banner de total pagado */
+.tp {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
   background: var(--emerald-50); color: var(--emerald-700);
   border-radius: 16px; padding: 12px 16px; margin-bottom: 14px;
-  span { font-size: 13px; } strong { font-size: 18px; }
+  span { font-size: 13px; font-weight: 600; }
+  strong { font-size: 22px; font-weight: 800; font-family: var(--font-display); }
 }
 
-.cc-acciones { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap;
-  ion-button { --border-radius: 12px; margin: 0; }
-  .calif { color: var(--amber-700); letter-spacing: 1px; font-size: 15px; }
+/* Acciones de cita completada */
+.actions {
+  display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center;
+  button {
+    flex: 1; min-width: 110px; padding: 9px 12px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    border: 1px solid var(--hairline); border-radius: 12px; background: var(--ion-card-background);
+    font-family: inherit; font-size: 11.5px; font-weight: 700; color: var(--ion-text-color);
+    transition: transform .15s; ion-icon { font-size: 15px; }
+    &:active { transform: scale(.97); }
+    &.btn-calif { background: var(--amber-100); color: var(--amber-700); border: none; }
+  }
+  .stars { color: var(--amber-700); letter-spacing: 2px; font-size: 15px; }
 }
 
-.reporte {
+/* Reporte / desglose */
+.rpt {
   margin-top: 12px; background: var(--n-50); border-radius: 14px; padding: 12px 14px;
-  .rep-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; color: var(--n-600);
+  .rpt-r { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 4px 0; color: var(--n-600);
     span:first-child { color: var(--n-400); }
     &.total { border-top: 1px solid var(--hairline); margin-top: 4px; padding-top: 8px; font-weight: 700; color: var(--n-800); } }
 }
-
-.pill.gris { background: var(--n-100); color: var(--n-500); }
 
 .empty-state {
   text-align: center; padding: 50px 24px; color: var(--n-400);

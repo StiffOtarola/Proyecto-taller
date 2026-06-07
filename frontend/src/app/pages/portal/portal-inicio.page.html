@@ -15,7 +15,10 @@
   </ion-refresher>
 
   <div class="ini">
-    <div class="greet" *ngIf="portal.getCliente() as c"><h1>Hola, {{ c.nombre }}</h1></div>
+    <div class="greet" *ngIf="portal.getCliente() as c">
+      <h1>Hola, {{ c.nombre }}</h1>
+      <span class="greet-date mono">{{ fechaHoy }}</span>
+    </div>
 
     <!-- Presupuestos por aprobar -->
     <section class="card presu" *ngFor="let o of presupuestos">
@@ -68,11 +71,11 @@
     </section>
 
     <!-- Métricas -->
-    <div class="kpi-grid">
-      <div class="stat-card"><span class="num mono">{{ resumen?.citas_totales ?? 0 }}</span><span class="lbl">Citas totales</span></div>
-      <div class="stat-card"><span class="num mono">{{ resumen?.citas_pendientes ?? 0 }}</span><span class="lbl">Pendientes</span></div>
-      <div class="stat-card"><span class="num mono">{{ resumen?.motos_registradas ?? 0 }}</span><span class="lbl">Motos</span></div>
-      <div class="stat-card"><span class="num mono">{{ (resumen?.total_pagado || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span><span class="lbl">Total pagado</span></div>
+    <div class="sg">
+      <div class="st ac"><span class="st-n">{{ resumen?.citas_totales ?? 0 }}</span><span class="st-l">Citas totales</span></div>
+      <div class="st"><span class="st-n amber">{{ resumen?.citas_pendientes ?? 0 }}</span><span class="st-l">Pendientes</span></div>
+      <div class="st"><span class="st-n">{{ resumen?.motos_registradas ?? 0 }}</span><span class="st-l">Motos</span></div>
+      <div class="st ac"><span class="st-n emerald mono">{{ (resumen?.total_pagado || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span><span class="st-l">Total pagado</span></div>
     </div>
 
     <!-- Recompensas -->
@@ -81,9 +84,10 @@
         <span class="section-label">Recompensas</span>
         <ion-icon name="gift"></ion-icon>
       </div>
+      <div class="reward-count">{{ resumen.recompensas?.ciclo ?? 0 }} de {{ (resumen.recompensas?.meta || 7) - 1 }} citas completadas</div>
       <p class="reward-txt" *ngIf="resumen.recompensas?.cortesia_disponible"><strong>¡Tu próxima cita es de cortesía! 🎉</strong></p>
       <p class="reward-txt" *ngIf="!resumen.recompensas?.cortesia_disponible">
-        Te faltan <strong>{{ resumen.recompensas?.faltan }}</strong> cita(s) para tu cortesía
+        Faltan <strong>{{ resumen.recompensas?.faltan }}</strong> cita(s) para tu servicio de cortesía
       </p>
       <div class="reward-blocks">
         <span class="blk" *ngFor="let on of bloques; let i = index" [class.on]="on" [class.gift]="i === bloques.length - 1">
@@ -95,13 +99,11 @@
     <!-- Próxima cita -->
     <section class="card next" *ngIf="resumen?.proxima_cita as p">
       <span class="section-label">Próxima cita</span>
-      <h3>{{ p.marca }} {{ p.modelo }}</h3>
-      <div class="next-meta">
-        <span><ion-icon name="construct-outline"></ion-icon> {{ p.tipo_servicio || 'Servicio' }}</span>
-        <span><ion-icon name="calendar-outline"></ion-icon> {{ p.fecha | date:'EEEE dd/MM' }} · {{ p.hora }}</span>
-        <span><ion-icon name="person-outline"></ion-icon> {{ p.tecnico_nombre || 'Por asignar' }}</span>
-        <span class="pill rose">{{ estadoLabel[p.estado] }}</span>
-      </div>
+      <div class="next-title">{{ p.marca }} {{ p.modelo }}</div>
+      <div class="nx-r"><span class="k">Servicio</span><span class="v">{{ p.tipo_servicio || 'Servicio' }}</span></div>
+      <div class="nx-r"><span class="k">Fecha y hora</span><span class="v mono">{{ p.fecha | date:'dd/MM/yyyy' }} · {{ p.hora }}</span></div>
+      <div class="nx-r"><span class="k">Mecánico</span><span class="v">{{ p.tecnico_nombre || 'Por asignar' }}</span></div>
+      <div class="nx-r"><span class="k">Estado</span><span class="pill rose">{{ estadoLabel[p.estado] }}</span></div>
     </section>
     <section class="card next vacia" *ngIf="resumen && !resumen.proxima_cita">
       <p>No tenés citas próximas.</p>
@@ -109,14 +111,14 @@
     </section>
 
     <!-- Notificaciones -->
-    <section class="noti-sec" *ngIf="notificaciones.length">
-      <span class="section-label">Avances de tu moto</span>
-      <div class="noti" *ngFor="let n of notificaciones" [class.nueva]="!n.leida">
-        <ion-icon name="notifications-outline"></ion-icon>
-        <div class="noti-body">
-          <strong>{{ n.titulo }}</strong>
-          <p>{{ n.mensaje }}</p>
-          <span class="noti-fecha">{{ n.created_at | date:'dd/MM HH:mm' }}</span>
+    <section class="card noti-sec" *ngIf="notificaciones.length">
+      <span class="section-label">📢 Notificaciones de avance</span>
+      <div class="nf" *ngFor="let n of notificaciones" [class.nueva]="!n.leida">
+        <span class="nf-d" [class.on]="!n.leida"></span>
+        <div class="nf-b">
+          <span class="nf-msg">{{ n.titulo }}</span>
+          <span class="nf-sub" *ngIf="n.mensaje">{{ n.mensaje }}</span>
+          <span class="nf-t">{{ hace(n.created_at) }}</span>
         </div>
       </div>
     </section>

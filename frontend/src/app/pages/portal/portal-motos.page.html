@@ -12,64 +12,28 @@
   <div class="motos">
     <div class="intro">
       <h2>Tus motos</h2>
-      <p>Registrá tus motos para asociarlas a tus citas y órdenes.</p>
+      <p>Registrá y administrá tus motos.</p>
     </div>
 
-    <ion-button expand="block" (click)="abrirForm()" *ngIf="!mostrarForm" class="cta-upper">
-      <ion-icon name="add-outline" slot="start"></ion-icon>
-      Agregar moto
-    </ion-button>
-
-    <!-- Formulario -->
-    <section class="card" *ngIf="mostrarForm">
-      <span class="section-label">{{ editandoId ? 'Editar moto' : 'Nueva moto' }}</span>
-      <ion-item>
-        <ion-input label="Marca *" labelPlacement="floating" [(ngModel)]="nueva.marca" placeholder="Ej: Honda"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-input label="Modelo *" labelPlacement="floating" [(ngModel)]="nueva.modelo" placeholder="Ej: CB 125F"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-input label="Placa *" labelPlacement="floating" [(ngModel)]="nueva.placa" placeholder="Ej: MOT-123" class="upper"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-input label="Año (opcional)" labelPlacement="floating" type="number" inputmode="numeric" [(ngModel)]="nueva.anio" placeholder="Ej: 2021"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-input label="Color (opcional)" labelPlacement="floating" [(ngModel)]="nueva.color" placeholder="Ej: Rojo"></ion-input>
-      </ion-item>
-      <ion-item lines="none">
-        <ion-input label="Kilometraje (opcional)" labelPlacement="floating" type="number" inputmode="numeric" [(ngModel)]="nueva.kilometraje" placeholder="Ej: 12500"></ion-input>
-      </ion-item>
-
-      <ion-button expand="block" class="ion-margin-top" (click)="guardar()" [disabled]="!valido || enviando">
-        <ion-spinner *ngIf="enviando" name="crescent" slot="start"></ion-spinner>
-        {{ enviando ? 'Guardando...' : (editandoId ? 'Guardar cambios' : 'Guardar moto') }}
-      </ion-button>
-      <ion-button expand="block" fill="clear" color="medium" (click)="cerrarForm()" [disabled]="enviando">
-        Cancelar
-      </ion-button>
-    </section>
-
-    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px;margin-top:22px">
-      <div class="skeleton" style="height:78px;border-radius:18px"></div>
-      <div class="skeleton" style="height:78px;border-radius:18px"></div>
+    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px">
+      <div class="skeleton" style="height:70px;border-radius:18px"></div>
+      <div class="skeleton" style="height:70px;border-radius:18px"></div>
     </div>
 
     <!-- Lista de motos -->
     <div class="moto-list" *ngIf="!cargando && motos.length">
-      <span class="section-label">Registradas</span>
-      <div class="moto-row" *ngFor="let m of motos">
-        <div class="moto-ico">
-          <ion-icon name="bicycle"></ion-icon>
-        </div>
-        <div class="moto-meta">
+      <div class="mc" *ngFor="let m of motos">
+        <div class="mc-i"><ion-icon name="bicycle"></ion-icon></div>
+        <div class="mc-m">
           <h4>{{ m.marca }} {{ m.modelo }}</h4>
-          <p><span class="placa mono">{{ m.placa }}</span><span *ngIf="m.anio"> · {{ m.anio }}</span><span *ngIf="m.color"> · {{ m.color }}</span><span *ngIf="m.kilometraje_actual"> · {{ m.kilometraje_actual | number }} km</span></p>
+          <p>
+            <span class="placa mono">{{ m.placa }}</span>
+            <span *ngIf="m.anio"> · {{ m.anio }}</span>
+            <span *ngIf="m.color"> · {{ m.color }}</span>
+            <span *ngIf="m.kilometraje_actual"> · {{ m.kilometraje_actual | number }} km</span>
+          </p>
         </div>
-        <ion-button fill="clear" size="small" (click)="editar(m)" title="Editar">
-          <ion-icon slot="icon-only" name="create-outline"></ion-icon>
-        </ion-button>
+        <button class="mc-e" (click)="editar(m)" title="Editar"><ion-icon name="create-outline"></ion-icon></button>
       </div>
     </div>
 
@@ -77,6 +41,28 @@
       <ion-icon name="bicycle-outline"></ion-icon>
       <p>Todavía no registraste ninguna moto.</p>
     </div>
+
+    <!-- Botón agregar -->
+    <button class="cta-o" (click)="abrirForm()" *ngIf="!mostrarForm">
+      <ion-icon name="add-outline"></ion-icon> Agregar moto
+    </button>
+
+    <!-- Formulario -->
+    <section class="cd" *ngIf="mostrarForm">
+      <span class="lb">{{ editandoId ? 'Editar moto' : 'Registrar nueva moto' }}</span>
+      <div class="fg"><label>Placa *</label><input class="upper" [(ngModel)]="nueva.placa" placeholder="MOT-123"></div>
+      <div class="fg"><label>Marca *</label><input [(ngModel)]="nueva.marca" placeholder="Ej: Honda"></div>
+      <div class="fg"><label>Modelo *</label><input [(ngModel)]="nueva.modelo" placeholder="Ej: CB500F"></div>
+      <div class="fg"><label>Año (opcional)</label><input type="number" inputmode="numeric" [(ngModel)]="nueva.anio" placeholder="2024"></div>
+      <div class="fg"><label>Color (opcional)</label><input [(ngModel)]="nueva.color" placeholder="Ej: Rojo"></div>
+      <div class="fg"><label>Kilometraje (opcional)</label><input type="number" inputmode="numeric" [(ngModel)]="nueva.kilometraje" placeholder="15000"></div>
+
+      <button class="cta" (click)="guardar()" [disabled]="!valido || enviando">
+        <ion-spinner *ngIf="enviando" name="crescent"></ion-spinner>
+        {{ enviando ? 'Guardando...' : (editandoId ? '💾 Guardar cambios' : '💾 Guardar moto') }}
+      </button>
+      <button class="cta-o" (click)="cerrarForm()" [disabled]="enviando">Cancelar</button>
+    </section>
 
     <div style="height:30px"></div>
   </div>

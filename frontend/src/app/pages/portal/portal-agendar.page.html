@@ -8,46 +8,53 @@
   <div class="agendar">
     <div class="intro">
       <h2>Reservá tu cita</h2>
-      <p>Elegí tu moto, el servicio y el horario disponible.</p>
+      <p>Elegí tu moto, el servicio y el horario.</p>
     </div>
 
     <section class="card">
-      <ion-item>
-        <ion-select label="Moto *" labelPlacement="floating" [(ngModel)]="form.moto_id" interface="action-sheet" placeholder="Elegí tu moto">
-          <ion-select-option *ngFor="let m of motos" [value]="m.id">{{ m.marca }} {{ m.modelo }}<span *ngIf="m.placa"> · {{ m.placa }}</span></ion-select-option>
-        </ion-select>
-      </ion-item>
-      <div class="hint" *ngIf="motos.length === 0">No tenés motos registradas. Agregá una en la pestaña "Motos".</div>
+      <div class="fg">
+        <label>Seleccionar moto *</label>
+        <select [(ngModel)]="form.moto_id">
+          <option [ngValue]="null" disabled>Elegí tu moto</option>
+          <option *ngFor="let m of motos" [ngValue]="m.id">{{ m.marca }} {{ m.modelo }}<ng-container *ngIf="m.placa"> — {{ m.placa }}</ng-container></option>
+        </select>
+        <div class="hint" *ngIf="motos.length === 0">No tenés motos registradas. Agregá una en la pestaña "Motos".</div>
+      </div>
 
-      <ion-item>
-        <ion-select label="Servicio *" labelPlacement="floating" [(ngModel)]="form.tipo_servicio" interface="action-sheet" placeholder="Elegí el servicio">
-          <ion-select-option *ngFor="let s of servicios" [value]="s">{{ s }}</ion-select-option>
-        </ion-select>
-      </ion-item>
+      <div class="fg">
+        <label>Tipo de servicio *</label>
+        <select [(ngModel)]="form.tipo_servicio">
+          <option value="" disabled>Elegí el servicio</option>
+          <option *ngFor="let s of servicios" [ngValue]="s">{{ s }}</option>
+        </select>
+      </div>
 
-      <ion-item>
-        <ion-input label="Fecha *" labelPlacement="floating" type="date" [min]="hoy" [(ngModel)]="form.fecha" (ionChange)="onFecha()"></ion-input>
-      </ion-item>
+      <div class="fg">
+        <label>Fecha *</label>
+        <input type="date" [min]="hoy" [(ngModel)]="form.fecha" (ngModelChange)="onFecha()">
+      </div>
 
-      <ion-item>
-        <ion-select label="Hora *" labelPlacement="floating" [(ngModel)]="form.hora" interface="action-sheet"
-          [disabled]="!form.fecha" placeholder="Elegí la hora">
-          <ion-select-option *ngFor="let h of horas" [value]="h" [disabled]="horaLlena(h)">
-            {{ h }}<span *ngIf="horaLlena(h)"> — lleno</span>
-          </ion-select-option>
-        </ion-select>
-      </ion-item>
-      <div class="hint" *ngIf="!form.fecha">Elegí primero una fecha para ver los horarios.</div>
+      <div class="fg">
+        <label>Hora disponible *</label>
+        <div class="tg" *ngIf="form.fecha">
+          <div class="ts" *ngFor="let h of horas"
+               [class.sel]="form.hora === h" [class.full]="horaLlena(h)"
+               (click)="seleccionarHora(h)">{{ h }}</div>
+        </div>
+        <div class="hint" *ngIf="!form.fecha">Elegí primero una fecha para ver los horarios.</div>
+        <div class="full-msg" *ngIf="horaLlenaMsg">⚠ Esa hora ya tiene el máximo de citas. Elegí otra.</div>
+        <div class="hint" *ngIf="form.fecha">Máximo {{ maxPorHora }} citas por hora. Las horas tachadas están llenas.</div>
+      </div>
 
-      <ion-item lines="none">
-        <ion-textarea label="Descripción del problema (opcional)" labelPlacement="floating" [(ngModel)]="form.descripcion" rows="3"
-          placeholder="Contanos qué le pasa a tu moto..."></ion-textarea>
-      </ion-item>
+      <div class="fg">
+        <label>Descripción del problema (opcional)</label>
+        <textarea [(ngModel)]="form.descripcion" placeholder="Contanos qué le pasa a tu moto..."></textarea>
+      </div>
 
-      <ion-button expand="block" class="ion-margin-top" (click)="agendar()" [disabled]="!valido || enviando">
-        <ion-spinner *ngIf="enviando" name="crescent" slot="start"></ion-spinner>
-        {{ enviando ? 'Agendando...' : 'Agendar cita' }}
-      </ion-button>
+      <button class="cta" (click)="agendar()" [disabled]="!valido || enviando">
+        <ion-spinner *ngIf="enviando" name="crescent"></ion-spinner>
+        {{ enviando ? 'Agendando...' : '📅 Agendar cita' }}
+      </button>
     </section>
 
     <div style="height:30px"></div>

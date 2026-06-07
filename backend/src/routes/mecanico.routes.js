@@ -41,6 +41,10 @@ router.get('/resumen', async (req, res) => {
       "SELECT COALESCE(AVG(monto), 0) AS monto_promedio FROM citas WHERE tecnico_id = ? AND estado = 'entregado' AND monto > 0",
       [yo]
     );
+    const [[{ generado_hoy }]] = await pool.query(
+      "SELECT COALESCE(SUM(monto), 0) AS generado_hoy FROM citas WHERE tecnico_id = ? AND estado = 'entregado' AND DATE(fecha_fin) = CURDATE()",
+      [yo]
+    );
     const [[{ tiempo_promedio_min }]] = await pool.query(
       `SELECT ROUND(AVG(TIMESTAMPDIFF(MINUTE, fecha_inicio, fecha_fin))) AS tiempo_promedio_min
        FROM citas WHERE tecnico_id = ? AND estado = 'entregado' AND fecha_inicio IS NOT NULL AND fecha_fin IS NOT NULL`,
@@ -56,6 +60,7 @@ router.get('/resumen', async (req, res) => {
         completadas_hoy,
         en_proceso,
         monto_promedio,
+        generado_hoy,
         tiempo_promedio_min: tiempo_promedio_min || 0,
         calificacion_promedio: calif.promedio,
         calificacion_total: calif.total,
@@ -125,6 +130,179 @@ router.patch('/citas/:id/estado', async (req, res) => {
     await pool.query(`UPDATE citas SET ${sets.join(', ')} WHERE id = ?`, params);
     await notificarCambioEstado(req.params.id, estado);
     res.json({ message: 'Estado actualizado' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// ───────────────────────────────────────────────────────────
+// Tareas pendientes del mecánico (checklist propio)
+// ───────────────────────────────────────────────────────────
+router.get('/tareas', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT * FROM tareas_mecanico WHERE tecnico_id = ?
+       ORDER BY hecha ASC, FIELD(prioridad, 'alta', 'normal'), created_at DESC`,
+      [req.usuario.id]
+    );
+    res.json({ data: rows });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+router.post('/tareas', async (req, res) => {
+  try {
+    const { titulo, detalle, prioridad } = req.body;
+    if (!titulo || !titulo.trim()) return res.status(400).json({ error: 'El título es requerido' });
+    const prio = prioridad === 'alta' ? 'alta' : 'normal';
+    const [r] = await pool.query(
+      'INSERT INTO tareas_mecanico (tecnico_id, titulo, detalle, prioridad) VALUES (?, ?, ?, ?)',
+      [req.usuario.id, titulo.trim(), (detalle || '').trim() || null, prio]
+    );
+    const [[nueva]] = await pool.query('SELECT * FROM tareas_mecanico WHERE id = ?', [r.insertId]);
+    res.status(201).json({ data: nueva, message: 'Tarea creada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// Alterna (o fija) el estado "hecha" de una tarea propia.
+router.patch('/tareas/:id', async (req, res) => {
+  try {
+    const [[t]] = await pool.query('SELECT id, hecha FROM tareas_mecanico WHERE id = ? AND tecnico_id = ?', [req.params.id, req.usuario.id]);
+    if (!t) return res.status(404).json({ error: 'Tarea no encontrada' });
+    const hecha = req.body.hecha !== undefined ? (req.body.hecha ? 1 : 0) : (t.hecha ? 0 : 1);
+    await pool.query('UPDATE tareas_mecanico SET hecha = ? WHERE id = ?', [hecha, req.params.id]);
+    res.json({ data: { id: Number(req.params.id), hecha }, message: 'Tarea actualizada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+router.delete('/tareas/:id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM tareas_mecanico WHERE id = ? AND tecnico_id = ?', [req.params.id, req.usuario.id]);
+    res.json({ message: 'Tarea eliminada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// ───────────────────────────────────────────────────────────
+// Mensajería con recepción
+// ───────────────────────────────────────────────────────────
+const SELECT_MENSAJE = `
+  SELECT m.id, m.mensaje, m.created_at, m.remitente_id, m.destino_rol, m.destino_id,
+         u.nombre AS remitente_nombre, u.rol AS remitente_rol
+  FROM mensajes_internos m JOIN usuarios u ON u.id = m.remitente_id`;
+
+router.get('/mensajes', async (req, res) => {
+  try {
+    const yo = req.usuario.id;
+    const [rows] = await pool.query(
+      `${SELECT_MENSAJE} WHERE m.remitente_id = ? OR m.destino_id = ? ORDER BY m.created_at ASC LIMIT 100`,
+      [yo, yo]
+    );
+    await pool.query('UPDATE mensajes_internos SET leido = 1 WHERE destino_id = ? AND leido = 0', [yo]);
+    res.json({ data: rows });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+router.post('/mensajes', async (req, res) => {
+  try {
+    const { mensaje } = req.body;
+    if (!mensaje || !mensaje.trim()) return res.status(400).json({ error: 'El mensaje es requerido' });
+    const [r] = await pool.query(
+      "INSERT INTO mensajes_internos (remitente_id, destino_rol, mensaje) VALUES (?, 'recepcion', ?)",
+      [req.usuario.id, mensaje.trim()]
+    );
+    const [[nuevo]] = await pool.query(`${SELECT_MENSAJE} WHERE m.id = ?`, [r.insertId]);
+    res.status(201).json({ data: nuevo, message: 'Mensaje enviado' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// Contacto directo (llamar/WhatsApp) con recepción: primer recepcionista con teléfono.
+router.get('/recepcion-contacto', async (req, res) => {
+  try {
+    const [[r]] = await pool.query(
+      "SELECT nombre, telefono FROM usuarios WHERE rol = 'recepcion' AND activo = 1 AND telefono IS NOT NULL AND telefono <> '' ORDER BY id LIMIT 1"
+    );
+    res.json({ data: r || null });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// ───────────────────────────────────────────────────────────
+// Perfil del mecánico (datos + estadísticas + calificaciones)
+// ───────────────────────────────────────────────────────────
+router.get('/perfil', async (req, res) => {
+  try {
+    const yo = req.usuario.id;
+    const [[u]] = await pool.query('SELECT id, nombre, email, rol, telefono, especialidades, horario FROM usuarios WHERE id = ?', [yo]);
+    const [[g]] = await pool.query(
+      `SELECT COUNT(*) AS completadas, COALESCE(SUM(monto), 0) AS ingresos_generados,
+              ROUND(AVG(TIMESTAMPDIFF(MINUTE, fecha_inicio, fecha_fin))) AS tiempo_promedio_min
+       FROM citas WHERE tecnico_id = ? AND estado = 'entregado'`,
+      [yo]
+    );
+    const [[calif]] = await pool.query(
+      'SELECT ROUND(AVG(calificacion), 1) AS promedio, COUNT(calificacion) AS total FROM citas WHERE tecnico_id = ? AND calificacion IS NOT NULL',
+      [yo]
+    );
+    const [[sat]] = await pool.query(
+      'SELECT COUNT(*) AS total, COALESCE(SUM(calificacion >= 4), 0) AS buenas FROM citas WHERE tecnico_id = ? AND calificacion IS NOT NULL',
+      [yo]
+    );
+    const satisfechos_pct = sat.total ? Math.round((sat.buenas / sat.total) * 100) : null;
+    const [[mes]] = await pool.query(
+      `SELECT COUNT(*) AS citas_mes, COALESCE(SUM(monto), 0) AS ingresos_mes
+       FROM citas WHERE tecnico_id = ? AND estado = 'entregado'
+         AND MONTH(fecha_fin) = MONTH(CURDATE()) AND YEAR(fecha_fin) = YEAR(CURDATE())`,
+      [yo]
+    );
+    const [calificaciones] = await pool.query(
+      `SELECT ci.calificacion, ci.comentario_satisfaccion, ci.tipo_servicio, ci.fecha_fin,
+              c.nombre AS cliente_nombre, c.apellido AS cliente_apellido
+       FROM citas ci JOIN clientes c ON c.id = ci.cliente_id
+       WHERE ci.tecnico_id = ? AND ci.calificacion IS NOT NULL
+       ORDER BY ci.fecha_fin DESC LIMIT 8`,
+      [yo]
+    );
+    res.json({
+      data: {
+        ...u,
+        especialidades_list: u.especialidades ? u.especialidades.split(',').map(s => s.trim()).filter(Boolean) : [],
+        completadas: g.completadas,
+        ingresos_generados: g.ingresos_generados,
+        tiempo_promedio_min: g.tiempo_promedio_min || 0,
+        calificacion_promedio: calif.promedio,
+        calificacion_total: calif.total,
+        satisfechos_pct,
+        citas_mes: mes.citas_mes,
+        ingresos_mes: mes.ingresos_mes,
+        calificaciones,
+      },
+    });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// El mecánico edita su propio perfil (teléfono, especialidades, horario).
+router.patch('/perfil', async (req, res) => {
+  try {
+    const { telefono, especialidades, horario } = req.body;
+    await pool.query(
+      'UPDATE usuarios SET telefono = ?, especialidades = ?, horario = ? WHERE id = ?',
+      [telefono || null, especialidades || null, horario || null, req.usuario.id]
+    );
+    res.json({ message: 'Perfil actualizado' });
   } catch (err) {
     fail(res, err);
   }

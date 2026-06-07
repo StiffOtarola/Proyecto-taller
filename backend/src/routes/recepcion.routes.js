@@ -463,4 +463,43 @@ router.post('/notificar', async (req, res) => {
   }
 });
 
+// ───────────────────────────────────────────────────────────
+// Mensajería interna con los mecánicos (lado recepción)
+// ───────────────────────────────────────────────────────────
+const SELECT_MSG_INT = `
+  SELECT m.id, m.mensaje, m.created_at, m.leido, m.remitente_id, m.destino_rol, m.destino_id,
+         ru.nombre AS remitente_nombre, ru.rol AS remitente_rol,
+         du.nombre AS destino_nombre
+  FROM mensajes_internos m
+  JOIN usuarios ru ON ru.id = m.remitente_id
+  LEFT JOIN usuarios du ON du.id = m.destino_id`;
+
+router.get('/mensajes-internos', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`${SELECT_MSG_INT} ORDER BY m.created_at DESC LIMIT 100`);
+    // Marca como leídos los mensajes que los mecánicos dirigieron a recepción.
+    await pool.query("UPDATE mensajes_internos SET leido = 1 WHERE destino_rol = 'recepcion' AND leido = 0");
+    res.json({ data: rows });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+router.post('/mensajes-internos', async (req, res) => {
+  try {
+    const { destino_id, mensaje } = req.body;
+    if (!destino_id || !mensaje || !mensaje.trim()) {
+      return res.status(400).json({ error: 'Destinatario y mensaje son requeridos' });
+    }
+    const [r] = await pool.query(
+      'INSERT INTO mensajes_internos (remitente_id, destino_id, mensaje) VALUES (?, ?, ?)',
+      [req.usuario.id, destino_id, mensaje.trim()]
+    );
+    const [[nuevo]] = await pool.query(`${SELECT_MSG_INT} WHERE m.id = ?`, [r.insertId]);
+    res.status(201).json({ data: nuevo, message: 'Respuesta enviada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
 module.exports = router;

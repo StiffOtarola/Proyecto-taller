@@ -11,8 +11,9 @@
 
   <div class="rec">
     <div class="segment">
-      <button class="seg-btn" [class.on]="vista==='mecanicos'" (click)="vista='mecanicos'">De mecánicos</button>
-      <button class="seg-btn" [class.on]="vista==='clientes'" (click)="vista='clientes'">A clientes</button>
+      <button class="seg-btn" [class.on]="vista==='mecanicos'" (click)="vista='mecanicos'">Mecánicos</button>
+      <button class="seg-btn" [class.on]="vista==='clientes'" (click)="vista='clientes'">Clientes</button>
+      <button class="seg-btn" [class.on]="vista==='taller'" (click)="vista='taller'">Taller</button>
     </div>
 
     <!-- Skeleton -->
@@ -69,11 +70,33 @@
       </div>
     </div>
 
+    <!-- Taller (mensajería interna con mecánicos) -->
+    <div class="msg-list" *ngIf="!cargando && vista === 'taller'">
+      <div class="msg-card" *ngFor="let m of internos">
+        <div class="msg-head">
+          <span class="avatar" [ngClass]="m.remitente_rol === 'recepcion' ? 'green' : 'rose'">{{ iniciales(m.remitente_nombre) }}</span>
+          <div class="msg-who">
+            <strong>{{ m.remitente_nombre }}</strong>
+            <span>{{ m.remitente_rol === 'recepcion' ? ('Recepción → ' + (m.destino_nombre || 'mecánico')) : 'Mecánico → Recepción' }}</span>
+          </div>
+          <span class="msg-time">{{ hace(m.created_at) }}</span>
+        </div>
+        <p class="msg-body">{{ m.mensaje }}</p>
+        <button class="msg-fwd" *ngIf="m.remitente_rol !== 'recepcion'" (click)="responderTaller(m)">
+          <ion-icon name="arrow-undo-outline"></ion-icon> Responder
+        </button>
+      </div>
+      <div class="empty-state" *ngIf="!internos.length">
+        <ion-icon name="construct-outline"></ion-icon>
+        <p>Sin mensajes del taller.</p>
+      </div>
+    </div>
+
     <div style="height:200px"></div>
   </div>
 
-  <!-- Envío rápido (siempre visible) -->
-  <div class="quick-send">
+  <!-- Envío rápido de notificación a un cliente (no aplica en la vista Taller) -->
+  <div class="quick-send" *ngIf="vista !== 'taller'">
     <ion-select [(ngModel)]="form.cliente_id" placeholder="Cliente" interface="action-sheet" class="qs-cliente">
       <ion-select-option *ngFor="let c of clientes" [value]="c.id">{{ c.nombre }} {{ c.apellido }}</ion-select-option>
     </ion-select>

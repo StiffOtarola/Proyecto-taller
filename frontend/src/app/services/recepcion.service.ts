@@ -91,4 +91,12 @@ export class RecepcionService {
   notificar(data: { cliente_id: number; cita_id?: number; titulo: string; mensaje: string }): Observable<any> {
     return this.http.post(`${this.url}/notificar`, data);
   }
+
+  // Mensajería interna con los mecánicos
+  getMensajesInternos(): Observable<{ data: any[] }> {
+    return this.http.get<{ data: any[] }>(`${this.url}/mensajes-internos`);
+  }
+  responderInterno(destino_id: number, mensaje: string): Observable<{ data: any }> {
+    return this.http.post<{ data: any }>(`${this.url}/mensajes-internos`, { destino_id, mensaje });
+  }
 }

@@ -25,6 +25,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
   email         VARCHAR(100) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   rol           ENUM('recepcion','tecnico','jefe_taller','admin','gerencia') NOT NULL DEFAULT 'tecnico',
+  telefono      VARCHAR(20),                 -- perfil del mecánico
+  especialidades VARCHAR(300),               -- perfil del mecánico (lista separada por comas)
+  horario       VARCHAR(200),                -- perfil del mecánico
   activo        TINYINT(1) DEFAULT 1,
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -236,6 +239,34 @@ CREATE TABLE IF NOT EXISTS promos (
   activa      TINYINT(1) DEFAULT 1,
   created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Tareas pendientes del mecánico (checklist propio).
+CREATE TABLE IF NOT EXISTS tareas_mecanico (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  tecnico_id INT NOT NULL,
+  titulo     VARCHAR(150) NOT NULL,
+  detalle    VARCHAR(300),
+  prioridad  ENUM('normal','alta') NOT NULL DEFAULT 'normal',
+  hecha      TINYINT(1) DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_tarea_tecnico (tecnico_id),
+  FOREIGN KEY (tecnico_id) REFERENCES usuarios(id)
+);
+
+-- Mensajería interna mecánico ↔ recepción.
+CREATE TABLE IF NOT EXISTS mensajes_internos (
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  remitente_id INT NOT NULL,
+  destino_rol  VARCHAR(20),
+  destino_id   INT,
+  mensaje      VARCHAR(500) NOT NULL,
+  leido        TINYINT(1) DEFAULT 0,
+  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_msg_remitente (remitente_id),
+  INDEX idx_msg_destino (destino_id),
+  FOREIGN KEY (remitente_id) REFERENCES usuarios(id),
+  FOREIGN KEY (destino_id)   REFERENCES usuarios(id)
 );
 
 -- Feed de notificaciones de avance para el cliente (portal).

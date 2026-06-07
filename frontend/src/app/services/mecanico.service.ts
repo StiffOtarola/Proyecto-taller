@@ -8,6 +8,7 @@ export interface ResumenMecanico {
   completadas_hoy: number;
   en_proceso: number;
   monto_promedio: number;
+  generado_hoy: number;
   tiempo_promedio_min: number;
   calificacion_promedio: number | null;
   calificacion_total: number;
@@ -32,5 +33,38 @@ export class MecanicoService {
 
   cambiarEstado(id: number, estado: string, monto?: number | null): Observable<any> {
     return this.http.patch(`${this.url}/citas/${id}/estado`, { estado, monto });
+  }
+
+  // Tareas
+  getTareas(): Observable<{ data: any[] }> {
+    return this.http.get<{ data: any[] }>(`${this.url}/tareas`);
+  }
+  addTarea(data: { titulo: string; detalle?: string; prioridad?: string }): Observable<{ data: any }> {
+    return this.http.post<{ data: any }>(`${this.url}/tareas`, data);
+  }
+  toggleTarea(id: number, hecha?: boolean): Observable<any> {
+    return this.http.patch(`${this.url}/tareas/${id}`, hecha === undefined ? {} : { hecha });
+  }
+  deleteTarea(id: number): Observable<any> {
+    return this.http.delete(`${this.url}/tareas/${id}`);
+  }
+
+  // Mensajería con recepción
+  getMensajes(): Observable<{ data: any[] }> {
+    return this.http.get<{ data: any[] }>(`${this.url}/mensajes`);
+  }
+  enviarMensaje(mensaje: string): Observable<{ data: any }> {
+    return this.http.post<{ data: any }>(`${this.url}/mensajes`, { mensaje });
+  }
+  getRecepcionContacto(): Observable<{ data: { nombre: string; telefono: string } | null }> {
+    return this.http.get<{ data: any }>(`${this.url}/recepcion-contacto`);
+  }
+
+  // Perfil
+  getPerfil(): Observable<{ data: any }> {
+    return this.http.get<{ data: any }>(`${this.url}/perfil`);
+  }
+  actualizarPerfil(data: { telefono?: string; especialidades?: string; horario?: string }): Observable<any> {
+    return this.http.patch(`${this.url}/perfil`, data);
   }
 }

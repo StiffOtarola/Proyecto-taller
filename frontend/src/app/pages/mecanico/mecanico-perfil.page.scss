@@ -1,0 +1,56 @@
+.profile-header {
+  display: flex; align-items: center; gap: 16px; padding: 20px;
+  background: linear-gradient(135deg, var(--rose-50), var(--emerald-50));
+  border-radius: 24px; margin-bottom: 16px;
+}
+.profile-avatar {
+  width: 66px; height: 66px; border-radius: 50%; flex-shrink: 0;
+  background: var(--ion-color-primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, .25);
+  ion-icon { font-size: 30px; }
+}
+.profile-info { min-width: 0;
+  h2 { margin: 0; font-family: var(--font-display); font-size: 20px; font-weight: 800; color: #0a0a0a; }
+  .rol { margin: 2px 0 0; font-size: 12px; color: var(--n-600); }
+  .contact { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 4px 12px;
+    span { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--n-600); }
+    ion-icon { font-size: 13px; } }
+  .profile-rating { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 13px;
+    .stars { font-size: 15px; letter-spacing: 1px; color: var(--amber-700); }
+    .val { font-weight: 700; color: #0a0a0a; }
+    .muted { color: var(--n-500); font-size: 12px; } }
+}
+
+/* Especialidades */
+.spec-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.spec {
+  display: inline-flex; align-items: center; font-size: 11px; font-weight: 700;
+  background: var(--emerald-50); color: var(--emerald-700);
+  padding: 6px 12px; border-radius: 999px;
+}
+
+.horario { margin: 0; font-size: 13px; color: var(--n-600); line-height: 1.6; white-space: pre-line; }
+
+/* Calificaciones recientes */
+.rating-card {
+  border: 1px solid var(--hairline); border-radius: 16px; padding: 12px; margin-bottom: 10px;
+  &:last-child { margin-bottom: 0; }
+  .rc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    .stars { font-size: 14px; letter-spacing: 1px; color: var(--amber-700); }
+    .client { font-size: 12px; font-weight: 700; } }
+  .rc-comment { margin: 6px 0 0; font-size: 12.5px; color: var(--n-600); font-style: italic; line-height: 1.4; }
+  .rc-date { margin: 6px 0 0; font-size: 10px; color: var(--n-400); }
+}
+
+/* Editar perfil */
+.fld { margin-bottom: 12px;
+  label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--n-500); margin-bottom: 5px; }
+  input { width: 100%; padding: 10px 12px; border: 1px solid var(--hairline); border-radius: 12px;
+    font-size: 14px; background: var(--ion-card-background); color: var(--ion-text-color); outline: none;
+    &:focus { border-color: var(--ion-color-primary); } }
+}
+.edit-acc { display: flex; gap: 8px; }
+.edit-acc button { flex: 1; padding: 11px; border-radius: 12px; border: none; cursor: pointer; font-size: 14px; font-weight: 700; }
+.btn-ghost { background: var(--n-100); color: var(--n-600); }
+.btn-solid { background: var(--ion-color-primary); color: #fff; &:disabled { opacity: .5; } }

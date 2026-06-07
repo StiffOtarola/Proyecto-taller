@@ -1,0 +1,100 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Perfil</ion-title>
+    <ion-buttons slot="end" *ngIf="!cargando && !editando">
+      <ion-button (click)="abrirEditar()" title="Editar perfil">
+        <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar($event)">
+    <ion-refresher-content pullingIcon="chevron-down" refreshingSpinner="crescent"></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="mec">
+    <div *ngIf="cargando">
+      <div class="skeleton" style="height:120px;border-radius:24px;margin-bottom:16px"></div>
+      <div class="skeleton" style="height:100px;border-radius:24px"></div>
+    </div>
+
+    <div *ngIf="!cargando && perfil">
+      <!-- Header -->
+      <div class="profile-header">
+        <div class="profile-avatar"><ion-icon name="construct"></ion-icon></div>
+        <div class="profile-info">
+          <h2>{{ perfil.nombre }}</h2>
+          <p class="rol">Mecánico</p>
+          <p class="contact">
+            <span *ngIf="perfil.telefono"><ion-icon name="call-outline"></ion-icon> {{ perfil.telefono }}</span>
+            <span><ion-icon name="mail-outline"></ion-icon> {{ perfil.email }}</span>
+          </p>
+          <div class="profile-rating" *ngIf="perfil.calificacion_promedio">
+            <span class="stars">{{ estrellas(perfil.calificacion_promedio) }}</span>
+            <span class="val">{{ perfil.calificacion_promedio }}/5</span>
+            <span class="muted">({{ perfil.calificacion_total }})</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Editar perfil -->
+      <section class="card" *ngIf="editando">
+        <span class="section-label">Editar perfil</span>
+        <div class="fld"><label>Teléfono</label><input type="tel" [(ngModel)]="form.telefono" placeholder="8888-1234"></div>
+        <div class="fld"><label>Especialidades (separadas por coma)</label><input type="text" [(ngModel)]="form.especialidades" placeholder="Frenos, Diagnóstico, Transmisión"></div>
+        <div class="fld"><label>Horario</label><input type="text" [(ngModel)]="form.horario" placeholder="Lun a Vie 08:00–17:00"></div>
+        <div class="edit-acc">
+          <button class="btn-ghost" (click)="editando = false">Cancelar</button>
+          <button class="btn-solid" (click)="guardar()" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+        </div>
+      </section>
+
+      <!-- Stats -->
+      <div class="stat-grid" style="margin-bottom:16px">
+        <div class="stat"><div class="st-n">{{ perfil.completadas }}</div><div class="st-l">Citas completadas</div></div>
+        <div class="stat"><div class="st-n em">{{ perfil.ingresos_generados | currency:'CRC':'symbol-narrow':'1.0-0' }}</div><div class="st-l">Ingresos generados</div></div>
+        <div class="stat"><div class="st-n">{{ perfil.satisfechos_pct != null ? perfil.satisfechos_pct + '%' : '—' }}</div><div class="st-l">Clientes satisfechos</div></div>
+        <div class="stat"><div class="st-n" style="font-size:24px">{{ formatMin(perfil.tiempo_promedio_min) }}</div><div class="st-l">Tiempo promedio</div></div>
+      </div>
+
+      <!-- Especialidades -->
+      <section class="card" *ngIf="perfil.especialidades_list?.length">
+        <span class="section-label">Especialidades</span>
+        <div class="spec-wrap">
+          <span class="spec" *ngFor="let s of perfil.especialidades_list">{{ s }}</span>
+        </div>
+      </section>
+
+      <!-- Horario -->
+      <section class="card" *ngIf="perfil.horario">
+        <span class="section-label">Horario de trabajo</span>
+        <p class="horario">{{ perfil.horario }}</p>
+      </section>
+
+      <!-- Stats del mes -->
+      <section class="card">
+        <span class="section-label">Este mes</span>
+        <div class="avg-row"><span class="lbl">Citas del mes</span><span class="val mono">{{ perfil.citas_mes }}</span></div>
+        <div class="avg-row"><span class="lbl">Ingresos del mes</span><span class="val mono">{{ perfil.ingresos_mes | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div>
+        <div class="avg-row"><span class="lbl">Calificación promedio</span><span class="val stars">{{ estrellas(perfil.calificacion_promedio) }}</span></div>
+      </section>
+
+      <!-- Calificaciones recientes -->
+      <section class="card" *ngIf="perfil.calificaciones?.length">
+        <span class="section-label">Calificaciones recientes</span>
+        <div class="rating-card" *ngFor="let r of perfil.calificaciones">
+          <div class="rc-head">
+            <span class="stars">{{ estrellas(r.calificacion) }}</span>
+            <span class="client">{{ r.cliente_nombre }} {{ r.cliente_apellido }}</span>
+          </div>
+          <p class="rc-comment" *ngIf="r.comentario_satisfaccion">"{{ r.comentario_satisfaccion }}"</p>
+          <p class="rc-date">{{ r.fecha_fin | date:'dd/MM' }}<span *ngIf="r.tipo_servicio"> · {{ r.tipo_servicio }}</span></p>
+        </div>
+      </section>
+    </div>
+
+    <div style="height:80px"></div>
+  </div>
+</ion-content>

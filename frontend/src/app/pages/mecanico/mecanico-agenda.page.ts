@@ -12,6 +12,8 @@ export class MecanicoAgendaPage implements OnInit {
   offsetSemana = 0; // 0 = esta semana, -1 anterior, +1 siguiente
   dias: { fecha: string; etiqueta: string; citas: any[] }[] = [];
   rango = '';
+  citasSemana = 0;
+  ingresosSemana = 0;
 
   readonly estadoLabel: Record<string, string> = {
     agendado: 'Agendado', en_revision: 'En revisión', en_mantenimiento: 'En mantenimiento',
@@ -54,12 +56,18 @@ export class MecanicoAgendaPage implements OnInit {
       return { fecha: this.iso(f), etiqueta: `${nombres[i]} ${f.getDate()}`, citas: [] };
     });
 
+    this.citasSemana = 0;
+    this.ingresosSemana = 0;
     this.mecanico.getAgenda(desde, hasta).subscribe({
       next: r => {
         for (const c of r.data) {
           const dia = this.dias.find(d => d.fecha === c.fecha?.slice(0, 10));
           if (dia) dia.citas.push(c);
         }
+        this.citasSemana = r.data.length;
+        this.ingresosSemana = r.data
+          .filter(c => c.estado === 'entregado')
+          .reduce((s, c) => s + Number(c.monto || 0), 0);
         this.cargando = false;
       },
       error: () => { this.cargando = false; },

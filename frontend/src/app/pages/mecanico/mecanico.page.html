@@ -1,10 +1,7 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Mi taller</ion-title>
+    <ion-title>Mi Agenda</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="irAgenda()" title="Agenda de la semana">
-        <ion-icon slot="icon-only" name="calendar-number-outline"></ion-icon>
-      </ion-button>
       <ion-button (click)="logout()" title="Salir">
         <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
       </ion-button>
@@ -13,91 +10,88 @@
 </ion-header>
 
 <ion-content>
-  <ion-refresher slot="fixed" (ionRefresh)="cargar(); $event.target.complete()">
-    <ion-refresher-content></ion-refresher-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar($event)">
+    <ion-refresher-content pullingIcon="chevron-down" refreshingSpinner="crescent"></ion-refresher-content>
   </ion-refresher>
 
   <div class="mec">
-    <div class="greet"><h1>Hola, {{ nombre }}</h1><p>Tu trabajo de hoy</p></div>
+    <div class="greet"><h1>Hola, {{ nombre }}</h1></div>
 
-    <!-- KPIs del día -->
-    <div class="kpi-grid">
-      <div class="stat-card"><span class="num mono">{{ resumen?.citas_hoy ?? 0 }}</span><span class="lbl">Citas hoy</span></div>
-      <div class="stat-card"><span class="num mono">{{ resumen?.completadas_hoy ?? 0 }}</span><span class="lbl">Completadas</span></div>
-      <div class="stat-card"><span class="num mono">{{ resumen?.en_proceso ?? 0 }}</span><span class="lbl">En proceso</span></div>
+    <!-- Stat cards -->
+    <div class="stat-grid">
+      <div class="stat accent"><div class="st-n">{{ resumen?.citas_hoy ?? 0 }}</div><div class="st-l">Citas hoy</div></div>
+      <div class="stat accent"><div class="st-n">{{ resumen?.completadas_hoy ?? 0 }}</div><div class="st-l">Completadas</div></div>
+      <div class="stat"><div class="st-n">{{ resumen?.en_proceso ?? 0 }}</div><div class="st-l">En proceso</div></div>
+      <div class="stat money">
+        <div class="st-n em">{{ (resumen?.generado_hoy || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</div>
+        <div class="st-l">Generado hoy</div>
+      </div>
     </div>
 
     <!-- Promedios -->
-    <span class="section-label">Tus promedios</span>
-    <div class="kpi-grid">
-      <div class="stat-card"><span class="num mono">{{ (resumen?.monto_promedio || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span><span class="lbl">Por cita</span></div>
-      <div class="stat-card"><span class="num mono">{{ formatMin(resumen?.tiempo_promedio_min) }}</span><span class="lbl">Tiempo prom.</span></div>
-      <div class="stat-card">
-        <span class="num stars">{{ estrellas(resumen?.calificacion_promedio ?? null) }}</span>
-        <span class="lbl">{{ resumen?.calificacion_promedio ? (resumen?.calificacion_promedio + ' (' + resumen?.calificacion_total + ')') : 'Calificación' }}</span>
+    <section class="card">
+      <span class="section-label">Promedios</span>
+      <div class="avg-row"><span class="lbl">Ganancia / cita</span><span class="val mono">{{ (resumen?.monto_promedio || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div>
+      <div class="avg-row"><span class="lbl">Tiempo promedio</span><span class="val mono">{{ formatMin(resumen?.tiempo_promedio_min) }}</span></div>
+      <div class="avg-row"><span class="lbl">Calificación</span><span class="val stars">{{ estrellas(resumen?.calificacion_promedio ?? null) }} {{ resumen?.calificacion_promedio || '' }}</span></div>
+    </section>
+
+    <!-- Citas de hoy -->
+    <section class="card">
+      <div class="card-head">
+        <span class="section-label">Citas de hoy</span>
+        <span class="cnt-badge" *ngIf="citasHoy.length">{{ citasHoy.length }}</span>
       </div>
-    </div>
 
-    <!-- Filtro -->
-    <ion-segment [(ngModel)]="vista" mode="md" class="seg">
-      <ion-segment-button value="hoy"><ion-label>Hoy</ion-label></ion-segment-button>
-      <ion-segment-button value="pendientes"><ion-label>Pendientes</ion-label></ion-segment-button>
-      <ion-segment-button value="todas"><ion-label>Todas</ion-label></ion-segment-button>
-    </ion-segment>
+      <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px">
+        <div class="skeleton" style="height:120px;border-radius:18px"></div>
+        <div class="skeleton" style="height:120px;border-radius:18px"></div>
+      </div>
 
-    <!-- Skeletons -->
-    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px;margin-top:6px">
-      <div class="skeleton" style="height:120px;border-radius:20px"></div>
-      <div class="skeleton" style="height:120px;border-radius:20px"></div>
-    </div>
-
-    <!-- Lista de citas -->
-    <div class="cita-list" *ngIf="!cargando">
-      <div class="cita-card" *ngFor="let c of citasFiltradas">
-        <div class="cc-top">
-          <div class="cc-moto">
-            <h4>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}</h4>
-            <span class="cc-placa mono" *ngIf="c.placa">{{ c.placa }}</span>
+      <div class="cita-list" *ngIf="!cargando">
+        <div class="cita-card" *ngFor="let c of citasHoy">
+          <div class="cita-head">
+            <h4>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}<span class="placa mono" *ngIf="c.placa"> · {{ c.placa }}</span></h4>
+            <span class="st-badge" [ngClass]="estadoBadge[c.estado]">{{ estadoLabel[c.estado] }}</span>
           </div>
-          <span class="pill" [ngClass]="estadoPill[c.estado]">{{ estadoLabel[c.estado] }}</span>
+          <div class="cita-info">
+            <strong>{{ c.tipo_servicio || 'Servicio' }}</strong><br>
+            {{ c.hora?.slice(0,5) }} — {{ c.cliente_nombre }} {{ c.cliente_apellido }}
+            <span class="cc-monto mono" *ngIf="c.monto > 0"> · {{ c.monto | currency:'CRC':'symbol-narrow':'1.0-0' }}</span>
+          </div>
+
+          <div class="pr-t"><div class="pr-f" [class.full]="c.estado === 'entregado'" [style.width.%]="progresoPct(c.estado)"></div></div>
+          <span class="pr-l">{{ progresoPct(c.estado) }}%</span>
+
+          <!-- Calificación recibida (entregadas) -->
+          <div class="cita-rating" *ngIf="c.calificacion">
+            Calificación del cliente: <span class="stars">{{ estrellas(c.calificacion) }}</span>
+          </div>
+
+          <!-- Cambiar estado -->
+          <select class="est-sel" [ngModel]="c.estado" (ngModelChange)="onEstadoChange(c, $event)" *ngIf="c.estado !== 'entregado' && c.estado !== 'cancelado'">
+            <option *ngFor="let e of estados" [value]="e">{{ estadoLabel[e] }}</option>
+          </select>
+
+          <!-- Notas del cliente -->
+          <button class="notas-btn" (click)="toggleNotas(c.id)">
+            <ion-icon [name]="notasAbiertas.has(c.id) ? 'chevron-up' : 'document-text-outline'"></ion-icon>
+            {{ notasAbiertas.has(c.id) ? 'Ocultar notas' : 'Ver notas del cliente' }}
+          </button>
+          <p class="notas-box" *ngIf="notasAbiertas.has(c.id)">{{ c.motivo || 'Sin notas' }}</p>
         </div>
 
-        <div class="cc-meta">
-          <span *ngIf="c.tipo_servicio"><ion-icon name="construct-outline"></ion-icon> {{ c.tipo_servicio }}</span>
-          <span><ion-icon name="calendar-outline"></ion-icon> {{ c.fecha | date:'dd/MM' }} · {{ c.hora }}</span>
-          <span><ion-icon name="person-outline"></ion-icon> {{ c.cliente_nombre }} {{ c.cliente_apellido }}</span>
-          <span *ngIf="c.monto > 0" class="cc-monto mono">{{ c.monto | currency:'CRC':'symbol-narrow':'1.0-0' }}</span>
-        </div>
-
-        <!-- Ver notas -->
-        <button class="cc-notas-btn" (click)="toggleNotas(c.id)">
-          <ion-icon [name]="notasAbiertas.has(c.id) ? 'chevron-up' : 'document-text-outline'"></ion-icon>
-          {{ notasAbiertas.has(c.id) ? 'Ocultar notas' : 'Ver notas' }}
-        </button>
-        <p class="cc-notas" *ngIf="notasAbiertas.has(c.id)">{{ c.motivo || 'Sin notas' }}</p>
-
-        <!-- Cambiar estado -->
-        <div class="cc-acciones" *ngIf="siguientes[c.estado]?.length">
-          <ion-button *ngFor="let s of siguientes[c.estado]" size="small"
-            [fill]="s === 'cancelado' ? 'clear' : 'solid'"
-            [color]="s === 'cancelado' ? 'medium' : 'primary'"
-            (click)="cambiarEstado(c, s)">
-            {{ estadoLabel[s] }}
-          </ion-button>
-        </div>
-
-        <!-- Calificación recibida -->
-        <div class="cc-calif" *ngIf="c.calificacion">
-          <span class="stars">{{ estrellas(c.calificacion) }}</span> del cliente
+        <div class="empty" *ngIf="!citasHoy.length">
+          <ion-icon class="ico" name="construct-outline"></ion-icon>
+          <p>No tenés citas para hoy.</p>
         </div>
       </div>
+    </section>
 
-      <div class="empty-state" *ngIf="citasFiltradas.length === 0">
-        <ion-icon name="construct-outline"></ion-icon>
-        <p>No tenés citas {{ vista === 'hoy' ? 'para hoy' : (vista === 'pendientes' ? 'en proceso' : 'asignadas') }}.</p>
-      </div>
-    </div>
+    <button class="cta-out" (click)="irAgenda()">
+      <ion-icon name="calendar-outline"></ion-icon> Ver agenda de la semana
+    </button>
 
-    <div style="height:36px"></div>
+    <div style="height:80px"></div>
   </div>
 </ion-content>

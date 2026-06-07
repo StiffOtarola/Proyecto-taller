@@ -1,8 +1,5 @@
 <ion-header>
   <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/mecanico"></ion-back-button>
-    </ion-buttons>
     <ion-title>Agenda de la semana</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -19,6 +16,11 @@
       <div class="skeleton" style="height:70px;border-radius:16px"></div>
       <div class="skeleton" style="height:70px;border-radius:16px"></div>
       <div class="skeleton" style="height:70px;border-radius:16px"></div>
+    </div>
+
+    <div class="week-stats" *ngIf="!cargando">
+      <div class="stat"><div class="st-n">{{ citasSemana }}</div><div class="st-l">Citas semana</div></div>
+      <div class="stat accent"><div class="st-n em">{{ ingresosSemana | currency:'CRC':'symbol-narrow':'1.0-0' }}</div><div class="st-l">Ingresos semana</div></div>
     </div>
 
     <div class="dia-list" *ngIf="!cargando">

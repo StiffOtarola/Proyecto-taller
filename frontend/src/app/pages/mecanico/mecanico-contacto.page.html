@@ -1,0 +1,57 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Contacto</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar($event)">
+    <ion-refresher-content pullingIcon="chevron-down" refreshingSpinner="crescent"></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="mec">
+    <!-- Tarjeta de recepción -->
+    <div class="contact-card" *ngIf="contacto">
+      <div class="contact-av">{{ (contacto.nombre || 'R').charAt(0) }}</div>
+      <div class="contact-info">
+        <strong>{{ contacto.nombre }}</strong>
+        <span>Recepción</span>
+      </div>
+      <div class="contact-btns">
+        <button (click)="llamar()" title="Llamar"><ion-icon name="call"></ion-icon></button>
+        <button class="wa" (click)="whatsapp()" title="WhatsApp"><ion-icon name="logo-whatsapp"></ion-icon></button>
+      </div>
+    </div>
+    <div class="contact-empty" *ngIf="!cargando && !contacto">
+      <ion-icon name="information-circle-outline"></ion-icon>
+      Recepción no tiene teléfono cargado. Igual podés escribir abajo.
+    </div>
+
+    <!-- Conversación -->
+    <span class="section-label" style="margin-top:6px">Conversación con recepción</span>
+
+    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px">
+      <div class="skeleton" style="height:48px;border-radius:14px"></div>
+      <div class="skeleton" style="height:48px;border-radius:14px;width:70%;margin-left:auto"></div>
+    </div>
+
+    <div class="chat" *ngIf="!cargando">
+      <div class="bubble" [class.mine]="esMio(m)" *ngFor="let m of mensajes">
+        <p>{{ m.mensaje }}</p>
+        <span class="meta">{{ esMio(m) ? 'Vos' : m.remitente_nombre }} · {{ hace(m.created_at) }}</span>
+      </div>
+      <div class="empty" *ngIf="!mensajes.length">
+        <ion-icon class="ico" name="chatbubbles-outline"></ion-icon>
+        <p>Sin mensajes todavía. Escribile a recepción.</p>
+      </div>
+    </div>
+
+    <div style="height:90px"></div>
+  </div>
+
+  <!-- Barra de envío fija -->
+  <div class="send-bar">
+    <input type="text" [(ngModel)]="texto" placeholder="Escribí a recepción…" (keyup.enter)="enviar()">
+    <button (click)="enviar()" [disabled]="enviando || !texto.trim()"><ion-icon name="send"></ion-icon></button>
+  </div>
+</ion-content>

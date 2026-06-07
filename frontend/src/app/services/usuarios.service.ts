@@ -13,7 +13,7 @@ export class UsuariosService {
     return this.http.get<{ data: Usuario[] }>(this.url);
   }
 
-  create(data: { nombre: string; email: string; password: string; rol: string }): Observable<{ data: Usuario }> {
+  create(data: { nombre: string; email: string; password: string; rol: string; telefono?: string }): Observable<{ data: Usuario }> {
     return this.http.post<{ data: Usuario }>(this.url, data);
   }
 

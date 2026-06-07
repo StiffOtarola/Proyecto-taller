@@ -12,7 +12,7 @@ export class UsuariosPage implements OnInit {
   usuarios: Usuario[] = [];
   cargando = true;
   mostrarForm = false;
-  nuevoUsuario = { nombre: '', email: '', password: '', rol: 'tecnico' };
+  nuevoUsuario = { nombre: '', email: '', password: '', rol: 'tecnico', telefono: '' };
 
   constructor(
     private usuarioSvc: UsuariosService,
@@ -34,7 +34,7 @@ export class UsuariosPage implements OnInit {
     this.usuarioSvc.create(this.nuevoUsuario).subscribe({
       next: async () => {
         this.mostrarForm = false;
-        this.nuevoUsuario = { nombre: '', email: '', password: '', rol: 'tecnico' };
+        this.nuevoUsuario = { nombre: '', email: '', password: '', rol: 'tecnico', telefono: '' };
         this.cargar();
         const t = await this.toast.create({ message: 'Usuario creado', duration: 2000, color: 'success' });
         await t.present();
@@ -44,6 +44,41 @@ export class UsuariosPage implements OnInit {
         await a.present();
       },
     });
+  }
+
+  // Editar nombre y teléfono (el teléfono habilita los botones de Contacto del mecánico).
+  async editar(u: Usuario) {
+    const a = await this.alert.create({
+      header: 'Editar usuario',
+      subHeader: u.email,
+      inputs: [
+        { name: 'nombre', value: u.nombre, placeholder: 'Nombre' },
+        { name: 'telefono', value: u.telefono || '', type: 'tel', placeholder: 'Teléfono (ej. 8888-8888)' },
+      ],
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Guardar',
+          handler: (d) => {
+            const nombre = (d?.nombre || '').trim();
+            if (!nombre) return false;
+            this.usuarioSvc.update(u.id!, { nombre, email: u.email, rol: u.rol, telefono: (d?.telefono || '').trim() }).subscribe({
+              next: async () => {
+                this.cargar();
+                const t = await this.toast.create({ message: 'Usuario actualizado', duration: 1800, color: 'success' });
+                await t.present();
+              },
+              error: async (err) => {
+                const al = await this.alert.create({ header: 'Error', message: err.error?.error || 'No se pudo actualizar', buttons: ['OK'] });
+                await al.present();
+              },
+            });
+            return true;
+          },
+        },
+      ],
+    });
+    await a.present();
   }
 
   async toggleActivo(u: Usuario) {

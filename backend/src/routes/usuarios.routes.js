@@ -10,7 +10,7 @@ router.use(auth, requireRol('admin'));
 router.get('/', async (req, res) => {
   try {
     const [rows] = await pool.query(
-      'SELECT id, nombre, email, rol, activo, created_at FROM usuarios ORDER BY nombre'
+      'SELECT id, nombre, email, telefono, rol, activo, created_at FROM usuarios ORDER BY nombre'
     );
     res.json({ data: rows });
   } catch (err) {
@@ -20,17 +20,17 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { nombre, email, password, rol } = req.body;
+    const { nombre, email, password, rol, telefono } = req.body;
     if (!nombre || !email || !password || !rol) {
       return res.status(400).json({ error: 'nombre, email, contraseña y rol son requeridos' });
     }
     const hash = await bcrypt.hash(password, 10);
     const [result] = await pool.query(
-      'INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES (?, ?, ?, ?)',
-      [nombre, email, hash, rol]
+      'INSERT INTO usuarios (nombre, email, password_hash, rol, telefono) VALUES (?, ?, ?, ?, ?)',
+      [nombre, email, hash, rol, telefono || null]
     );
     const [[nuevo]] = await pool.query(
-      'SELECT id, nombre, email, rol, activo, created_at FROM usuarios WHERE id = ?',
+      'SELECT id, nombre, email, telefono, rol, activo, created_at FROM usuarios WHERE id = ?',
       [result.insertId]
     );
     res.status(201).json({ data: nuevo, message: 'Usuario creado' });
@@ -42,10 +42,13 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    const { nombre, email, rol } = req.body;
-    await pool.query('UPDATE usuarios SET nombre=?, email=?, rol=? WHERE id=?', [nombre, email, rol, req.params.id]);
+    const { nombre, email, rol, telefono } = req.body;
+    await pool.query(
+      'UPDATE usuarios SET nombre=?, email=?, rol=?, telefono=? WHERE id=?',
+      [nombre, email, rol, telefono ?? null, req.params.id]
+    );
     const [[actualizado]] = await pool.query(
-      'SELECT id, nombre, email, rol, activo, created_at FROM usuarios WHERE id = ?',
+      'SELECT id, nombre, email, telefono, rol, activo, created_at FROM usuarios WHERE id = ?',
       [req.params.id]
     );
     res.json({ data: actualizado, message: 'Usuario actualizado' });

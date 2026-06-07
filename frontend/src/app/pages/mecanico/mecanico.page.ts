@@ -14,12 +14,10 @@ export class MecanicoPage implements OnInit {
   resumen?: ResumenMecanico;
   citas: any[] = [];
   cargando = true;
-  vista: 'hoy' | 'pendientes' | 'todas' = 'hoy';
   notasAbiertas = new Set<number>();
-
   hoy = new Date().toISOString().slice(0, 10);
 
-  // Etiquetas y colores de los estados del flujo del mecánico.
+  readonly estados = ['agendado', 'en_revision', 'en_mantenimiento', 'listo', 'entregado', 'cancelado'];
   readonly estadoLabel: Record<string, string> = {
     agendado: 'Agendado',
     en_revision: 'En revisión',
@@ -28,22 +26,17 @@ export class MecanicoPage implements OnInit {
     entregado: 'Entregado',
     cancelado: 'Cancelado',
   };
-  readonly estadoPill: Record<string, string> = {
-    agendado: 'gris',
-    en_revision: 'amber',
-    en_mantenimiento: 'rose',
-    listo: 'indigo',
-    entregado: 'green',
-    cancelado: 'gris',
+  // Clase del badge (coincide con el SCSS .st-badge.<x>).
+  readonly estadoBadge: Record<string, string> = {
+    agendado: 'agendado',
+    en_revision: 'revision',
+    en_mantenimiento: 'mantenimiento',
+    listo: 'listo',
+    entregado: 'entregado',
+    cancelado: 'cancelado',
   };
-  // Transiciones permitidas desde cada estado.
-  readonly siguientes: Record<string, string[]> = {
-    agendado: ['en_revision', 'cancelado'],
-    en_revision: ['en_mantenimiento', 'listo', 'cancelado'],
-    en_mantenimiento: ['listo', 'cancelado'],
-    listo: ['entregado', 'cancelado'],
-    entregado: [],
-    cancelado: [],
+  readonly progreso: Record<string, number> = {
+    agendado: 10, en_revision: 35, en_mantenimiento: 65, listo: 85, entregado: 100, cancelado: 0,
   };
 
   constructor(
@@ -57,34 +50,39 @@ export class MecanicoPage implements OnInit {
   ngOnInit() { this.cargar(); }
   ionViewWillEnter() { this.cargar(); }
 
-  get nombre(): string { return this.auth.getUsuario()?.nombre || 'Mecánico'; }
+  get nombre(): string { return (this.auth.getUsuario()?.nombre || 'Mecánico').split(' ')[0]; }
 
-  cargar() {
+  cargar(ev?: any) {
     this.cargando = true;
     this.mecanico.getResumen().subscribe({ next: r => this.resumen = r.data });
     this.mecanico.getCitas().subscribe({
-      next: r => { this.citas = r.data; this.cargando = false; },
-      error: () => { this.cargando = false; },
+      next: r => { this.citas = r.data; this.cargando = false; if (ev) ev.target.complete(); },
+      error: () => { this.cargando = false; if (ev) ev.target.complete(); },
     });
   }
 
-  // Lista filtrada según el segment activo.
-  get citasFiltradas(): any[] {
-    if (this.vista === 'hoy') return this.citas.filter(c => c.fecha?.slice(0, 10) === this.hoy);
-    if (this.vista === 'pendientes') return this.citas.filter(c => ['en_revision', 'en_mantenimiento'].includes(c.estado));
-    return this.citas;
+  // En el Inicio se muestran las citas de hoy + cualquier trabajo activo (no se esconde nada en curso).
+  get citasHoy(): any[] {
+    return this.citas.filter(c =>
+      c.fecha?.slice(0, 10) === this.hoy || ['en_revision', 'en_mantenimiento'].includes(c.estado)
+    );
   }
+
+  progresoPct(estado: string): number { return this.progreso[estado] ?? 0; }
 
   toggleNotas(id: number) {
     this.notasAbiertas.has(id) ? this.notasAbiertas.delete(id) : this.notasAbiertas.add(id);
   }
 
-  necesitaMonto(estado: string): boolean {
-    return estado === 'listo' || estado === 'entregado';
+  necesitaMonto(estado: string): boolean { return estado === 'listo' || estado === 'entregado'; }
+
+  // Cambio desde el <select>: si pide monto, lo pregunta; si se cancela, la vista revierte sola.
+  onEstadoChange(cita: any, nuevo: string) {
+    if (!nuevo || nuevo === cita.estado) return;
+    this.cambiarEstado(cita, nuevo);
   }
 
   async cambiarEstado(cita: any, estado: string) {
-    // Al pasar a listo/entregado, pedir el monto cobrado.
     if (this.necesitaMonto(estado)) {
       const al = await this.alert.create({
         header: this.estadoLabel[estado],
@@ -107,7 +105,7 @@ export class MecanicoPage implements OnInit {
         cita.estado = estado;
         if (monto !== undefined) cita.monto = Number(monto) || 0;
         this.mecanico.getResumen().subscribe({ next: r => this.resumen = r.data });
-        const t = await this.toast.create({ message: 'Estado actualizado', duration: 1500, color: 'success' });
+        const t = await this.toast.create({ message: 'Estado actualizado', duration: 1400, color: 'success' });
         await t.present();
       },
       error: async () => {
@@ -125,7 +123,7 @@ export class MecanicoPage implements OnInit {
   }
 
   estrellas(prom: number | null): string {
-    if (!prom) return 'Sin calificaciones';
+    if (!prom) return '—';
     const llenas = Math.round(prom);
     return '★'.repeat(llenas) + '☆'.repeat(5 - llenas);
   }

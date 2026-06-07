@@ -301,6 +301,19 @@ router.post('/cotizaciones/:id/enviar', async (req, res) => {
     if (!result.affectedRows) {
       return res.status(400).json({ error: 'La orden no está en un estado que permita enviar la cotización' });
     }
+    // Aviso en el feed del cliente (además del WhatsApp que abre la recepción).
+    const [[o]] = await pool.query(
+      `SELECT o.cliente_id, o.numero_orden, m.marca, m.modelo
+       FROM ordenes_trabajo o JOIN motos m ON m.id = o.moto_id WHERE o.id = ?`,
+      [req.params.id]
+    );
+    if (o) {
+      const moto = [o.marca, o.modelo].filter(Boolean).join(' ') || 'tu moto';
+      await pool.query(
+        'INSERT INTO notificaciones (cliente_id, titulo, mensaje) VALUES (?, ?, ?)',
+        [o.cliente_id, `Presupuesto listo: ${moto}`, `Tu presupuesto (orden ${o.numero_orden}) está listo. Revisalo y aprobalo desde el portal.`]
+      );
+    }
     res.json({ message: 'Cotización enviada al cliente' });
   } catch (err) {
     fail(res, err);

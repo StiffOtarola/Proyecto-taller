@@ -42,6 +42,52 @@
   &.vacia { display: flex; align-items: center; justify-content: space-between; p { margin: 0; color: var(--n-500); } }
 }
 
+/* Presupuestos por aprobar */
+.presu {
+  border: 1.5px solid var(--ion-color-primary);
+  animation: cardRise .4s var(--ease, cubic-bezier(0.32, 0.72, 0, 1)) both;
+
+  .presu-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .presu-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--ion-color-primary);
+    ion-icon { font-size: 14px; }
+  }
+  h3 { margin: 6px 0 2px; font-size: 17px; font-weight: 700; }
+  .presu-sub { font-size: 12px; color: var(--n-400); }
+  .presu-prob { margin: 8px 0 0; font-size: 13px; color: var(--n-600); line-height: 1.4; }
+
+  .presu-ver {
+    margin-top: 10px; background: none; border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 700; color: var(--ion-color-primary);
+    ion-icon { font-size: 16px; }
+  }
+
+  .presu-det { margin-top: 10px; }
+  .presu-diag { font-size: 12.5px; color: var(--n-600); line-height: 1.4; margin: 0 0 10px;
+    background: var(--n-50); border-radius: 12px; padding: 10px 12px; }
+
+  .presu-row {
+    display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; font-size: 13.5px; color: var(--n-700);
+    & + .presu-row { border-top: 1px dashed var(--hairline); }
+    .presu-cant { color: var(--n-400); }
+    &.total { border-top: 1.5px solid var(--hairline); margin-top: 2px; padding-top: 10px; font-weight: 800;
+      span:last-child { font-family: var(--font-display); font-size: 18px; color: var(--ion-color-primary); } }
+  }
+
+  .presu-acc { display: flex; gap: 8px; margin-top: 14px; }
+  .presu-acc button {
+    flex: 1; padding: 11px; border-radius: 12px; border: none; cursor: pointer;
+    font-size: 14px; font-weight: 700;
+    transition: transform .15s var(--ease, cubic-bezier(0.32, 0.72, 0, 1));
+    &:active { transform: scale(.97); }
+    &:disabled { opacity: .5; }
+  }
+  .btn-rechazar { background: var(--n-100); color: var(--n-600); }
+  .btn-aprobar { background: var(--ion-color-primary); color: #fff; box-shadow: 0 6px 16px rgba(225,29,72,.28); }
+}
+
 .noti-sec { margin-top: 4px; }
 .noti {
   display: flex; gap: 12px; padding: 12px 14px; margin-bottom: 8px;

@@ -604,6 +604,14 @@ ion-toast {
    del sistema (claro Crimson Ops): nada aplica sin la clase .admin-dark.
    Topbar y sidebar van con color fijo porque quedan fuera de .admin-dark.
    ═══════════════════════════════════════════════════════════ */
+/* Isotipo de marca en las toolbars de rol (mecánico/recepción): color en claro, blanco en oscuro. */
+.brand-hd { height: 26px; width: auto; margin-inline-start: 12px; }
+.brand-hd.dark-only { display: none; }
+@media (prefers-color-scheme: dark) {
+  .brand-hd.light-only { display: none; }
+  .brand-hd.dark-only { display: inline-block; }
+}
+
 .admin-topbar {
   --background: #111111; --color: #F5F5F5; --border-color: #2A2A2A; --border-width: 0 0 1px 0;
   ion-title { font-family: 'Outfit', sans-serif; font-weight: 800; letter-spacing: -.03em; font-size: 17px; }

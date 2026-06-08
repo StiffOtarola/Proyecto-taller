@@ -597,6 +597,9 @@ ion-toast {
         --padding-start: 6px;
         --padding-end: 6px;
       }
+    }
+  }
+}
 
 /* ═══════════════════════════════════════════════════════════
    Panel del administrador — tema oscuro, AISLADO bajo .admin-dark.
@@ -749,9 +752,6 @@ ion-footer.admin-dark { background: #111111; }
     .g2 { grid-template-columns: 1fr 1fr; }
     .g21 { grid-template-columns: 2fr 1fr; }
     .kpi-grid { grid-template-columns: repeat(4, 1fr); }
-  }
-}
-    }
   }
 }
 

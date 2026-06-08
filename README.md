@@ -1,40 +1,77 @@
-# Proyecto Taller
+# MS Motos — Gestión de taller
 
-App **Ionic + Angular** con backend **Node.js + Express** y base de datos **MySQL**.
+Sistema de gestión para un taller de motos: **citas**, **órdenes de trabajo**,
+**portal de clientes**, **garantías**, **fidelización** y paneles por rol.
+
+App **Ionic + Angular** (NgModules) con API **Node.js + Express 5** y base **MySQL 8.x**.
+Desplegada en **Railway** (auto-deploy desde `main`).
 
 ```
 Proyecto Taller/
-├── frontend/   → App Ionic + Angular (corre en navegador / móvil)
-└── backend/    → API REST Node + Express (habla con MySQL)
+├── frontend/   → App Ionic + Angular (navegador / móvil)
+└── backend/    → API REST Express + MySQL
 ```
 
-Ionic no se conecta directamente a MySQL: el **frontend** llama por HTTP a la **API**,
-y la API es la única que abre conexiones a la base de datos.
+El frontend no toca MySQL directo: llama por HTTP a la API, y la API es la única
+que abre conexiones a la base. En producción, Express también sirve el build de Angular.
 
 ```
 [Ionic/Angular] --HTTP--> [Express API] --SQL--> [MySQL]
-   :8100                     :3000                :3306
 ```
+
+---
+
+## Roles
+
+Tres roles (jerarquía `recepcion` < `tecnico` < `admin`):
+
+- **recepcion** — mostrador: clientes, órdenes de trabajo, cotizaciones, mensajería.
+- **tecnico** (mecánico) — su agenda de citas, tareas asignadas, perfil.
+- **admin** — panel `/admin` (resumen, citas, empleados, reportes, tareas, promociones)
+  y el dashboard operativo `/tabs`.
+
+Los clientes entran por el **portal** (`/portal`): registro, agenda de citas con cupos,
+seguimiento de su moto, aprobación de presupuestos y calificación.
 
 ---
 
 ## Requisitos
 
-- Node.js 18+ (tienes v24 ✓)
-- MySQL Server 8.x corriendo (tienes 8.4.3 ✓)
-- Ionic CLI y Angular CLI (ya instalados globalmente)
+- Node.js 18+
+- MySQL Server 8.x
+- Ionic CLI y Angular CLI
 
 ---
 
 ## 1. Base de datos
 
-Ya está creada (`proyecto_taller`) con la tabla `items` y datos de ejemplo.
-Para recrearla desde cero, en MySQL Workbench abre y ejecuta `backend/schema.sql`,
-o por terminal:
+Creá la base y configurá `backend/.env` (copia de `backend/.env.example`):
+
+```
+PORT=3000
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=taller_motos
+CORS_ORIGIN=http://localhost:8100
+RESEND_API_KEY=          # opcional; sin key, los códigos se imprimen en consola
+```
+
+Cargá el esquema y los usuarios semilla:
 
 ```bash
-mysql -u root -p < backend/schema.sql
+cd backend
+node src/db/migrate.js
 ```
+
+Crea las tablas (`backend/schema.sql`) y dos cuentas de prueba:
+
+- **admin@taller.com** / `Admin2024!` (rol admin)
+- **recepcion@taller.com** / `Recep2024!` (rol recepción)
+
+> La API además corre **migraciones idempotentes** (`ensureSchema`) en cada arranque,
+> así que el esquema se mantiene al día solo en cada deploy.
 
 ---
 
@@ -42,58 +79,34 @@ mysql -u root -p < backend/schema.sql
 
 ```bash
 cd backend
-# Configura credenciales (ya hay un .env listo para root sin password)
-npm run dev        # con recarga automática (nodemon)
+npm install
+npm run dev        # recarga automática (nodemon)
 # o
-npm start          # modo normal
+npm start
+npm test           # tests unitarios
 ```
 
-La API queda en **http://localhost:3000**. Endpoints:
-
-| Método | Ruta              | Descripción            |
-|--------|-------------------|------------------------|
-| GET    | `/api/health`     | Comprueba que vive     |
-| GET    | `/api/items`      | Lista todos            |
-| GET    | `/api/items/:id`  | Uno por id             |
-| POST   | `/api/items`      | Crear `{nombre, descripcion}` |
-| PUT    | `/api/items/:id`  | Actualizar             |
-| DELETE | `/api/items/:id`  | Borrar                 |
-
-Configuración en `backend/.env` (copiado de `.env.example`):
-
-```
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=          # vacío en tu instalación
-DB_NAME=proyecto_taller
-CORS_ORIGIN=http://localhost:8100
-```
+API en **http://localhost:3000**, montada bajo `/api` (auth, clientes, motos, citas,
+ordenes, recepcion, mecanico, admin, garantias, promos, portal…).
 
 ---
 
 ## 3. Frontend (Ionic)
 
-En **otra terminal** (deja el backend corriendo):
+En otra terminal, con el backend corriendo:
 
 ```bash
 cd frontend
-ionic serve
+npm install
+ionic serve                              # http://localhost:8100
+npx ng build --configuration production  # build de producción
 ```
 
-Abre **http://localhost:8100**. Verás el CRUD de `items`:
-crear, listar, editar (deslizar a la izquierda) y borrar.
-
-La URL de la API se configura en `frontend/src/environments/environment.ts`.
+La URL de la API se configura en `frontend/src/environments/`.
 
 ---
 
-## Cómo adaptarlo a tu app real
+## Deploy
 
-Cuando definas qué tipo de app es, los puntos a tocar son:
-
-1. **`backend/schema.sql`** → cambia la tabla `items` por tus tablas reales.
-2. **`backend/src/routes/`** → crea rutas para tus entidades (copia `items.routes.js`).
-3. **`backend/src/server.js`** → registra las nuevas rutas con `app.use(...)`.
-4. **`frontend/src/app/models/`** y **`services/`** → un modelo y servicio por entidad.
-5. **`frontend/src/app/`** → páginas/UI para tus entidades (`ionic generate page ...`).
+Railway despliega automáticamente al hacer **push a `main`**. La API sirve el build
+del frontend y ejecuta las migraciones al arrancar; no hay pasos manuales de base de datos.

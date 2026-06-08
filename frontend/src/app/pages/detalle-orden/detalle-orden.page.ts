@@ -104,9 +104,12 @@ export class DetalleOrdenPage implements OnInit {
         };
       }
     });
-    this.usuarioSvc.getAll().subscribe(res => {
-      this.tecnicos = res.data.filter(u => u.rol === 'tecnico' && u.activo);
-    });
+    // Solo admin asigna técnicos (y /api/usuarios es admin): evita un 403 silencioso al resto.
+    if (this.auth.tieneRol('admin')) {
+      this.usuarioSvc.getAll().subscribe(res => {
+        this.tecnicos = res.data.filter(u => u.rol === 'tecnico' && u.activo);
+      });
+    }
   }
 
   estadoLabel(e: string) { return ESTADO_CONFIG[e as EstadoOrden]?.label ?? e; }

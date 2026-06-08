@@ -41,15 +41,19 @@
 
     <!-- Lista -->
     <div *ngIf="!cargando">
-      <div class="task" [class.high]="t.prioridad === 'alta'" [class.done]="t.hecha" *ngFor="let t of tareas">
+      <div class="task" [class.high]="esAlta(t)" [class.done]="t.hecha" *ngFor="let t of tareas">
         <div class="task-check" [class.checked]="t.hecha" (click)="toggle(t)">
           <ion-icon name="checkmark" *ngIf="t.hecha"></ion-icon>
         </div>
         <div class="task-body" (click)="toggle(t)">
-          <h5>{{ t.titulo }} <span class="prio" *ngIf="t.prioridad === 'alta' && !t.hecha">Alta</span></h5>
+          <h5>{{ t.titulo }} <span class="prio" [class.urg]="t.prioridad === 'urgente'" *ngIf="prioLabel(t) && !t.hecha">{{ prioLabel(t) }}</span></h5>
           <p *ngIf="t.detalle">{{ t.detalle }}</p>
+          <div class="task-meta" *ngIf="t.asignado_por || t.vence">
+            <span class="meta-tag asg" *ngIf="t.asignado_por"><ion-icon name="person-outline"></ion-icon> {{ t.asignado_por_nombre || 'Jefe' }}</span>
+            <span class="meta-tag" [class.venc]="vencida(t)" *ngIf="t.vence"><ion-icon name="calendar-outline"></ion-icon> {{ t.vence | date:'dd/MM' }}</span>
+          </div>
         </div>
-        <button class="task-del" (click)="eliminar(t)" title="Eliminar"><ion-icon name="trash-outline"></ion-icon></button>
+        <button class="task-del" *ngIf="!t.asignado_por" (click)="eliminar(t)" title="Eliminar"><ion-icon name="trash-outline"></ion-icon></button>
       </div>
 
       <div class="empty" *ngIf="!tareas.length">

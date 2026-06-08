@@ -202,4 +202,64 @@ router.get('/reportes', async (req, res) => {
   }
 });
 
+// ───────────────────────────────────────────────────────────
+// Asignar tareas a los mecánicos (Fase C)
+// ───────────────────────────────────────────────────────────
+const PRIORIDADES = ['baja', 'normal', 'alta', 'urgente'];
+
+// GET /api/admin/tareas?empleado= — tareas asignadas por el admin (monitoreo).
+router.get('/tareas', async (req, res) => {
+  try {
+    const empRaw = Number(req.query.empleado);
+    const empleado = Number.isInteger(empRaw) && empRaw > 0 ? empRaw : null;
+    let sql =
+      `SELECT t.id, t.tecnico_id, t.titulo, t.detalle, t.prioridad, t.hecha, t.vence, t.created_at,
+              u.nombre AS tecnico_nombre, a.nombre AS asignado_por_nombre
+       FROM tareas_mecanico t
+       JOIN usuarios u ON u.id = t.tecnico_id
+       LEFT JOIN usuarios a ON a.id = t.asignado_por
+       WHERE t.asignado_por IS NOT NULL`;
+    const params = [];
+    if (empleado) { sql += ' AND t.tecnico_id = ?'; params.push(empleado); }
+    sql += ` ORDER BY t.hecha ASC, FIELD(t.prioridad,'urgente','alta','normal','baja'),
+             (t.vence IS NULL), t.vence ASC, t.created_at DESC`;
+    const [rows] = await pool.query(sql, params);
+    res.json({ data: rows });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// POST /api/admin/tareas — asignar una tarea a un mecánico.
+router.post('/tareas', async (req, res) => {
+  try {
+    const { tecnico_id, titulo, detalle, prioridad, vence } = req.body;
+    if (!tecnico_id) return res.status(400).json({ error: 'Elegí un mecánico' });
+    if (!titulo || !titulo.trim()) return res.status(400).json({ error: 'El título es requerido' });
+    const [[tec]] = await pool.query(
+      "SELECT id FROM usuarios WHERE id = ? AND rol = 'tecnico' AND activo = 1", [tecnico_id]
+    );
+    if (!tec) return res.status(400).json({ error: 'Mecánico no válido' });
+    const prio = PRIORIDADES.includes(prioridad) ? prioridad : 'normal';
+    const [r] = await pool.query(
+      'INSERT INTO tareas_mecanico (tecnico_id, titulo, detalle, prioridad, vence, asignado_por) VALUES (?, ?, ?, ?, ?, ?)',
+      [tecnico_id, titulo.trim(), (detalle || '').trim() || null, prio, vence || null, req.usuario.id]
+    );
+    const [[nueva]] = await pool.query('SELECT * FROM tareas_mecanico WHERE id = ?', [r.insertId]);
+    res.status(201).json({ data: nueva, message: 'Tarea asignada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// DELETE /api/admin/tareas/:id — cancelar una tarea asignada (solo asignadas, no las propias del técnico).
+router.delete('/tareas/:id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM tareas_mecanico WHERE id = ? AND asignado_por IS NOT NULL', [req.params.id]);
+    res.json({ message: 'Tarea eliminada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
 module.exports = router;

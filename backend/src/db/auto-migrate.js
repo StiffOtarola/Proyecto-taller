@@ -184,20 +184,37 @@ async function ensureSchema() {
     await addColumnIfMissing('usuarios', 'especialidades', 'VARCHAR(300) NULL');
     await addColumnIfMissing('usuarios', 'horario', 'VARCHAR(200) NULL');
 
-    // Tareas pendientes del mecánico (checklist propio).
+    // Tareas del mecánico: checklist propio + asignadas por el admin (Fase C).
     await pool.query(`
       CREATE TABLE IF NOT EXISTS tareas_mecanico (
-        id         INT AUTO_INCREMENT PRIMARY KEY,
-        tecnico_id INT NOT NULL,
-        titulo     VARCHAR(150) NOT NULL,
-        detalle    VARCHAR(300),
-        prioridad  ENUM('normal','alta') NOT NULL DEFAULT 'normal',
-        hecha      TINYINT(1) DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        id           INT AUTO_INCREMENT PRIMARY KEY,
+        tecnico_id   INT NOT NULL,
+        titulo       VARCHAR(150) NOT NULL,
+        detalle      VARCHAR(300),
+        prioridad    ENUM('baja','normal','alta','urgente') NOT NULL DEFAULT 'normal',
+        hecha        TINYINT(1) DEFAULT 0,
+        asignado_por INT,
+        vence        DATETIME NULL,
+        created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         INDEX idx_tarea_tecnico (tecnico_id),
-        FOREIGN KEY (tecnico_id) REFERENCES usuarios(id)
+        FOREIGN KEY (tecnico_id)   REFERENCES usuarios(id),
+        FOREIGN KEY (asignado_por) REFERENCES usuarios(id)
       )
     `);
+    // Fase C en bases existentes: origen (quién la asignó), vencimiento y prioridad ampliada.
+    await addColumnIfMissing('tareas_mecanico', 'asignado_por', 'INT NULL');
+    await addColumnIfMissing('tareas_mecanico', 'vence', 'DATETIME NULL');
+    // Amplía prioridad a 4 niveles conservando los valores viejos (normal/alta), sin perder datos.
+    const [[tareaPrio]] = await pool.query(
+      `SELECT COLUMN_TYPE FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tareas_mecanico' AND COLUMN_NAME = 'prioridad'`
+    );
+    if (tareaPrio && !tareaPrio.COLUMN_TYPE.includes('urgente')) {
+      await pool.query(
+        "ALTER TABLE tareas_mecanico MODIFY COLUMN prioridad ENUM('baja','normal','alta','urgente') NOT NULL DEFAULT 'normal'"
+      );
+      console.log('🔧 Migración: tareas_mecanico.prioridad → 4 niveles');
+    }
 
     // Mensajería interna mecánico ↔ recepción.
     // destino_rol agrupa por rol (p. ej. mensaje "a recepción"); destino_id apunta

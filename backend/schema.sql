@@ -245,15 +245,18 @@ CREATE TABLE IF NOT EXISTS promos (
 
 -- Tareas pendientes del mecánico (checklist propio).
 CREATE TABLE IF NOT EXISTS tareas_mecanico (
-  id         INT AUTO_INCREMENT PRIMARY KEY,
-  tecnico_id INT NOT NULL,
-  titulo     VARCHAR(150) NOT NULL,
-  detalle    VARCHAR(300),
-  prioridad  ENUM('normal','alta') NOT NULL DEFAULT 'normal',
-  hecha      TINYINT(1) DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  tecnico_id   INT NOT NULL,
+  titulo       VARCHAR(150) NOT NULL,
+  detalle      VARCHAR(300),
+  prioridad    ENUM('baja','normal','alta','urgente') NOT NULL DEFAULT 'normal',
+  hecha        TINYINT(1) DEFAULT 0,
+  asignado_por INT,                                    -- admin que asignó (NULL = la creó el propio técnico)
+  vence        DATETIME NULL,                          -- fecha límite opcional
+  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_tarea_tecnico (tecnico_id),
-  FOREIGN KEY (tecnico_id) REFERENCES usuarios(id)
+  FOREIGN KEY (tecnico_id)   REFERENCES usuarios(id),
+  FOREIGN KEY (asignado_por) REFERENCES usuarios(id)
 );
 
 -- Mensajería interna mecánico ↔ recepción.

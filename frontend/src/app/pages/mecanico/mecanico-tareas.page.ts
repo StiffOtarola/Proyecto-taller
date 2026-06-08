@@ -59,6 +59,11 @@ export class MecanicoTareasPage implements OnInit {
     });
   }
 
+  // Prioridad alta/urgente resalta el borde; solo esas dos muestran etiqueta.
+  esAlta(t: any): boolean { return t.prioridad === 'alta' || t.prioridad === 'urgente'; }
+  prioLabel(t: any): string { return t.prioridad === 'urgente' ? 'Urgente' : (t.prioridad === 'alta' ? 'Alta' : ''); }
+  vencida(t: any): boolean { return !t.hecha && !!t.vence && new Date(t.vence) < new Date(); }
+
   private async aviso(message: string, color: string) {
     const t = await this.toast.create({ message, duration: 1600, color });
     await t.present();

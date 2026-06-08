@@ -145,8 +145,12 @@ router.patch('/citas/:id/estado', async (req, res) => {
 router.get('/tareas', async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT * FROM tareas_mecanico WHERE tecnico_id = ?
-       ORDER BY hecha ASC, FIELD(prioridad, 'alta', 'normal'), created_at DESC`,
+      `SELECT t.*, a.nombre AS asignado_por_nombre
+       FROM tareas_mecanico t
+       LEFT JOIN usuarios a ON a.id = t.asignado_por
+       WHERE t.tecnico_id = ?
+       ORDER BY t.hecha ASC, FIELD(t.prioridad, 'urgente', 'alta', 'normal', 'baja'),
+                (t.vence IS NULL), t.vence ASC, t.created_at DESC`,
       [req.usuario.id]
     );
     res.json({ data: rows });
@@ -159,7 +163,7 @@ router.post('/tareas', async (req, res) => {
   try {
     const { titulo, detalle, prioridad } = req.body;
     if (!titulo || !titulo.trim()) return res.status(400).json({ error: 'El título es requerido' });
-    const prio = prioridad === 'alta' ? 'alta' : 'normal';
+    const prio = ['baja', 'normal', 'alta', 'urgente'].includes(prioridad) ? prioridad : 'normal';
     const [r] = await pool.query(
       'INSERT INTO tareas_mecanico (tecnico_id, titulo, detalle, prioridad) VALUES (?, ?, ?, ?)',
       [req.usuario.id, titulo.trim(), (detalle || '').trim() || null, prio]
@@ -186,7 +190,11 @@ router.patch('/tareas/:id', async (req, res) => {
 
 router.delete('/tareas/:id', async (req, res) => {
   try {
-    await pool.query('DELETE FROM tareas_mecanico WHERE id = ? AND tecnico_id = ?', [req.params.id, req.usuario.id]);
+    // El técnico solo borra sus propias tareas; las asignadas por el admin las completa, no las borra.
+    await pool.query(
+      'DELETE FROM tareas_mecanico WHERE id = ? AND tecnico_id = ? AND asignado_por IS NULL',
+      [req.params.id, req.usuario.id]
+    );
     res.json({ message: 'Tarea eliminada' });
   } catch (err) {
     fail(res, err);

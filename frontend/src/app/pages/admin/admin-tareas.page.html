@@ -6,11 +6,76 @@
 </ion-header>
 
 <ion-content class="admin-dark">
+  <ion-refresher slot="fixed" (ionRefresh)="cargar($event)"><ion-refresher-content></ion-refresher-content></ion-refresher>
+
   <div class="admin">
-    <div class="placeholder">
-      <ion-icon name="checkmark-done-outline"></ion-icon>
-      <h3>Asignar tareas — próximamente</h3>
-      <p>Asignación de tareas a empleados con prioridad, vencimiento y seguimiento de progreso (Fase C).</p>
+    <!-- Asignar nueva tarea -->
+    <div class="cd mb">
+      <span class="cd-title">➕ Asignar nueva tarea</span>
+      <div class="fg">
+        <label>Mecánico</label>
+        <select [(ngModel)]="form.tecnico_id">
+          <option [ngValue]="null" disabled>Elegí un mecánico…</option>
+          <option *ngFor="let t of tecnicos" [ngValue]="t.id">{{ t.nombre }}</option>
+        </select>
+        <div class="hint" *ngIf="!tecnicos.length">No hay mecánicos activos. Creá uno en Empleados.</div>
+      </div>
+      <div class="fg">
+        <label>Tarea</label>
+        <input type="text" [(ngModel)]="form.titulo" placeholder="¿Qué hay que hacer?">
+      </div>
+      <div class="fg">
+        <label>Detalle (opcional)</label>
+        <input type="text" [(ngModel)]="form.detalle" placeholder="Notas o instrucciones…">
+      </div>
+      <div class="fg-row">
+        <div class="fg">
+          <label>Prioridad</label>
+          <select [(ngModel)]="form.prioridad">
+            <option *ngFor="let p of prioridades" [value]="p.v">{{ p.l }}</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Vence (opcional)</label>
+          <input type="date" [(ngModel)]="form.vence">
+        </div>
+      </div>
+      <button class="btn btn-cr btn-block" (click)="asignar()" [disabled]="guardando">{{ guardando ? 'Asignando…' : 'Asignar tarea' }}</button>
+    </div>
+
+    <!-- Tareas asignadas -->
+    <div class="cd">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap">
+        <span class="cd-title" style="margin:0">📋 Tareas asignadas</span>
+        <select [(ngModel)]="empleado" (ngModelChange)="cargar()" style="padding:7px 10px; border:1px solid var(--bd); border-radius:8px; background:var(--sur2); color:var(--tx); font-size:12px; font-family:inherit">
+          <option [ngValue]="null">Todos los mecánicos</option>
+          <option *ngFor="let t of tecnicos" [ngValue]="t.id">{{ t.nombre }}</option>
+        </select>
+      </div>
+      <div style="font-size:12px; color:var(--tx2); margin-bottom:12px" *ngIf="total">{{ hechas }}/{{ total }} completadas</div>
+
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Mecánico</th><th>Tarea</th><th>Prioridad</th><th>Vence</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            <tr *ngFor="let t of tareas" [style.opacity]="t.hecha ? '.55' : '1'">
+              <td style="font-weight:600">{{ t.tecnico_nombre }}</td>
+              <td>
+                <strong>{{ t.titulo }}</strong>
+                <div *ngIf="t.detalle" style="font-size:11px; color:var(--tx3); margin-top:2px">{{ t.detalle }}</div>
+              </td>
+              <td><span class="bg" [ngClass]="prioBadge[t.prioridad]">{{ prioLabel(t.prioridad) }}</span></td>
+              <td class="mono" style="font-size:11px" [style.color]="vencida(t) ? 'var(--rd)' : 'var(--tx2)'">{{ t.vence ? (t.vence | date:'dd/MM/yy') : '—' }}</td>
+              <td><span class="bg" [ngClass]="t.hecha ? 'bg-em' : 'bg-am'">{{ t.hecha ? 'Hecha' : 'Pendiente' }}</span></td>
+              <td><button class="btn btn-rd btn-sm" (click)="borrar(t)">Eliminar</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="empty" *ngIf="!cargando && !tareas.length">
+        <ion-icon name="clipboard-outline"></ion-icon>
+        <p>No hay tareas asignadas{{ empleado ? ' a este mecánico' : '' }}.</p>
+      </div>
     </div>
   </div>
 </ion-content>

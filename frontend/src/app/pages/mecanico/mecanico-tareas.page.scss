@@ -39,6 +39,15 @@
   .prio { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
     background: #fef2f2; color: #dc2626; padding: 2px 7px; border-radius: 999px; }
 }
+.prio.urg { background: #dc2626; color: #fff; }
+/* Meta de tareas asignadas por el admin: origen y vencimiento. */
+.task-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.meta-tag { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600;
+  color: var(--n-500); background: var(--n-100); padding: 2px 8px; border-radius: 999px;
+  ion-icon { font-size: 11px; } }
+.meta-tag.asg { background: #eef2ff; color: #4f46e5; }
+.meta-tag.venc { background: #fef2f2; color: #dc2626; }
+
 .task-del { background: none; border: none; color: var(--n-400); cursor: pointer; padding: 2px; flex-shrink: 0;
   ion-icon { font-size: 18px; } }
 

@@ -187,6 +187,12 @@ router.patch('/:id/estado', async (req, res) => {
 router.patch('/:id/tecnico', requireRol('admin'), async (req, res) => {
   try {
     const { tecnico_id } = req.body;
+    const [[orden]] = await pool.query('SELECT id FROM ordenes_trabajo WHERE id = ?', [req.params.id]);
+    if (!orden) return res.status(404).json({ error: 'Orden no encontrada' });
+    if (tecnico_id) {
+      const [[tec]] = await pool.query("SELECT id FROM usuarios WHERE id = ? AND rol = 'tecnico' AND activo = 1", [tecnico_id]);
+      if (!tec) return res.status(400).json({ error: 'El técnico no existe o está inactivo' });
+    }
     await pool.query('UPDATE ordenes_trabajo SET tecnico_id = ? WHERE id = ?', [tecnico_id || null, req.params.id]);
     res.json({ message: 'Técnico asignado' });
   } catch (err) {
@@ -263,6 +269,8 @@ router.get('/:id/repuestos', async (req, res) => {
 router.put('/:id/repuestos/:rid', async (req, res) => {
   try {
     const { nombre, cantidad, costo_unitario, estado } = req.body;
+    const [[existe]] = await pool.query('SELECT id FROM orden_repuestos WHERE id = ? AND orden_id = ?', [req.params.rid, req.params.id]);
+    if (!existe) return res.status(404).json({ error: 'Repuesto no encontrado' });
     await pool.query(
       'UPDATE orden_repuestos SET nombre=?, cantidad=?, costo_unitario=?, estado=? WHERE id=? AND orden_id=?',
       [nombre, cantidad || 1, costo_unitario || 0, estado || 'pendiente', req.params.rid, req.params.id]
@@ -281,7 +289,8 @@ router.put('/:id/repuestos/:rid', async (req, res) => {
 // DELETE /api/ordenes/:id/repuestos/:rid
 router.delete('/:id/repuestos/:rid', requireRol('admin'), async (req, res) => {
   try {
-    await pool.query('DELETE FROM orden_repuestos WHERE id=? AND orden_id=?', [req.params.rid, req.params.id]);
+    const [result] = await pool.query('DELETE FROM orden_repuestos WHERE id=? AND orden_id=?', [req.params.rid, req.params.id]);
+    if (!result.affectedRows) return res.status(404).json({ error: 'Repuesto no encontrado' });
     await pool.query(
       'UPDATE ordenes_trabajo SET costo_repuestos = (SELECT COALESCE(SUM(cantidad * costo_unitario), 0) FROM orden_repuestos WHERE orden_id = ?) WHERE id = ?',
       [req.params.id, req.params.id]
@@ -334,15 +343,19 @@ router.patch('/:id/cerrar', requireRol('admin'), async (req, res) => {
     // Cierre + fidelización en una transacción: la visita se cuenta exactamente una
     // vez y la cortesía se otorga de forma consistente (sin estados a medias).
     await conn.beginTransaction();
+    const [[orden]] = await conn.query('SELECT cliente_id, visita_contada FROM ordenes_trabajo WHERE id = ? FOR UPDATE', [req.params.id]);
+    if (!orden) {
+      await conn.rollback();
+      return res.status(404).json({ error: 'Orden no encontrada' });
+    }
     await conn.query(
       `UPDATE ordenes_trabajo SET estado='entregada', metodo_pago=?, garantia_dias=?,
        observaciones_finales=?, fecha_entrega_real=NOW() WHERE id=?`,
       [metodo_pago || null, garantia_dias || 0, observaciones_finales || null, req.params.id]
     );
 
-    const [[orden]] = await conn.query('SELECT cliente_id, visita_contada FROM ordenes_trabajo WHERE id = ? FOR UPDATE', [req.params.id]);
     let cortesiaGanada = false;
-    if (orden && !orden.visita_contada) {
+    if (!orden.visita_contada) {
       await conn.query('UPDATE ordenes_trabajo SET visita_contada = 1 WHERE id = ?', [req.params.id]);
       await conn.query('UPDATE clientes SET visitas = visitas + 1 WHERE id = ?', [orden.cliente_id]);
       const [[cli]] = await conn.query('SELECT visitas FROM clientes WHERE id = ?', [orden.cliente_id]);
@@ -398,7 +411,8 @@ router.get('/:id/fotos', async (req, res) => {
 // DELETE /api/ordenes/:id/fotos/:fid
 router.delete('/:id/fotos/:fid', requireRol('admin'), async (req, res) => {
   try {
-    await pool.query('DELETE FROM orden_fotos WHERE id = ? AND orden_id = ?', [req.params.fid, req.params.id]);
+    const [result] = await pool.query('DELETE FROM orden_fotos WHERE id = ? AND orden_id = ?', [req.params.fid, req.params.id]);
+    if (!result.affectedRows) return res.status(404).json({ error: 'Foto no encontrada' });
     res.json({ message: 'Foto eliminada' });
   } catch (err) {
     fail(res, err);

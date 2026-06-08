@@ -295,6 +295,8 @@ router.post('/cotizaciones/:id/repuestos', async (req, res) => {
 router.put('/cotizaciones/:id/repuestos/:rid', async (req, res) => {
   try {
     const { nombre, cantidad, costo_unitario, estado } = req.body;
+    const [[existe]] = await pool.query('SELECT id FROM orden_repuestos WHERE id = ? AND orden_id = ?', [req.params.rid, req.params.id]);
+    if (!existe) return res.status(404).json({ error: 'Repuesto no encontrado' });
     await pool.query(
       'UPDATE orden_repuestos SET nombre=?, cantidad=?, costo_unitario=?, estado=? WHERE id=? AND orden_id=?',
       [nombre, cantidad || 1, costo_unitario || 0, estado || 'pendiente', req.params.rid, req.params.id]
@@ -310,7 +312,8 @@ router.put('/cotizaciones/:id/repuestos/:rid', async (req, res) => {
 // Eliminar repuesto
 router.delete('/cotizaciones/:id/repuestos/:rid', async (req, res) => {
   try {
-    await pool.query('DELETE FROM orden_repuestos WHERE id=? AND orden_id=?', [req.params.rid, req.params.id]);
+    const [result] = await pool.query('DELETE FROM orden_repuestos WHERE id=? AND orden_id=?', [req.params.rid, req.params.id]);
+    if (!result.affectedRows) return res.status(404).json({ error: 'Repuesto no encontrado' });
     await recalcularRepuestos(req.params.id);
     res.json({ message: 'Repuesto eliminado' });
   } catch (err) {
@@ -322,6 +325,8 @@ router.delete('/cotizaciones/:id/repuestos/:rid', async (req, res) => {
 router.put('/cotizaciones/:id/costos', async (req, res) => {
   try {
     const { costo_mano_obra, descuento } = req.body;
+    const [[orden]] = await pool.query('SELECT id FROM ordenes_trabajo WHERE id = ?', [req.params.id]);
+    if (!orden) return res.status(404).json({ error: 'Orden no encontrada' });
     await pool.query(
       'UPDATE ordenes_trabajo SET costo_mano_obra = ?, descuento = ? WHERE id = ?',
       [costo_mano_obra || 0, descuento || 0, req.params.id]
@@ -467,6 +472,12 @@ router.get('/tecnicos', async (req, res) => {
 router.patch('/ordenes/:id/tecnico', async (req, res) => {
   try {
     const { tecnico_id } = req.body;
+    const [[orden]] = await pool.query('SELECT id FROM ordenes_trabajo WHERE id = ?', [req.params.id]);
+    if (!orden) return res.status(404).json({ error: 'Orden no encontrada' });
+    if (tecnico_id) {
+      const [[tec]] = await pool.query("SELECT id FROM usuarios WHERE id = ? AND rol = 'tecnico' AND activo = 1", [tecnico_id]);
+      if (!tec) return res.status(400).json({ error: 'El técnico no existe o está inactivo' });
+    }
     await pool.query('UPDATE ordenes_trabajo SET tecnico_id = ? WHERE id = ?', [tecnico_id || null, req.params.id]);
     res.json({ message: 'Técnico asignado' });
   } catch (err) {
@@ -477,6 +488,8 @@ router.patch('/ordenes/:id/tecnico', async (req, res) => {
 // Marcar una cotización como aprobada por el cliente (atajo desde recepción)
 router.post('/cotizaciones/:id/aprobar', async (req, res) => {
   try {
+    const [[orden]] = await pool.query('SELECT id FROM ordenes_trabajo WHERE id = ?', [req.params.id]);
+    if (!orden) return res.status(404).json({ error: 'Orden no encontrada' });
     await pool.query(
       "UPDATE ordenes_trabajo SET aprobacion_cliente = 'aprobado', aprobado_por_cliente = 1, fecha_aprobacion = NOW() WHERE id = ?",
       [req.params.id]

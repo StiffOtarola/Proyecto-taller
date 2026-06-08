@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Gestión: solo admin/gerencia
+// Gestión: solo admin
 router.post('/', requireRol('admin'), async (req, res) => {
   try {
     const { titulo, descripcion, descuento, activa, imagen, precio_final } = req.body;

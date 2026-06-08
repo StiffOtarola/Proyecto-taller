@@ -74,7 +74,7 @@ export class GarantiasPage implements OnInit {
   cerrarModal() { this.modalAbierto = false; this.seleccionada = null; }
 
   get puedeGestionar(): boolean {
-    return this.auth.tieneRol('jefe_taller', 'admin', 'gerencia');
+    return this.auth.tieneRol('admin');
   }
 
   guardarTramite() {

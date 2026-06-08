@@ -115,7 +115,7 @@ export class DetalleOrdenPage implements OnInit {
   get siguientes(): EstadoOrden[] {
     if (!this.orden?.estado) return [];
     const lista = this.estadosSiguientes[this.orden.estado] || [];
-    if (!this.auth.tieneRol('admin', 'gerencia')) {
+    if (!this.auth.tieneRol('admin')) {
       return lista.filter(e => e !== 'cancelada');
     }
     return lista;
@@ -223,7 +223,7 @@ export class DetalleOrdenPage implements OnInit {
   }
 
   get puedeEntregar(): boolean {
-    return this.orden?.estado === 'lista_entrega' && this.auth.tieneRol('jefe_taller', 'admin', 'gerencia');
+    return this.orden?.estado === 'lista_entrega' && this.auth.tieneRol('admin');
   }
 
   async facturarYEntregar() {

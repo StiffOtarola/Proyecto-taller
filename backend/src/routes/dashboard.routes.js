@@ -4,7 +4,7 @@ const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
 
-router.use(auth, requireRol('jefe_taller'));
+router.use(auth, requireRol('admin'));
 
 router.get('/resumen', async (req, res) => {
   try {

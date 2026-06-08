@@ -55,8 +55,8 @@ export class CitasPage implements OnInit {
       next: res => { this.citas = res.data; this.cargando = false; },
       error: () => { this.cargando = false; },
     });
-    // Lista de técnicos para asignar (solo jefe+ puede).
-    if (this.auth.tieneRol('jefe_taller', 'admin', 'gerencia') && !this.tecnicos.length) {
+    // Lista de técnicos para asignar (solo admin puede).
+    if (this.auth.tieneRol('admin') && !this.tecnicos.length) {
       this.dashSvc.getTecnicos().subscribe({ next: res => this.tecnicos = res.data });
     }
   }
@@ -74,7 +74,7 @@ export class CitasPage implements OnInit {
     });
   }
 
-  // El jefe de taller asigna la cita a un técnico (radio con los técnicos activos).
+  // El admin asigna la cita a un técnico (radio con los técnicos activos).
   async asignarTecnico(cita: Cita) {
     if (!this.tecnicos.length) {
       const t = await this.toast.create({ message: 'No hay técnicos disponibles', duration: 2000, color: 'warning' });

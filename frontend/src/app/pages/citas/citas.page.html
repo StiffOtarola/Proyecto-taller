@@ -57,7 +57,7 @@
         <ion-item-option (click)="editarCita(c.id!)">
           <ion-icon name="create-outline"></ion-icon>
         </ion-item-option>
-        <ion-item-option color="tertiary" (click)="asignarTecnico(c)" *ngIf="auth.tieneRol('jefe_taller','admin','gerencia')">
+        <ion-item-option color="tertiary" (click)="asignarTecnico(c)" *ngIf="auth.tieneRol('admin')">
           <ion-icon name="construct-outline"></ion-icon>
         </ion-item-option>
         <ion-item-option color="danger" (click)="cambiarEstado(c, 'cancelado')" *ngIf="c.estado !== 'entregado' && c.estado !== 'cancelado'">

@@ -8,9 +8,9 @@ const { notificarCambioEstado } = require('../utils/notificaciones');
 
 const ESTADOS = ['agendado', 'en_revision', 'en_mantenimiento', 'listo', 'entregado', 'cancelado'];
 
-// Quién gestiona la agenda (crear/editar citas): mostrador y jefatura, NO el técnico.
+// Quién gestiona la agenda (crear/editar citas): mostrador y administración, NO el técnico.
 // El técnico solo mueve el estado de SUS citas (más abajo y en /api/mecanico).
-const GESTIONA_AGENDA = ['recepcion', 'jefe_taller', 'admin', 'gerencia'];
+const GESTIONA_AGENDA = ['recepcion', 'admin'];
 
 router.use(auth);
 
@@ -101,7 +101,7 @@ router.patch('/:id/estado', async (req, res) => {
     const [[cita]] = await pool.query('SELECT id, tecnico_id FROM citas WHERE id = ?', [req.params.id]);
     if (!cita) return res.status(404).json({ error: 'Cita no encontrada' });
 
-    // Un técnico solo puede mover SUS citas; jefe_taller+ (y recepción) pueden cualquiera.
+    // Un técnico solo puede mover SUS citas; admin (y recepción) pueden cualquiera.
     if (req.usuario.rol === 'tecnico' && cita.tecnico_id !== req.usuario.id) {
       return res.status(403).json({ error: 'Solo podés cambiar el estado de tus citas asignadas' });
     }
@@ -114,8 +114,8 @@ router.patch('/:id/estado', async (req, res) => {
   }
 });
 
-// PATCH /api/citas/:id/asignar — el jefe de taller asigna la cita a un técnico
-router.patch('/:id/asignar', requireRol('jefe_taller'), async (req, res) => {
+// PATCH /api/citas/:id/asignar — el admin asigna la cita a un técnico
+router.patch('/:id/asignar', requireRol('admin'), async (req, res) => {
   try {
     const { tecnico_id } = req.body;
     await pool.query('UPDATE citas SET tecnico_id = ? WHERE id = ?', [tecnico_id || null, req.params.id]);

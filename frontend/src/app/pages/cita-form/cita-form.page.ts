@@ -47,8 +47,8 @@ export class CitaFormPage implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Lista de técnicos para asignar (solo jefe+ puede).
-    if (this.auth.tieneRol('jefe_taller', 'admin', 'gerencia')) {
+    // Lista de técnicos para asignar (solo admin puede).
+    if (this.auth.tieneRol('admin')) {
       this.dashSvc.getTecnicos().subscribe({ next: res => this.tecnicos = res.data });
     }
     const id = this.route.snapshot.paramMap.get('id');

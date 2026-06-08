@@ -15,8 +15,7 @@ export class AdminEmpleadosPage implements OnInit {
   nuevo = { nombre: '', email: '', password: '', rol: 'tecnico', telefono: '' };
 
   readonly rolLabel: Record<string, string> = {
-    tecnico: '🔧 Mecánico', recepcion: '🗂 Recepcionista',
-    jefe_taller: 'Jefe de taller', admin: 'Administración', gerencia: 'Gerencia',
+    tecnico: '🔧 Mecánico', recepcion: '🗂 Recepcionista', admin: 'Administración',
   };
 
   constructor(private svc: UsuariosService, private toast: ToastController) {}

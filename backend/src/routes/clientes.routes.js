@@ -71,8 +71,8 @@ router.patch('/:id/cortesia', async (req, res) => {
 });
 
 // PATCH /api/clientes/:id/portal — activa/define o desactiva el acceso al portal del cliente.
-// Sensible (fija contraseñas de acceso): restringido a jefe_taller o superior.
-router.patch('/:id/portal', requireRol('jefe_taller'), async (req, res) => {
+// Sensible (fija contraseñas de acceso): restringido a administración.
+router.patch('/:id/portal', requireRol('admin'), async (req, res) => {
   try {
     const { password, activar } = req.body;
     const [[cliente]] = await pool.query('SELECT id, email FROM clientes WHERE id = ? AND activo = 1', [req.params.id]);

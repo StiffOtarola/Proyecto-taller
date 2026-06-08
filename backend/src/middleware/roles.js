@@ -1,6 +1,6 @@
-const JERARQUIA = ['recepcion', 'tecnico', 'jefe_taller', 'admin', 'gerencia'];
+const JERARQUIA = ['recepcion', 'tecnico', 'admin'];
 
-// Exige un nivel mínimo según la jerarquía (recepcion < tecnico < jefe_taller < admin < gerencia).
+// Exige un nivel mínimo según la jerarquía (recepcion < tecnico < admin).
 function requireRol(...rolesPermitidos) {
   return (req, res, next) => {
     const rolUsuario = req.usuario?.rol;

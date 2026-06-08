@@ -63,7 +63,7 @@
     </section>
 
     <!-- Asignar técnico -->
-    <section class="card" *ngIf="auth.tieneRol('jefe_taller','admin','gerencia') && tecnicos.length">
+    <section class="card" *ngIf="auth.tieneRol('admin') && tecnicos.length">
       <span class="section-label">Asignar técnico</span>
       <ion-select placeholder="Seleccionar técnico" [(ngModel)]="orden.tecnico_id"
         (ngModelChange)="asignarTecnico($event)" interface="action-sheet" class="sel-line">

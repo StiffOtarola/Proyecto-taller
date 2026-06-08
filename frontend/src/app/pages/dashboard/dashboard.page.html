@@ -2,13 +2,16 @@
   <ion-toolbar>
     <ion-title>MS Motos</ion-title>
     <ion-buttons slot="end">
+      <ion-button [routerLink]="['/admin']" title="Panel admin">
+        <ion-icon slot="icon-only" name="grid-outline"></ion-icon>
+      </ion-button>
       <ion-button [routerLink]="['/garantias']" title="Garantías">
         <ion-icon slot="icon-only" name="shield-checkmark-outline"></ion-icon>
       </ion-button>
-      <ion-button [routerLink]="['/promociones']" title="Promociones" *ngIf="auth.tieneRol('admin','gerencia')">
+      <ion-button [routerLink]="['/promociones']" title="Promociones" *ngIf="auth.tieneRol('admin')">
         <ion-icon slot="icon-only" name="pricetags-outline"></ion-icon>
       </ion-button>
-      <ion-button [routerLink]="['/usuarios']" title="Usuarios" *ngIf="auth.tieneRol('admin','gerencia')">
+      <ion-button [routerLink]="['/usuarios']" title="Usuarios" *ngIf="auth.tieneRol('admin')">
         <ion-icon slot="icon-only" name="people-outline"></ion-icon>
       </ion-button>
       <ion-button (click)="logout()">

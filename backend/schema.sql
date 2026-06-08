@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   nombre        VARCHAR(100) NOT NULL,
   email         VARCHAR(100) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
-  rol           ENUM('recepcion','tecnico','jefe_taller','admin','gerencia') NOT NULL DEFAULT 'tecnico',
+  rol           ENUM('recepcion','tecnico','admin') NOT NULL DEFAULT 'tecnico',
   telefono      VARCHAR(20),                 -- perfil del mecánico
   especialidades VARCHAR(300),               -- perfil del mecánico (lista separada por comas)
   horario       VARCHAR(200),                -- perfil del mecánico

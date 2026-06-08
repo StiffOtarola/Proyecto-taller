@@ -79,8 +79,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PATCH /api/garantias/:id/estado — avanzar el trámite (jefe_taller+)
-router.patch('/:id/estado', requireRol('jefe_taller'), async (req, res) => {
+// PATCH /api/garantias/:id/estado — avanzar el trámite (admin)
+router.patch('/:id/estado', requireRol('admin'), async (req, res) => {
   try {
     const { estado, resolucion, cubre_repuestos, cubre_mano_obra } = req.body;
     if (!ESTADOS.includes(estado)) return res.status(400).json({ error: 'Estado inválido' });

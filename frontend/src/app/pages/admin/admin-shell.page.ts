@@ -11,7 +11,7 @@ export class AdminShellPage {
   constructor(private auth: AuthService, private router: Router) {}
 
   get nombre(): string { return this.auth.getUsuario()?.nombre || 'Administrador'; }
-  get rolLabel(): string { return this.auth.getUsuario()?.rol === 'gerencia' ? 'Gerencia' : 'Administrador'; }
+  get rolLabel(): string { return 'Administrador'; }
   get iniciales(): string {
     const p = this.nombre.trim().split(/\s+/);
     return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || 'A';

@@ -216,6 +216,25 @@ async function ensureSchema() {
       console.log('🔧 Migración: tareas_mecanico.prioridad → 4 niveles');
     }
 
+    // Roles simplificados: se eliminan jefe_taller y gerencia (todo se consolida en admin).
+    // 1) Remapear usuarios existentes ANTES de achicar el enum (para no perder filas).
+    await tryStep('remap roles a admin', () =>
+      pool.query("UPDATE usuarios SET rol = 'admin' WHERE rol IN ('jefe_taller', 'gerencia')")
+    );
+    // 2) Achicar el enum solo si todavía tiene los valores viejos (idempotente).
+    const [[rolCol]] = await pool.query(
+      `SELECT COLUMN_TYPE FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'rol'`
+    );
+    if (rolCol && (rolCol.COLUMN_TYPE.includes('jefe_taller') || rolCol.COLUMN_TYPE.includes('gerencia'))) {
+      await tryStep('achicar enum rol', async () => {
+        await pool.query(
+          "ALTER TABLE usuarios MODIFY COLUMN rol ENUM('recepcion','tecnico','admin') NOT NULL DEFAULT 'tecnico'"
+        );
+        console.log('🔧 Migración: roles → recepcion/tecnico/admin');
+      });
+    }
+
     // Mensajería interna mecánico ↔ recepción.
     // destino_rol agrupa por rol (p. ej. mensaje "a recepción"); destino_id apunta
     // a un usuario puntual (p. ej. la respuesta de recepción a un técnico).

@@ -151,10 +151,9 @@ router.patch('/:id/estado', async (req, res) => {
       return res.status(400).json({ error: 'Estado inválido' });
     }
 
-    // Solo admin/gerencia pueden cancelar
-    if (estado === 'cancelada') {
-      const nivel = ['recepcion','tecnico','jefe_taller','admin','gerencia'].indexOf(req.usuario.rol);
-      if (nivel < 3) return res.status(403).json({ error: 'Solo admin o gerencia pueden cancelar una orden' });
+    // Solo admin puede cancelar
+    if (estado === 'cancelada' && req.usuario.rol !== 'admin') {
+      return res.status(403).json({ error: 'Solo admin puede cancelar una orden' });
     }
 
     const [[orden]] = await pool.query('SELECT estado FROM ordenes_trabajo WHERE id = ?', [req.params.id]);
@@ -185,7 +184,7 @@ router.patch('/:id/estado', async (req, res) => {
 });
 
 // PATCH /api/ordenes/:id/tecnico
-router.patch('/:id/tecnico', requireRol('jefe_taller'), async (req, res) => {
+router.patch('/:id/tecnico', requireRol('admin'), async (req, res) => {
   try {
     const { tecnico_id } = req.body;
     await pool.query('UPDATE ordenes_trabajo SET tecnico_id = ? WHERE id = ?', [tecnico_id || null, req.params.id]);
@@ -280,7 +279,7 @@ router.put('/:id/repuestos/:rid', async (req, res) => {
 });
 
 // DELETE /api/ordenes/:id/repuestos/:rid
-router.delete('/:id/repuestos/:rid', requireRol('jefe_taller'), async (req, res) => {
+router.delete('/:id/repuestos/:rid', requireRol('admin'), async (req, res) => {
   try {
     await pool.query('DELETE FROM orden_repuestos WHERE id=? AND orden_id=?', [req.params.rid, req.params.id]);
     await pool.query(
@@ -328,7 +327,7 @@ router.get('/:id/checklist', async (req, res) => {
 const VISITAS_PARA_CORTESIA = 7;
 
 // PATCH /api/ordenes/:id/cerrar
-router.patch('/:id/cerrar', requireRol('jefe_taller'), async (req, res) => {
+router.patch('/:id/cerrar', requireRol('admin'), async (req, res) => {
   const conn = await pool.getConnection();
   try {
     const { metodo_pago, garantia_dias, observaciones_finales } = req.body;
@@ -397,7 +396,7 @@ router.get('/:id/fotos', async (req, res) => {
 });
 
 // DELETE /api/ordenes/:id/fotos/:fid
-router.delete('/:id/fotos/:fid', requireRol('jefe_taller'), async (req, res) => {
+router.delete('/:id/fotos/:fid', requireRol('admin'), async (req, res) => {
   try {
     await pool.query('DELETE FROM orden_fotos WHERE id = ? AND orden_id = ?', [req.params.fid, req.params.id]);
     res.json({ message: 'Foto eliminada' });

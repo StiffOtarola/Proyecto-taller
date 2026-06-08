@@ -4,7 +4,7 @@ const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
 
-// Panel del administrador: métricas ejecutivas. Solo admin/gerencia.
+// Panel del administrador: métricas ejecutivas. Solo admin.
 router.use(auth, requireRol('admin'));
 
 // GET /api/admin/resumen — KPIs del mes + distribución de citas + ingresos por servicio.

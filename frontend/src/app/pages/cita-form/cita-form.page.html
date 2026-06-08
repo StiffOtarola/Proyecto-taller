@@ -46,7 +46,7 @@
       </ion-select>
     </ion-item>
 
-    <ion-item *ngIf="auth.tieneRol('jefe_taller','admin','gerencia')">
+    <ion-item *ngIf="auth.tieneRol('admin')">
       <ion-label position="stacked">Técnico asignado</ion-label>
       <ion-select [(ngModel)]="form.tecnico_id" interface="action-sheet" placeholder="Sin asignar">
         <ion-select-option [value]="null">Sin asignar</ion-select-option>

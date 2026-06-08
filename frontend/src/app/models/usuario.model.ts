@@ -3,7 +3,7 @@ export interface Usuario {
   nombre: string;
   email: string;
   telefono?: string;
-  rol: 'recepcion' | 'tecnico' | 'jefe_taller' | 'admin' | 'gerencia';
+  rol: 'recepcion' | 'tecnico' | 'admin';
   activo?: number;
   created_at?: string;
 }

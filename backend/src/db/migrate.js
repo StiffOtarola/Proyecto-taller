@@ -26,7 +26,7 @@ async function run() {
   const hash = await bcrypt.hash('Admin2024!', 10);
   await conn.query(
     'INSERT IGNORE INTO usuarios (nombre, email, password_hash, rol) VALUES (?, ?, ?, ?)',
-    ['Administrador', 'admin@taller.com', hash, 'gerencia']
+    ['Administrador', 'admin@taller.com', hash, 'admin']
   );
   console.log('✅ Usuario admin creado (admin@taller.com / Admin2024!)');
 

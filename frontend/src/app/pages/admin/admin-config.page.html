@@ -1,0 +1,114 @@
+<ion-header>
+  <ion-toolbar class="admin-topbar">
+    <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
+    <ion-title>Configuración</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="admin-dark">
+  <div class="admin" *ngIf="config">
+    <div class="g2">
+      <!-- Columna izquierda -->
+      <div>
+        <!-- Info del taller -->
+        <div class="cd mb">
+          <span class="cd-title">🏪 Información del taller</span>
+          <div class="fg"><label>Nombre del negocio</label><input [(ngModel)]="config.nombre_taller" placeholder="MS Motos"></div>
+          <div class="fg"><label>Teléfono / WhatsApp</label><input [(ngModel)]="config.telefono" placeholder="+506 0000-0000"></div>
+          <div class="fg"><label>Correo de contacto</label><input type="email" [(ngModel)]="config.email" placeholder="info@msmotos.com"></div>
+          <div class="fg"><label>Dirección</label><input [(ngModel)]="config.direccion" placeholder="San José, Costa Rica"></div>
+          <div class="fg">
+            <label>Logo del taller</label>
+            <div *ngIf="config.logo" style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+              <img [src]="config.logo" alt="logo" style="width:64px;height:64px;object-fit:contain;background:var(--sur2);border-radius:10px;border:1px solid var(--bd)">
+              <button class="btn btn-rd btn-sm" (click)="quitarLogo()">Quitar</button>
+            </div>
+            <label style="border:2px dashed var(--bd2);border-radius:12px;padding:20px;text-align:center;cursor:pointer;display:block;text-transform:none;letter-spacing:0">
+              <div style="font-size:24px;margin-bottom:4px">🖼️</div>
+              <div style="font-size:12px;color:var(--tx3)">Clic para subir logo</div>
+              <input type="file" accept="image/*" (change)="onLogoFile($event)" hidden>
+            </label>
+          </div>
+          <button class="btn btn-cr" style="width:100%;justify-content:center;padding:12px" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar información</button>
+        </div>
+
+        <!-- Horarios -->
+        <div class="cd mb">
+          <span class="cd-title">🕒 Horario de atención</span>
+          <div *ngFor="let h of horariosVista"
+               style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--sur2);border-radius:10px;margin-bottom:8px"
+               [style.opacity]="h.activo ? 1 : 0.5">
+            <span style="width:84px;font-weight:700;font-size:12px">{{ h.label }}</span>
+            <input type="time" [(ngModel)]="h.abre" [disabled]="!h.activo"
+                   style="padding:4px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx);font-size:11px">
+            <span style="color:var(--tx3)">a</span>
+            <input type="time" [(ngModel)]="h.cierra" [disabled]="!h.activo"
+                   style="padding:4px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx);font-size:11px">
+            <label style="margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2);text-transform:none;letter-spacing:0">
+              <input type="checkbox" [(ngModel)]="h.activo"> Abierto
+            </label>
+          </div>
+          <button class="btn btn-cr" style="width:100%;justify-content:center;padding:12px;margin-top:6px" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar horarios</button>
+        </div>
+      </div>
+
+      <!-- Columna derecha -->
+      <div>
+        <!-- Capacidad -->
+        <div class="cd mb">
+          <span class="cd-title">⚙️ Capacidad de atención</span>
+          <div class="fg"><label>Máx. citas por hora</label><input type="number" min="1" max="20" [(ngModel)]="config.max_citas_hora"><div class="hint">Cuántas citas puede atender el taller por franja horaria.</div></div>
+          <div class="fg"><label>Días de anticipación para agendar</label><input type="number" min="1" max="365" [(ngModel)]="config.dias_anticipacion"><div class="hint">Hasta cuántos días adelante puede reservar un cliente desde el portal.</div></div>
+          <div class="fg"><label>Duración promedio por cita (minutos)</label><input type="number" min="15" max="480" [(ngModel)]="config.duracion_cita_min"><div class="hint">Informativo (los cupos del portal son por hora).</div></div>
+          <button class="btn btn-cr" style="width:100%;justify-content:center;padding:12px" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar capacidad</button>
+        </div>
+
+        <!-- Notificaciones -->
+        <div class="cd mb">
+          <span class="cd-title">🔔 Notificaciones</span>
+          <div style="display:flex;flex-direction:column;gap:4px;font-size:13px">
+            <label style="display:flex;justify-content:space-between;align-items:center;text-transform:none;letter-spacing:0">
+              <span>Notificar al cliente al cambiar estado</span>
+              <ion-toggle [(ngModel)]="config.notif_estado"></ion-toggle>
+            </label>
+            <label style="display:flex;justify-content:space-between;align-items:center;text-transform:none;letter-spacing:0">
+              <span>Notificar cuando la cotización está lista</span>
+              <ion-toggle [(ngModel)]="config.notif_cotizacion"></ion-toggle>
+            </label>
+            <label style="display:flex;justify-content:space-between;align-items:center;text-transform:none;letter-spacing:0;opacity:.55">
+              <span>Recordatorio 24h antes de la cita <em style="color:var(--tx3);font-style:normal">(aún no activo)</em></span>
+              <ion-toggle [(ngModel)]="config.notif_recordatorio" disabled></ion-toggle>
+            </label>
+            <label style="display:flex;justify-content:space-between;align-items:center;text-transform:none;letter-spacing:0;opacity:.55">
+              <span>Enviar reporte por email al entregar <em style="color:var(--tx3);font-style:normal">(aún no activo)</em></span>
+              <ion-toggle [(ngModel)]="config.notif_email_entrega" disabled></ion-toggle>
+            </label>
+          </div>
+          <button class="btn btn-cr" style="width:100%;justify-content:center;padding:12px;margin-top:12px" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar</button>
+        </div>
+
+        <!-- Cuenta admin -->
+        <div class="cd">
+          <span class="cd-title">👤 Cuenta del administrador</span>
+          <div class="fg"><label>Nombre</label><input [(ngModel)]="cuenta.nombre"></div>
+          <div class="fg"><label>Correo</label><input type="email" [(ngModel)]="cuenta.email"></div>
+          <button class="btn btn-cr" style="width:100%;justify-content:center;padding:12px" [disabled]="guardandoCuenta" (click)="guardarCuenta()">💾 Actualizar cuenta</button>
+
+          <div style="height:1px;background:var(--bd);margin:16px 0"></div>
+
+          <div class="fg"><label>Contraseña actual</label><input type="password" [(ngModel)]="pass.actual" placeholder="••••••••"></div>
+          <div class="fg"><label>Nueva contraseña</label><input type="password" [(ngModel)]="pass.nueva" placeholder="Mín. 8 caracteres"></div>
+          <button class="btn btn-ou" style="width:100%;justify-content:center;padding:12px" [disabled]="guardandoPass" (click)="cambiarPassword()">🔑 Cambiar contraseña</button>
+
+          <div style="height:1px;background:var(--bd);margin:16px 0"></div>
+
+          <button class="btn btn-rd" style="width:100%;justify-content:center;padding:12px" (click)="logout()">⏻ Cerrar sesión</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin" *ngIf="cargando && !config">
+    <div class="cd"><div class="placeholder">Cargando configuración…</div></div>
+  </div>
+</ion-content>

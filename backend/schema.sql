@@ -287,3 +287,24 @@ CREATE TABLE IF NOT EXISTS notificaciones (
   FOREIGN KEY (cliente_id) REFERENCES clientes(id),
   FOREIGN KEY (cita_id)    REFERENCES citas(id)
 );
+
+-- Configuración del taller (fila única id=1): datos del negocio, horarios de
+-- atención, capacidad de la agenda y preferencias de notificación. El portal
+-- lee de aquí los cupos/horas de la agenda.
+CREATE TABLE IF NOT EXISTS configuracion (
+  id                  TINYINT PRIMARY KEY,
+  nombre_taller       VARCHAR(150),
+  telefono            VARCHAR(40),
+  email               VARCHAR(120),
+  direccion           VARCHAR(200),
+  logo                LONGTEXT,
+  max_citas_hora      INT DEFAULT 2,
+  dias_anticipacion   INT DEFAULT 30,
+  duracion_cita_min   INT DEFAULT 90,
+  horarios            JSON,                          -- [{dia:0..6, abre, cierra, activo}]
+  notif_estado        TINYINT(1) DEFAULT 1,
+  notif_recordatorio  TINYINT(1) DEFAULT 1,
+  notif_cotizacion    TINYINT(1) DEFAULT 1,
+  notif_email_entrega TINYINT(1) DEFAULT 0,
+  updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

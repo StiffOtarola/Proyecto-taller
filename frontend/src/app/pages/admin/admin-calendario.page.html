@@ -1,0 +1,99 @@
+<ion-header>
+  <ion-toolbar class="admin-topbar">
+    <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
+    <ion-title>Calendario de Citas</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="admin-dark">
+  <div class="admin">
+    <div class="cal-wrap">
+      <!-- Calendario principal -->
+      <div>
+        <div class="cal-header">
+          <h3>{{ tituloMes }}</h3>
+          <div class="cal-nav">
+            <button (click)="cambiarMes(-1)">← Anterior</button>
+            <button class="on" (click)="cambiarMes(0)">Hoy</button>
+            <button (click)="cambiarMes(1)">Siguiente →</button>
+          </div>
+        </div>
+
+        <div class="cal-grid">
+          <div class="cal-dow" *ngFor="let d of dows">{{ d }}</div>
+        </div>
+
+        <div class="cal-grid" *ngFor="let semana of semanas">
+          <div *ngFor="let c of semana"
+               class="cal-day"
+               [class.empty]="!c.dia"
+               [class.today]="c.hoy"
+               [class.low]="c.flujo === 'bajo'"
+               [class.high]="c.flujo === 'alto'"
+               (click)="selDia(c)">
+            <ng-container *ngIf="c.dia">
+              <div class="day-num">{{ c.dia }}</div>
+              <div class="day-citas">
+                <div class="mec-dot" *ngFor="let m of c.mecanicos"
+                     [style.background]="m.color.bg" [style.color]="m.color.fg">
+                  {{ m.iniciales }}: {{ m.n }}
+                </div>
+              </div>
+              <div class="flujo" *ngIf="c.total > 0" [ngClass]="'flujo-' + c.flujo">{{ c.total }}</div>
+            </ng-container>
+          </div>
+        </div>
+
+        <div class="empty" *ngIf="!cargando && !semanas.length">No hay citas para mostrar.</div>
+      </div>
+
+      <!-- Panel lateral -->
+      <div class="cal-side">
+        <!-- Leyenda -->
+        <div class="cd">
+          <span class="cd-title">Leyenda</span>
+          <div class="legend-list">
+            <div class="legend-item" *ngFor="let m of leyenda">
+              <div class="legend-dot" [style.background]="m.color.fg"></div>{{ m.nombre }}
+            </div>
+            <div class="legend-item" *ngIf="!leyenda.length">Sin mecánicos activos.</div>
+          </div>
+          <div class="legend-sep"></div>
+          <div class="legend-item"><div class="legend-dot lg-bajo"></div>Flujo bajo (≤2 citas)</div>
+          <div class="legend-item"><div class="legend-dot lg-medio"></div>Flujo medio (3-5 citas)</div>
+          <div class="legend-item"><div class="legend-dot lg-alto"></div>Flujo alto (6+ citas)</div>
+        </div>
+
+        <!-- Detalle del día -->
+        <div class="cd day-detail" *ngIf="diaSel && diaSel.dia">
+          <h4>{{ detalleTitulo() }}</h4>
+          <div class="mec-row" *ngFor="let m of diaSel.mecanicos">
+            <div class="mec-name">
+              <div class="mec-av-sm" [style.background]="m.color.fg">{{ m.iniciales }}</div>
+              {{ m.nombre }}
+            </div>
+            <span class="mec-cnt">{{ m.n }} {{ m.n === 1 ? 'cita' : 'citas' }}</span>
+          </div>
+          <div class="mec-row" *ngIf="!diaSel.mecanicos.length">
+            <span style="color:var(--tx3)">Sin citas este día</span>
+          </div>
+          <div class="day-total">Total del día: <strong>{{ diaSel.total }} {{ diaSel.total === 1 ? 'cita' : 'citas' }}</strong></div>
+        </div>
+
+        <!-- Resumen del mes -->
+        <div class="cd">
+          <span class="cd-title">Resumen de {{ meses[mes - 1] }}</span>
+          <div class="mec-row" *ngFor="let m of resumenMes">
+            <span class="mec-name" style="font-weight:600">{{ m.nombre }}</span>
+            <span class="mono" [style.color]="m.color.fg" style="font-weight:700">{{ m.n }} citas</span>
+          </div>
+          <div class="legend-sep" *ngIf="resumenMes.length"></div>
+          <div class="mec-row">
+            <span class="mec-name">Total del mes</span>
+            <span class="mono" style="font-weight:700">{{ totalMes }} citas</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ion-content>

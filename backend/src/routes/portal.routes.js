@@ -7,7 +7,8 @@ const authCliente = require('../middleware/auth-cliente');
 const { emailValido } = require('../utils/validar');
 const { consumir } = require('../utils/rate-limit');
 const { enviarCodigoReset } = require('../services/mailer');
-const { SERVICIOS, HORAS, MAX_POR_HORA } = require('../utils/servicios');
+const { SERVICIOS } = require('../utils/servicios');
+const { getConfig, horasDisponibles } = require('../utils/configuracion');
 const { recompensas } = require('../utils/recompensas');
 
 // Fecha de hoy en zona de Costa Rica (UTC-6, sin horario de verano).
@@ -252,6 +253,8 @@ router.get('/disponibilidad', async (req, res) => {
   try {
     const { fecha } = req.query;
     if (!fecha) return res.status(400).json({ error: 'Fecha requerida' });
+    const config = await getConfig();
+    const horas = horasDisponibles(fecha, config);
     const [rows] = await pool.query(
       `SELECT TIME_FORMAT(hora, '%H:%i') AS hora, COUNT(*) AS n
        FROM citas WHERE fecha = ? AND estado != 'cancelado' GROUP BY 1`,
@@ -259,7 +262,7 @@ router.get('/disponibilidad', async (req, res) => {
     );
     const ocupacion = {};
     for (const r of rows) ocupacion[r.hora] = r.n;
-    res.json({ data: { horas: HORAS, max: MAX_POR_HORA, ocupacion } });
+    res.json({ data: { horas, max: config.max_citas_hora, ocupacion } });
   } catch (err) {
     fail(res, err);
   }
@@ -510,11 +513,20 @@ router.post('/citas', async (req, res) => {
     if (!SERVICIOS.includes(tipo_servicio)) {
       return res.status(400).json({ error: 'Servicio no válido' });
     }
-    if (!HORAS.includes(hora)) {
-      return res.status(400).json({ error: 'La hora debe ser entre las 8:00 y las 16:00' });
+    const config = await getConfig();
+    const horas = horasDisponibles(fecha, config);
+    if (!horas.includes(hora)) {
+      return res.status(400).json({ error: 'Ese día/hora no está disponible para agendar' });
     }
-    if (fecha < hoyCR()) {
+    const hoy = hoyCR();
+    if (fecha < hoy) {
       return res.status(400).json({ error: 'La fecha no puede ser en el pasado' });
+    }
+    // Tope de anticipación configurable: no se agenda más allá de N días.
+    const limiteFecha = new Date(`${hoy}T12:00:00Z`);
+    limiteFecha.setUTCDate(limiteFecha.getUTCDate() + Number(config.dias_anticipacion || 30));
+    if (fecha > limiteFecha.toISOString().slice(0, 10)) {
+      return res.status(400).json({ error: `Solo se puede agendar hasta ${config.dias_anticipacion} días por adelantado` });
     }
 
     // Anti-spam: limita cuántas citas pide un mismo cliente.
@@ -539,7 +551,7 @@ router.post('/citas', async (req, res) => {
         "SELECT COUNT(*) AS ocupadas FROM citas WHERE fecha = ? AND hora = ? AND estado != 'cancelado' FOR UPDATE",
         [fecha, hora]
       );
-      if (ocupadas >= MAX_POR_HORA) {
+      if (ocupadas >= config.max_citas_hora) {
         await conn.rollback();
         return res.status(400).json({ error: 'Esa hora ya no está disponible, elegí otra.' });
       }

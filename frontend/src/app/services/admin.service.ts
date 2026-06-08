@@ -43,4 +43,23 @@ export class AdminService {
   borrarTarea(id: number): Observable<any> {
     return this.http.delete(`${this.url}/tareas/${id}`);
   }
+
+  // Calendario: citas del mes agrupadas por día y mecánico.
+  getCalendario(anio: number, mes: number): Observable<{ data: { anio: number; mes: number; celdas: any[]; tecnicos: any[] } }> {
+    return this.http.get<{ data: any }>(`${this.url}/calendario`, { params: { anio, mes } as any });
+  }
+
+  // Configuración del taller.
+  getConfig(): Observable<{ data: any }> {
+    return this.http.get<{ data: any }>(`${this.url}/configuracion`);
+  }
+  updateConfig(payload: any): Observable<{ data: any; message: string }> {
+    return this.http.put<{ data: any; message: string }>(`${this.url}/configuracion`, payload);
+  }
+  updateCuenta(payload: { nombre: string; email: string }): Observable<{ data: any; message: string }> {
+    return this.http.put<{ data: any; message: string }>(`${this.url}/cuenta`, payload);
+  }
+  updatePassword(payload: { actual: string; nueva: string }): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(`${this.url}/cuenta/password`, payload);
+  }
 }

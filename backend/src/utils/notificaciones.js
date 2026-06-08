@@ -1,4 +1,5 @@
 const { pool } = require('../db/pool');
+const { getConfig } = require('./configuracion');
 
 const ESTADO_LEGIBLE = {
   agendado: 'Agendada',
@@ -13,6 +14,9 @@ const ESTADO_LEGIBLE = {
 // Nunca lanza: si algo falla, lo loguea y sigue (no debe romper el cambio de estado).
 async function notificarCambioEstado(citaId, estado) {
   try {
+    // Preferencia del taller: si está apagado, no se avisa al cliente por cambio de estado.
+    const config = await getConfig();
+    if (!config.notif_estado) return;
     const [[cita]] = await pool.query(
       `SELECT ci.cliente_id, m.marca, m.modelo
        FROM citas ci LEFT JOIN motos m ON m.id = ci.moto_id

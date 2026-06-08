@@ -4,6 +4,7 @@ const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
 const { generarNumeroOrden, sincronizarCitaDesdeOrden } = require('../utils/ordenes');
+const { getConfig } = require('../utils/configuracion');
 
 // Panel de recepción: intermediaria entre cliente y mecánico.
 // Accesible a recepción y superiores.
@@ -423,7 +424,9 @@ router.post('/cotizaciones/:id/enviar', async (req, res) => {
        FROM ordenes_trabajo o JOIN motos m ON m.id = o.moto_id WHERE o.id = ?`,
       [req.params.id]
     );
-    if (o) {
+    // Preferencia del taller: avisar al cliente cuando la cotización está lista.
+    const config = await getConfig();
+    if (o && config.notif_cotizacion) {
       const moto = [o.marca, o.modelo].filter(Boolean).join(' ') || 'tu moto';
       await pool.query(
         'INSERT INTO notificaciones (cliente_id, titulo, mensaje) VALUES (?, ?, ?)',

@@ -1,8 +1,10 @@
 const router = require('express').Router();
+const bcrypt = require('bcrypt');
 const { pool } = require('../db/pool');
 const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
+const { getConfig, clearCache } = require('../utils/configuracion');
 
 // Panel del administrador: métricas ejecutivas. Solo admin.
 router.use(auth, requireRol('admin'));
@@ -257,6 +259,131 @@ router.delete('/tareas/:id', async (req, res) => {
   try {
     await pool.query('DELETE FROM tareas_mecanico WHERE id = ? AND asignado_por IS NOT NULL', [req.params.id]);
     res.json({ message: 'Tarea eliminada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// ───────────────────────────────────────────────────────────
+// Calendario: citas del mes agrupadas por día y por mecánico.
+// ───────────────────────────────────────────────────────────
+// GET /api/admin/calendario?anio=&mes=  (mes 1-12)
+router.get('/calendario', async (req, res) => {
+  try {
+    const anio = parseInt(req.query.anio, 10) || new Date().getFullYear();
+    const mes = Math.min(12, Math.max(1, parseInt(req.query.mes, 10) || (new Date().getMonth() + 1)));
+    const [celdas] = await pool.query(
+      `SELECT DAY(ci.fecha) AS dia, ci.tecnico_id, t.nombre AS tecnico_nombre, COUNT(*) AS n
+       FROM citas ci
+       LEFT JOIN usuarios t ON t.id = ci.tecnico_id
+       WHERE YEAR(ci.fecha) = ? AND MONTH(ci.fecha) = ? AND ci.estado != 'cancelado'
+       GROUP BY dia, ci.tecnico_id, t.nombre
+       ORDER BY dia`,
+      [anio, mes]
+    );
+    const [tecnicos] = await pool.query(
+      "SELECT id, nombre FROM usuarios WHERE rol = 'tecnico' AND activo = 1 ORDER BY nombre"
+    );
+    res.json({ data: { anio, mes, celdas, tecnicos } });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// ───────────────────────────────────────────────────────────
+// Configuración del taller (fila única).
+// ───────────────────────────────────────────────────────────
+// GET /api/admin/configuracion
+router.get('/configuracion', async (req, res) => {
+  try {
+    res.json({ data: await getConfig() });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// PUT /api/admin/configuracion — datos del taller, horarios, capacidad y notificaciones.
+router.put('/configuracion', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const num = (v, def) => {
+      const n = parseInt(v, 10);
+      return Number.isFinite(n) && n > 0 ? n : def;
+    };
+    const bit = (v) => (v ? 1 : 0);
+    // Normaliza horarios: solo los 7 días válidos con campos saneados.
+    const horarios = Array.isArray(b.horarios)
+      ? b.horarios
+          .filter((h) => Number.isInteger(Number(h?.dia)) && Number(h.dia) >= 0 && Number(h.dia) <= 6)
+          .map((h) => ({
+            dia: Number(h.dia),
+            abre: String(h.abre || '08:00').slice(0, 5),
+            cierra: String(h.cierra || '17:00').slice(0, 5),
+            activo: bit(h.activo),
+          }))
+      : null;
+
+    await pool.query(
+      `UPDATE configuracion SET
+         nombre_taller = ?, telefono = ?, email = ?, direccion = ?, logo = ?,
+         max_citas_hora = ?, dias_anticipacion = ?, duracion_cita_min = ?,
+         ${horarios ? 'horarios = ?,' : ''}
+         notif_estado = ?, notif_recordatorio = ?, notif_cotizacion = ?, notif_email_entrega = ?
+       WHERE id = 1`,
+      [
+        (b.nombre_taller || '').trim() || 'MS Motos',
+        (b.telefono || '').trim() || null,
+        (b.email || '').trim() || null,
+        (b.direccion || '').trim() || null,
+        b.logo || null,
+        num(b.max_citas_hora, 2),
+        num(b.dias_anticipacion, 30),
+        num(b.duracion_cita_min, 90),
+        ...(horarios ? [JSON.stringify(horarios)] : []),
+        bit(b.notif_estado),
+        bit(b.notif_recordatorio),
+        bit(b.notif_cotizacion),
+        bit(b.notif_email_entrega),
+      ]
+    );
+    clearCache();
+    res.json({ data: await getConfig(), message: 'Configuración guardada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// ───────────────────────────────────────────────────────────
+// Cuenta del administrador logueado.
+// ───────────────────────────────────────────────────────────
+// PUT /api/admin/cuenta — nombre y correo del propio admin.
+router.put('/cuenta', async (req, res) => {
+  try {
+    const { nombre, email } = req.body;
+    if (!nombre || !nombre.trim() || !email || !email.trim()) {
+      return res.status(400).json({ error: 'Nombre y correo son requeridos' });
+    }
+    await pool.query('UPDATE usuarios SET nombre = ?, email = ? WHERE id = ?', [nombre.trim(), email.trim(), req.usuario.id]);
+    const [[u]] = await pool.query('SELECT id, nombre, email, rol FROM usuarios WHERE id = ?', [req.usuario.id]);
+    res.json({ data: u, message: 'Cuenta actualizada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// PUT /api/admin/cuenta/password — cambia la contraseña verificando la actual.
+router.put('/cuenta/password', async (req, res) => {
+  try {
+    const { actual, nueva } = req.body;
+    if (!actual || !nueva) return res.status(400).json({ error: 'Contraseña actual y nueva son requeridas' });
+    if (String(nueva).length < 8) return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 8 caracteres' });
+    const [[u]] = await pool.query('SELECT password_hash FROM usuarios WHERE id = ?', [req.usuario.id]);
+    if (!u) return res.status(404).json({ error: 'Usuario no encontrado' });
+    const ok = await bcrypt.compare(String(actual), u.password_hash);
+    if (!ok) return res.status(400).json({ error: 'La contraseña actual no es correcta' });
+    const hash = await bcrypt.hash(String(nueva), 10);
+    await pool.query('UPDATE usuarios SET password_hash = ? WHERE id = ?', [hash, req.usuario.id]);
+    res.json({ message: 'Contraseña actualizada' });
   } catch (err) {
     fail(res, err);
   }

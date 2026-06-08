@@ -253,6 +253,48 @@ async function ensureSchema() {
         FOREIGN KEY (destino_id)   REFERENCES usuarios(id)
       )
     `);
+
+    // Configuración del taller (fila única id=1): datos del negocio, horarios de
+    // atención, capacidad de la agenda y preferencias de notificación. El portal
+    // lee de aquí los cupos/horas (antes hardcodeados en utils/servicios.js).
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS configuracion (
+        id                  TINYINT PRIMARY KEY,
+        nombre_taller       VARCHAR(150),
+        telefono            VARCHAR(40),
+        email               VARCHAR(120),
+        direccion           VARCHAR(200),
+        logo                LONGTEXT,
+        max_citas_hora      INT DEFAULT 2,
+        dias_anticipacion   INT DEFAULT 30,
+        duracion_cita_min   INT DEFAULT 90,
+        horarios            JSON,
+        notif_estado        TINYINT(1) DEFAULT 1,
+        notif_recordatorio  TINYINT(1) DEFAULT 1,
+        notif_cotizacion    TINYINT(1) DEFAULT 1,
+        notif_email_entrega TINYINT(1) DEFAULT 0,
+        updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+    // Siembra la fila única con valores por defecto (idempotente: INSERT IGNORE).
+    // Horarios: 0=Dom … 6=Sáb. L-V 08-17, Sáb 08-13, Dom cerrado.
+    await tryStep('seed configuracion', () =>
+      pool.query(
+        `INSERT IGNORE INTO configuracion
+           (id, nombre_taller, telefono, email, direccion,
+            max_citas_hora, dias_anticipacion, duracion_cita_min, horarios)
+         VALUES (1, 'MS Motos', '', '', '', 2, 30, 90, ?)`,
+        [JSON.stringify([
+          { dia: 0, abre: '08:00', cierra: '13:00', activo: 0 },
+          { dia: 1, abre: '08:00', cierra: '17:00', activo: 1 },
+          { dia: 2, abre: '08:00', cierra: '17:00', activo: 1 },
+          { dia: 3, abre: '08:00', cierra: '17:00', activo: 1 },
+          { dia: 4, abre: '08:00', cierra: '17:00', activo: 1 },
+          { dia: 5, abre: '08:00', cierra: '17:00', activo: 1 },
+          { dia: 6, abre: '08:00', cierra: '13:00', activo: 1 },
+        ])]
+      )
+    );
   } catch (err) {
     console.error('⚠️  Auto-migración falló:', err.code || err.message);
   }

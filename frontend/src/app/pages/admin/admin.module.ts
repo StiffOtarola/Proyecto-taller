@@ -8,6 +8,8 @@ import { AdminEmpleadosPage } from './admin-empleados.page';
 import { AdminTareasPage } from './admin-tareas.page';
 import { AdminReportesPage } from './admin-reportes.page';
 import { AdminPromosPage } from './admin-promos.page';
+import { AdminCalendarioPage } from './admin-calendario.page';
+import { AdminConfigPage } from './admin-config.page';
 
 @NgModule({
   imports: [SharedModule, AdminPageRoutingModule],
@@ -19,6 +21,8 @@ import { AdminPromosPage } from './admin-promos.page';
     AdminTareasPage,
     AdminReportesPage,
     AdminPromosPage,
+    AdminCalendarioPage,
+    AdminConfigPage,
   ],
 })
 export class AdminPageModule {}

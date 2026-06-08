@@ -1,0 +1,70 @@
+<ion-header>
+  <ion-toolbar class="admin-topbar">
+    <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
+    <ion-title>Resumen Ejecutivo</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="admin-dark">
+  <ion-refresher slot="fixed" (ionRefresh)="cargar($event)"><ion-refresher-content></ion-refresher-content></ion-refresher>
+
+  <div class="admin">
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi cr"><div class="kpi-label">Citas del mes</div><div class="kpi-val">{{ data?.total_citas ?? 0 }}</div></div>
+      <div class="kpi em"><div class="kpi-label">Ingresos del mes</div><div class="kpi-val mono">{{ (data?.ingresos_mes || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</div></div>
+      <div class="kpi am"><div class="kpi-label">Citas pendientes</div><div class="kpi-val">{{ data?.citas_pendientes ?? 0 }}</div></div>
+      <div class="kpi in"><div class="kpi-label">Tasa de éxito</div><div class="kpi-val">{{ data?.tasa_exito ?? 0 }}%</div></div>
+    </div>
+
+    <div class="g21">
+      <!-- Top servicios -->
+      <div class="cd">
+        <span class="cd-title">🏆 Top servicios del mes</span>
+        <div class="bar-item" *ngFor="let s of data?.top_servicios">
+          <div class="bar-head"><span>{{ s.servicio }}</span><strong>{{ s.total }} citas</strong></div>
+          <div class="bar-track"><div class="bar-fill" [style.width.%]="pct(s.total, maxServicio)"></div></div>
+        </div>
+        <div class="empty" *ngIf="!cargando && !data?.top_servicios?.length"><ion-icon name="construct-outline"></ion-icon><p>Sin citas este mes.</p></div>
+      </div>
+
+      <!-- Estado de citas -->
+      <div class="cd">
+        <span class="cd-title">📊 Estado de citas</span>
+        <ng-container *ngIf="data?.estado_citas as e">
+          <div class="bar-item"><div class="bar-head"><span>Agendadas</span><strong class="mono">{{ e.agendadas }} — {{ pct(e.agendadas, e.total) }}%</strong></div><div class="bar-track"><div class="bar-fill" style="background:#818CF8" [style.width.%]="pct(e.agendadas, e.total)"></div></div></div>
+          <div class="bar-item"><div class="bar-head"><span>En proceso</span><strong class="mono">{{ e.en_proceso }} — {{ pct(e.en_proceso, e.total) }}%</strong></div><div class="bar-track"><div class="bar-fill" style="background:#FBB834" [style.width.%]="pct(e.en_proceso, e.total)"></div></div></div>
+          <div class="bar-item"><div class="bar-head"><span>Completadas</span><strong class="mono">{{ e.completadas }} — {{ pct(e.completadas, e.total) }}%</strong></div><div class="bar-track"><div class="bar-fill" style="background:#4ADE80" [style.width.%]="pct(e.completadas, e.total)"></div></div></div>
+          <div class="bar-item"><div class="bar-head"><span>Canceladas</span><strong class="mono">{{ e.canceladas }} — {{ pct(e.canceladas, e.total) }}%</strong></div><div class="bar-track"><div class="bar-fill" style="background:#F87171" [style.width.%]="pct(e.canceladas, e.total)"></div></div></div>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Ingresos por servicio -->
+    <div class="cd mb">
+      <span class="cd-title">💰 Desglose de ingresos por servicio (mes)</span>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Servicio</th><th>Citas</th><th>Ingreso</th><th>% del total</th><th>Prom./cita</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let r of data?.ingresos_por_servicio">
+              <td style="font-weight:600">{{ r.servicio }}</td>
+              <td class="mono">{{ r.citas }}</td>
+              <td class="mono" style="color:var(--em)">{{ (r.ingreso || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</td>
+              <td><div>{{ pct(r.ingreso, totalIngreso) }}%</div><div class="pct-bar"><div class="pct-fill" [style.width.%]="pct(r.ingreso, totalIngreso)"></div></div></td>
+              <td class="mono">{{ (r.promedio || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</td>
+            </tr>
+            <tr *ngIf="data?.ingresos_por_servicio?.length" style="border-top:1.5px solid var(--bd)">
+              <td style="font-weight:800">TOTAL</td>
+              <td></td>
+              <td class="mono" style="font-weight:800;color:var(--em)">{{ totalIngreso | currency:'CRC':'symbol-narrow':'1.0-0' }}</td>
+              <td><strong>100%</strong></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="empty" *ngIf="!cargando && !data?.ingresos_por_servicio?.length"><ion-icon name="cash-outline"></ion-icon><p>Sin ingresos registrados este mes.</p></div>
+    </div>
+  </div>
+</ion-content>

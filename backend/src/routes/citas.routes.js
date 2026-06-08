@@ -16,7 +16,7 @@ router.use(auth);
 
 router.get('/', async (req, res) => {
   try {
-    const { fecha, estado, tecnico_id } = req.query;
+    const { fecha, estado, tecnico_id, q } = req.query;
     let sql = `SELECT ci.*, c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.telefono AS cliente_telefono,
                       m.marca, m.modelo, m.placa,
                       u.nombre AS usuario_nombre,
@@ -31,6 +31,11 @@ router.get('/', async (req, res) => {
     if (fecha) { sql += ' AND ci.fecha = ?'; params.push(fecha); }
     if (estado) { sql += ' AND ci.estado = ?'; params.push(estado); }
     if (tecnico_id) { sql += ' AND ci.tecnico_id = ?'; params.push(tecnico_id); }
+    if (q) {
+      sql += ' AND (c.nombre LIKE ? OR c.apellido LIKE ? OR CONCAT(c.nombre, " ", c.apellido) LIKE ? OR m.placa LIKE ?)';
+      const like = `%${q}%`;
+      params.push(like, like, like, like);
+    }
     sql += ' ORDER BY ci.fecha ASC, ci.hora ASC';
     const [rows] = await pool.query(sql, params);
     res.json({ data: rows });

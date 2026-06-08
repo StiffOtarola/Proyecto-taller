@@ -237,6 +237,7 @@ CREATE TABLE IF NOT EXISTS promos (
   descripcion TEXT NOT NULL,
   descuento   INT DEFAULT 0,
   imagen      MEDIUMTEXT,                 -- data URL base64 de la oferta
+  precio_final INT,                       -- precio final opcional (lo fija el admin)
   activa      TINYINT(1) DEFAULT 1,
   created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

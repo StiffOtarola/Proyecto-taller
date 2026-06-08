@@ -19,11 +19,11 @@ router.get('/', async (req, res) => {
 // Gestión: solo admin/gerencia
 router.post('/', requireRol('admin'), async (req, res) => {
   try {
-    const { titulo, descripcion, descuento, activa, imagen } = req.body;
+    const { titulo, descripcion, descuento, activa, imagen, precio_final } = req.body;
     if (!titulo || !descripcion) return res.status(400).json({ error: 'Título y descripción son requeridos' });
     const [result] = await pool.query(
-      'INSERT INTO promos (titulo, descripcion, descuento, activa, imagen) VALUES (?, ?, ?, ?, ?)',
-      [titulo, descripcion, descuento || 0, activa === false ? 0 : 1, imagen || null]
+      'INSERT INTO promos (titulo, descripcion, descuento, activa, imagen, precio_final) VALUES (?, ?, ?, ?, ?, ?)',
+      [titulo, descripcion, descuento || 0, activa === false ? 0 : 1, imagen || null, precio_final || null]
     );
     const [[nueva]] = await pool.query('SELECT * FROM promos WHERE id = ?', [result.insertId]);
     res.status(201).json({ data: nueva, message: 'Promoción creada' });
@@ -35,11 +35,11 @@ router.post('/', requireRol('admin'), async (req, res) => {
 // Editar oferta (incluye imagen)
 router.put('/:id', requireRol('admin'), async (req, res) => {
   try {
-    const { titulo, descripcion, descuento, imagen } = req.body;
+    const { titulo, descripcion, descuento, imagen, precio_final } = req.body;
     if (!titulo || !descripcion) return res.status(400).json({ error: 'Título y descripción son requeridos' });
     await pool.query(
-      'UPDATE promos SET titulo = ?, descripcion = ?, descuento = ?, imagen = ? WHERE id = ?',
-      [titulo, descripcion, descuento || 0, imagen || null, req.params.id]
+      'UPDATE promos SET titulo = ?, descripcion = ?, descuento = ?, imagen = ?, precio_final = ? WHERE id = ?',
+      [titulo, descripcion, descuento || 0, imagen || null, precio_final || null, req.params.id]
     );
     const [[promo]] = await pool.query('SELECT * FROM promos WHERE id = ?', [req.params.id]);
     if (!promo) return res.status(404).json({ error: 'Promoción no encontrada' });

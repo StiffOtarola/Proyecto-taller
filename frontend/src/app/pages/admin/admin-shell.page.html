@@ -1,0 +1,48 @@
+<ion-split-pane contentId="admin-content" when="lg">
+  <ion-menu contentId="admin-content" type="overlay" class="admin-sidebar">
+    <ion-content class="admin-dark sidebar-content">
+      <div class="sb-logo">
+        <h1>Taller<span class="dot">MS</span></h1>
+        <span>Panel Administrativo</span>
+      </div>
+
+      <ion-menu-toggle auto-hide="false">
+        <nav class="sb-nav">
+          <div class="sb-section">Principal</div>
+          <a class="nav-item" routerLink="/admin/resumen" routerLinkActive="on">
+            <ion-icon name="grid-outline"></ion-icon> Resumen ejecutivo
+          </a>
+          <a class="nav-item" routerLink="/admin/citas" routerLinkActive="on">
+            <ion-icon name="calendar-outline"></ion-icon> Gestión de citas
+          </a>
+
+          <div class="sb-section">Equipo</div>
+          <a class="nav-item" routerLink="/admin/empleados" routerLinkActive="on">
+            <ion-icon name="people-outline"></ion-icon> Gestión de empleados
+          </a>
+          <a class="nav-item" routerLink="/admin/tareas" routerLinkActive="on">
+            <ion-icon name="checkmark-done-outline"></ion-icon> Asignar tareas
+          </a>
+
+          <div class="sb-section">Análisis</div>
+          <a class="nav-item" routerLink="/admin/reportes" routerLinkActive="on">
+            <ion-icon name="bar-chart-outline"></ion-icon> Reportes
+          </a>
+          <a class="nav-item" routerLink="/admin/promos" routerLinkActive="on">
+            <ion-icon name="pricetags-outline"></ion-icon> Promociones
+          </a>
+        </nav>
+      </ion-menu-toggle>
+    </ion-content>
+
+    <ion-footer class="admin-dark">
+      <div class="sb-user">
+        <div class="sb-av">{{ iniciales }}</div>
+        <div class="sb-info"><strong>{{ nombre }}</strong><span>{{ rolLabel }}</span></div>
+        <button class="sb-logout" (click)="logout()" title="Cerrar sesión"><ion-icon name="log-out-outline"></ion-icon></button>
+      </div>
+    </ion-footer>
+  </ion-menu>
+
+  <ion-router-outlet id="admin-content"></ion-router-outlet>
+</ion-split-pane>

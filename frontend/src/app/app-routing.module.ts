@@ -30,6 +30,12 @@ const routes: Routes = [
     loadChildren: () => import('./pages/recepcion/recepcion.module').then(m => m.RecepcionPageModule),
   },
   {
+    path: 'admin',
+    canActivate: [AuthGuard, RolGuard],
+    data: { roles: ['admin', 'gerencia'] },
+    loadChildren: () => import('./pages/admin/admin.module').then(m => m.AdminPageModule),
+  },
+  {
     path: 'nueva-orden',
     canActivate: [AuthGuard, RolGuard],
     data: { roles: ['jefe_taller', 'admin', 'gerencia'] },

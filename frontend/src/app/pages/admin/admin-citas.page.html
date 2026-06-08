@@ -1,0 +1,47 @@
+<ion-header>
+  <ion-toolbar class="admin-topbar">
+    <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
+    <ion-title>Gestión de Citas</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="admin-dark">
+  <div class="admin">
+    <div class="filter-bar">
+      <button class="filter-btn" *ngFor="let f of filtros" [class.on]="estado === f.v" (click)="setFiltro(f.v)">{{ f.l }}</button>
+    </div>
+
+    <div class="search-row">
+      <input class="grow" type="text" [(ngModel)]="q" (keyup.enter)="cargar()" placeholder="🔍 Buscar cliente o placa...">
+      <input type="date" [(ngModel)]="fecha">
+      <button class="btn btn-cr" (click)="cargar()">Buscar</button>
+      <button class="btn btn-ou" (click)="exportar()" [disabled]="!citas.length">Exportar</button>
+    </div>
+
+    <div class="cd">
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>#</th><th>Moto / Placa</th><th>Cliente</th><th>Servicio</th><th>Fecha y hora</th><th>Mecánico</th><th>Estado</th><th>Acción</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of citas">
+              <td class="mono" style="color:var(--tx3)">#{{ c.id }}</td>
+              <td><strong>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}</strong><br><span class="mono" style="font-size:11px;color:var(--tx3)">{{ c.placa || '—' }}</span></td>
+              <td>{{ c.cliente_nombre }} {{ c.cliente_apellido }}</td>
+              <td style="font-size:12px">{{ c.tipo_servicio || c.motivo }}</td>
+              <td class="mono" style="font-size:11px">{{ c.fecha | date:'dd/MM/yy' }} · {{ c.hora?.slice(0,5) }}</td>
+              <td>{{ c.tecnico_nombre || '—' }}</td>
+              <td><span class="bg" [ngClass]="estadoBadge[c.estado]">{{ estadoLabel[c.estado] }}</span></td>
+              <td>
+                <button class="btn btn-ou btn-sm" *ngIf="c.orden_id" (click)="abrir(c)">Ver orden</button>
+                <span *ngIf="!c.orden_id" style="color:var(--tx3)">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="empty" *ngIf="!cargando && !citas.length"><ion-icon name="calendar-clear-outline"></ion-icon><p>No hay citas con esos filtros.</p></div>
+    </div>
+  </div>
+</ion-content>

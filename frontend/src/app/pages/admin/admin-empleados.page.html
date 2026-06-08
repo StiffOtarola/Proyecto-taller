@@ -1,0 +1,51 @@
+<ion-header>
+  <ion-toolbar class="admin-topbar">
+    <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
+    <ion-title>Gestión de Empleados</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="admin-dark">
+  <div class="admin">
+    <div class="g2">
+      <!-- Crear empleado -->
+      <div class="cd">
+        <span class="cd-title">➕ Crear nuevo empleado</span>
+        <div class="fg"><label>Nombre completo *</label><input [(ngModel)]="nuevo.nombre" placeholder="Ej: Carlos García"></div>
+        <div class="fg"><label>Correo electrónico *</label><input type="email" [(ngModel)]="nuevo.email" placeholder="carlos@taller.com"></div>
+        <div class="fg"><label>Contraseña *</label><input type="password" [(ngModel)]="nuevo.password" placeholder="Mín. 6 caracteres"></div>
+        <div class="fg"><label>Teléfono (opcional)</label><input type="tel" [(ngModel)]="nuevo.telefono" placeholder="8888-8888"></div>
+        <div class="fg"><label>Rol *</label>
+          <select [(ngModel)]="nuevo.rol">
+            <option value="tecnico">🔧 Mecánico</option>
+            <option value="recepcion">🗂 Recepcionista</option>
+          </select>
+        </div>
+        <button class="btn btn-cr btn-block" (click)="crear()" [disabled]="!valido || creando">{{ creando ? 'Creando…' : 'Crear empleado' }}</button>
+      </div>
+
+      <!-- Lista de empleados -->
+      <div class="cd">
+        <span class="cd-title">👥 Empleados</span>
+        <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:8px">
+          <div class="sk-dark" style="height:62px"></div>
+          <div class="sk-dark" style="height:62px"></div>
+        </div>
+        <div *ngIf="!cargando">
+          <div class="emp-row" *ngFor="let u of usuarios" [class.inactivo]="!u.activo">
+            <div class="emp-av" [ngClass]="u.activo ? avatarColor(u.rol) : 'off'">{{ iniciales(u.nombre) }}</div>
+            <div class="emp-info">
+              <strong>{{ u.nombre }}</strong>
+              <span>{{ rolLabel[u.rol] || u.rol }}<span *ngIf="u.telefono"> · {{ u.telefono }}</span></span>
+            </div>
+            <div class="emp-actions">
+              <span class="bg" [ngClass]="u.activo ? 'bg-em' : 'bg-rd'">{{ u.activo ? 'Activo' : 'Inactivo' }}</span>
+              <button class="btn btn-sm" [ngClass]="u.activo ? 'btn-rd' : 'btn-em'" (click)="toggle(u)">{{ u.activo ? 'Desactivar' : 'Activar' }}</button>
+            </div>
+          </div>
+          <div class="empty" *ngIf="!usuarios.length"><ion-icon name="people-outline"></ion-icon><p>Sin empleados.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ion-content>

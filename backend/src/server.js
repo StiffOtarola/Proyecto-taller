@@ -56,6 +56,7 @@ app.use('/api/portal',    require('./routes/portal.routes'));
 app.use('/api/promos',    require('./routes/promos.routes'));
 app.use('/api/mecanico',  require('./routes/mecanico.routes'));
 app.use('/api/recepcion', require('./routes/recepcion.routes'));
+app.use('/api/admin',     require('./routes/admin.routes'));
 
 app.use('/api', (err, req, res, next) => {
   console.error('Error:', err.message);

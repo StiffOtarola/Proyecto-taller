@@ -8,6 +8,7 @@ export interface Promo {
   titulo: string;
   descripcion: string;
   descuento?: number;
+  precio_final?: number | null;
   imagen?: string | null;
   activa?: number;
   created_at?: string;
@@ -24,6 +25,10 @@ export class PromosService {
 
   create(promo: Promo): Observable<{ data: Promo }> {
     return this.http.post<{ data: Promo }>(this.url, promo);
+  }
+
+  update(id: number, promo: Promo): Observable<{ data: Promo }> {
+    return this.http.put<{ data: Promo }>(`${this.url}/${id}`, promo);
   }
 
   toggle(id: number): Observable<{ data: Promo }> {

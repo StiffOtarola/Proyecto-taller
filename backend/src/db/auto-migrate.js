@@ -154,6 +154,8 @@ async function ensureSchema() {
 
     // Ofertas con imagen (data URL base64).
     await addColumnIfMissing('promos', 'imagen', 'MEDIUMTEXT NULL');
+    // Precio final de la oferta (lo fija el admin; opcional, para mostrar en el portal).
+    await addColumnIfMissing('promos', 'precio_final', 'INT NULL');
 
     // Puente cita ↔ orden: una cita puede generar/enlazar una orden de trabajo.
     await addColumnIfMissing('citas', 'orden_id', 'INT NULL');

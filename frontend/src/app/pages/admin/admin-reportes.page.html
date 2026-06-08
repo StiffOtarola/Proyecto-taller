@@ -6,11 +6,106 @@
 </ion-header>
 
 <ion-content class="admin-dark">
+  <ion-refresher slot="fixed" (ionRefresh)="cargar($event)"><ion-refresher-content></ion-refresher-content></ion-refresher>
+
   <div class="admin">
-    <div class="placeholder">
-      <ion-icon name="bar-chart-outline"></ion-icon>
-      <h3>Reportes — próximamente</h3>
-      <p>KPIs por período, citas por día, ingresos por servicio y rendimiento por colaborador (Fase B).</p>
+    <!-- Filtros: período + mecánico + exportar -->
+    <div class="filter-bar">
+      <button class="filter-btn" *ngFor="let p of periodos" [class.on]="periodo === p.v" (click)="setPeriodo(p.v)">{{ p.l }}</button>
+    </div>
+    <div class="search-row">
+      <select [(ngModel)]="empleado" (ngModelChange)="cargar()" style="flex:1; min-width:180px">
+        <option [ngValue]="null">Todos los mecánicos</option>
+        <option *ngFor="let t of tecnicos" [ngValue]="t.id">{{ t.nombre }}</option>
+      </select>
+      <button class="btn btn-ou" (click)="exportar()" [disabled]="!data?.rendimiento?.length">Exportar rendimiento</button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi cr"><div class="kpi-label">Citas del período</div><div class="kpi-val">{{ data?.kpis?.total_citas ?? 0 }}</div></div>
+      <div class="kpi em"><div class="kpi-label">Ingresos</div><div class="kpi-val mono">{{ (data?.kpis?.ingresos || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</div></div>
+      <div class="kpi in"><div class="kpi-label">Tasa de éxito</div><div class="kpi-val">{{ data?.kpis?.tasa_exito ?? 0 }}%</div></div>
+      <div class="kpi am"><div class="kpi-label">Ticket promedio</div><div class="kpi-val mono">{{ (data?.kpis?.ticket_promedio || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</div></div>
+    </div>
+    <div style="font-size:12px; color:var(--tx2); margin:-8px 0 18px; padding-left:2px">
+      {{ data?.kpis?.entregadas ?? 0 }} entregadas · {{ data?.kpis?.canceladas ?? 0 }} canceladas · {{ calFmt(data?.kpis?.calificacion_promedio) }} satisfacción
+    </div>
+
+    <!-- Gráfico: citas por día / mes -->
+    <div class="cd mb">
+      <span class="cd-title">📈 Citas por {{ data?.periodo?.clave === 'anio' ? 'mes' : 'día' }} · {{ data?.periodo?.label }}</span>
+      <div style="display:flex; align-items:flex-end; gap:3px; height:150px">
+        <div *ngFor="let b of data?.serie" style="flex:1; min-width:6px; height:100%; display:flex; align-items:flex-end" [title]="b.label + ': ' + b.citas + ' citas'">
+          <div [style.height.%]="pct(b.citas, maxSerie)" style="width:100%; min-height:2px; background:linear-gradient(180deg, #F43F5E, var(--cr)); border-radius:4px 4px 0 0"></div>
+        </div>
+      </div>
+      <div style="display:flex; gap:3px; margin-top:6px">
+        <div *ngFor="let b of data?.serie; let i = index" class="mono" style="flex:1; min-width:6px; text-align:center; font-size:9px; color:var(--tx3); white-space:nowrap">{{ verLabel(i) ? b.label : '' }}</div>
+      </div>
+      <div class="empty" *ngIf="!cargando && !data?.serie?.length"><ion-icon name="bar-chart-outline"></ion-icon><p>Sin datos en el período.</p></div>
+    </div>
+
+    <!-- Ingresos por servicio -->
+    <div class="cd mb">
+      <span class="cd-title">💰 Ingresos por servicio · {{ data?.periodo?.label }}</span>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Servicio</th><th>Citas</th><th>Ingreso</th><th>% del total</th><th>Prom./cita</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let r of data?.ingresos_por_servicio">
+              <td style="font-weight:600">{{ r.servicio }}</td>
+              <td class="mono">{{ r.citas }}</td>
+              <td class="mono" style="color:var(--em)">{{ (r.ingreso || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</td>
+              <td><div>{{ pct(r.ingreso, totalIngresoServicio) }}%</div><div class="pct-bar"><div class="pct-fill" [style.width.%]="pct(r.ingreso, totalIngresoServicio)"></div></div></td>
+              <td class="mono">{{ (r.promedio || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="empty" *ngIf="!cargando && !data?.ingresos_por_servicio?.length"><ion-icon name="cash-outline"></ion-icon><p>Sin ingresos en el período.</p></div>
+    </div>
+
+    <!-- Rendimiento por mecánico -->
+    <div class="cd mb">
+      <span class="cd-title">🔧 Rendimiento por mecánico · {{ data?.periodo?.label }}</span>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Mecánico</th><th>Citas</th><th>Entreg.</th><th>Tasa</th><th>Ingresos</th><th>Tiempo prom.</th><th>Calif.</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let r of data?.rendimiento">
+              <td style="font-weight:600">{{ r.nombre }}</td>
+              <td class="mono">{{ r.citas }}</td>
+              <td class="mono">{{ r.entregadas }}</td>
+              <td><span class="bg" [ngClass]="tasa(r) >= 70 ? 'bg-em' : (tasa(r) >= 40 ? 'bg-am' : 'bg-rd')">{{ tasa(r) }}%</span></td>
+              <td class="mono" style="color:var(--em)">{{ (r.ingresos || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</td>
+              <td class="mono">{{ tiempoFmt(r.tiempo_prom_min) }}</td>
+              <td class="mono">{{ calFmt(r.calificacion) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="empty" *ngIf="!cargando && !data?.rendimiento?.length"><ion-icon name="people-outline"></ion-icon><p>Sin citas asignadas a mecánicos en el período.</p></div>
+    </div>
+
+    <!-- Cotizaciones por recepción -->
+    <div class="cd mb">
+      <span class="cd-title">🗂 Cotizaciones por recepción · {{ data?.periodo?.label }}</span>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Recepcionista</th><th>Órdenes</th><th>Aprobadas</th><th>Rechazadas</th><th>Tasa aprob.</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let r of data?.recepcion">
+              <td style="font-weight:600">{{ r.nombre }}</td>
+              <td class="mono">{{ r.ordenes }}</td>
+              <td class="mono" style="color:var(--em)">{{ r.aprobadas }}</td>
+              <td class="mono" style="color:var(--rd)">{{ r.rechazadas }}</td>
+              <td class="mono">{{ pct(r.aprobadas, r.ordenes) }}%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="empty" *ngIf="!cargando && !data?.recepcion?.length"><ion-icon name="document-text-outline"></ion-icon><p>Sin órdenes con recepcionista en el período.</p></div>
     </div>
   </div>
 </ion-content>

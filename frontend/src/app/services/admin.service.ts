@@ -22,4 +22,12 @@ export class AdminService {
     if (filtros.fecha) params.fecha = filtros.fecha;
     return this.http.get<{ data: any[] }>(this.citasUrl, { params });
   }
+
+  // Reportes analíticos por período (KPIs, serie, ingresos por servicio, rendimiento).
+  getReportes(filtros: { periodo?: string; empleado?: number | null } = {}): Observable<{ data: any }> {
+    const params: any = {};
+    if (filtros.periodo) params.periodo = filtros.periodo;
+    if (filtros.empleado) params.empleado = filtros.empleado;
+    return this.http.get<{ data: any }>(`${this.url}/reportes`, { params });
+  }
 }

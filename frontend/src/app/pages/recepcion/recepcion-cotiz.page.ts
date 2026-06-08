@@ -95,27 +95,30 @@ export class RecepcionCotizPage implements OnInit {
     return !!this.form.orden_id && this.form.piezas.some(p => p.nombre.trim() && Number(p.monto) > 0);
   }
 
-  async guardarCotizacion() {
+  guardarCotizacion() {
     if (!this.formValido) { this.aviso('Elegí una orden y al menos una pieza con monto', 'warning'); return; }
     this.guardando = true;
-    const ordenId = this.form.orden_id!;
-    try {
-      if (this.form.tecnico_id) {
-        await this.rec.asignarTecnico(ordenId, this.form.tecnico_id).toPromise();
-      }
-      const piezas = this.form.piezas.filter(p => p.nombre.trim() && Number(p.monto) > 0);
-      for (const p of piezas) {
-        await this.rec.addRepuesto(ordenId, { nombre: p.nombre.trim(), cantidad: 1, costo_unitario: Number(p.monto) || 0 }).toPromise();
-      }
-      await this.rec.updateCostos(ordenId, { costo_mano_obra: Number(this.form.mano_obra) || 0, descuento: 0 }).toPromise();
-      this.guardando = false;
-      this.mostrarForm = false;
-      this.aviso('Cotización guardada', 'success');
-      this.cargar();
-    } catch {
-      this.guardando = false;
-      this.aviso('No se pudo guardar la cotización', 'danger');
-    }
+    const piezas = this.form.piezas
+      .filter(p => p.nombre.trim() && Number(p.monto) > 0)
+      .map(p => ({ nombre: p.nombre.trim(), cantidad: 1, costo_unitario: Number(p.monto) || 0 }));
+    // Una sola llamada transaccional: si algo falla, no queda nada a medias.
+    this.rec.armarCotizacion(this.form.orden_id!, {
+      tecnico_id: this.form.tecnico_id,
+      piezas,
+      costo_mano_obra: Number(this.form.mano_obra) || 0,
+      descuento: 0,
+    }).subscribe({
+      next: () => {
+        this.guardando = false;
+        this.mostrarForm = false;
+        this.aviso('Cotización guardada', 'success');
+        this.cargar();
+      },
+      error: () => {
+        this.guardando = false;
+        this.aviso('No se pudo guardar la cotización', 'danger');
+      },
+    });
   }
 
   // ───── Edición de piezas existentes ─────

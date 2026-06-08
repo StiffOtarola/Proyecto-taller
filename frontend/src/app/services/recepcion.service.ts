@@ -59,6 +59,15 @@ export class RecepcionService {
   updateCostos(id: number, data: { costo_mano_obra: number; descuento: number }): Observable<any> {
     return this.http.put(`${this.url}/cotizaciones/${id}/costos`, data);
   }
+  // Arma la cotización completa (técnico + piezas + costos) en una sola llamada transaccional.
+  armarCotizacion(ordenId: number, data: {
+    tecnico_id?: number | null;
+    piezas: { nombre: string; cantidad?: number; costo_unitario: number }[];
+    costo_mano_obra: number;
+    descuento: number;
+  }): Observable<{ data: any }> {
+    return this.http.post<{ data: any }>(`${this.url}/cotizaciones/${ordenId}/armar`, data);
+  }
   enviarCotizacion(id: number): Observable<any> {
     return this.http.post(`${this.url}/cotizaciones/${id}/enviar`, {});
   }

@@ -336,6 +336,72 @@ router.put('/cotizaciones/:id/costos', async (req, res) => {
   }
 });
 
+// Armar una cotización completa en UNA transacción: asigna técnico (opcional),
+// inserta todas las piezas, fija mano de obra + descuento y recalcula los repuestos.
+// Si algo falla, no queda nada a medias (antes el front encadenaba varias llamadas).
+router.post('/cotizaciones/:id/armar', async (req, res) => {
+  const ordenId = req.params.id;
+  const { tecnico_id, piezas, costo_mano_obra, descuento } = req.body;
+
+  const piezasValidas = Array.isArray(piezas)
+    ? piezas
+        .map(p => ({ nombre: String(p?.nombre || '').trim(), cantidad: Number(p?.cantidad) || 1, costo_unitario: Number(p?.costo_unitario) || 0 }))
+        .filter(p => p.nombre && p.costo_unitario > 0)
+    : [];
+  if (!piezasValidas.length) {
+    return res.status(400).json({ error: 'Agregá al menos una pieza con monto' });
+  }
+
+  try {
+    const [[orden]] = await pool.query('SELECT id FROM ordenes_trabajo WHERE id = ?', [ordenId]);
+    if (!orden) return res.status(404).json({ error: 'Orden no encontrada' });
+
+    if (tecnico_id) {
+      const [[tec]] = await pool.query(
+        "SELECT id FROM usuarios WHERE id = ? AND rol = 'tecnico' AND activo = 1",
+        [tecnico_id]
+      );
+      if (!tec) return res.status(400).json({ error: 'El técnico no existe o está inactivo' });
+    }
+
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      if (tecnico_id) {
+        await conn.query('UPDATE ordenes_trabajo SET tecnico_id = ? WHERE id = ?', [tecnico_id, ordenId]);
+      }
+      for (const p of piezasValidas) {
+        await conn.query(
+          "INSERT INTO orden_repuestos (orden_id, nombre, cantidad, costo_unitario, estado) VALUES (?, ?, ?, ?, 'pendiente')",
+          [ordenId, p.nombre, p.cantidad, p.costo_unitario]
+        );
+      }
+      await conn.query(
+        'UPDATE ordenes_trabajo SET costo_mano_obra = ?, descuento = ? WHERE id = ?',
+        [Number(costo_mano_obra) || 0, Number(descuento) || 0, ordenId]
+      );
+      await conn.query(
+        'UPDATE ordenes_trabajo SET costo_repuestos = (SELECT COALESCE(SUM(cantidad * costo_unitario), 0) FROM orden_repuestos WHERE orden_id = ?) WHERE id = ?',
+        [ordenId, ordenId]
+      );
+      await conn.commit();
+    } catch (e) {
+      await conn.rollback();
+      throw e;
+    } finally {
+      conn.release();
+    }
+
+    const [[cotizacion]] = await pool.query(
+      'SELECT id, costo_mano_obra, costo_repuestos, descuento, (costo_mano_obra + costo_repuestos - descuento) AS total FROM ordenes_trabajo WHERE id = ?',
+      [ordenId]
+    );
+    res.status(201).json({ data: cotizacion, message: 'Cotización guardada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
 // Enviar cotización: la orden pasa a esperando aprobación del cliente.
 router.post('/cotizaciones/:id/enviar', async (req, res) => {
   try {

@@ -7,6 +7,8 @@ import { RecepcionOrdenesPage } from './recepcion-ordenes.page';
 import { RecepcionCotizPage } from './recepcion-cotiz.page';
 import { RecepcionMensajesPage } from './recepcion-mensajes.page';
 import { RecepcionClientesPage } from './recepcion-clientes.page';
+import { RecepcionPerfilPage } from './recepcion-perfil.page';
+import { RecepcionActionsComponent } from './recepcion-actions.component';
 import { SharedModule } from '../../shared/shared.module';
 
 @NgModule({
@@ -19,6 +21,8 @@ import { SharedModule } from '../../shared/shared.module';
     RecepcionCotizPage,
     RecepcionMensajesPage,
     RecepcionClientesPage,
+    RecepcionPerfilPage,
+    RecepcionActionsComponent,
   ],
 })
 export class RecepcionPageModule {}

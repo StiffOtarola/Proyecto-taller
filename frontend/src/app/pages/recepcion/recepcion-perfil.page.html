@@ -1,0 +1,42 @@
+<ion-header>
+  <ion-toolbar>
+    <img slot="start" class="brand-hd light-only" src="assets/logo/ms-iso.png" alt="MS Motos" />
+    <img slot="start" class="brand-hd dark-only" src="assets/logo/ms-iso-white.png" alt="MS Motos" />
+    <ion-title>Mi perfil</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="rec-perfil">
+    <!-- Cabecera del perfil -->
+    <div class="profile-header">
+      <div class="avatar">{{ iniciales }}</div>
+      <div class="info">
+        <h2>{{ cuenta.nombre || 'Recepción' }}</h2>
+        <p class="role">Recepcionista</p>
+        <p class="contact">{{ cuenta.email || '—' }}<ng-container *ngIf="cuenta.telefono"> · 📞 {{ cuenta.telefono }}</ng-container></p>
+      </div>
+    </div>
+
+    <!-- Mi cuenta -->
+    <section class="card">
+      <span class="section-label">Mi cuenta</span>
+      <div class="ig"><label>Nombre</label><input [(ngModel)]="cuenta.nombre" placeholder="Tu nombre"></div>
+      <div class="ig"><label>Correo</label><input type="email" [(ngModel)]="cuenta.email" placeholder="correo@taller.com"></div>
+      <div class="ig"><label>Teléfono</label><input type="tel" [(ngModel)]="cuenta.telefono" placeholder="8888-8888"></div>
+      <button class="cta" [disabled]="guardando" (click)="guardarCuenta()">💾 Guardar cambios</button>
+    </section>
+
+    <!-- Seguridad -->
+    <section class="card">
+      <span class="section-label">Seguridad</span>
+      <div class="ig"><label>Contraseña actual</label><input type="password" [(ngModel)]="pass.actual" placeholder="••••••••"></div>
+      <div class="ig"><label>Nueva contraseña</label><input type="password" [(ngModel)]="pass.nueva" placeholder="Mín. 8 caracteres"></div>
+      <button class="cta outline" [disabled]="guardandoPass" (click)="cambiarPassword()">🔑 Cambiar contraseña</button>
+    </section>
+
+    <button class="cta danger" (click)="logout()">⏻ Cerrar sesión</button>
+
+    <div style="height:80px"></div>
+  </div>
+</ion-content>

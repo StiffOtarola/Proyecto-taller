@@ -7,6 +7,7 @@ import { RecepcionOrdenesPage } from './recepcion-ordenes.page';
 import { RecepcionCotizPage } from './recepcion-cotiz.page';
 import { RecepcionMensajesPage } from './recepcion-mensajes.page';
 import { RecepcionClientesPage } from './recepcion-clientes.page';
+import { RecepcionPerfilPage } from './recepcion-perfil.page';
 
 const routes: Routes = [
   {
@@ -20,6 +21,7 @@ const routes: Routes = [
       { path: 'cotizaciones', component: RecepcionCotizPage },
       { path: 'mensajes', component: RecepcionMensajesPage },
       { path: 'clientes', component: RecepcionClientesPage },
+      { path: 'perfil', component: RecepcionPerfilPage },
     ],
   },
 ];

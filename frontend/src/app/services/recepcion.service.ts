@@ -98,6 +98,17 @@ export class RecepcionService {
     return this.http.post<{ data: any }>(`${environment.apiUrl}/citas`, data);
   }
 
+  // ── Perfil propio (cuenta del recepcionista) ──
+  getMiPerfil(): Observable<{ data: any }> {
+    return this.http.get<{ data: any }>(`${this.url}/perfil`);
+  }
+  updateMiPerfil(data: { nombre: string; email: string; telefono: string }): Observable<{ data: any; message: string }> {
+    return this.http.put<{ data: any; message: string }>(`${this.url}/perfil`, data);
+  }
+  updateMiPassword(data: { actual: string; nueva: string }): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(`${this.url}/perfil/password`, data);
+  }
+
   // Puente cita ↔ orden: crea (o recupera) la orden de trabajo de una cita.
   crearOrdenDesdeCita(citaId: number): Observable<{ data: { orden_id: number; numero_orden: string } }> {
     return this.http.post<{ data: any }>(`${this.url}/citas/${citaId}/crear-orden`, {});

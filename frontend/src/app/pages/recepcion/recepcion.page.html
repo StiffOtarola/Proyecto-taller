@@ -3,6 +3,7 @@
     <img slot="start" class="brand-hd light-only" src="assets/logo/ms-iso.png" alt="MS Motos" />
     <img slot="start" class="brand-hd dark-only" src="assets/logo/ms-iso-white.png" alt="MS Motos" />
     <ion-title>Recepción</ion-title>
+    <app-recepcion-actions slot="end"></app-recepcion-actions>
     <ion-buttons slot="end">
       <span class="hdr-badge" *ngIf="!cargando && alertas.length">{{ alertas.length }} nuevas</span>
       <ion-button (click)="logout()" title="Salir">

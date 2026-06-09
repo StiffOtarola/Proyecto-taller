@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const bcrypt = require('bcrypt');
 const { pool } = require('../db/pool');
 const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
@@ -475,6 +476,51 @@ router.get('/tecnicos', async (req, res) => {
 // Catálogo de servicios (para el formulario de agendar).
 router.get('/servicios', (req, res) => {
   res.json({ data: SERVICIOS });
+});
+
+// ── Perfil del recepcionista (su propia cuenta) ──
+router.get('/perfil', async (req, res) => {
+  try {
+    const [[u]] = await pool.query('SELECT id, nombre, email, telefono, rol FROM usuarios WHERE id = ?', [req.usuario.id]);
+    if (!u) return res.status(404).json({ error: 'Usuario no encontrado' });
+    res.json({ data: u });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+router.put('/perfil', async (req, res) => {
+  try {
+    const { nombre, email, telefono } = req.body;
+    if (!nombre || !nombre.trim() || !email || !email.trim()) {
+      return res.status(400).json({ error: 'Nombre y correo son requeridos' });
+    }
+    await pool.query(
+      'UPDATE usuarios SET nombre = ?, email = ?, telefono = ? WHERE id = ?',
+      [nombre.trim(), email.trim(), (telefono || '').trim() || null, req.usuario.id]
+    );
+    const [[u]] = await pool.query('SELECT id, nombre, email, telefono, rol FROM usuarios WHERE id = ?', [req.usuario.id]);
+    res.json({ data: u, message: 'Perfil actualizado' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+router.put('/perfil/password', async (req, res) => {
+  try {
+    const { actual, nueva } = req.body;
+    if (!actual || !nueva) return res.status(400).json({ error: 'Contraseña actual y nueva son requeridas' });
+    if (String(nueva).length < 8) return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 8 caracteres' });
+    const [[u]] = await pool.query('SELECT password_hash FROM usuarios WHERE id = ?', [req.usuario.id]);
+    if (!u) return res.status(404).json({ error: 'Usuario no encontrado' });
+    const ok = await bcrypt.compare(String(actual), u.password_hash);
+    if (!ok) return res.status(400).json({ error: 'La contraseña actual no es correcta' });
+    const hash = await bcrypt.hash(String(nueva), 10);
+    await pool.query('UPDATE usuarios SET password_hash = ? WHERE id = ?', [hash, req.usuario.id]);
+    res.json({ message: 'Contraseña actualizada' });
+  } catch (err) {
+    fail(res, err);
+  }
 });
 
 // Disponibilidad de horas para una fecha (agendar manual). Reusa la config del

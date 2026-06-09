@@ -98,15 +98,17 @@
 
   <!-- Envío rápido de notificación a un cliente (no aplica en la vista Taller) -->
   <div class="quick-send" *ngIf="vista !== 'taller'">
-    <ion-select [(ngModel)]="form.cliente_id" placeholder="Cliente" interface="action-sheet" class="qs-cliente">
-      <ion-select-option *ngFor="let c of clientes" [value]="c.id">{{ c.nombre }} {{ c.apellido }}</ion-select-option>
-    </ion-select>
-    <input type="text" [(ngModel)]="form.titulo" placeholder="Título" class="qs-titulo" />
-    <div class="qs-row">
-      <input type="text" [(ngModel)]="form.mensaje" placeholder="Mensaje para el cliente…" class="qs-msg" (keyup.enter)="enviarRapido()" />
-      <button class="qs-send" (click)="enviarRapido()" [disabled]="!formValido || enviando">
-        <ion-icon name="send"></ion-icon>
-      </button>
+    <div class="qs-inner">
+      <ion-select [(ngModel)]="form.cliente_id" placeholder="Cliente" interface="action-sheet" class="qs-cliente">
+        <ion-select-option *ngFor="let c of clientes" [value]="c.id">{{ c.nombre }} {{ c.apellido }}</ion-select-option>
+      </ion-select>
+      <input type="text" [(ngModel)]="form.titulo" placeholder="Título" class="qs-titulo" />
+      <div class="qs-row">
+        <input type="text" [(ngModel)]="form.mensaje" placeholder="Mensaje para el cliente…" class="qs-msg" (keyup.enter)="enviarRapido()" />
+        <button class="qs-send" (click)="enviarRapido()" [disabled]="!formValido || enviando">
+          <ion-icon name="send"></ion-icon>
+        </button>
+      </div>
     </div>
   </div>
 </ion-content>

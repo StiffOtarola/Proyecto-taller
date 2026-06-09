@@ -16,8 +16,8 @@
   }
   .msg-time { font-size: 11px; color: var(--n-400); flex-shrink: 0; }
 
-  .msg-body { margin: 12px 0 0; font-size: 13.5px; color: var(--n-700); line-height: 1.4;
-    background: var(--n-50); border-radius: 12px; padding: 10px 12px; }
+  .msg-body { margin: 12px 0 0; font-size: 13.5px; color: var(--ion-text-color); line-height: 1.5;
+    background: var(--n-100); border: 1px solid var(--hairline); border-radius: 12px; padding: 10px 12px; }
 
   .msg-sub { display: flex; gap: 14px; margin-top: 10px;
     span { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--n-500); }
@@ -48,22 +48,32 @@
   background: var(--ion-card-background);
   border-top: 1px solid var(--hairline);
   padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-  display: flex; flex-direction: column; gap: 8px;
-  box-shadow: 0 -4px 16px rgba(0,0,0,.06);
+  box-shadow: 0 -4px 16px rgba(0,0,0,.18);
 
-  .qs-cliente { border: 1px solid var(--hairline); border-radius: 10px; --padding-start: 12px; }
+  /* El contenido se centra al mismo ancho que las tarjetas */
+  .qs-inner { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
+
+  .qs-cliente {
+    border: 1px solid var(--hairline); border-radius: 10px; --padding-start: 12px;
+    background: var(--n-100); font-size: 14px;
+  }
   .qs-titulo, .qs-msg {
-    border: 1px solid var(--hairline); border-radius: 10px; padding: 9px 12px; font-size: 14px;
-    background: var(--ion-card-background); color: var(--ion-text-color); width: 100%;
+    border: 1px solid var(--hairline); border-radius: 10px; padding: 10px 12px; font-size: 14px;
+    background: var(--n-100); color: var(--ion-text-color); width: 100%; outline: none;
+    transition: border-color .2s;
+    &:focus { border-color: var(--ion-color-primary); }
+    &::placeholder { color: var(--n-400); }
   }
   .qs-row { display: flex; gap: 8px; align-items: center; }
   .qs-msg { flex: 1; min-width: 0; }
   .qs-send {
-    flex-shrink: 0; width: 44px; height: 40px; border-radius: 12px; border: none;
+    flex-shrink: 0; width: 46px; height: 42px; border-radius: 12px; border: none;
     background: var(--ion-color-primary); color: #fff; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
+    transition: transform .15s;
     ion-icon { font-size: 20px; }
-    &:disabled { opacity: .45; }
+    &:active { transform: scale(.95); }
+    &:disabled { opacity: .45; cursor: default; }
   }
 }
 

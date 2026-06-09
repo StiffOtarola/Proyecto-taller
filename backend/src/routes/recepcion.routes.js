@@ -4,7 +4,8 @@ const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
 const { generarNumeroOrden, sincronizarCitaDesdeOrden } = require('../utils/ordenes');
-const { getConfig } = require('../utils/configuracion');
+const { getConfig, horasDisponibles } = require('../utils/configuracion');
+const { SERVICIOS } = require('../utils/servicios');
 
 // Panel de recepción: intermediaria entre cliente y mecánico.
 // Accesible a recepción y superiores.
@@ -466,6 +467,32 @@ router.get('/tecnicos', async (req, res) => {
       "SELECT id, nombre FROM usuarios WHERE rol = 'tecnico' AND activo = 1 ORDER BY nombre"
     );
     res.json({ data: rows });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// Catálogo de servicios (para el formulario de agendar).
+router.get('/servicios', (req, res) => {
+  res.json({ data: SERVICIOS });
+});
+
+// Disponibilidad de horas para una fecha (agendar manual). Reusa la config del
+// taller: mismas horas/cupos que ve el cliente en el portal.
+router.get('/disponibilidad', async (req, res) => {
+  try {
+    const { fecha } = req.query;
+    if (!fecha) return res.status(400).json({ error: 'Fecha requerida' });
+    const config = await getConfig();
+    const horas = horasDisponibles(fecha, config);
+    const [rows] = await pool.query(
+      `SELECT TIME_FORMAT(hora, '%H:%i') AS hora, COUNT(*) AS n
+       FROM citas WHERE fecha = ? AND estado != 'cancelado' GROUP BY 1`,
+      [fecha]
+    );
+    const ocupacion = {};
+    for (const r of rows) ocupacion[r.hora] = r.n;
+    res.json({ data: { horas, max: config.max_citas_hora, ocupacion } });
   } catch (err) {
     fail(res, err);
   }

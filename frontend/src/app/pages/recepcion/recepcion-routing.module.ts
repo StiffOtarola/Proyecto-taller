@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { RecepcionTabsPage } from './recepcion-tabs.page';
 import { RecepcionPage } from './recepcion.page';
+import { RecepcionAgendarPage } from './recepcion-agendar.page';
 import { RecepcionOrdenesPage } from './recepcion-ordenes.page';
 import { RecepcionCotizPage } from './recepcion-cotiz.page';
 import { RecepcionMensajesPage } from './recepcion-mensajes.page';
@@ -14,6 +15,7 @@ const routes: Routes = [
     children: [
       { path: '', redirectTo: 'inicio', pathMatch: 'full' },
       { path: 'inicio', component: RecepcionPage },
+      { path: 'agendar', component: RecepcionAgendarPage },
       { path: 'ordenes', component: RecepcionOrdenesPage },
       { path: 'cotizaciones', component: RecepcionCotizPage },
       { path: 'mensajes', component: RecepcionMensajesPage },

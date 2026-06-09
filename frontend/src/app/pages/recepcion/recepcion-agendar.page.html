@@ -1,0 +1,97 @@
+<ion-header>
+  <ion-toolbar>
+    <img slot="start" class="brand-hd light-only" src="assets/logo/ms-iso.png" alt="MS Motos" />
+    <img slot="start" class="brand-hd dark-only" src="assets/logo/ms-iso-white.png" alt="MS Motos" />
+    <ion-title>Agendar cita</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="agendar">
+    <div class="intro">
+      <h1>Agendar cita</h1>
+      <p>Para un cliente que llamó o llegó al taller.</p>
+    </div>
+
+    <!-- Datos del cliente -->
+    <section class="card">
+      <span class="section-label">Datos del cliente</span>
+
+      <div class="ig cli-wrap">
+        <label>Buscar cliente *</label>
+        <input [(ngModel)]="qCliente" (ngModelChange)="buscarClientes()" placeholder="Nombre, teléfono o cédula...">
+        <div class="cli-results" *ngIf="clientes.length && !cliente">
+          <button type="button" class="cli-item" *ngFor="let c of clientes" (click)="seleccionarCliente(c)">
+            <strong>{{ c.nombre }} {{ c.apellido }}</strong>
+            <span *ngIf="c.telefono">· {{ c.telefono }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="cli-pick" *ngIf="cliente">
+        <div class="av">{{ iniciales(cliente) }}</div>
+        <div class="meta">
+          <strong>{{ cliente.nombre }} {{ cliente.apellido }}</strong>
+          <span>{{ cliente.email || cliente.telefono || '—' }}</span>
+        </div>
+        <button class="x" (click)="limpiarCliente()" title="Cambiar cliente"><ion-icon name="close-outline"></ion-icon></button>
+      </div>
+
+      <div class="ig" *ngIf="cliente">
+        <label>Moto</label>
+        <select [(ngModel)]="form.moto_id">
+          <option [ngValue]="null">Sin especificar</option>
+          <option *ngFor="let m of motos" [ngValue]="m.id">{{ m.marca }} {{ m.modelo }}{{ m.placa ? ' — ' + m.placa : '' }}</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Detalles del servicio -->
+    <section class="card">
+      <span class="section-label">Detalles del servicio</span>
+
+      <div class="ig">
+        <label>Tipo de servicio *</label>
+        <select [(ngModel)]="form.tipo_servicio">
+          <option value="">Seleccionar servicio</option>
+          <option *ngFor="let s of servicios" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+
+      <div class="ig">
+        <label>Mecánico asignado</label>
+        <select [(ngModel)]="form.tecnico_id">
+          <option [ngValue]="null">Sin asignar</option>
+          <option *ngFor="let t of tecnicos" [ngValue]="t.id">{{ t.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="grid2">
+        <div class="ig">
+          <label>Fecha *</label>
+          <input type="date" [(ngModel)]="form.fecha" (ngModelChange)="cargarDisponibilidad()">
+        </div>
+        <div class="ig">
+          <label>Hora *</label>
+          <select [(ngModel)]="form.hora">
+            <option value="">{{ disp && disp.horas.length ? 'Elegí una hora' : 'Día cerrado' }}</option>
+            <option *ngFor="let h of disp?.horas || []" [value]="h" [disabled]="llena(h)">
+              {{ h }} — {{ llena(h) ? 'LLENA' : restantes(h) + ' disp.' }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="ig" style="margin-bottom:4px">
+        <label>Problema o notas (opcional)</label>
+        <textarea [(ngModel)]="form.motivo" placeholder="Anotá lo que dijo el cliente sobre su moto..."></textarea>
+      </div>
+    </section>
+
+    <button class="cta" [disabled]="!valido || guardando" (click)="confirmar()">
+      <ion-icon name="calendar-outline"></ion-icon> {{ guardando ? 'Agendando…' : 'Confirmar cita' }}
+    </button>
+
+    <div style="height:80px"></div>
+  </div>
+</ion-content>

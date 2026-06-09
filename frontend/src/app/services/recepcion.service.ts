@@ -84,6 +84,20 @@ export class RecepcionService {
     return this.http.get<{ data: any[] }>(`${this.url}/tecnicos`);
   }
 
+  // ── Agendar cita manual ──
+  getServicios(): Observable<{ data: string[] }> {
+    return this.http.get<{ data: string[] }>(`${this.url}/servicios`);
+  }
+  getDisponibilidad(fecha: string): Observable<{ data: { horas: string[]; max: number; ocupacion: Record<string, number> } }> {
+    return this.http.get<{ data: any }>(`${this.url}/disponibilidad`, { params: { fecha } as any });
+  }
+  getMotos(clienteId: number): Observable<{ data: any[] }> {
+    return this.http.get<{ data: any[] }>(`${environment.apiUrl}/motos`, { params: { cliente_id: clienteId } as any });
+  }
+  crearCita(data: { cliente_id: number; moto_id: number | null; fecha: string; hora: string; motivo: string; tipo_servicio: string | null; tecnico_id: number | null }): Observable<{ data: any }> {
+    return this.http.post<{ data: any }>(`${environment.apiUrl}/citas`, data);
+  }
+
   // Puente cita ↔ orden: crea (o recupera) la orden de trabajo de una cita.
   crearOrdenDesdeCita(citaId: number): Observable<{ data: { orden_id: number; numero_orden: string } }> {
     return this.http.post<{ data: any }>(`${this.url}/citas/${citaId}/crear-orden`, {});

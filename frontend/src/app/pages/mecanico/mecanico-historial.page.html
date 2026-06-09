@@ -4,6 +4,9 @@
     <img slot="start" class="brand-hd dark-only" src="assets/logo/ms-iso-white.png" alt="MS Motos" />
     <ion-title>Historial</ion-title>
     <ion-buttons slot="end">
+      <ion-button [routerLink]="['/mecanico/perfil']" title="Perfil">
+        <ion-icon slot="icon-only" name="person-circle-outline"></ion-icon>
+      </ion-button>
       <ion-button (click)="logout()" title="Salir">
         <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
       </ion-button>

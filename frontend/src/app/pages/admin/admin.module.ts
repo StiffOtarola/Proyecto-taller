@@ -10,6 +10,7 @@ import { AdminReportesPage } from './admin-reportes.page';
 import { AdminPromosPage } from './admin-promos.page';
 import { AdminCalendarioPage } from './admin-calendario.page';
 import { AdminConfigPage } from './admin-config.page';
+import { AdminActionsComponent } from './admin-actions.component';
 
 @NgModule({
   imports: [SharedModule, AdminPageRoutingModule],
@@ -23,6 +24,7 @@ import { AdminConfigPage } from './admin-config.page';
     AdminPromosPage,
     AdminCalendarioPage,
     AdminConfigPage,
+    AdminActionsComponent,
   ],
 })
 export class AdminPageModule {}

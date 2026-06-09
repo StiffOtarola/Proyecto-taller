@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { MecanicoTabsPage } from './mecanico-tabs.page';
 import { MecanicoPage } from './mecanico.page';
+import { MecanicoHistorialPage } from './mecanico-historial.page';
 import { MecanicoTareasPage } from './mecanico-tareas.page';
 import { MecanicoContactoPage } from './mecanico-contacto.page';
 import { MecanicoAgendaPage } from './mecanico-agenda.page';
@@ -14,6 +15,7 @@ const routes: Routes = [
     children: [
       { path: '', redirectTo: 'inicio', pathMatch: 'full' },
       { path: 'inicio', component: MecanicoPage },
+      { path: 'historial', component: MecanicoHistorialPage },
       { path: 'tareas', component: MecanicoTareasPage },
       { path: 'contacto', component: MecanicoContactoPage },
       { path: 'agenda', component: MecanicoAgendaPage },

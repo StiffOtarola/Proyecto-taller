@@ -1,0 +1,65 @@
+<ion-header>
+  <ion-toolbar>
+    <img slot="start" class="brand-hd light-only" src="assets/logo/ms-iso.png" alt="MS Motos" />
+    <img slot="start" class="brand-hd dark-only" src="assets/logo/ms-iso-white.png" alt="MS Motos" />
+    <ion-title>Historial</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="logout()" title="Salir">
+        <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar($event)">
+    <ion-refresher-content pullingIcon="chevron-down" refreshingSpinner="crescent"></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="mec">
+    <div class="greet">
+      <h1>Mi historial</h1>
+      <p class="hist-sub">Citas que completaste.</p>
+    </div>
+
+    <!-- Resumen acumulado -->
+    <section class="card">
+      <span class="section-label">Resumen acumulado</span>
+      <div class="avg-row"><span class="lbl">Total completadas</span><span class="val mono">{{ acum?.completadas ?? 0 }}</span></div>
+      <div class="avg-row"><span class="lbl">Ingresos generados</span><span class="val mono">{{ (acum?.ingresos_generados || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div>
+      <div class="avg-row"><span class="lbl">Calificación promedio</span><span class="val stars">{{ estrellas(acum?.calificacion_promedio ?? null) }} {{ acum?.calificacion_promedio || '' }}</span></div>
+    </section>
+
+    <!-- Lista de citas entregadas -->
+    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px">
+      <div class="skeleton" style="height:104px;border-radius:18px"></div>
+      <div class="skeleton" style="height:104px;border-radius:18px"></div>
+      <div class="skeleton" style="height:104px;border-radius:18px"></div>
+    </div>
+
+    <div class="cita-list" *ngIf="!cargando">
+      <div class="cita-card" *ngFor="let c of citas">
+        <div class="cita-head">
+          <h4>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}<span class="placa mono" *ngIf="c.placa"> · {{ c.placa }}</span></h4>
+          <span class="st-badge entregado">Entregado</span>
+        </div>
+        <div class="cita-info">
+          <strong>{{ c.tipo_servicio || 'Servicio' }}</strong><br>
+          {{ (c.fecha_fin || c.fecha) | date:'dd/MM/yy' }} · {{ c.cliente_nombre }} {{ c.cliente_apellido }}
+        </div>
+        <div class="hist-foot">
+          <span class="monto mono">{{ (c.monto || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span>
+          <span class="stars" *ngIf="c.calificacion">{{ estrellas(c.calificacion) }}</span>
+          <span class="sin-calif" *ngIf="!c.calificacion">Sin calificar</span>
+        </div>
+      </div>
+
+      <div class="empty" *ngIf="!citas.length">
+        <ion-icon class="ico" name="time-outline"></ion-icon>
+        <p>Todavía no completaste citas.</p>
+      </div>
+    </div>
+
+    <div style="height:80px"></div>
+  </div>
+</ion-content>

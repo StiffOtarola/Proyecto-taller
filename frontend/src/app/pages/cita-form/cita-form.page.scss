@@ -1,0 +1,37 @@
+// Las variables (--sur2, --bd, --tx…) las hereda de .admin-dark en el contenido.
+.cli-wrap { position: relative; }
+
+.cli-results {
+  margin-top: 6px;
+  background: var(--sur2);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  overflow: hidden auto;
+  max-height: 220px;
+}
+
+.cli-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--bd2);
+  color: var(--tx);
+  font-size: 13px;
+  cursor: pointer;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--sur3); }
+
+  strong { font-weight: 600; }
+  span { color: var(--tx3); font-size: 12px; margin-left: 4px; }
+}
+
+// Pickers nativos de fecha/hora en modo oscuro (icono y popup claros).
+.fg input[type="date"],
+.fg input[type="time"] { color-scheme: dark; }
+
+// Icono alineado dentro del botón Guardar.
+.btn-block ion-icon { font-size: 16px; vertical-align: -3px; margin-right: 6px; }

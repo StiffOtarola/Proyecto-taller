@@ -1,67 +1,76 @@
 <ion-header>
-  <ion-toolbar color="primary">
+  <ion-toolbar class="admin-topbar">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/tabs/citas"></ion-back-button>
+      <ion-back-button defaultHref="/admin/citas"></ion-back-button>
     </ion-buttons>
     <ion-title>{{ esEdicion ? 'Editar' : 'Nueva' }} Cita</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <ion-list>
-    <ion-item>
-      <ion-label position="stacked">Cliente *</ion-label>
-      <ion-input [(ngModel)]="busquedaCliente" (ionInput)="buscarClientes()"
-        placeholder="Buscar cliente..."></ion-input>
-    </ion-item>
-    <ion-list *ngIf="clientes.length">
-      <ion-item *ngFor="let c of clientes" button (click)="seleccionarCliente(c)" detail="false">
-        <ion-label>{{ c.nombre }} {{ c.apellido }} — {{ c.telefono }}</ion-label>
-      </ion-item>
-    </ion-list>
+<ion-content class="admin-dark">
+  <div class="admin">
+    <div class="cd">
+      <span class="cd-title">📅 {{ esEdicion ? 'Editar cita' : 'Datos de la cita' }}</span>
 
-    <ion-item *ngIf="motos.length">
-      <ion-label position="stacked">Moto (opcional)</ion-label>
-      <ion-select [(ngModel)]="form.moto_id" interface="action-sheet" placeholder="Seleccionar moto">
-        <ion-select-option *ngFor="let m of motos" [value]="m.id">
-          {{ m.marca }} {{ m.modelo }} {{ m.placa ? '(' + m.placa + ')' : '' }}
-        </ion-select-option>
-      </ion-select>
-    </ion-item>
+      <!-- Cliente (autocompletar) -->
+      <div class="fg cli-wrap">
+        <label>Cliente *</label>
+        <input [(ngModel)]="busquedaCliente" (ngModelChange)="buscarClientes()" placeholder="Buscar cliente por nombre...">
+        <div class="cli-results" *ngIf="clientes.length">
+          <button type="button" class="cli-item" *ngFor="let c of clientes" (click)="seleccionarCliente(c)">
+            <strong>{{ c.nombre }} {{ c.apellido }}</strong>
+            <span *ngIf="c.telefono">· {{ c.telefono }}</span>
+          </button>
+        </div>
+      </div>
 
-    <ion-item>
-      <ion-label position="stacked">Fecha *</ion-label>
-      <ion-input type="date" [(ngModel)]="form.fecha"></ion-input>
-    </ion-item>
+      <!-- Moto (opcional) -->
+      <div class="fg" *ngIf="motos.length">
+        <label>Moto (opcional)</label>
+        <select [(ngModel)]="form.moto_id">
+          <option [ngValue]="undefined">Seleccionar moto</option>
+          <option *ngFor="let m of motos" [ngValue]="m.id">{{ m.marca }} {{ m.modelo }}{{ m.placa ? ' (' + m.placa + ')' : '' }}</option>
+        </select>
+      </div>
 
-    <ion-item>
-      <ion-label position="stacked">Hora *</ion-label>
-      <ion-input type="time" [(ngModel)]="form.hora"></ion-input>
-    </ion-item>
+      <div class="fg-row">
+        <div class="fg">
+          <label>Fecha *</label>
+          <input type="date" [(ngModel)]="form.fecha">
+        </div>
+        <div class="fg">
+          <label>Hora *</label>
+          <input type="time" [(ngModel)]="form.hora">
+        </div>
+      </div>
 
-    <ion-item>
-      <ion-label position="stacked">Tipo de servicio</ion-label>
-      <ion-select [(ngModel)]="form.tipo_servicio" interface="action-sheet" placeholder="Seleccionar servicio">
-        <ion-select-option *ngFor="let t of tiposServicio" [value]="t">{{ t }}</ion-select-option>
-      </ion-select>
-    </ion-item>
+      <!-- Tipo de servicio -->
+      <div class="fg">
+        <label>Tipo de servicio</label>
+        <select [(ngModel)]="form.tipo_servicio">
+          <option [ngValue]="undefined">Seleccionar servicio</option>
+          <option *ngFor="let t of tiposServicio" [ngValue]="t">{{ t }}</option>
+        </select>
+      </div>
 
-    <ion-item *ngIf="auth.tieneRol('admin')">
-      <ion-label position="stacked">Técnico asignado</ion-label>
-      <ion-select [(ngModel)]="form.tecnico_id" interface="action-sheet" placeholder="Sin asignar">
-        <ion-select-option [value]="null">Sin asignar</ion-select-option>
-        <ion-select-option *ngFor="let t of tecnicos" [value]="t.id">{{ t.nombre }}</ion-select-option>
-      </ion-select>
-    </ion-item>
+      <!-- Técnico (solo admin) -->
+      <div class="fg" *ngIf="auth.tieneRol('admin')">
+        <label>Técnico asignado</label>
+        <select [(ngModel)]="form.tecnico_id">
+          <option [ngValue]="null">Sin asignar</option>
+          <option *ngFor="let t of tecnicos" [ngValue]="t.id">{{ t.nombre }}</option>
+        </select>
+      </div>
 
-    <ion-item>
-      <ion-label position="stacked">Motivo / Notas *</ion-label>
-      <ion-textarea [(ngModel)]="form.motivo" rows="3" placeholder="Motivo de la cita..."></ion-textarea>
-    </ion-item>
-  </ion-list>
+      <!-- Motivo / Notas -->
+      <div class="fg" style="margin-bottom:4px">
+        <label>Motivo / Notas *</label>
+        <textarea [(ngModel)]="form.motivo" rows="3" placeholder="Motivo de la cita..."></textarea>
+      </div>
+    </div>
 
-  <ion-button expand="block" class="ion-margin-top" (click)="guardar()">
-    <ion-icon name="save-outline" slot="start"></ion-icon>
-    Guardar
-  </ion-button>
+    <button class="btn btn-cr btn-block" style="padding:14px;margin-top:4px" (click)="guardar()">
+      <ion-icon name="save-outline"></ion-icon> Guardar
+    </button>
+  </div>
 </ion-content>

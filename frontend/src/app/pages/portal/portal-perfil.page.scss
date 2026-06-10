@@ -12,9 +12,11 @@
     font-family: var(--font-display); font-size: 26px; font-weight: 800;
     box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2);
   }
+  // El degradado es claro en ambos temas: el texto va en oscuro fijo (no con vars
+  // de tema) para que no quede texto claro sobre fondo claro en modo oscuro.
   .info { min-width: 0;
-    h2 { font-family: var(--font-display); font-size: 20px; font-weight: 800; margin: 0; color: var(--ion-text-color); }
-    .contact { font-size: 12px; color: var(--n-600); margin: 4px 0 0; word-break: break-word; }
+    h2 { font-family: var(--font-display); font-size: 20px; font-weight: 800; margin: 0; color: #0a0a0a; }
+    .contact { font-size: 12px; color: #525252; margin: 4px 0 0; word-break: break-word; }
   }
 }
 

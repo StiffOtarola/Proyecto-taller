@@ -12,9 +12,10 @@
 }
 .profile-info { min-width: 0;
   h2 { margin: 0; font-family: var(--font-display); font-size: 20px; font-weight: 800; color: #0a0a0a; }
-  .rol { margin: 2px 0 0; font-size: 12px; color: var(--n-600); }
+  // El degradado de fondo es claro en ambos temas: texto secundario en oscuro fijo.
+  .rol { margin: 2px 0 0; font-size: 12px; color: #525252; }
   .contact { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 4px 12px;
-    span { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--n-600); }
+    span { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: #525252; }
     ion-icon { font-size: 13px; } }
   .profile-rating { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 13px;
     .stars { font-size: 15px; letter-spacing: 1px; color: var(--amber-700); }

@@ -12,12 +12,14 @@ import { PortalMotosPage } from './portal-motos.page';
 import { PortalOfertasPage } from './portal-ofertas.page';
 import { PortalPerfilPage } from './portal-perfil.page';
 import { PortalLegalPage } from './portal-legal.page';
+import { PortalCitaDetallePage } from './portal-cita-detalle.page';
 
 const routes: Routes = [
   { path: 'login', component: PortalLoginPage },
   { path: 'registro', component: PortalRegistroPage },
   { path: 'recuperar', component: PortalRecuperarPage },
   { path: 'legal/:doc', component: PortalLegalPage },
+  { path: 'cita/:id', component: PortalCitaDetallePage, canActivate: [PortalGuard] },
   {
     path: '',
     component: PortalTabsPage,

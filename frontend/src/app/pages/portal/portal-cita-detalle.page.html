@@ -1,0 +1,99 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/portal/mis-citas" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Detalle de la cita</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="det" *ngIf="cargando">
+    <div class="skeleton" style="height:140px;border-radius:20px;margin-bottom:12px"></div>
+    <div class="skeleton" style="height:200px;border-radius:20px"></div>
+  </div>
+
+  <div class="det" *ngIf="!cargando && cita">
+    <!-- Cabecera -->
+    <section class="card">
+      <div class="head">
+        <h2>{{ cita.marca }} {{ cita.modelo }}</h2>
+        <span class="pill" [ngClass]="cita.estado === 'entregado' ? 'green' : cita.estado === 'cancelado' ? 'gris' : 'rose'">{{ estadoLabel[cita.estado] }}</span>
+      </div>
+      <p class="placa mono" *ngIf="cita.placa">{{ cita.placa }}</p>
+
+      <div class="prog" *ngIf="cita.estado !== 'cancelado'">
+        <div class="pr-t"><div class="pr-f" [style.width.%]="progresoPct(cita.estado)"></div></div>
+        <div class="pr-l">{{ cita.estado === 'entregado' ? 'Completado ✓' : progresoPct(cita.estado) + '%' }}</div>
+      </div>
+
+      <div class="rows">
+        <div class="row"><span class="k">Servicio</span><span class="v">{{ cita.tipo_servicio || cita.motivo }}</span></div>
+        <div class="row"><span class="k">Fecha</span><span class="v mono">{{ cita.fecha | date:'dd/MM/yyyy' }}<ng-container *ngIf="cita.hora"> · {{ cita.hora }}</ng-container></span></div>
+        <div class="row"><span class="k">Mecánico</span><span class="v">{{ cita.tecnico_nombre || 'Por asignar' }}</span></div>
+        <div class="row" *ngIf="cita.numero_orden"><span class="k">Orden</span><span class="v mono">{{ cita.numero_orden }}</span></div>
+        <div class="row" *ngIf="cita.motivo && cita.motivo !== cita.tipo_servicio"><span class="k">Descripción</span><span class="v">{{ cita.motivo }}</span></div>
+      </div>
+    </section>
+
+    <!-- Diagnóstico de la orden -->
+    <section class="card" *ngIf="orden?.diagnostico">
+      <span class="section-label">Diagnóstico</span>
+      <p class="diag">{{ orden.diagnostico }}</p>
+    </section>
+
+    <!-- Repuestos y costos -->
+    <section class="card" *ngIf="orden && (orden.repuestos?.length || orden.costo_mano_obra || total)">
+      <span class="section-label">Presupuesto</span>
+      <div class="rows">
+        <div class="row" *ngFor="let r of orden.repuestos">
+          <span class="k">{{ r.nombre }}<ng-container *ngIf="r.cantidad > 1"> ×{{ r.cantidad }}</ng-container></span>
+          <span class="v mono">{{ (r.cantidad * r.costo_unitario) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span>
+        </div>
+        <div class="row"><span class="k">Mano de obra</span><span class="v mono">{{ (orden.costo_mano_obra || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div>
+        <div class="row" *ngIf="orden.descuento > 0"><span class="k">Descuento</span><span class="v mono">− {{ orden.descuento | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div>
+        <div class="row total"><span class="k">Total</span><span class="v mono">{{ total | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div>
+      </div>
+    </section>
+
+    <!-- Total simple si no hay orden pero sí monto -->
+    <section class="card" *ngIf="!orden && cita.monto">
+      <div class="rows"><div class="row total"><span class="k">Total</span><span class="v mono">{{ total | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div></div>
+    </section>
+
+    <!-- Avances del mecánico -->
+    <section class="card" *ngIf="orden?.avances?.length">
+      <span class="section-label">Avances</span>
+      <div class="avance" *ngFor="let a of orden.avances">
+        <div class="dot"></div>
+        <div class="av-b">
+          <p class="av-txt">{{ a.descripcion }}</p>
+          <p class="av-meta">{{ a.usuario_nombre || 'Taller' }} · {{ a.created_at | date:'dd/MM/yyyy HH:mm' }}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Fotos -->
+    <section class="card" *ngIf="orden?.fotos?.length">
+      <span class="section-label">Fotos</span>
+      <div class="fotos">
+        <img *ngFor="let f of orden.fotos" [src]="f.url" alt="Foto de la orden" />
+      </div>
+    </section>
+
+    <!-- Calificar -->
+    <button class="cta" *ngIf="cita.estado === 'entregado' && !cita.calificacion" (click)="calificar()">
+      <ion-icon name="star-outline"></ion-icon> Calificar el servicio
+    </button>
+    <div class="calif-hecha" *ngIf="cita.calificacion">
+      <span class="stars">{{ estrellas(cita.calificacion) }}</span> Gracias por tu calificación
+    </div>
+
+    <div style="height:40px"></div>
+  </div>
+
+  <div class="det empty" *ngIf="!cargando && !cita">
+    <ion-icon name="alert-circle-outline"></ion-icon>
+    <p>No se encontró la cita.</p>
+  </div>
+</ion-content>

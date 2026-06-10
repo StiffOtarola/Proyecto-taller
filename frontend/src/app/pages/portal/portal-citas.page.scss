@@ -14,6 +14,16 @@
     ion-icon { font-size: 14px; } }
 }
 
+/* Botón "Ver detalle" (pendientes) */
+.ver-detalle {
+  width: 100%; margin-top: 12px; padding: 9px 12px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  border: 1px solid var(--hairline); border-radius: 12px; background: var(--ion-card-background);
+  font-family: inherit; font-size: 12px; font-weight: 700; color: var(--ion-color-primary);
+  ion-icon { font-size: 15px; }
+  &:active { transform: scale(.98); }
+}
+
 /* Aviso de presupuesto por aprobar */
 .presu-aviso {
   width: 100%; margin: 10px 0 2px; padding: 10px 12px; cursor: pointer;

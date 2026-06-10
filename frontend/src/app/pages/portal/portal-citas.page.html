@@ -42,6 +42,7 @@
           <div class="pr-l">{{ progresoPct(c.estado) }}%</div>
         </div>
         <p class="cita-tec" *ngIf="c.tecnico_nombre"><ion-icon name="construct-outline"></ion-icon> Mecánico: {{ c.tecnico_nombre }}</p>
+        <button class="ver-detalle" (click)="verDetalle(c)">Ver detalle <ion-icon name="chevron-forward"></ion-icon></button>
       </div>
       <div class="empty-state" *ngIf="pendientes.length === 0">
         <ion-icon name="checkmark-done-circle-outline"></ion-icon>
@@ -68,22 +69,14 @@
           <div class="pr-l">Completado ✓</div>
         </div>
 
-        <div class="actions" *ngIf="c.estado === 'entregado'">
-          <button (click)="toggleReporte(c.id)">
-            <ion-icon name="document-text-outline"></ion-icon> {{ reporteAbierto.has(c.id) ? 'Ocultar' : 'Ver reporte' }}
+        <div class="actions">
+          <button (click)="verDetalle(c)">
+            <ion-icon name="document-text-outline"></ion-icon> Ver detalle
           </button>
-          <button class="btn-calif" *ngIf="!c.calificacion" (click)="calificar(c)">
+          <button class="btn-calif" *ngIf="c.estado === 'entregado' && !c.calificacion" (click)="calificar(c)">
             <ion-icon name="star-outline"></ion-icon> Calificar
           </button>
           <span class="stars" *ngIf="c.calificacion">{{ estrellas(c.calificacion) }}</span>
-        </div>
-
-        <!-- Desglose -->
-        <div class="rpt" *ngIf="reporteAbierto.has(c.id)">
-          <div class="rpt-r"><span>Servicio</span><span>{{ c.tipo_servicio || c.motivo }}</span></div>
-          <div class="rpt-r"><span>Fecha</span><span class="mono">{{ c.fecha | date:'dd/MM/yyyy' }}</span></div>
-          <div class="rpt-r"><span>Mecánico</span><span>{{ c.tecnico_nombre || '—' }}</span></div>
-          <div class="rpt-r total"><span>Total</span><span class="mono">{{ (c.monto || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div>
         </div>
       </div>
       <div class="empty-state" *ngIf="historial.length === 0">

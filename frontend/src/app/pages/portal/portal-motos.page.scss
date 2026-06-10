@@ -26,7 +26,8 @@
     .placa { font-weight: 700; color: var(--ion-color-primary);
       background: var(--rose-50); padding: 1px 7px; border-radius: 6px; letter-spacing: .04em; font-size: 11px; } }
   .mc-e { background: none; border: none; cursor: pointer; color: var(--n-500); padding: 4px; flex-shrink: 0;
-    ion-icon { font-size: 18px; } &:active { transform: scale(.9); } }
+    ion-icon { font-size: 18px; } &:active { transform: scale(.9); }
+    &.del { color: var(--ion-color-danger); } }
 }
 
 /* Botón outline "Agregar moto" / Cancelar */

@@ -35,11 +35,16 @@ export class PortalCitasPage implements OnInit {
   get pendientes(): any[] {
     return this.citas.filter(c => !['entregado', 'cancelado'].includes(c.estado));
   }
+  // Completadas/canceladas, pero solo del último año: las más viejas se ocultan de la lista.
   get historial(): any[] {
-    return this.citas.filter(c => ['entregado', 'cancelado'].includes(c.estado));
+    const corte = new Date();
+    corte.setFullYear(corte.getFullYear() - 1);
+    const corteStr = corte.toISOString().slice(0, 10);
+    return this.citas.filter(c => ['entregado', 'cancelado'].includes(c.estado) && (c.fecha || '') >= corteStr);
   }
+  // Total pagado histórico (todas las entregadas, sin importar el filtro de 1 año).
   get totalPagado(): number {
-    return this.historial.filter(c => c.estado === 'entregado').reduce((s, c) => s + Number(c.monto || 0), 0);
+    return this.citas.filter(c => c.estado === 'entregado').reduce((s, c) => s + Number(c.monto || 0), 0);
   }
 
   // Índice del estado en el flujo (para la barra de progreso). -1 si cancelado.
@@ -84,6 +89,8 @@ export class PortalCitasPage implements OnInit {
   }
 
   estrellas(n: number): string { return '★'.repeat(n) + '☆'.repeat(5 - n); }
+
+  verDetalle(c: any) { this.router.navigate(['/portal/cita', c.id]); }
 
   // El presupuesto se aprueba en Inicio (donde está el flujo aprobar/rechazar).
   irAInicio() { this.router.navigate(['/portal/inicio']); }

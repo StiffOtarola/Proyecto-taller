@@ -557,6 +557,19 @@ router.put('/motos/:id', async (req, res) => {
   }
 });
 
+// DELETE /api/portal/motos/:id — el cliente da de baja una moto propia (soft-delete).
+// No se borra la fila (preserva el historial de citas/órdenes); deja de aparecer en su lista.
+router.delete('/motos/:id', async (req, res) => {
+  try {
+    const [[moto]] = await pool.query('SELECT id FROM motos WHERE id = ? AND cliente_id = ? AND activa = 1', [req.params.id, req.cliente.id]);
+    if (!moto) return res.status(404).json({ error: 'Moto no encontrada' });
+    await pool.query('UPDATE motos SET activa = 0 WHERE id = ?', [req.params.id]);
+    res.json({ message: 'Moto eliminada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
 // GET /api/portal/citas — citas del cliente
 router.get('/citas', async (req, res) => {
   try {
@@ -575,6 +588,29 @@ router.get('/citas', async (req, res) => {
       [req.cliente.id]
     );
     res.json({ data: rows });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// GET /api/portal/citas/:id — detalle de una cita propia (para la pantalla de detalle)
+router.get('/citas/:id', async (req, res) => {
+  try {
+    const [[cita]] = await pool.query(
+      `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado,
+              ci.monto, ci.calificacion, ci.comentario_satisfaccion, ci.fecha_inicio, ci.fecha_fin,
+              ci.orden_id, o.numero_orden, o.estado AS orden_estado, o.aprobacion_cliente,
+              m.marca, m.modelo, m.placa,
+              t.nombre AS tecnico_nombre
+       FROM citas ci
+       LEFT JOIN motos m ON m.id = ci.moto_id
+       LEFT JOIN usuarios t ON t.id = ci.tecnico_id
+       LEFT JOIN ordenes_trabajo o ON o.id = ci.orden_id
+       WHERE ci.id = ? AND ci.cliente_id = ?`,
+      [req.params.id, req.cliente.id]
+    );
+    if (!cita) return res.status(404).json({ error: 'Cita no encontrada' });
+    res.json({ data: cita });
   } catch (err) {
     fail(res, err);
   }

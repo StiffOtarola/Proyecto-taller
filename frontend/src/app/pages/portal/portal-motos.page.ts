@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ToastController } from '@ionic/angular';
+import { AlertController, ToastController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
 import { MARCAS_MOTO, modelosDeMarca } from '../../utils/motos-catalogo';
 
@@ -22,7 +22,7 @@ export class PortalMotosPage implements OnInit {
   marcasSugeridas: string[] = [];
   modelosSugeridos: string[] = [];
 
-  constructor(private portal: PortalService, private toast: ToastController) {}
+  constructor(private portal: PortalService, private toast: ToastController, private alert: AlertController) {}
 
   ngOnInit() { this.cargar(); }
   ionViewWillEnter() { this.cargar(); }
@@ -119,6 +119,29 @@ export class PortalMotosPage implements OnInit {
         this.enviando = false;
         this.mostrarToast(err.error?.error || 'No se pudo guardar la moto', 'danger');
       },
+    });
+  }
+
+  async eliminar(m: any) {
+    const al = await this.alert.create({
+      header: 'Eliminar moto',
+      message: `¿Querés eliminar tu ${m.marca} ${m.modelo} (${m.placa})? Dejará de aparecer en tu lista.`,
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Eliminar', role: 'destructive', handler: () => this.confirmarEliminar(m) },
+      ],
+    });
+    await al.present();
+  }
+
+  private confirmarEliminar(m: any) {
+    this.portal.eliminarMoto(m.id).subscribe({
+      next: () => {
+        this.motos = this.motos.filter(x => x.id !== m.id);
+        if (this.editandoId === m.id) this.cerrarForm();
+        this.mostrarToast('Moto eliminada');
+      },
+      error: err => this.mostrarToast(err.error?.error || 'No se pudo eliminar la moto', 'danger'),
     });
   }
 

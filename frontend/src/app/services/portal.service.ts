@@ -145,6 +145,10 @@ export class PortalService {
     return this.http.put(`${this.url}/perfil/password`, data);
   }
 
+  eliminarCuenta(): Observable<any> {
+    return this.http.delete(`${this.url}/perfil`);
+  }
+
   // Refresca el nombre/apellido guardados (saludo del inicio) tras editar el perfil,
   // sin necesidad de un token nuevo.
   actualizarClienteLocal(parcial: Partial<ClientePortal>) {

@@ -313,6 +313,18 @@ router.put('/perfil/password', async (req, res) => {
   }
 });
 
+// DELETE /api/portal/perfil — el cliente da de baja su propia cuenta.
+// Soft-delete: NO se borran sus datos históricos (órdenes/citas) por integridad
+// del taller; se desactiva el acceso al portal (activo=0 + sin contraseña).
+router.delete('/perfil', async (req, res) => {
+  try {
+    await pool.query('UPDATE clientes SET activo = 0, password_hash = NULL WHERE id = ?', [req.cliente.id]);
+    res.json({ message: 'Cuenta eliminada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
 // GET /api/portal/disponibilidad?fecha= — conteo de citas por hora ese día
 router.get('/disponibilidad', async (req, res) => {
   try {

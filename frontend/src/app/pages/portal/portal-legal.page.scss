@@ -1,0 +1,12 @@
+.legal { max-width: 760px; margin: 0 auto; padding: 16px; }
+
+.updated { font-size: 12px; color: var(--n-500); margin: 0 0 18px; }
+
+.bloque {
+  margin-bottom: 18px;
+  h2 {
+    font-family: var(--font-display); font-size: 16px; font-weight: 800;
+    margin: 0 0 8px; color: var(--ion-text-color);
+  }
+  p { font-size: 13.5px; line-height: 1.6; color: var(--n-700); margin: 0 0 8px; }
+}

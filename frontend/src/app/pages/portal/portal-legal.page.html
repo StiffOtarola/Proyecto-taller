@@ -1,0 +1,19 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/portal/perfil" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ doc?.titulo }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="legal" *ngIf="doc">
+    <p class="updated">Última actualización: {{ doc.actualizado }}</p>
+    <section class="bloque" *ngFor="let s of doc.secciones; let i = index">
+      <h2>{{ i + 1 }}. {{ s.titulo }}</h2>
+      <p *ngFor="let p of s.parrafos">{{ p }}</p>
+    </section>
+    <div style="height:40px"></div>
+  </div>
+</ion-content>

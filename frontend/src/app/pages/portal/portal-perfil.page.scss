@@ -60,4 +60,16 @@
 
   &.outline { background: none; border: 1.5px solid var(--hairline); color: var(--ion-text-color); }
   &.danger { background: var(--rose-50); color: var(--ion-color-primary); border: 1px solid var(--rose-200); }
+  &.danger-outline { background: none; border: 1.5px solid var(--ion-color-danger); color: var(--ion-color-danger); margin-top: 10px; }
+}
+
+/* Filas de "Información legal" */
+.legal-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 2px; cursor: pointer; text-decoration: none;
+  color: var(--ion-text-color); border-bottom: 1px solid var(--hairline);
+  &:last-child { border-bottom: none; }
+  ion-icon:first-child { font-size: 20px; color: var(--ion-color-primary); flex-shrink: 0; }
+  span { flex: 1; font-size: 14px; font-weight: 600; }
+  .chev { font-size: 16px; color: var(--n-400); flex-shrink: 0; }
 }

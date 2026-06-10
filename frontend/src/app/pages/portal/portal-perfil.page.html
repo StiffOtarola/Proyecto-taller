@@ -37,13 +37,19 @@
         <button class="cta" [disabled]="guardando" (click)="guardarCuenta()">💾 Guardar cambios</button>
       </section>
 
-      <!-- Seguridad -->
+      <!-- Información legal -->
       <section class="card">
-        <span class="section-label">Seguridad</span>
-        <div class="ig"><label>Contraseña actual</label><input type="password" [(ngModel)]="pass.actual" placeholder="••••••••"></div>
-        <div class="ig"><label>Nueva contraseña</label><input type="password" [(ngModel)]="pass.nueva" placeholder="Mín. 6 caracteres"></div>
-        <div class="ig"><label>Confirmar contraseña</label><input type="password" [(ngModel)]="pass.confirmar" placeholder="Repetí la nueva"></div>
-        <button class="cta outline" [disabled]="guardandoPass" (click)="cambiarPassword()">🔑 Cambiar contraseña</button>
+        <span class="section-label">Información legal</span>
+        <a class="legal-row" [routerLink]="['/portal/legal/terminos']">
+          <ion-icon name="document-text-outline"></ion-icon>
+          <span>Términos y condiciones</span>
+          <ion-icon name="chevron-forward" class="chev"></ion-icon>
+        </a>
+        <a class="legal-row" [routerLink]="['/portal/legal/privacidad']">
+          <ion-icon name="shield-checkmark-outline"></ion-icon>
+          <span>Política de privacidad</span>
+          <ion-icon name="chevron-forward" class="chev"></ion-icon>
+        </a>
       </section>
 
       <!-- Historial de notificaciones -->
@@ -58,6 +64,7 @@
       </section>
 
       <button class="cta danger" (click)="logout()">⏻ Cerrar sesión</button>
+      <button class="cta danger-outline" [disabled]="eliminando" (click)="eliminarCuenta()">🗑️ Eliminar cuenta</button>
     </ng-container>
 
     <div style="height:90px"></div>

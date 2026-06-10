@@ -11,11 +11,13 @@ import { PortalCitasPage } from './portal-citas.page';
 import { PortalMotosPage } from './portal-motos.page';
 import { PortalOfertasPage } from './portal-ofertas.page';
 import { PortalPerfilPage } from './portal-perfil.page';
+import { PortalLegalPage } from './portal-legal.page';
 
 const routes: Routes = [
   { path: 'login', component: PortalLoginPage },
   { path: 'registro', component: PortalRegistroPage },
   { path: 'recuperar', component: PortalRecuperarPage },
+  { path: 'legal/:doc', component: PortalLegalPage },
   {
     path: '',
     component: PortalTabsPage,

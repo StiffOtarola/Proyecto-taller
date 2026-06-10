@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { ToastController } from '@ionic/angular';
+import { AlertController, ToastController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
 
 @Component({
@@ -12,16 +12,16 @@ import { PortalService } from '../../services/portal.service';
 export class PortalPerfilPage implements OnInit {
   perfil: any = null;
   cuenta = { nombre: '', apellido: '', telefono: '', email: '' };
-  pass = { actual: '', nueva: '', confirmar: '' };
   notificaciones: any[] = [];
   cargando = true;
   guardando = false;
-  guardandoPass = false;
+  eliminando = false;
 
   constructor(
     public portal: PortalService,
     private router: Router,
     private toast: ToastController,
+    private alert: AlertController,
   ) {}
 
   ngOnInit() { this.cargar(); }
@@ -84,14 +84,28 @@ export class PortalPerfilPage implements OnInit {
     });
   }
 
-  cambiarPassword() {
-    if (!this.pass.actual || !this.pass.nueva) { this.aviso('Completá la contraseña actual y la nueva', 'warning'); return; }
-    if (this.pass.nueva.length < 6) { this.aviso('La nueva debe tener al menos 6 caracteres', 'warning'); return; }
-    if (this.pass.nueva !== this.pass.confirmar) { this.aviso('Las contraseñas nuevas no coinciden', 'warning'); return; }
-    this.guardandoPass = true;
-    this.portal.updateMiPassword({ actual: this.pass.actual, nueva: this.pass.nueva }).subscribe({
-      next: () => { this.guardandoPass = false; this.pass = { actual: '', nueva: '', confirmar: '' }; this.aviso('Contraseña actualizada'); },
-      error: (e) => { this.guardandoPass = false; this.aviso(e.error?.error || 'No se pudo cambiar', 'danger'); },
+  async eliminarCuenta() {
+    const al = await this.alert.create({
+      header: 'Eliminar cuenta',
+      message: 'Se desactivará tu acceso al portal y se cerrará la sesión. Tu historial de servicios queda en el taller. ¿Querés continuar?',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Eliminar', role: 'destructive', handler: () => this.confirmarEliminar() },
+      ],
+    });
+    await al.present();
+  }
+
+  private confirmarEliminar() {
+    if (this.eliminando) return;
+    this.eliminando = true;
+    this.portal.eliminarCuenta().subscribe({
+      next: async () => {
+        await this.aviso('Tu cuenta fue eliminada');
+        this.portal.logout();
+        this.router.navigate(['/portal/login'], { replaceUrl: true });
+      },
+      error: (e) => { this.eliminando = false; this.aviso(e.error?.error || 'No se pudo eliminar la cuenta', 'danger'); },
     });
   }
 

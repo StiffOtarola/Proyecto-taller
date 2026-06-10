@@ -10,6 +10,7 @@ import { PortalCitasPage } from './portal-citas.page';
 import { PortalMotosPage } from './portal-motos.page';
 import { PortalOfertasPage } from './portal-ofertas.page';
 import { PortalPerfilPage } from './portal-perfil.page';
+import { PortalActionsComponent } from './portal-actions.component';
 import { SharedModule } from '../../shared/shared.module';
 
 @NgModule({
@@ -18,6 +19,7 @@ import { SharedModule } from '../../shared/shared.module';
     PortalLoginPage, PortalRegistroPage, PortalRecuperarPage,
     PortalTabsPage, PortalInicioPage, PortalAgendarPage,
     PortalCitasPage, PortalMotosPage, PortalOfertasPage, PortalPerfilPage,
+    PortalActionsComponent,
   ],
 })
 export class PortalPageModule {}

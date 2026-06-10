@@ -4,8 +4,11 @@ const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
 const { generarNumeroOrden, sincronizarCitaDesdeOrden } = require('../utils/ordenes');
+const { TRANSICIONES_ORDEN, transicionPermitida } = require('../utils/transiciones');
 
-router.use(auth);
+// Piso de rol: recepción o superior (recepción crea órdenes, el técnico las trabaja).
+// Sin esto, cualquier token válido podía leer/alterar órdenes ajenas y sus costos.
+router.use(auth, requireRol('recepcion'));
 
 // GET /api/ordenes
 router.get('/', async (req, res) => {
@@ -158,6 +161,11 @@ router.patch('/:id/estado', async (req, res) => {
 
     const [[orden]] = await pool.query('SELECT estado FROM ordenes_trabajo WHERE id = ?', [req.params.id]);
     if (!orden) return res.status(404).json({ error: 'Orden no encontrada' });
+
+    // Solo transiciones válidas (evita saltos ilógicos, p. ej. entregada→diagnostico).
+    if (!transicionPermitida(TRANSICIONES_ORDEN, orden.estado, estado)) {
+      return res.status(400).json({ error: `Transición no permitida: ${orden.estado} → ${estado}` });
+    }
 
     // Cerrar tiempo de etapa anterior
     if (ETAPAS_TIEMPO.includes(orden.estado)) {

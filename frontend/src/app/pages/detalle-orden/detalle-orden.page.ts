@@ -55,7 +55,9 @@ export class DetalleOrdenPage implements OnInit {
     esperando_aprobacion: ['esperando_repuestos', 'en_reparacion', 'cancelada'],
     esperando_repuestos:  ['en_reparacion', 'cancelada'],
     en_reparacion:        ['lista_entrega', 'cancelada'],
-    lista_entrega:        ['entregada'],
+    // La entrega NO se hace por cambio de estado, sino por la card "Facturar y
+    // entregar" (PATCH /cerrar: registra pago, garantía y suma la visita de fidelidad).
+    lista_entrega:        [],
     entregada:            [],
     cancelada:            [],
   };

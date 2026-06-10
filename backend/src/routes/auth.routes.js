@@ -11,6 +11,11 @@ function firmar(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '8h' });
 }
 
+// Hash señuelo (bcrypt válido) para igualar el tiempo de respuesta cuando el correo
+// no existe: sin esto, un login a un correo inexistente respondería más rápido (no
+// corre bcrypt), revelando qué cuentas existen. Se calcula una sola vez al cargar.
+const DUMMY_HASH = bcrypt.hashSync('timing-equalizer', 10);
+
 // Login unificado: el mismo formulario sirve para personal y para clientes.
 // Busca primero en usuarios (personal) y, si no, en clientes con acceso al portal.
 // La respuesta incluye `tipo` ('staff' | 'cliente') para que el front sepa a dónde mandar.
@@ -50,6 +55,11 @@ router.post('/login', async (req, res) => {
       return res.json({ data: { token: firmar(payload), tipo: 'cliente', cliente: payload } });
     }
 
+    // Anti-enumeración: si el correo no existía en ninguna tabla, no se ejecutó
+    // ningún bcrypt.compare; corré uno señuelo para no delatar la cuenta por timing.
+    if (!usuario && !cliente) {
+      await bcrypt.compare(password, DUMMY_HASH);
+    }
     return res.status(401).json({ error: 'Credenciales incorrectas' });
   } catch (err) {
     fail(res, err);

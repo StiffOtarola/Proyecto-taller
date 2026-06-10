@@ -4,7 +4,9 @@ const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
 
-router.use(auth);
+// Piso de rol: recepción o superior. Sin esto, cualquier token válido (incluido el
+// de un cliente del portal) podía leer/crear reclamos de garantía ajenos.
+router.use(auth, requireRol('recepcion'));
 
 const ESTADOS = ['abierto', 'en_revision', 'aprobado', 'rechazado', 'resuelto'];
 

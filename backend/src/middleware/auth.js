@@ -7,7 +7,14 @@ module.exports = function authMiddleware(req, res, next) {
   }
   const token = header.slice(7);
   try {
-    req.usuario = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    // El token debe ser de PERSONAL: los del portal de clientes se firman con el
+    // mismo secreto pero llevan tipo:'cliente' y no tienen rol. Sin este chequeo,
+    // un cliente autenticado podría usar su token en las rutas de staff.
+    if (payload.tipo === 'cliente' || !payload.rol) {
+      return res.status(403).json({ error: 'Token no válido para esta sección' });
+    }
+    req.usuario = payload;
     next();
   } catch {
     return res.status(401).json({ error: 'Token inválido o expirado' });

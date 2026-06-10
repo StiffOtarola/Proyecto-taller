@@ -4,8 +4,12 @@ const { pool } = require('../db/pool');
 const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
+const { emailValido } = require('../utils/validar');
 
 router.use(auth, requireRol('admin'));
+
+// Roles válidos del personal (debe coincidir con el ENUM de la tabla usuarios).
+const ROLES = ['recepcion', 'tecnico', 'admin'];
 
 router.get('/', async (req, res) => {
   try {
@@ -24,6 +28,8 @@ router.post('/', async (req, res) => {
     if (!nombre || !email || !password || !rol) {
       return res.status(400).json({ error: 'nombre, email, contraseña y rol son requeridos' });
     }
+    if (!emailValido(email)) return res.status(400).json({ error: 'El correo no tiene un formato válido' });
+    if (!ROLES.includes(rol)) return res.status(400).json({ error: 'Rol no válido' });
     const hash = await bcrypt.hash(password, 10);
     const [result] = await pool.query(
       'INSERT INTO usuarios (nombre, email, password_hash, rol, telefono) VALUES (?, ?, ?, ?, ?)',
@@ -43,6 +49,15 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { nombre, email, rol, telefono } = req.body;
+    if (!nombre || !nombre.trim() || !email || !rol) {
+      return res.status(400).json({ error: 'nombre, email y rol son requeridos' });
+    }
+    if (!emailValido(email)) return res.status(400).json({ error: 'El correo no tiene un formato válido' });
+    if (!ROLES.includes(rol)) return res.status(400).json({ error: 'Rol no válido' });
+    // Anti-lockout: el admin logueado no puede quitarse a sí mismo el rol admin.
+    if (Number(req.params.id) === req.usuario.id && rol !== 'admin') {
+      return res.status(400).json({ error: 'No podés cambiar tu propio rol de administrador' });
+    }
     await pool.query(
       'UPDATE usuarios SET nombre=?, email=?, rol=?, telefono=? WHERE id=?',
       [nombre, email, rol, telefono ?? null, req.params.id]
@@ -60,6 +75,10 @@ router.put('/:id', async (req, res) => {
 router.patch('/:id/activo', async (req, res) => {
   try {
     const { activo } = req.body;
+    // Anti-lockout: el admin logueado no puede desactivarse a sí mismo.
+    if (Number(req.params.id) === req.usuario.id && !activo) {
+      return res.status(400).json({ error: 'No podés desactivar tu propia cuenta' });
+    }
     await pool.query('UPDATE usuarios SET activo = ? WHERE id = ?', [activo ? 1 : 0, req.params.id]);
     res.json({ message: activo ? 'Usuario activado' : 'Usuario desactivado' });
   } catch (err) {

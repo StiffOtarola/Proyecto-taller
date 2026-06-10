@@ -23,22 +23,41 @@ async function run() {
   await conn.query(sql);
   console.log('✅ Schema ejecutado');
 
-  const hash = await bcrypt.hash('Admin2024!', 10);
-  await conn.query(
-    'INSERT IGNORE INTO usuarios (nombre, email, password_hash, rol) VALUES (?, ?, ?, ?)',
-    ['Administrador', 'admin@taller.com', hash, 'admin']
-  );
-  console.log('✅ Usuario admin creado (admin@taller.com / Admin2024!)');
-
-  const hashRecep = await bcrypt.hash('Recep2024!', 10);
-  await conn.query(
-    'INSERT IGNORE INTO usuarios (nombre, email, password_hash, rol) VALUES (?, ?, ?, ?)',
-    ['María Recepción', 'recepcion@taller.com', hashRecep, 'recepcion']
-  );
-  console.log('✅ Usuario recepción creado (recepcion@taller.com / Recep2024!)');
+  // Cuentas semilla: la contraseña se toma de variables de entorno; sin ellas no se
+  // crean (evita dejar credenciales conocidas en producción). Para sembrarlas, definí
+  // SEED_ADMIN_PASSWORD / SEED_RECEP_PASSWORD (y opcionalmente *_EMAIL) antes de migrar.
+  await seedUsuario(conn, {
+    nombre: 'Administrador', rol: 'admin',
+    email: process.env.SEED_ADMIN_EMAIL || 'admin@taller.com',
+    password: process.env.SEED_ADMIN_PASSWORD,
+  });
+  await seedUsuario(conn, {
+    nombre: 'Recepción', rol: 'recepcion',
+    email: process.env.SEED_RECEP_EMAIL || 'recepcion@taller.com',
+    password: process.env.SEED_RECEP_PASSWORD,
+  });
 
   await conn.end();
   console.log('🎉 Migración completa');
+}
+
+// Crea una cuenta semilla solo si su contraseña viene por entorno (≥8 chars).
+// Nunca imprime la contraseña. Idempotente (INSERT IGNORE por email único).
+async function seedUsuario(conn, { nombre, email, rol, password }) {
+  if (!password) {
+    console.warn(`⚠️  Seed de ${rol} (${email}) omitido: definí su contraseña en una variable de entorno.`);
+    return;
+  }
+  if (String(password).length < 8) {
+    console.warn(`⚠️  Seed de ${rol} omitido: la contraseña debe tener al menos 8 caracteres.`);
+    return;
+  }
+  const hash = await bcrypt.hash(String(password), 10);
+  await conn.query(
+    'INSERT IGNORE INTO usuarios (nombre, email, password_hash, rol) VALUES (?, ?, ?, ?)',
+    [nombre, email, hash, rol]
+  );
+  console.log(`✅ Usuario ${rol} listo (${email})`);
 }
 
 run().catch(err => {

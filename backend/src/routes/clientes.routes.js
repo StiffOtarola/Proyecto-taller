@@ -4,8 +4,12 @@ const { pool } = require('../db/pool');
 const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
+const { soloRoles } = require('../middleware/roles');
 
-router.use(auth);
+// El CRUD de clientes (PII: cédula, dirección, edición) es tarea de recepción/admin.
+// Membresía exacta: el técnico queda excluido (su panel usa /api/mecanico, que ya
+// le da el contexto de cliente que necesita). Los clientes del portal nunca entran.
+router.use(auth, soloRoles('recepcion', 'admin'));
 
 // Columnas seguras (nunca exponer password_hash); tiene_portal indica si el acceso está activo.
 const COLS = `id, nombre, apellido, telefono, email, cedula, direccion, activo, created_at, updated_at,

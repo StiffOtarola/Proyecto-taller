@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
 const { soloRoles } = require('../middleware/roles');
 const { notificarCambioEstado } = require('../utils/notificaciones');
+const { TRANSICIONES_CITA, transicionPermitida } = require('../utils/transiciones');
 
 const ESTADOS = ['agendado', 'en_revision', 'en_mantenimiento', 'listo', 'entregado', 'cancelado'];
 
@@ -12,7 +13,9 @@ const ESTADOS = ['agendado', 'en_revision', 'en_mantenimiento', 'listo', 'entreg
 // El técnico solo mueve el estado de SUS citas (más abajo y en /api/mecanico).
 const GESTIONA_AGENDA = ['recepcion', 'admin'];
 
-router.use(auth);
+// Piso de rol: recepción o superior. Sin esto, cualquier token válido (incluido el
+// de un cliente del portal) podía leer la agenda y cambiar el estado de cualquier cita.
+router.use(auth, requireRol('recepcion'));
 
 router.get('/', async (req, res) => {
   try {
@@ -98,12 +101,17 @@ router.patch('/:id/estado', async (req, res) => {
     const { estado } = req.body;
     if (!ESTADOS.includes(estado)) return res.status(400).json({ error: 'Estado inválido' });
 
-    const [[cita]] = await pool.query('SELECT id, tecnico_id FROM citas WHERE id = ?', [req.params.id]);
+    const [[cita]] = await pool.query('SELECT id, tecnico_id, estado FROM citas WHERE id = ?', [req.params.id]);
     if (!cita) return res.status(404).json({ error: 'Cita no encontrada' });
 
     // Un técnico solo puede mover SUS citas; admin (y recepción) pueden cualquiera.
     if (req.usuario.rol === 'tecnico' && cita.tecnico_id !== req.usuario.id) {
       return res.status(403).json({ error: 'Solo podés cambiar el estado de tus citas asignadas' });
+    }
+
+    // Solo transiciones válidas del flujo de la cita.
+    if (!transicionPermitida(TRANSICIONES_CITA, cita.estado, estado)) {
+      return res.status(400).json({ error: `Transición no permitida: ${cita.estado} → ${estado}` });
     }
 
     await pool.query('UPDATE citas SET estado = ? WHERE id = ?', [estado, req.params.id]);

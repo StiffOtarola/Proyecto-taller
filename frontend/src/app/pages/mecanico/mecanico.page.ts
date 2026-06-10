@@ -79,6 +79,22 @@ export class MecanicoPage implements OnInit {
 
   necesitaMonto(estado: string): boolean { return estado === 'listo' || estado === 'entregado'; }
 
+  // Transiciones válidas del flujo de la cita (espejo del backend utils/transiciones.js).
+  // El <select> ofrece solo el estado actual + sus siguientes, para no pedir saltos que
+  // el backend rechaza (p. ej. agendado→listo).
+  private readonly siguientesCita: Record<string, string[]> = {
+    agendado: ['en_revision', 'cancelado'],
+    en_revision: ['en_mantenimiento', 'listo', 'cancelado'],
+    en_mantenimiento: ['listo', 'cancelado'],
+    listo: ['entregado', 'cancelado'],
+    entregado: [],
+    cancelado: [],
+  };
+
+  opcionesEstado(actual: string): string[] {
+    return [actual, ...(this.siguientesCita[actual] || [])];
+  }
+
   // Cambio desde el <select>: si pide monto, lo pregunta; si se cancela, la vista revierte sola.
   onEstadoChange(cita: any, nuevo: string) {
     if (!nuevo || nuevo === cita.estado) return;

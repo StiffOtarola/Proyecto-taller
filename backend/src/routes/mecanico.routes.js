@@ -4,6 +4,7 @@ const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
 const { notificarCambioEstado } = require('../utils/notificaciones');
+const { TRANSICIONES_CITA, transicionPermitida } = require('../utils/transiciones');
 
 // Panel del mecánico: opera sobre SUS citas asignadas. Accesible a técnico o superior.
 router.use(auth, requireRol('tecnico'));
@@ -118,6 +119,11 @@ router.patch('/citas/:id/estado', async (req, res) => {
       [req.params.id, req.usuario.id]
     );
     if (!cita) return res.status(404).json({ error: 'Cita no encontrada o no asignada a vos' });
+
+    // Solo transiciones válidas del flujo de la cita.
+    if (!transicionPermitida(TRANSICIONES_CITA, cita.estado, estado)) {
+      return res.status(400).json({ error: `Transición no permitida: ${cita.estado} → ${estado}` });
+    }
 
     // Marca inicio al arrancar el trabajo y fin al entregar.
     const arrancaTrabajo = cita.estado === 'agendado' && estado !== 'agendado' && estado !== 'cancelado';

@@ -88,7 +88,7 @@
 
           <!-- Cambiar estado (solo citas SIN orden: las vinculadas las maneja la orden) -->
           <select class="est-sel" [ngModel]="c.estado" (ngModelChange)="onEstadoChange(c, $event)" *ngIf="!c.orden_id && c.estado !== 'entregado' && c.estado !== 'cancelado'">
-            <option *ngFor="let e of estados" [value]="e">{{ estadoLabel[e] }}</option>
+            <option *ngFor="let e of opcionesEstado(c.estado)" [value]="e">{{ estadoLabel[e] }}</option>
           </select>
 
           <!-- Notas del cliente -->

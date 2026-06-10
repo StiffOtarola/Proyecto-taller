@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ToastController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
+import { MARCAS_MOTO, modelosDeMarca } from '../../utils/motos-catalogo';
 
 @Component({
   standalone: false,
@@ -16,6 +17,10 @@ export class PortalMotosPage implements OnInit {
   enviando = false;
   editandoId: number | null = null;
   nueva = { marca: '', modelo: '', placa: '', anio: null as number | null, color: '', kilometraje: null as number | null };
+
+  // Autocompletado de marca/modelo (catálogo local, no restrictivo).
+  marcasSugeridas: string[] = [];
+  modelosSugeridos: string[] = [];
 
   constructor(private portal: PortalService, private toast: ToastController) {}
 
@@ -33,6 +38,8 @@ export class PortalMotosPage implements OnInit {
   abrirForm() {
     this.editandoId = null;
     this.nueva = { marca: '', modelo: '', placa: '', anio: null, color: '', kilometraje: null };
+    this.marcasSugeridas = [];
+    this.modelosSugeridos = [];
     this.mostrarForm = true;
   }
 
@@ -42,10 +49,39 @@ export class PortalMotosPage implements OnInit {
       marca: m.marca, modelo: m.modelo, placa: m.placa,
       anio: m.anio || null, color: m.color || '', kilometraje: m.kilometraje_actual || null,
     };
+    this.marcasSugeridas = [];
+    this.modelosSugeridos = [];
     this.mostrarForm = true;
   }
 
-  cerrarForm() { this.mostrarForm = false; this.editandoId = null; }
+  cerrarForm() { this.mostrarForm = false; this.editandoId = null; this.marcasSugeridas = []; this.modelosSugeridos = []; }
+
+  // —— Autocompletado de marca ——
+  onMarcaInput() {
+    const q = this.nueva.marca.trim().toLowerCase();
+    this.marcasSugeridas = q ? MARCAS_MOTO.filter(m => m.toLowerCase().includes(q)).slice(0, 8) : [];
+  }
+  seleccionarMarca(m: string) {
+    this.nueva.marca = m;
+    this.marcasSugeridas = [];
+    // Al cambiar de marca, el modelo previo deja de aplicar.
+    this.nueva.modelo = '';
+    this.modelosSugeridos = [];
+  }
+
+  // —— Autocompletado de modelo, filtrado por la marca elegida ——
+  onModeloFocus() {
+    if (!this.nueva.modelo.trim()) this.modelosSugeridos = modelosDeMarca(this.nueva.marca).slice(0, 8);
+  }
+  onModeloInput() {
+    const q = this.nueva.modelo.trim().toLowerCase();
+    const modelos = modelosDeMarca(this.nueva.marca);
+    this.modelosSugeridos = (q ? modelos.filter(m => m.toLowerCase().includes(q)) : modelos).slice(0, 8);
+  }
+  seleccionarModelo(m: string) {
+    this.nueva.modelo = m;
+    this.modelosSugeridos = [];
+  }
 
   // Marca, modelo y placa son obligatorios.
   get valido(): boolean {

@@ -132,6 +132,29 @@ export class PortalService {
     return this.http.get<{ data: any[] }>(`${this.url}/promos`);
   }
 
+  // —— Perfil (Mi cuenta + Seguridad) ——
+  getMiPerfil(): Observable<{ data: any }> {
+    return this.http.get<{ data: any }>(`${this.url}/perfil`);
+  }
+
+  updateMiPerfil(data: { nombre: string; apellido: string; telefono: string; email: string }): Observable<{ data: any }> {
+    return this.http.put<{ data: any }>(`${this.url}/perfil`, data);
+  }
+
+  updateMiPassword(data: { actual: string; nueva: string }): Observable<any> {
+    return this.http.put(`${this.url}/perfil/password`, data);
+  }
+
+  // Refresca el nombre/apellido guardados (saludo del inicio) tras editar el perfil,
+  // sin necesidad de un token nuevo.
+  actualizarClienteLocal(parcial: Partial<ClientePortal>) {
+    const actual = this.clienteSubject.value;
+    if (!actual) return;
+    const merge = { ...actual, ...parcial };
+    localStorage.setItem(CLIENTE_KEY, JSON.stringify(merge));
+    this.clienteSubject.next(merge);
+  }
+
   private getClienteGuardado(): ClientePortal | null {
     try {
       const raw = localStorage.getItem(CLIENTE_KEY);

@@ -248,6 +248,71 @@ router.post('/notificaciones/leer', async (req, res) => {
   }
 });
 
+// ——— Perfil del cliente (Mi cuenta + Seguridad) ———
+
+// GET /api/portal/perfil — datos de la cuenta del cliente autenticado
+router.get('/perfil', async (req, res) => {
+  try {
+    const [[c]] = await pool.query(
+      'SELECT id, nombre, apellido, email, telefono, cedula FROM clientes WHERE id = ? AND activo = 1',
+      [req.cliente.id]
+    );
+    if (!c) return res.status(404).json({ error: 'Cuenta no encontrada' });
+    res.json({ data: c });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// PUT /api/portal/perfil — el cliente edita sus datos de contacto
+router.put('/perfil', async (req, res) => {
+  try {
+    const { nombre, apellido, telefono, email } = req.body;
+    if (!nombre || !nombre.trim() || !apellido || !apellido.trim()) {
+      return res.status(400).json({ error: 'Nombre y apellido son requeridos' });
+    }
+    if (!email || !emailValido(email)) {
+      return res.status(400).json({ error: 'El correo no tiene un formato válido' });
+    }
+    // El correo es la llave de login: no permitir chocar con otra cuenta.
+    const [[dup]] = await pool.query(
+      'SELECT id FROM clientes WHERE email = ? AND id <> ? AND activo = 1',
+      [email.trim(), req.cliente.id]
+    );
+    if (dup) return res.status(409).json({ error: 'Ese correo ya está en uso por otra cuenta' });
+
+    await pool.query(
+      'UPDATE clientes SET nombre = ?, apellido = ?, telefono = ?, email = ? WHERE id = ?',
+      [nombre.trim(), apellido.trim(), (telefono || '').trim() || null, email.trim(), req.cliente.id]
+    );
+    const [[c]] = await pool.query(
+      'SELECT id, nombre, apellido, email, telefono, cedula FROM clientes WHERE id = ?',
+      [req.cliente.id]
+    );
+    res.json({ data: c, message: 'Perfil actualizado' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// PUT /api/portal/perfil/password — cambia la contraseña verificando la actual
+router.put('/perfil/password', async (req, res) => {
+  try {
+    const { actual, nueva } = req.body;
+    if (!actual || !nueva) return res.status(400).json({ error: 'Contraseña actual y nueva son requeridas' });
+    if (String(nueva).length < 6) return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
+    const [[c]] = await pool.query('SELECT password_hash FROM clientes WHERE id = ? AND activo = 1', [req.cliente.id]);
+    if (!c || !c.password_hash) return res.status(404).json({ error: 'Cuenta no encontrada' });
+    const ok = await bcrypt.compare(String(actual), c.password_hash);
+    if (!ok) return res.status(400).json({ error: 'La contraseña actual no es correcta' });
+    const hash = await bcrypt.hash(String(nueva), 10);
+    await pool.query('UPDATE clientes SET password_hash = ? WHERE id = ?', [hash, req.cliente.id]);
+    res.json({ message: 'Contraseña actualizada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
 // GET /api/portal/disponibilidad?fecha= — conteo de citas por hora ese día
 router.get('/disponibilidad', async (req, res) => {
   try {

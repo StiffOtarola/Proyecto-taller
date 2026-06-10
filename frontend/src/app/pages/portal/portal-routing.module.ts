@@ -10,6 +10,7 @@ import { PortalAgendarPage } from './portal-agendar.page';
 import { PortalCitasPage } from './portal-citas.page';
 import { PortalMotosPage } from './portal-motos.page';
 import { PortalOfertasPage } from './portal-ofertas.page';
+import { PortalPerfilPage } from './portal-perfil.page';
 
 const routes: Routes = [
   { path: 'login', component: PortalLoginPage },
@@ -25,6 +26,7 @@ const routes: Routes = [
       { path: 'agendar', component: PortalAgendarPage },
       { path: 'mis-citas', component: PortalCitasPage },
       { path: 'motos', component: PortalMotosPage },
+      { path: 'perfil', component: PortalPerfilPage },
       { path: 'ofertas', component: PortalOfertasPage },
     ],
   },

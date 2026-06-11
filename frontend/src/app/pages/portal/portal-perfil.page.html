@@ -20,13 +20,15 @@
       <!-- Cabecera -->
       <div class="profile-header">
         <div class="avatar-wrap">
-          <button type="button" class="avatar" (click)="fotoInput.click()" [disabled]="subiendoFoto" aria-label="Cambiar foto de perfil">
+          <button type="button" class="avatar" (click)="abrirAvatar(fotoInput)" [disabled]="subiendoFoto"
+                  [attr.aria-label]="perfil?.foto ? 'Ver foto de perfil' : 'Agregar foto de perfil'">
             <img *ngIf="perfil?.foto; else iniTpl" [src]="perfil.foto" alt="Foto de perfil">
             <ng-template #iniTpl>{{ iniciales }}</ng-template>
           </button>
-          <span class="avatar-cam" [class.cargando]="subiendoFoto">
+          <button type="button" class="avatar-cam" [class.cargando]="subiendoFoto" (click)="fotoInput.click()"
+                  [disabled]="subiendoFoto" aria-label="Cambiar foto de perfil">
             <ion-icon [name]="subiendoFoto ? 'hourglass-outline' : 'camera'"></ion-icon>
-          </span>
+          </button>
           <input #fotoInput type="file" accept="image/*" hidden (change)="onFoto($event)">
         </div>
         <div class="info">
@@ -79,5 +81,14 @@
     </ng-container>
 
     <div style="height:90px"></div>
+  </div>
+
+  <!-- Visor con zoom de la foto de perfil -->
+  <div class="foto-zoom" *ngIf="zoomAbierto && perfil?.foto" (click)="cerrarZoom()">
+    <button class="fz-close" (click)="cerrarZoom()" aria-label="Cerrar"><ion-icon name="close"></ion-icon></button>
+    <div class="fz-stage" [class.zoom]="zoomActivo">
+      <img [src]="perfil.foto" alt="Foto de perfil" (click)="toggleZoom($event)">
+    </div>
+    <span class="fz-hint">{{ zoomActivo ? 'Tocá la imagen para alejar' : 'Tocá la imagen para acercar' }}</span>
   </div>
 </ion-content>

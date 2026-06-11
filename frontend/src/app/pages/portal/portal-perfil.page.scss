@@ -19,17 +19,56 @@
   }
   .avatar-cam {
     position: absolute; right: -2px; bottom: -2px; width: 24px; height: 24px; border-radius: 50%;
-    background: var(--ion-card-background); border: 1px solid var(--hairline);
-    display: flex; align-items: center; justify-content: center; pointer-events: none;
+    background: var(--ion-card-background); border: 1px solid var(--hairline); cursor: pointer; padding: 0;
+    display: flex; align-items: center; justify-content: center;
     box-shadow: var(--shadow-sm);
     ion-icon { font-size: 13px; color: var(--ion-color-primary); }
     &.cargando ion-icon { color: var(--n-400); }
+    &:active { transform: scale(.9); }
+    &:disabled { opacity: .7; }
   }
   .quitar-foto {
     margin-top: 8px; background: none; border: none; padding: 0; cursor: pointer;
     font-family: inherit; font-size: 11px; font-weight: 700; color: #b91c1c;
     &:disabled { opacity: .6; }
   }
+}
+
+/* Visor (lightbox) con zoom de la foto de perfil */
+.foto-zoom {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0, 0, 0, 0.93);
+  animation: fzIn .18s ease;
+
+  .fz-stage {
+    position: absolute; inset: 0; overflow: auto;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+    -webkit-overflow-scrolling: touch;
+    img {
+      margin: auto; max-width: 94vw; max-height: 82vh; object-fit: contain;
+      border-radius: 14px; cursor: zoom-in; user-select: none;
+      transition: max-width .2s ease, max-height .2s ease;
+    }
+    &.zoom img { max-width: none; max-height: none; width: 175vw; cursor: zoom-out; border-radius: 0; }
+  }
+
+  .fz-close {
+    position: absolute; top: 14px; right: 14px; z-index: 2;
+    width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
+    background: rgba(255, 255, 255, 0.14); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    ion-icon { font-size: 22px; }
+    &:active { transform: scale(.92); }
+  }
+
+  .fz-hint {
+    position: absolute; left: 0; right: 0; bottom: 22px; text-align: center;
+    color: rgba(255, 255, 255, 0.7); font-size: 12px; font-weight: 600; pointer-events: none;
+  }
+}
+@keyframes fzIn { from { opacity: 0; } to { opacity: 1; } }
+
+.profile-header {
   // El degradado es claro en ambos temas: el texto va en oscuro fijo (no con vars
   // de tema) para que no quede texto claro sobre fondo claro en modo oscuro.
   .info { min-width: 0;

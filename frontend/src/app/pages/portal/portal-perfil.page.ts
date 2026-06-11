@@ -19,6 +19,10 @@ export class PortalPerfilPage implements OnInit {
   eliminando = false;
   subiendoFoto = false;
 
+  // Visor (lightbox) de la foto de perfil con zoom.
+  zoomAbierto = false;
+  zoomActivo = false;
+
   constructor(
     public portal: PortalService,
     private router: Router,
@@ -85,6 +89,16 @@ export class PortalPerfilPage implements OnInit {
       error: (e) => { this.guardando = false; this.aviso(e.error?.error || 'No se pudo actualizar', 'danger'); },
     });
   }
+
+  // —— Visor con zoom de la foto de perfil ——
+  // Al tocar el avatar: si hay foto la abre en grande; si no, abre el selector.
+  abrirAvatar(fileInput: HTMLInputElement) {
+    if (this.perfil?.foto) this.abrirZoom();
+    else fileInput.click();
+  }
+  abrirZoom() { this.zoomAbierto = true; this.zoomActivo = false; }
+  cerrarZoom() { this.zoomAbierto = false; this.zoomActivo = false; }
+  toggleZoom(ev: Event) { ev.stopPropagation(); this.zoomActivo = !this.zoomActivo; }
 
   // —— Foto de perfil ——
   async onFoto(ev: Event) {

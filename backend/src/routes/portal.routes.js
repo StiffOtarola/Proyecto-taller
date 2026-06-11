@@ -204,7 +204,12 @@ router.use(authCliente);
 router.get('/resumen', async (req, res) => {
   try {
     const id = req.cliente.id;
-    const [[{ citas_totales }]] = await pool.query('SELECT COUNT(*) AS citas_totales FROM citas WHERE cliente_id = ?', [id]);
+    // "Citas totales" del cliente = pendientes + completadas (NO cuenta las canceladas,
+    // que para el cliente quedan eliminadas de su vista).
+    const [[{ citas_totales }]] = await pool.query(
+      "SELECT COUNT(*) AS citas_totales FROM citas WHERE cliente_id = ? AND estado <> 'cancelado'",
+      [id]
+    );
     const [[{ citas_pendientes }]] = await pool.query(
       "SELECT COUNT(*) AS citas_pendientes FROM citas WHERE cliente_id = ? AND estado NOT IN ('entregado','cancelado')",
       [id]

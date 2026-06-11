@@ -117,6 +117,11 @@ export class PortalService {
     return this.http.patch(`${this.url}/citas/${id}/cancelar`, {});
   }
 
+  // El cliente confirma que asistirá a su cita agendada.
+  confirmarCita(id: number): Observable<any> {
+    return this.http.patch(`${this.url}/citas/${id}/confirmar`, {});
+  }
+
   crearCita(data: { moto_id: number; fecha: string; hora: string; tipo_servicio: string; descripcion?: string }): Observable<{ data: any }> {
     return this.http.post<{ data: any }>(`${this.url}/citas`, data);
   }

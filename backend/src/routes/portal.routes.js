@@ -650,7 +650,7 @@ router.get('/citas', async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado,
-              ci.monto, ci.calificacion,
+              ci.monto, ci.calificacion, ci.confirmada_cliente,
               ci.orden_id, o.numero_orden, o.estado AS orden_estado, o.aprobacion_cliente,
               m.marca, m.modelo, m.placa,
               t.nombre AS tecnico_nombre
@@ -675,8 +675,9 @@ router.get('/citas/:id', async (req, res) => {
       `SELECT ci.id, DATE_FORMAT(ci.fecha, '%Y-%m-%d') AS fecha, TIME_FORMAT(ci.hora, '%H:%i') AS hora,
               ci.motivo, ci.tipo_servicio, ci.estado, ci.moto_id,
               ci.monto, ci.calificacion, ci.comentario_satisfaccion, ci.fecha_inicio, ci.fecha_fin,
+              ci.confirmada_cliente,
               ci.orden_id, o.numero_orden, o.estado AS orden_estado, o.aprobacion_cliente,
-              m.marca, m.modelo, m.placa,
+              m.marca, m.modelo, m.placa, m.foto AS moto_foto,
               t.nombre AS tecnico_nombre
        FROM citas ci
        LEFT JOIN motos m ON m.id = ci.moto_id
@@ -891,6 +892,25 @@ router.patch('/citas/:id/cancelar', async (req, res) => {
     }
     await pool.query("UPDATE citas SET estado = 'cancelado' WHERE id = ?", [req.params.id]);
     res.json({ message: 'Cita cancelada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// PATCH /api/portal/citas/:id/confirmar — el cliente confirma que asistirá.
+// Marca confirmada_cliente=1 (el taller lo usa como señal de presencia / no-show).
+router.patch('/citas/:id/confirmar', async (req, res) => {
+  try {
+    const [[cita]] = await pool.query(
+      'SELECT id, estado FROM citas WHERE id = ? AND cliente_id = ?',
+      [req.params.id, req.cliente.id]
+    );
+    if (!cita) return res.status(404).json({ error: 'Cita no encontrada' });
+    if (cita.estado !== 'agendado') {
+      return res.status(400).json({ error: 'Solo se puede confirmar una cita agendada.' });
+    }
+    await pool.query('UPDATE citas SET confirmada_cliente = 1 WHERE id = ?', [req.params.id]);
+    res.json({ message: 'Asistencia confirmada' });
   } catch (err) {
     fail(res, err);
   }

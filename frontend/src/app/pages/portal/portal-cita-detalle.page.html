@@ -17,7 +17,10 @@
     <!-- Cabecera -->
     <section class="card">
       <div class="head">
-        <h2>{{ cita.marca }} {{ cita.modelo }}</h2>
+        <div class="head-moto">
+          <div class="moto-thumb" *ngIf="cita.moto_foto"><img [src]="cita.moto_foto" [alt]="cita.marca + ' ' + cita.modelo"></div>
+          <h2>{{ cita.marca }} {{ cita.modelo }}</h2>
+        </div>
         <span class="pill" [ngClass]="cita.estado === 'entregado' ? 'green' : cita.estado === 'cancelado' ? 'gris' : 'rose'">{{ estadoLabel[cita.estado] }}</span>
       </div>
       <p class="placa mono" *ngIf="cita.placa">{{ cita.placa }}</p>
@@ -87,6 +90,19 @@
         <img *ngFor="let f of orden.fotos" [src]="f.url" alt="Foto de la orden" />
       </div>
     </section>
+
+    <!-- Confirmar asistencia (cita agendada) -->
+    <button class="btn-confirmar" *ngIf="puedeConfirmar" (click)="confirmar()" [disabled]="confirmando">
+      <ion-icon name="checkmark-circle-outline"></ion-icon> Confirmar asistencia
+    </button>
+    <div class="confirmada-banner" *ngIf="cita.estado === 'agendado' && cita.confirmada_cliente">
+      <ion-icon name="checkmark-circle"></ion-icon> Confirmaste tu asistencia. ¡Te esperamos!
+    </div>
+
+    <!-- Descargar comprobante (cuando hay orden/monto) -->
+    <button class="btn-descargar" *ngIf="puedeDescargar" (click)="descargarComprobante()">
+      <ion-icon name="download-outline"></ion-icon> Descargar comprobante
+    </button>
 
     <!-- Editar / cancelar (solo mientras está agendada) -->
     <button class="btn-editar" *ngIf="puedeCancelar" (click)="editar()">

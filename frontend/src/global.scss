@@ -422,6 +422,16 @@ ion-toast {
 .pill.gris   { background: var(--n-100);      color: var(--n-500); }
 .pill.solid  { background: var(--ion-color-primary); color: #fff; }
 
+// Badge de proximidad de una cita ("Hoy" / "Mañana" / "En N días"). Portal cliente.
+.prox-badge {
+  display: inline-flex; align-items: center; white-space: nowrap;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.01em;
+  padding: 3px 10px; border-radius: var(--radius-pill);
+  &.pb-hoy    { background: var(--rose-50);   color: var(--rose-700); }
+  &.pb-pronto { background: var(--amber-100);  color: var(--amber-700); }
+  &.pb-futuro { background: var(--n-100);      color: var(--n-500); }
+}
+
 // Segment tipo "pill" (carmesí en el activo) — usado en el panel de recepción
 .segment {
   display: flex;

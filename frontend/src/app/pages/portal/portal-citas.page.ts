@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { ToastController, AlertController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
 import { FLUJO_CITA, ESTADO_CITA_LABEL } from '../../utils/servicios';
+import { badgeProximidad, BadgeProximidad } from '../../utils/fecha-cita';
 
 @Component({
   standalone: false,
@@ -15,9 +16,16 @@ export class PortalCitasPage implements OnInit {
   cargando = true;
   vista: 'pendientes' | 'historial' = 'pendientes';
   reporteAbierto = new Set<number>();
+  confirmando = new Set<number>();
+
+  // Buscador (por moto/placa/servicio) y filtro por estado (solo en pendientes).
+  busqueda = '';
+  filtroEstado = '';
 
   readonly flujo = FLUJO_CITA;
   readonly estadoLabel = ESTADO_CITA_LABEL;
+  // Estados posibles de una cita pendiente (para los chips de filtro).
+  readonly estadosPendiente = ['agendado', 'en_revision', 'en_mantenimiento', 'listo'];
 
   constructor(private portal: PortalService, private toast: ToastController, private alert: AlertController, private router: Router) {}
 
@@ -43,6 +51,54 @@ export class PortalCitasPage implements OnInit {
     const corteStr = corte.toISOString().slice(0, 10);
     return this.citas.filter(c => c.estado === 'entregado' && (c.fecha || '') >= corteStr);
   }
+
+  // ¿Hay algún filtro/búsqueda activo? (para distinguir "sin resultados" de "sin citas")
+  get hayFiltro(): boolean { return !!this.busqueda.trim() || !!this.filtroEstado; }
+  limpiarFiltros() { this.busqueda = ''; this.filtroEstado = ''; }
+  toggleEstado(e: string) { this.filtroEstado = this.filtroEstado === e ? '' : e; }
+
+  // Texto de la cita contra el que se busca (moto, placa, servicio).
+  private coincide(c: any): boolean {
+    const q = this.busqueda.trim().toLowerCase();
+    if (!q) return true;
+    const texto = `${c.marca || ''} ${c.modelo || ''} ${c.placa || ''} ${c.tipo_servicio || c.motivo || ''}`.toLowerCase();
+    return texto.includes(q);
+  }
+
+  // Listas finales que ve el template (base + búsqueda + filtro de estado).
+  get pendientesVista(): any[] {
+    return this.pendientes.filter(c => this.coincide(c) && (!this.filtroEstado || c.estado === this.filtroEstado));
+  }
+  get historialVista(): any[] {
+    return this.historial.filter(c => this.coincide(c));
+  }
+
+  // Badge "Hoy/Mañana/En N días" para citas agendadas próximas.
+  badge(c: any): BadgeProximidad | null {
+    return c?.estado === 'agendado' ? badgeProximidad(c.fecha) : null;
+  }
+
+  // Confirmar asistencia a una cita agendada.
+  confirmar(c: any, ev?: Event) {
+    ev?.stopPropagation();
+    if (this.confirmando.has(c.id)) return;
+    this.confirmando.add(c.id);
+    this.portal.confirmarCita(c.id).subscribe({
+      next: async () => {
+        c.confirmada_cliente = 1;
+        this.confirmando.delete(c.id);
+        const t = await this.toast.create({ message: '¡Asistencia confirmada! Te esperamos.', duration: 2200, color: 'success' });
+        await t.present();
+      },
+      error: async (e) => {
+        this.confirmando.delete(c.id);
+        const t = await this.toast.create({ message: e.error?.error || 'No se pudo confirmar', duration: 2400, color: 'danger' });
+        await t.present();
+      },
+    });
+  }
+
+  irAgendar() { this.router.navigate(['/portal/agendar']); }
   // Total pagado histórico (todas las entregadas, sin importar el filtro de 1 año).
   get totalPagado(): number {
     return this.citas.filter(c => c.estado === 'entregado').reduce((s, c) => s + Number(c.monto || 0), 0);

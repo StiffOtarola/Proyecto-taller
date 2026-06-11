@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
 import { ESTADO_CITA_LABEL } from '../../utils/servicios';
+import { badgeProximidad, BadgeProximidad } from '../../utils/fecha-cita';
 
 @Component({
   standalone: false,
@@ -150,6 +151,10 @@ export class PortalInicioPage implements OnInit {
     if (tipo === 'en_curso') return 'Ingreso';
     if (tipo === 'vencida') return 'Fecha agendada';
     return 'Fecha y hora';
+  }
+  // Badge "Hoy/Mañana/En N días" solo para la próxima cita agendada.
+  badgeCita(p: any): BadgeProximidad | null {
+    return p?.tipo === 'proxima' ? badgeProximidad(p.fecha) : null;
   }
 
   // Al tocar una notificación de avance: si está ligada a una cita, abre su detalle;

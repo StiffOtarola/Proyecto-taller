@@ -16,6 +16,19 @@
       <button class="seg-btn" [class.on]="vista==='historial'" (click)="vista='historial'">Completadas</button>
     </div>
 
+    <!-- Buscador + filtro por estado -->
+    <div class="filtros" *ngIf="!cargando && citas.length">
+      <div class="buscador">
+        <ion-icon name="search-outline"></ion-icon>
+        <input type="text" [(ngModel)]="busqueda" placeholder="Buscar por moto, placa o servicio">
+        <button class="bx" *ngIf="busqueda" (click)="busqueda=''" aria-label="Limpiar"><ion-icon name="close-circle"></ion-icon></button>
+      </div>
+      <div class="chips" *ngIf="vista==='pendientes'">
+        <button class="chip" [class.on]="!filtroEstado" (click)="filtroEstado=''">Todos</button>
+        <button class="chip" *ngFor="let e of estadosPendiente" [class.on]="filtroEstado===e" (click)="toggleEstado(e)">{{ estadoLabel[e] }}</button>
+      </div>
+    </div>
+
     <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
       <div class="skeleton" style="height:130px;border-radius:20px"></div>
       <div class="skeleton" style="height:130px;border-radius:20px"></div>
@@ -23,10 +36,13 @@
 
     <!-- PENDIENTES con barra de progreso -->
     <div *ngIf="!cargando && vista === 'pendientes'">
-      <div class="cita-card" *ngFor="let c of pendientes">
+      <div class="cita-card" *ngFor="let c of pendientesVista">
         <div class="cita-head">
           <h4>{{ c.marca }} {{ c.modelo }}</h4>
-          <span class="pill rose">{{ estadoLabel[c.estado] }}</span>
+          <div class="head-tags">
+            <span class="prox-badge" *ngIf="badge(c) as b" [ngClass]="'pb-' + b.tono">{{ b.texto }}</span>
+            <span class="pill rose">{{ estadoLabel[c.estado] }}</span>
+          </div>
         </div>
         <p class="cita-info">{{ c.tipo_servicio || c.motivo }} · {{ c.fecha | date:'dd/MM' }} · {{ c.hora }}</p>
 
@@ -42,12 +58,29 @@
           <div class="pr-l">{{ progresoPct(c.estado) }}%</div>
         </div>
         <p class="cita-tec" *ngIf="c.tecnico_nombre"><ion-icon name="construct-outline"></ion-icon> Mecánico: {{ c.tecnico_nombre }}</p>
+
+        <!-- Confirmar asistencia (solo agendada) -->
+        <button class="confirmar-btn" *ngIf="c.estado === 'agendado' && !c.confirmada_cliente" (click)="confirmar(c, $event)" [disabled]="confirmando.has(c.id)">
+          <ion-icon name="checkmark-circle-outline"></ion-icon> Confirmar asistencia
+        </button>
+        <div class="confirmada-chip" *ngIf="c.estado === 'agendado' && c.confirmada_cliente">
+          <ion-icon name="checkmark-circle"></ion-icon> Asistencia confirmada
+        </div>
+
         <button class="ver-detalle" (click)="verDetalle(c)">Ver detalle <ion-icon name="chevron-forward"></ion-icon></button>
         <button class="cancelar-link" *ngIf="c.estado === 'agendado'" (click)="cancelar(c, $event)">Cancelar cita</button>
       </div>
-      <div class="empty-state" *ngIf="pendientes.length === 0">
-        <ion-icon name="checkmark-done-circle-outline"></ion-icon>
+
+      <!-- Vacío: sin resultados (hay filtro) vs sin citas (CTA guiado) -->
+      <div class="empty-state" *ngIf="pendientesVista.length === 0 && hayFiltro">
+        <ion-icon name="search-outline"></ion-icon>
+        <p>No hay citas que coincidan con tu búsqueda.</p>
+        <button class="empty-cta ghost" (click)="limpiarFiltros()">Limpiar filtros</button>
+      </div>
+      <div class="empty-state" *ngIf="pendientes.length === 0 && !hayFiltro">
+        <ion-icon name="calendar-outline"></ion-icon>
         <p>No tenés citas pendientes.</p>
+        <button class="empty-cta" (click)="irAgendar()"><ion-icon name="add"></ion-icon> Agendar una cita</button>
       </div>
     </div>
 
@@ -58,7 +91,7 @@
         <strong class="mono">{{ totalPagado | currency:'CRC':'symbol-narrow':'1.0-0' }}</strong>
       </div>
 
-      <div class="cita-card" [class.cancelada]="c.estado === 'cancelado'" *ngFor="let c of historial">
+      <div class="cita-card" [class.cancelada]="c.estado === 'cancelado'" *ngFor="let c of historialVista">
         <div class="cita-head">
           <h4>{{ c.marca }} {{ c.modelo }}</h4>
           <span class="pill" [ngClass]="c.estado === 'entregado' ? 'green' : 'gris'">{{ estadoLabel[c.estado] }}</span>
@@ -80,7 +113,13 @@
           <span class="stars" *ngIf="c.calificacion">{{ estrellas(c.calificacion) }}</span>
         </div>
       </div>
-      <div class="empty-state" *ngIf="historial.length === 0">
+
+      <div class="empty-state" *ngIf="historialVista.length === 0 && hayFiltro">
+        <ion-icon name="search-outline"></ion-icon>
+        <p>No hay citas que coincidan con tu búsqueda.</p>
+        <button class="empty-cta ghost" (click)="limpiarFiltros()">Limpiar filtros</button>
+      </div>
+      <div class="empty-state" *ngIf="historial.length === 0 && !hayFiltro">
         <ion-icon name="time-outline"></ion-icon>
         <p>Todavía no tenés citas completadas.</p>
       </div>

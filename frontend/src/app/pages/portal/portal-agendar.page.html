@@ -15,14 +15,32 @@
       <p>{{ editId ? 'Cambiá la moto, el servicio o el horario.' : 'Elegí tu moto, el servicio y el horario.' }}</p>
     </div>
 
-    <section class="card">
+    <!-- Sin motos: CTA guiado (no se puede agendar sin una moto) -->
+    <section class="card sin-motos" *ngIf="motos.length === 0">
+      <ion-icon name="bicycle-outline"></ion-icon>
+      <h3>Primero registrá tu moto</h3>
+      <p>Necesitás al menos una moto para poder agendar una cita.</p>
+      <button type="button" class="cta" (click)="irAMotos()"><ion-icon name="add"></ion-icon> Agregar mi moto</button>
+    </section>
+
+    <section class="card" *ngIf="motos.length > 0">
       <div class="fg">
         <label>Seleccionar moto *</label>
         <select [(ngModel)]="form.moto_id">
           <option [ngValue]="null" disabled>Elegí tu moto</option>
           <option *ngFor="let m of motos" [ngValue]="m.id">{{ m.marca }} {{ m.modelo }}<ng-container *ngIf="m.placa"> — {{ m.placa }}</ng-container></option>
         </select>
-        <div class="hint" *ngIf="motos.length === 0">No tenés motos registradas. Agregá una en la pestaña "Motos".</div>
+        <!-- Preview de la moto elegida con su foto -->
+        <div class="moto-sel" *ngIf="motoSel">
+          <div class="ms-thumb" [class.empty]="!motoSel.foto">
+            <img *ngIf="motoSel.foto; else msIcon" [src]="motoSel.foto" [alt]="motoSel.marca + ' ' + motoSel.modelo">
+            <ng-template #msIcon><ion-icon name="bicycle"></ion-icon></ng-template>
+          </div>
+          <div class="ms-info">
+            <strong>{{ motoSel.marca }} {{ motoSel.modelo }}</strong>
+            <span *ngIf="motoSel.placa" class="mono">{{ motoSel.placa }}</span>
+          </div>
+        </div>
       </div>
 
       <div class="fg">

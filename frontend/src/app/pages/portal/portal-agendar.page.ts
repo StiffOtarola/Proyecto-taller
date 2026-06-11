@@ -93,6 +93,10 @@ export class PortalAgendarPage implements OnInit {
     this.form.hora = h;
   }
 
+  // Moto seleccionada (para el preview con foto bajo el selector).
+  get motoSel(): any { return this.motos.find(m => m.id === this.form.moto_id) || null; }
+  irAMotos() { this.router.navigate(['/portal/motos']); }
+
   get valido(): boolean {
     return !!(this.form.moto_id && this.form.tipo_servicio && this.form.fecha && this.form.hora);
   }

@@ -94,7 +94,10 @@
 
     <!-- Cita destacada: próxima / en curso / vencida -->
     <section class="card next" *ngIf="resumen?.proxima_cita as p" [class.is-vencida]="p.tipo === 'vencida'" [class.is-curso]="p.tipo === 'en_curso'">
-      <span class="section-label">{{ tituloCita(p.tipo) }}</span>
+      <div class="next-head">
+        <span class="section-label">{{ tituloCita(p.tipo) }}</span>
+        <span class="prox-badge" *ngIf="badgeCita(p) as b" [ngClass]="'pb-' + b.tono">{{ b.texto }}</span>
+      </div>
       <div class="next-title">{{ p.marca }} {{ p.modelo }}</div>
       <div class="nx-r"><span class="k">Servicio</span><span class="v">{{ p.tipo_servicio || 'Servicio' }}</span></div>
       <div class="nx-r"><span class="k">{{ labelFecha(p.tipo) }}</span><span class="v mono">{{ p.fecha | date:'dd/MM/yyyy' }} · {{ p.hora }}</span></div>

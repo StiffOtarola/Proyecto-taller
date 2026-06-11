@@ -20,6 +20,7 @@ export class PortalAgendarPage implements OnInit {
   ocupacion: Record<string, number> = {};
   maxPorHora = 2;
   enviando = false;
+  sugiriendo = false;
   horaLlenaMsg = false;
   editId: number | null = null;   // si está seteado, la pantalla edita esa cita
 
@@ -81,6 +82,35 @@ export class PortalAgendarPage implements OnInit {
 
   horaLlena(h: string): boolean {
     return (this.ocupacion[h] || 0) >= this.maxPorHora;
+  }
+
+  // Sugiere el próximo horario libre: precarga fecha + hora listos para confirmar.
+  sugerir() {
+    if (this.sugiriendo) return;
+    this.sugiriendo = true;
+    this.portal.getProximoLibre().subscribe({
+      next: r => {
+        if (!r.data) {
+          this.sugiriendo = false;
+          this.toastMsg('No hay horarios libres en los próximos días', 'warning');
+          return;
+        }
+        const { fecha, hora } = r.data;
+        this.form.fecha = fecha;
+        // Carga la disponibilidad de ese día y deja la hora seleccionada.
+        this.portal.getDisponibilidad(fecha).subscribe({
+          next: d => {
+            this.ocupacion = d.data.ocupacion || {};
+            this.maxPorHora = d.data.max || 2;
+            this.form.hora = hora;
+            this.sugiriendo = false;
+            this.toastMsg('Listo: te sugerimos el próximo horario libre');
+          },
+          error: () => { this.sugiriendo = false; this.form.hora = hora; },
+        });
+      },
+      error: () => { this.sugiriendo = false; this.toastMsg('No se pudo sugerir un horario', 'danger'); },
+    });
   }
 
   // Selección desde la grilla de horas: ignora las llenas y avisa brevemente.

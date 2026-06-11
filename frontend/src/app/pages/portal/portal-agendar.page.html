@@ -51,6 +51,12 @@
         </select>
       </div>
 
+      <!-- Sugerir próximo horario libre -->
+      <button type="button" class="sugerir-btn" (click)="sugerir()" [disabled]="sugiriendo">
+        <ion-icon [name]="sugiriendo ? 'hourglass-outline' : 'flash-outline'"></ion-icon>
+        {{ sugiriendo ? 'Buscando...' : 'Sugerir próximo horario libre' }}
+      </button>
+
       <div class="fg">
         <label>Fecha *</label>
         <input type="date" [min]="hoy" [(ngModel)]="form.fecha" (ngModelChange)="onFecha()">

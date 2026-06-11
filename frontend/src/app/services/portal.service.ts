@@ -146,6 +146,16 @@ export class PortalService {
     return this.http.get<{ data: any }>(`${this.url}/disponibilidad`, { params: { fecha } as any });
   }
 
+  // Primer horario con cupo (para el botón "Sugerir próximo horario libre"). data = null si no hay.
+  getProximoLibre(): Observable<{ data: { fecha: string; hora: string } | null }> {
+    return this.http.get<{ data: any }>(`${this.url}/proximo-libre`);
+  }
+
+  // Línea de tiempo de servicios de una moto (citas entregadas).
+  getMotoHistorial(id: number): Observable<{ data: { moto: any; servicios: any[] } }> {
+    return this.http.get<{ data: any }>(`${this.url}/motos/${id}/historial`);
+  }
+
   calificarCita(id: number, calificacion: number, comentario?: string): Observable<any> {
     return this.http.post(`${this.url}/citas/${id}/calificar`, { calificacion, comentario });
   }

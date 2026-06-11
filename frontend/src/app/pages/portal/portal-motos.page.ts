@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
 import { MARCAS_MOTO, modelosDeMarca } from '../../utils/motos-catalogo';
@@ -24,7 +25,9 @@ export class PortalMotosPage implements OnInit {
   marcasSugeridas: string[] = [];
   modelosSugeridos: string[] = [];
 
-  constructor(private portal: PortalService, private toast: ToastController, private alert: AlertController) {}
+  constructor(private portal: PortalService, private toast: ToastController, private alert: AlertController, private router: Router) {}
+
+  verHistorial(m: any) { this.router.navigate(['/portal/moto', m.id, 'historial']); }
 
   ngOnInit() { this.cargar(); }
   ionViewWillEnter() { this.cargar(); }

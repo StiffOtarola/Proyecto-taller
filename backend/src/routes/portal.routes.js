@@ -418,6 +418,45 @@ router.get('/disponibilidad', async (req, res) => {
   }
 });
 
+// GET /api/portal/proximo-libre — primer horario con cupo (para "sugerir próximo horario").
+// Recorre día por día desde hoy hasta dias_anticipacion, según horarios y cupo configurados.
+router.get('/proximo-libre', async (req, res) => {
+  try {
+    const config = await getConfig();
+    const max = Number(config.max_citas_hora) || 1;
+    const dias = Number(config.dias_anticipacion) || 30;
+    const hoy = hoyCR();
+    const fin = new Date(`${hoy}T00:00:00Z`);
+    fin.setUTCDate(fin.getUTCDate() + dias);
+    const finStr = fin.toISOString().slice(0, 10);
+
+    // Ocupación de todo el rango en una sola consulta (fecha+hora → cantidad).
+    const [filas] = await pool.query(
+      `SELECT DATE_FORMAT(fecha, '%Y-%m-%d') AS f, TIME_FORMAT(hora, '%H:%i') AS h, COUNT(*) AS n
+       FROM citas WHERE fecha BETWEEN ? AND ? AND estado <> 'cancelado' GROUP BY f, h`,
+      [hoy, finStr]
+    );
+    const ocup = {};
+    for (const r of filas) { (ocup[r.f] || (ocup[r.f] = {}))[r.h] = Number(r.n); }
+
+    // Primer slot con cupo y que aún no haya pasado.
+    const cursor = new Date(`${hoy}T00:00:00Z`);
+    for (let i = 0; i <= dias; i++) {
+      const fecha = cursor.toISOString().slice(0, 10);
+      for (const hora of horasDisponibles(fecha, config)) {
+        const usados = (ocup[fecha] || {})[hora] || 0;
+        if (usados < max && horasHastaCita(fecha, hora) > 0) {
+          return res.json({ data: { fecha, hora } });
+        }
+      }
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+    res.json({ data: null }); // no hay horarios libres en la ventana
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
 // GET /api/portal/ordenes — órdenes del cliente autenticado
 router.get('/ordenes', async (req, res) => {
   try {
@@ -640,6 +679,35 @@ router.delete('/motos/:id', async (req, res) => {
     if (!moto) return res.status(404).json({ error: 'Moto no encontrada' });
     await pool.query('UPDATE motos SET activa = 0 WHERE id = ?', [req.params.id]);
     res.json({ message: 'Moto eliminada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// GET /api/portal/motos/:id/historial — línea de tiempo de servicios de una moto.
+// Devuelve la moto + sus citas entregadas (qué se le hizo y cuándo). No filtra por
+// activa=1: el historial sobrevive aunque el cliente haya eliminado la moto de su lista.
+router.get('/motos/:id/historial', async (req, res) => {
+  try {
+    const [[moto]] = await pool.query(
+      'SELECT id, marca, modelo, placa, anio, color, kilometraje_actual, foto FROM motos WHERE id = ? AND cliente_id = ?',
+      [req.params.id, req.cliente.id]
+    );
+    if (!moto) return res.status(404).json({ error: 'Moto no encontrada' });
+
+    const [servicios] = await pool.query(
+      `SELECT ci.id, DATE_FORMAT(COALESCE(ci.fecha_fin, ci.fecha), '%Y-%m-%d') AS fecha,
+              ci.tipo_servicio, ci.motivo, ci.monto, ci.calificacion,
+              ci.orden_id, o.numero_orden, o.diagnostico,
+              t.nombre AS tecnico_nombre
+       FROM citas ci
+       LEFT JOIN ordenes_trabajo o ON o.id = ci.orden_id
+       LEFT JOIN usuarios t ON t.id = ci.tecnico_id
+       WHERE ci.moto_id = ? AND ci.cliente_id = ? AND ci.estado = 'entregado'
+       ORDER BY COALESCE(ci.fecha_fin, ci.fecha) DESC, ci.hora DESC`,
+      [req.params.id, req.cliente.id]
+    );
+    res.json({ data: { moto, servicios } });
   } catch (err) {
     fail(res, err);
   }

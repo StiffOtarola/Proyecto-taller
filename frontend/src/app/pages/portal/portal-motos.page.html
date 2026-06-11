@@ -37,8 +37,9 @@
             <span *ngIf="m.kilometraje_actual"> · {{ m.kilometraje_actual | number }} km</span>
           </p>
         </div>
-        <button class="mc-e" (click)="editar(m)" title="Editar"><ion-icon name="create-outline"></ion-icon></button>
-        <button class="mc-e del" (click)="eliminar(m)" title="Eliminar"><ion-icon name="trash-outline"></ion-icon></button>
+        <button class="mc-e" (click)="verHistorial(m)" title="Ver historial" aria-label="Ver historial de servicios"><ion-icon name="time-outline"></ion-icon></button>
+        <button class="mc-e" (click)="editar(m)" title="Editar" aria-label="Editar moto"><ion-icon name="create-outline"></ion-icon></button>
+        <button class="mc-e del" (click)="eliminar(m)" title="Eliminar" aria-label="Eliminar moto"><ion-icon name="trash-outline"></ion-icon></button>
       </div>
     </div>
 

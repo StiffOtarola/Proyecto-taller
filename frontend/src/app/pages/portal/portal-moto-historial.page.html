@@ -1,0 +1,74 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/portal/motos" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Historial de la moto</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="hist" *ngIf="cargando">
+    <div class="skeleton" style="height:120px;border-radius:20px;margin-bottom:12px"></div>
+    <div class="skeleton" style="height:180px;border-radius:20px"></div>
+  </div>
+
+  <div class="hist" *ngIf="!cargando && moto">
+    <!-- Cabecera de la moto -->
+    <section class="moto-card">
+      <div class="moto-thumb" [class.empty]="!moto.foto">
+        <img *ngIf="moto.foto; else mIcon" [src]="moto.foto" [alt]="moto.marca + ' ' + moto.modelo">
+        <ng-template #mIcon><ion-icon name="bicycle"></ion-icon></ng-template>
+      </div>
+      <div class="moto-info">
+        <h2>{{ moto.marca }} {{ moto.modelo }}</h2>
+        <p class="placa mono" *ngIf="moto.placa">{{ moto.placa }}</p>
+        <p class="meta">
+          <span *ngIf="moto.anio">{{ moto.anio }}</span>
+          <span *ngIf="moto.color"> · {{ moto.color }}</span>
+          <span *ngIf="moto.kilometraje_actual"> · {{ moto.kilometraje_actual | number }} km</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- Resumen -->
+    <div class="resumen" *ngIf="servicios.length">
+      <div class="rs"><span class="rs-n">{{ servicios.length }}</span><span class="rs-l">Servicios</span></div>
+      <div class="rs"><span class="rs-n mono">{{ totalGastado | currency:'CRC':'symbol-narrow':'1.0-0' }}</span><span class="rs-l">Total invertido</span></div>
+    </div>
+
+    <!-- Línea de tiempo -->
+    <section class="tl" *ngIf="servicios.length">
+      <span class="section-label">Línea de tiempo</span>
+      <div class="tl-item" *ngFor="let s of servicios" (click)="verCita(s)">
+        <div class="tl-rail"><span class="tl-dot"></span></div>
+        <div class="tl-body">
+          <div class="tl-top">
+            <strong>{{ s.tipo_servicio || s.motivo || 'Servicio' }}</strong>
+            <span class="tl-monto mono" *ngIf="s.monto > 0">{{ s.monto | currency:'CRC':'symbol-narrow':'1.0-0' }}</span>
+          </div>
+          <p class="tl-fecha mono">{{ s.fecha | date:'dd/MM/yyyy' }}<ng-container *ngIf="s.numero_orden"> · {{ s.numero_orden }}</ng-container></p>
+          <p class="tl-diag" *ngIf="s.diagnostico">{{ s.diagnostico }}</p>
+          <div class="tl-foot">
+            <span class="tl-tec" *ngIf="s.tecnico_nombre"><ion-icon name="construct-outline"></ion-icon> {{ s.tecnico_nombre }}</span>
+            <span class="tl-stars" *ngIf="s.calificacion">{{ estrellas(s.calificacion) }}</span>
+            <ion-icon name="chevron-forward" class="tl-chev"></ion-icon>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vacío -->
+    <div class="empty" *ngIf="!servicios.length">
+      <ion-icon name="time-outline"></ion-icon>
+      <p>Esta moto todavía no tiene servicios completados.</p>
+    </div>
+
+    <div style="height:40px"></div>
+  </div>
+
+  <div class="hist empty" *ngIf="!cargando && !moto">
+    <ion-icon name="alert-circle-outline"></ion-icon>
+    <p>No se encontró la moto.</p>
+  </div>
+</ion-content>

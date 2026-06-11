@@ -1,0 +1,72 @@
+.hist { max-width: 760px; margin: 0 auto; padding: 14px 16px 0; }
+
+/* Cabecera de la moto */
+.moto-card {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--ion-card-background); border: 1px solid var(--hairline);
+  border-radius: 20px; box-shadow: var(--shadow-sm); padding: 16px; margin-bottom: 12px;
+
+  .moto-thumb { width: 64px; height: 64px; border-radius: 16px; overflow: hidden; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--rose-50); color: var(--ion-color-primary);
+    img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    ion-icon { font-size: 30px; }
+    &.empty { background: var(--n-100); color: var(--n-400); } }
+  .moto-info { min-width: 0;
+    h2 { margin: 0; font-family: var(--font-display); font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+    .placa { display: inline-block; margin: 4px 0 0; font-size: 12px; font-weight: 700; color: var(--ion-color-primary);
+      background: var(--rose-50); padding: 1px 8px; border-radius: 6px; letter-spacing: .04em; }
+    .meta { margin: 5px 0 0; font-size: 12px; color: var(--n-500); } }
+}
+
+/* Resumen */
+.resumen { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.rs {
+  background: var(--ion-card-background); border: 1px solid var(--hairline);
+  border-radius: 16px; box-shadow: var(--shadow-xs); padding: 14px; text-align: center;
+  .rs-n { display: block; font-family: var(--font-display); font-size: 20px; font-weight: 900;
+    letter-spacing: -0.03em; color: var(--ion-color-primary); }
+  .rs-l { display: block; margin-top: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--n-400); }
+}
+
+.section-label { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--n-400); margin-bottom: 14px; }
+
+/* Línea de tiempo */
+.tl {
+  background: var(--ion-card-background); border: 1px solid var(--hairline);
+  border-radius: 20px; box-shadow: var(--shadow-sm); padding: 18px 16px;
+}
+.tl-item {
+  display: flex; gap: 12px; cursor: pointer;
+  &:active { opacity: .7; }
+  // Riel con el punto y la línea vertical que conecta los hitos.
+  .tl-rail { position: relative; width: 12px; flex-shrink: 0; display: flex; justify-content: center;
+    &::before { content: ''; position: absolute; top: 0; bottom: 0; width: 2px; background: var(--hairline); } }
+  .tl-dot { position: relative; z-index: 1; width: 11px; height: 11px; border-radius: 50%;
+    background: var(--ion-color-primary); margin-top: 4px;
+    box-shadow: 0 0 0 3px var(--ion-card-background); }
+  &:first-child .tl-rail::before { top: 6px; }
+  &:last-child .tl-rail::before { bottom: auto; height: 6px; }
+
+  .tl-body { flex: 1; min-width: 0; padding-bottom: 18px; }
+  &:last-child .tl-body { padding-bottom: 0; }
+  .tl-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+    strong { font-size: 14.5px; font-weight: 700; }
+    .tl-monto { font-size: 14px; font-weight: 800; color: var(--emerald-700); flex-shrink: 0; } }
+  .tl-fecha { margin: 3px 0 0; font-size: 11.5px; color: var(--n-400); }
+  .tl-diag { margin: 7px 0 0; font-size: 12.5px; color: var(--n-600); line-height: 1.5;
+    background: var(--n-50); border-radius: 10px; padding: 8px 10px; }
+  .tl-foot { display: flex; align-items: center; gap: 10px; margin-top: 8px;
+    .tl-tec { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--n-500);
+      ion-icon { font-size: 13px; } }
+    .tl-stars { color: var(--amber-700); letter-spacing: 1px; font-size: 13px; }
+    .tl-chev { margin-left: auto; font-size: 16px; color: var(--n-400); } }
+}
+
+.empty {
+  text-align: center; padding: 56px 24px; color: var(--n-400);
+  ion-icon { font-size: 52px; opacity: .4; display: block; margin: 0 auto 12px; }
+  p { font-size: 14px; }
+}

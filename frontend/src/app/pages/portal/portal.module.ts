@@ -12,6 +12,7 @@ import { PortalOfertasPage } from './portal-ofertas.page';
 import { PortalPerfilPage } from './portal-perfil.page';
 import { PortalLegalPage } from './portal-legal.page';
 import { PortalCitaDetallePage } from './portal-cita-detalle.page';
+import { PortalMotoHistorialPage } from './portal-moto-historial.page';
 import { PortalActionsComponent } from './portal-actions.component';
 import { SharedModule } from '../../shared/shared.module';
 
@@ -21,7 +22,7 @@ import { SharedModule } from '../../shared/shared.module';
     PortalLoginPage, PortalRegistroPage, PortalRecuperarPage,
     PortalTabsPage, PortalInicioPage, PortalAgendarPage,
     PortalCitasPage, PortalMotosPage, PortalOfertasPage, PortalPerfilPage,
-    PortalLegalPage, PortalCitaDetallePage, PortalActionsComponent,
+    PortalLegalPage, PortalCitaDetallePage, PortalMotoHistorialPage, PortalActionsComponent,
   ],
 })
 export class PortalPageModule {}

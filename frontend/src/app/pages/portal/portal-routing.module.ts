@@ -13,6 +13,7 @@ import { PortalOfertasPage } from './portal-ofertas.page';
 import { PortalPerfilPage } from './portal-perfil.page';
 import { PortalLegalPage } from './portal-legal.page';
 import { PortalCitaDetallePage } from './portal-cita-detalle.page';
+import { PortalMotoHistorialPage } from './portal-moto-historial.page';
 
 const routes: Routes = [
   { path: 'login', component: PortalLoginPage },
@@ -21,6 +22,7 @@ const routes: Routes = [
   { path: 'legal/:doc', component: PortalLegalPage },
   { path: 'cita/:id', component: PortalCitaDetallePage, canActivate: [PortalGuard] },
   { path: 'cita/:id/editar', component: PortalAgendarPage, canActivate: [PortalGuard] },
+  { path: 'moto/:id/historial', component: PortalMotoHistorialPage, canActivate: [PortalGuard] },
   {
     path: '',
     component: PortalTabsPage,

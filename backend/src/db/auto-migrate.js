@@ -174,6 +174,9 @@ async function ensureSchema() {
         FOREIGN KEY (cita_id)    REFERENCES citas(id)
       )
     `);
+    // Tipo de evento (icono/color en el portal) e índice para el contador de no leídas.
+    await addColumnIfMissing('notificaciones', 'tipo', "VARCHAR(30) NOT NULL DEFAULT 'estado'");
+    await crearIndiceSiFalta('notificaciones', 'idx_cliente_leida', '(cliente_id, leida)');
 
     // Ofertas con imagen (data URL base64).
     await addColumnIfMissing('promos', 'imagen', 'MEDIUMTEXT NULL');

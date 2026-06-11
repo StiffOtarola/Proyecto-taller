@@ -1,5 +1,6 @@
 const { pool } = require('../db/pool');
 const { getConfig } = require('./configuracion');
+const { recompensas } = require('./recompensas');
 
 const ESTADO_LEGIBLE = {
   agendado: 'Agendada',
@@ -10,8 +11,22 @@ const ESTADO_LEGIBLE = {
   cancelado: 'Cancelada',
 };
 
-// Registra un aviso para el cliente cuando cambia el estado de su cita.
-// Nunca lanza: si algo falla, lo loguea y sigue (no debe romper el cambio de estado).
+// Inserta una notificación para el cliente. `tipo` define el icono/color en el
+// portal (estado | listo | entregado | presupuesto | cortesia | mensaje | ...).
+// Nunca lanza: si falla, lo loguea y sigue (no debe romper la operación que la dispara).
+async function crearNotificacion({ cliente_id, cita_id = null, titulo, mensaje, tipo = 'estado' }) {
+  try {
+    await pool.query(
+      'INSERT INTO notificaciones (cliente_id, cita_id, titulo, mensaje, tipo) VALUES (?, ?, ?, ?, ?)',
+      [cliente_id, cita_id, titulo, mensaje, tipo]
+    );
+  } catch (err) {
+    console.error('⚠️  No se pudo crear notificación:', err.message);
+  }
+}
+
+// Avisa al cliente cuando cambia el estado de su cita. El `tipo` = estado, para
+// que el portal pueda resaltar (ej. "listo" en verde, "cancelado" en rojo).
 async function notificarCambioEstado(citaId, estado) {
   try {
     // Preferencia del taller: si está apagado, no se avisa al cliente por cambio de estado.
@@ -26,13 +41,43 @@ async function notificarCambioEstado(citaId, estado) {
     if (!cita) return;
     const moto = [cita.marca, cita.modelo].filter(Boolean).join(' ') || 'tu moto';
     const legible = ESTADO_LEGIBLE[estado] || estado;
-    await pool.query(
-      'INSERT INTO notificaciones (cliente_id, cita_id, titulo, mensaje) VALUES (?, ?, ?, ?)',
-      [cita.cliente_id, citaId, `${moto}: ${legible}`, `El estado de tu cita cambió a "${legible}".`]
-    );
+    await crearNotificacion({
+      cliente_id: cita.cliente_id,
+      cita_id: citaId,
+      titulo: `${moto}: ${legible}`,
+      mensaje: `El estado de tu cita cambió a "${legible}".`,
+      tipo: estado,
+    });
+    // Al entregar, si el cliente acaba de desbloquear su cortesía, avisarle.
+    if (estado === 'entregado') await notificarCortesia(cita.cliente_id);
   } catch (err) {
     console.error('⚠️  No se pudo crear notificación:', err.message);
   }
 }
 
-module.exports = { notificarCambioEstado, ESTADO_LEGIBLE };
+// Si con la última visita entregada el cliente llegó al servicio de cortesía,
+// se lo notifica. Se dispara una sola vez por ciclo (justo al alcanzar la meta).
+async function notificarCortesia(clienteId) {
+  try {
+    const [[{ completadas }]] = await pool.query(
+      `SELECT
+         (SELECT COUNT(*) FROM citas WHERE cliente_id = ? AND estado = 'entregado')
+       + (SELECT COUNT(*) FROM ordenes_trabajo
+            WHERE cliente_id = ? AND estado = 'entregada'
+              AND id NOT IN (SELECT orden_id FROM citas WHERE orden_id IS NOT NULL)) AS completadas`,
+      [clienteId, clienteId]
+    );
+    const r = recompensas(completadas);
+    if (!r.cortesia_disponible) return;
+    await crearNotificacion({
+      cliente_id: clienteId,
+      titulo: '🎉 ¡Desbloqueaste tu servicio de cortesía!',
+      mensaje: 'Tu próxima cita es de cortesía. Agendala desde el portal para aprovecharla.',
+      tipo: 'cortesia',
+    });
+  } catch (err) {
+    console.error('⚠️  No se pudo crear notificación de cortesía:', err.message);
+  }
+}
+
+module.exports = { notificarCambioEstado, crearNotificacion, ESTADO_LEGIBLE };

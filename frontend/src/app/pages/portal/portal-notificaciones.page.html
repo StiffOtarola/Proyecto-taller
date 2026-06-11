@@ -4,6 +4,11 @@
       <ion-back-button defaultHref="/portal/inicio" text=""></ion-back-button>
     </ion-buttons>
     <ion-title>Notificaciones</ion-title>
+    <ion-buttons slot="end">
+      <ion-button *ngIf="hayNoLeidas" (click)="leerTodas()" title="Marcar todas como leídas" aria-label="Marcar todas como leídas">
+        <ion-icon slot="icon-only" name="checkmark-done-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -19,18 +24,35 @@
       <div class="skeleton" style="height:64px;border-radius:16px"></div>
     </div>
 
-    <section class="card" *ngIf="!cargando && notificaciones.length">
-      <span class="section-label">📢 Avances de tus servicios</span>
-      <div class="nf" *ngFor="let n of notificaciones" [class.nueva]="!n.leida" (click)="abrir(n)">
-        <span class="nf-d" [class.on]="!n.leida"></span>
-        <div class="nf-b">
-          <span class="nf-msg">{{ n.titulo }}</span>
-          <span class="nf-sub" *ngIf="n.mensaje">{{ n.mensaje }}</span>
-          <span class="nf-t">{{ hace(n.created_at) }}</span>
-        </div>
-        <ion-icon name="chevron-forward" class="nf-chev"></ion-icon>
+    <ng-container *ngIf="!cargando && notificaciones.length">
+      <div class="lista-head">
+        <span class="section-label">📢 Avances de tus servicios</span>
+        <button type="button" class="limpiar" *ngIf="hayLeidas" (click)="limpiarLeidas()">Limpiar leídas</button>
       </div>
-    </section>
+
+      <ion-list class="nlist" lines="none">
+        <ion-item-sliding *ngFor="let n of notificaciones" #sliding>
+          <ion-item class="nf-item" button detail="false" (click)="abrir(n)">
+            <div class="nf" [class.nueva]="!n.leida">
+              <span class="nf-ico" [ngClass]="'t-' + tono(n)"><ion-icon [name]="icono(n)"></ion-icon></span>
+              <div class="nf-b">
+                <span class="nf-msg">{{ n.titulo }}</span>
+                <span class="nf-sub" *ngIf="n.mensaje">{{ n.mensaje }}</span>
+                <span class="nf-t">{{ hace(n.created_at) }}</span>
+              </div>
+              <span class="nf-d" *ngIf="!n.leida" aria-label="No leída"></span>
+            </div>
+          </ion-item>
+          <ion-item-options side="end">
+            <ion-item-option color="danger" (click)="eliminar(n, sliding)">
+              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+            </ion-item-option>
+          </ion-item-options>
+        </ion-item-sliding>
+      </ion-list>
+
+      <p class="hint-swipe">Deslizá una notificación hacia la izquierda para eliminarla.</p>
+    </ng-container>
 
     <div class="empty" *ngIf="!cargando && !notificaciones.length">
       <ion-icon name="notifications-off-outline"></ion-icon>

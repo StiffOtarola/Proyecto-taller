@@ -1,6 +1,21 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { ToastController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
+
+// Apariencia (icono + color) según el evento que generó la notificación.
+const META_TIPO: Record<string, { icon: string; tono: string }> = {
+  agendado:         { icon: 'calendar-outline',          tono: 'azul' },
+  estado:           { icon: 'sync-outline',              tono: 'azul' },
+  en_revision:      { icon: 'search-outline',            tono: 'azul' },
+  en_mantenimiento: { icon: 'construct-outline',         tono: 'ambar' },
+  listo:            { icon: 'checkmark-circle-outline',  tono: 'verde' },
+  entregado:        { icon: 'checkmark-done-outline',    tono: 'verde' },
+  cancelado:        { icon: 'close-circle-outline',      tono: 'rojo' },
+  presupuesto:      { icon: 'receipt-outline',           tono: 'ambar' },
+  cortesia:         { icon: 'gift-outline',              tono: 'rosa' },
+  mensaje:          { icon: 'chatbubble-ellipses-outline', tono: 'azul' },
+};
 
 @Component({
   standalone: false,
@@ -12,7 +27,11 @@ export class PortalNotificacionesPage {
   notificaciones: any[] = [];
   cargando = true;
 
-  constructor(private portal: PortalService, private router: Router) {}
+  constructor(
+    private portal: PortalService,
+    private router: Router,
+    private toast: ToastController,
+  ) {}
 
   ionViewWillEnter() { this.cargar(); }
 
@@ -22,13 +41,23 @@ export class PortalNotificacionesPage {
       next: r => {
         this.notificaciones = r.data;
         this.cargando = false;
+        this.sincronizarContador();
         if (ev) ev.target.complete();
-        // Marca como leídas las nuevas (apenas el usuario abre el feed).
-        if (r.data.some(n => !n.leida)) this.portal.leerNotificaciones().subscribe();
       },
       error: () => { this.cargando = false; if (ev) ev.target.complete(); },
     });
   }
+
+  get hayLeidas(): boolean { return this.notificaciones.some(n => n.leida); }
+  get hayNoLeidas(): boolean { return this.notificaciones.some(n => !n.leida); }
+
+  // Mantiene el badge de la campana en sintonía con lo que se ve en el feed.
+  private sincronizarContador() {
+    this.portal.fijarContador(this.notificaciones.filter(n => !n.leida).length);
+  }
+
+  icono(n: any): string { return (META_TIPO[n?.tipo] || META_TIPO['estado']).icon; }
+  tono(n: any): string { return (META_TIPO[n?.tipo] || META_TIPO['estado']).tono; }
 
   // Tiempo relativo legible ("Hace 2 h").
   hace(fecha: string): string {
@@ -41,9 +70,41 @@ export class PortalNotificacionesPage {
     return `Hace ${Math.round(h / 24)} d`;
   }
 
-  // Al tocar una notificación: si está ligada a una cita, abre su detalle; si no, las citas.
+  // Al tocar: marca esa sola como leída y abre el detalle de la cita ligada (si hay).
   abrir(n: any) {
+    if (!n.leida) {
+      n.leida = 1;
+      this.sincronizarContador();
+      this.portal.leerNotificacion(n.id).subscribe();
+    }
     if (n?.cita_id) this.router.navigate(['/portal/cita', n.cita_id]);
     else this.router.navigate(['/portal/mis-citas']);
+  }
+
+  // Marca todas como leídas (sin salir del feed).
+  leerTodas() {
+    this.notificaciones.forEach(n => (n.leida = 1));
+    this.portal.leerNotificaciones().subscribe();
+  }
+
+  // Deslizar para eliminar una notificación.
+  eliminar(n: any, sliding?: any) {
+    sliding?.close();
+    const idx = this.notificaciones.indexOf(n);
+    if (idx > -1) this.notificaciones.splice(idx, 1);
+    this.sincronizarContador();
+    this.portal.eliminarNotificacion(n.id).subscribe({ error: () => this.cargar() });
+  }
+
+  // Borra todas las leídas (limpia el feed; deja las pendientes).
+  async limpiarLeidas() {
+    this.notificaciones = this.notificaciones.filter(n => !n.leida);
+    this.portal.limpiarNotificacionesLeidas().subscribe({
+      next: async () => {
+        const t = await this.toast.create({ message: 'Notificaciones leídas eliminadas', duration: 1500, color: 'medium' });
+        await t.present();
+      },
+      error: () => this.cargar(),
+    });
   }
 }

@@ -1,28 +1,59 @@
 .notis { max-width: 760px; margin: 0 auto; padding: 14px 16px 0; }
 
-.card {
-  background: var(--ion-card-background); border: 1px solid var(--hairline);
-  border-radius: 20px; box-shadow: var(--shadow-sm); padding: 8px 16px 6px;
+.lista-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin: 12px 2px 6px;
 }
 .section-label {
-  display: block; font-size: 11px; font-weight: 800; text-transform: uppercase;
-  letter-spacing: 0.12em; color: var(--n-400); margin: 12px 0 4px;
+  font-size: 11px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--n-400);
+}
+.limpiar {
+  background: none; border: none; padding: 4px 6px; cursor: pointer;
+  font-size: 12px; font-weight: 700; color: var(--ion-color-primary);
 }
 
+/* Lista deslizable sin el fondo/relleno por defecto de Ionic. */
+.nlist {
+  background: transparent; padding: 0;
+  border-radius: 20px; overflow: hidden;
+  border: 1px solid var(--hairline); box-shadow: var(--shadow-sm);
+  background: var(--ion-card-background);
+}
+ion-item-sliding { --background: transparent; }
+.nf-item {
+  --background: transparent; --inner-padding-end: 0; --padding-start: 0;
+  --border-color: var(--hairline);
+  &::part(native) { padding-inline: 0; }
+}
+ion-item-sliding:not(:last-child) .nf-item { border-bottom: 1px solid var(--hairline); }
+
 .nf {
-  display: flex; align-items: center; gap: 10px;
-  padding: 12px 0; border-bottom: 1px solid var(--hairline);
-  cursor: pointer; transition: opacity .15s;
-  &:last-child { border-bottom: none; }
-  &:active { opacity: .6; }
-  .nf-d { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; align-self: flex-start; margin-top: 5px;
-    background: var(--n-300); &.on { background: var(--ion-color-primary); } }
+  display: flex; align-items: flex-start; gap: 12px; width: 100%;
+  padding: 13px 16px;
+  .nf-ico {
+    width: 34px; height: 34px; flex-shrink: 0; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    ion-icon { font-size: 18px; }
+    &.t-azul   { background: rgba(99,102,241,.14);  color: #4f46e5; }
+    &.t-verde  { background: var(--emerald-50);     color: var(--emerald-700); }
+    &.t-ambar  { background: var(--amber-100);      color: var(--amber-700); }
+    &.t-rojo   { background: rgba(225,29,72,.13);    color: var(--ion-color-danger, #e11d48); }
+    &.t-rosa   { background: var(--rose-50);        color: var(--rose-700); }
+  }
   .nf-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;
     .nf-msg { font-size: 13px; color: var(--n-800); line-height: 1.35; }
     .nf-sub { font-size: 12px; color: var(--n-500); line-height: 1.35; }
     .nf-t { font-size: 10px; color: var(--n-400); margin-top: 1px; } }
-  .nf-chev { font-size: 16px; color: var(--n-400); flex-shrink: 0; }
+  .nf-d { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+    background: var(--ion-color-primary); }
   &.nueva .nf-msg { font-weight: 700; }
+}
+
+ion-item-option { --background: var(--ion-color-danger, #e11d48); }
+
+.hint-swipe {
+  text-align: center; font-size: 11px; color: var(--n-400); margin: 12px 0 0;
 }
 
 .empty {

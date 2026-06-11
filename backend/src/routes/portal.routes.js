@@ -281,14 +281,36 @@ router.get('/resumen', async (req, res) => {
   }
 });
 
-// GET /api/portal/notificaciones — feed de avances del cliente
+// Días que se conserva una notificación ya leída antes de auto-purgarse.
+const NOTIF_RETENCION_DIAS = 7;
+
+// GET /api/portal/notificaciones — feed de avances del cliente.
+// Antes de devolver, purga las que ya fueron leídas hace más de N días (la
+// info real vive en el detalle de la cita; el feed no debe crecer sin límite).
 router.get('/notificaciones', async (req, res) => {
   try {
+    await pool.query(
+      'DELETE FROM notificaciones WHERE cliente_id = ? AND leida = 1 AND created_at < (NOW() - INTERVAL ? DAY)',
+      [req.cliente.id, NOTIF_RETENCION_DIAS]
+    );
     const [rows] = await pool.query(
-      'SELECT id, cita_id, titulo, mensaje, leida, created_at FROM notificaciones WHERE cliente_id = ? ORDER BY created_at DESC LIMIT 50',
+      'SELECT id, cita_id, titulo, mensaje, tipo, leida, created_at FROM notificaciones WHERE cliente_id = ? ORDER BY created_at DESC LIMIT 50',
       [req.cliente.id]
     );
     res.json({ data: rows });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// GET /api/portal/notificaciones/contador — solo el # de no leídas (para el badge).
+router.get('/notificaciones/contador', async (req, res) => {
+  try {
+    const [[{ no_leidas }]] = await pool.query(
+      'SELECT COUNT(*) AS no_leidas FROM notificaciones WHERE cliente_id = ? AND leida = 0',
+      [req.cliente.id]
+    );
+    res.json({ data: { no_leidas } });
   } catch (err) {
     fail(res, err);
   }
@@ -299,6 +321,42 @@ router.post('/notificaciones/leer', async (req, res) => {
   try {
     await pool.query('UPDATE notificaciones SET leida = 1 WHERE cliente_id = ? AND leida = 0', [req.cliente.id]);
     res.json({ message: 'Notificaciones leídas' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// PATCH /api/portal/notificaciones/:id/leer — marca UNA como leída.
+router.patch('/notificaciones/:id/leer', async (req, res) => {
+  try {
+    await pool.query(
+      'UPDATE notificaciones SET leida = 1 WHERE id = ? AND cliente_id = ?',
+      [req.params.id, req.cliente.id]
+    );
+    res.json({ message: 'Notificación leída' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// DELETE /api/portal/notificaciones/leidas — borra todas las leídas (limpiar feed).
+router.delete('/notificaciones/leidas', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM notificaciones WHERE cliente_id = ? AND leida = 1', [req.cliente.id]);
+    res.json({ message: 'Notificaciones leídas eliminadas' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// DELETE /api/portal/notificaciones/:id — borra UNA (deslizar para eliminar).
+router.delete('/notificaciones/:id', async (req, res) => {
+  try {
+    await pool.query(
+      'DELETE FROM notificaciones WHERE id = ? AND cliente_id = ?',
+      [req.params.id, req.cliente.id]
+    );
+    res.json({ message: 'Notificación eliminada' });
   } catch (err) {
     fail(res, err);
   }

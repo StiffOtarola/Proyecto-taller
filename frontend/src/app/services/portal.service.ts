@@ -19,6 +19,9 @@ export class PortalService {
   private url = `${environment.apiUrl}/portal`;
   private clienteSubject = new BehaviorSubject<ClientePortal | null>(this.getClienteGuardado());
   cliente$ = this.clienteSubject.asObservable();
+  // Contador de notificaciones no leídas (alimenta el badge de la campana).
+  private noLeidasSubject = new BehaviorSubject<number>(0);
+  noLeidas$ = this.noLeidasSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
@@ -67,6 +70,7 @@ export class PortalService {
     // Limpia el cache offline para no mostrar datos de otra cuenta tras cerrar sesión.
     ['citas', 'resumen', 'motos'].forEach(n => localStorage.removeItem(`tallerms_cache_${n}`));
     this.clienteSubject.next(null);
+    this.noLeidasSubject.next(0);
   }
 
   getToken(): string | null { return localStorage.getItem(TOKEN_KEY); }
@@ -154,9 +158,39 @@ export class PortalService {
     return this.http.get<{ data: any[] }>(`${this.url}/notificaciones`);
   }
 
+  // Marca TODAS como leídas (al abrir el feed) y pone el badge en 0.
   leerNotificaciones(): Observable<any> {
-    return this.http.post(`${this.url}/notificaciones/leer`, {});
+    return this.http.post(`${this.url}/notificaciones/leer`, {}).pipe(
+      tap(() => this.noLeidasSubject.next(0))
+    );
   }
+
+  // Marca UNA como leída (el feed actualiza el badge tras esto).
+  leerNotificacion(id: number): Observable<any> {
+    return this.http.patch(`${this.url}/notificaciones/${id}/leer`, {});
+  }
+
+  // Borra UNA (deslizar para eliminar).
+  eliminarNotificacion(id: number): Observable<any> {
+    return this.http.delete(`${this.url}/notificaciones/${id}`);
+  }
+
+  // Borra todas las leídas (limpiar feed).
+  limpiarNotificacionesLeidas(): Observable<any> {
+    return this.http.delete(`${this.url}/notificaciones/leidas`);
+  }
+
+  // Refresca el contador del badge desde el backend (liviano).
+  refrescarContador(): void {
+    if (!this.isLoggedIn()) { this.noLeidasSubject.next(0); return; }
+    this.http.get<{ data: { no_leidas: number } }>(`${this.url}/notificaciones/contador`).subscribe({
+      next: r => this.noLeidasSubject.next(r.data?.no_leidas || 0),
+      error: () => {},
+    });
+  }
+
+  // Ajusta el contador local sin pegar al backend (tras leer/borrar en el feed).
+  fijarContador(n: number): void { this.noLeidasSubject.next(Math.max(0, n)); }
 
   getDisponibilidad(fecha: string): Observable<{ data: { horas: string[]; max: number; ocupacion: Record<string, number> } }> {
     return this.http.get<{ data: any }>(`${this.url}/disponibilidad`, { params: { fecha } as any });

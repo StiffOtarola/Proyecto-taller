@@ -432,7 +432,7 @@ router.post('/cotizaciones/:id/enviar', async (req, res) => {
     if (o && config.notif_cotizacion) {
       const moto = [o.marca, o.modelo].filter(Boolean).join(' ') || 'tu moto';
       await pool.query(
-        'INSERT INTO notificaciones (cliente_id, cita_id, titulo, mensaje) VALUES (?, ?, ?, ?)',
+        "INSERT INTO notificaciones (cliente_id, cita_id, titulo, mensaje, tipo) VALUES (?, ?, ?, ?, 'presupuesto')",
         [o.cliente_id, o.cita_id || null, `Presupuesto listo: ${moto}`, `Tu presupuesto (orden ${o.numero_orden}) está listo. Revisalo y aprobalo desde el portal.`]
       );
     }
@@ -654,7 +654,7 @@ router.post('/notificar', async (req, res) => {
       return res.status(400).json({ error: 'cliente_id, titulo y mensaje son requeridos' });
     }
     const [result] = await pool.query(
-      'INSERT INTO notificaciones (cliente_id, cita_id, titulo, mensaje) VALUES (?, ?, ?, ?)',
+      "INSERT INTO notificaciones (cliente_id, cita_id, titulo, mensaje, tipo) VALUES (?, ?, ?, ?, 'mensaje')",
       [cliente_id, cita_id || null, titulo, mensaje]
     );
     const [[nueva]] = await pool.query('SELECT * FROM notificaciones WHERE id = ?', [result.insertId]);

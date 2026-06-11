@@ -281,9 +281,11 @@ CREATE TABLE IF NOT EXISTS notificaciones (
   cita_id    INT,
   titulo     VARCHAR(150) NOT NULL,
   mensaje    VARCHAR(255) NOT NULL,
+  tipo       VARCHAR(30) NOT NULL DEFAULT 'estado',  -- evento que la generó (icono/color en el portal)
   leida      TINYINT(1) DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_cliente (cliente_id),
+  INDEX idx_cliente_leida (cliente_id, leida),
   FOREIGN KEY (cliente_id) REFERENCES clientes(id),
   FOREIGN KEY (cita_id)    REFERENCES citas(id)
 );

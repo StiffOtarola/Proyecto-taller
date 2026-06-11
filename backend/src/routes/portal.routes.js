@@ -584,6 +584,23 @@ router.get('/fidelidad', async (req, res) => {
   }
 });
 
+// GET /api/portal/recompensas — historial de cortesías canjeadas del cliente.
+router.get('/recompensas', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT rc.id, DATE_FORMAT(rc.created_at, '%Y-%m-%d') AS fecha, rc.descripcion, o.numero_orden
+       FROM recompensas_canjeadas rc
+       LEFT JOIN ordenes_trabajo o ON o.id = rc.orden_id
+       WHERE rc.cliente_id = ?
+       ORDER BY rc.created_at DESC`,
+      [req.cliente.id]
+    );
+    res.json({ data: rows });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
 // GET /api/portal/promos — promociones activas (visibles para el cliente)
 router.get('/promos', async (req, res) => {
   try {

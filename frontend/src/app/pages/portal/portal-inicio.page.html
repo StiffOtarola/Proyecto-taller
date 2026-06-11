@@ -6,6 +6,9 @@
 </ion-header>
 
 <ion-content>
+  <!-- Tour de bienvenida (se muestra una sola vez) -->
+  <app-portal-onboarding></app-portal-onboarding>
+
   <ion-refresher slot="fixed" (ionRefresh)="cargar(); $event.target.complete()">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>

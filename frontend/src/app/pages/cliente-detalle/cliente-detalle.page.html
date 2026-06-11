@@ -47,6 +47,7 @@
         <div class="fidelidad-info">
           <strong>Fidelización</strong>
           <span>{{ cliente!.visitas || 0 }} visita(s)</span>
+          <span *ngIf="cliente!.cortesias_canjeadas">{{ cliente!.cortesias_canjeadas }} cortesía(s) canjeada(s)</span>
           <span *ngIf="cliente!.cortesia_disponible" class="cortesia-on">¡Cortesía disponible!</span>
         </div>
         <ion-button *ngIf="cliente!.cortesia_disponible" size="small" color="success" (click)="canjearCortesia()">

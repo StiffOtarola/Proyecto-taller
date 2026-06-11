@@ -10,5 +10,6 @@ export interface Cliente {
   tiene_portal?: number;
   visitas?: number;
   cortesia_disponible?: number;
+  cortesias_canjeadas?: number;
   created_at?: string;
 }

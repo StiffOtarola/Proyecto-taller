@@ -16,6 +16,37 @@
       <p>Promociones exclusivas del taller.</p>
     </div>
 
+    <!-- Programa de fidelidad: progreso de cortesía -->
+    <section class="reward-hero" *ngIf="fidelidad" [class.ready]="fidelidad.cortesia_disponible">
+      <div class="rh-tag"><ion-icon name="gift"></ion-icon> Programa de fidelidad</div>
+
+      <h3 *ngIf="fidelidad.cortesia_disponible">¡Tu próximo servicio es de cortesía! 🎉</h3>
+      <h3 *ngIf="!fidelidad.cortesia_disponible">
+        Te falta{{ fidelidad.faltan === 1 ? '' : 'n' }} <strong>{{ fidelidad.faltan }}</strong> servicio{{ fidelidad.faltan === 1 ? '' : 's' }} para tu cortesía
+      </h3>
+      <p class="rh-sub">Cada {{ fidelidad.meta - 1 }} servicios completados, el siguiente va por nuestra cuenta.</p>
+
+      <div class="rh-blocks">
+        <span class="rb" *ngFor="let on of bloques; let i = index" [class.on]="on" [class.gift]="i === bloques.length - 1">
+          <ion-icon *ngIf="i === bloques.length - 1" name="gift"></ion-icon>
+        </span>
+      </div>
+      <div class="rh-foot">{{ fidelidad.visitas }} servicio{{ fidelidad.visitas === 1 ? '' : 's' }} completado{{ fidelidad.visitas === 1 ? '' : 's' }}</div>
+
+      <!-- Historial de cortesías canjeadas -->
+      <button class="rh-hist-tog" *ngIf="recompensas.length" (click)="toggleHistorial()">
+        <ion-icon [name]="histAbierto ? 'chevron-up' : 'chevron-down'"></ion-icon>
+        {{ recompensas.length }} cortesía{{ recompensas.length === 1 ? '' : 's' }} canjeada{{ recompensas.length === 1 ? '' : 's' }}
+      </button>
+      <div class="rh-hist" *ngIf="histAbierto">
+        <div class="rh-hist-row" *ngFor="let r of recompensas">
+          <ion-icon name="gift-outline"></ion-icon>
+          <span class="rhh-desc">{{ r.descripcion }}<ng-container *ngIf="r.numero_orden"> · {{ r.numero_orden }}</ng-container></span>
+          <span class="rhh-fecha mono">{{ r.fecha | date:'dd/MM/yyyy' }}</span>
+        </div>
+      </div>
+    </section>
+
     <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:12px">
       <div class="skeleton" style="height:150px;border-radius:20px"></div>
       <div class="skeleton" style="height:150px;border-radius:20px"></div>

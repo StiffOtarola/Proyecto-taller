@@ -164,6 +164,16 @@ export class PortalService {
     return this.http.get<{ data: any[] }>(`${this.url}/promos`);
   }
 
+  // Estado de fidelidad: visitas completadas, meta y si la cortesía está disponible.
+  getFidelidad(): Observable<{ data: { visitas: number; cortesia_disponible: boolean; meta: number; faltan: number } }> {
+    return this.http.get<{ data: any }>(`${this.url}/fidelidad`);
+  }
+
+  // Historial de cortesías canjeadas del cliente.
+  getRecompensas(): Observable<{ data: { id: number; fecha: string; descripcion: string; numero_orden: string | null }[] }> {
+    return this.http.get<{ data: any[] }>(`${this.url}/recompensas`);
+  }
+
   // —— Perfil (Mi cuenta + Seguridad) ——
   getMiPerfil(): Observable<{ data: any }> {
     return this.http.get<{ data: any }>(`${this.url}/perfil`);

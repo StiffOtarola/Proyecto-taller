@@ -53,7 +53,12 @@ router.post('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const [[cliente]] = await pool.query(`SELECT ${COLS} FROM clientes WHERE id = ? AND activo = 1`, [req.params.id]);
+    const [[cliente]] = await pool.query(
+      `SELECT ${COLS},
+              (SELECT COUNT(*) FROM recompensas_canjeadas WHERE cliente_id = clientes.id) AS cortesias_canjeadas
+       FROM clientes WHERE id = ? AND activo = 1`,
+      [req.params.id]
+    );
     if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
     res.json({ data: cliente });
   } catch (err) {
@@ -61,16 +66,32 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// PATCH /api/clientes/:id/cortesia — canjea (consume) la cortesía de fidelización
+// PATCH /api/clientes/:id/cortesia — canjea (consume) la cortesía de fidelización.
+// Además del flag, deja un registro en recompensas_canjeadas (historial que ve el cliente).
+// Acepta orden_id y descripcion opcionales (la cortesía aplicada a un servicio puntual).
 router.patch('/:id/cortesia', async (req, res) => {
+  const conn = await pool.getConnection();
   try {
-    const [[cliente]] = await pool.query('SELECT cortesia_disponible FROM clientes WHERE id = ? AND activo = 1', [req.params.id]);
-    if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
-    if (!cliente.cortesia_disponible) return res.status(400).json({ error: 'El cliente no tiene cortesía disponible' });
-    await pool.query('UPDATE clientes SET cortesia_disponible = 0 WHERE id = ?', [req.params.id]);
+    await conn.beginTransaction();
+    const [[cliente]] = await conn.query(
+      'SELECT cortesia_disponible FROM clientes WHERE id = ? AND activo = 1 FOR UPDATE',
+      [req.params.id]
+    );
+    if (!cliente) { await conn.rollback(); return res.status(404).json({ error: 'Cliente no encontrado' }); }
+    if (!cliente.cortesia_disponible) { await conn.rollback(); return res.status(400).json({ error: 'El cliente no tiene cortesía disponible' }); }
+
+    await conn.query('UPDATE clientes SET cortesia_disponible = 0 WHERE id = ?', [req.params.id]);
+    await conn.query(
+      'INSERT INTO recompensas_canjeadas (cliente_id, orden_id, aplicado_por, descripcion) VALUES (?, ?, ?, ?)',
+      [req.params.id, req.body.orden_id || null, req.usuario.id, (req.body.descripcion || 'Servicio de cortesía').slice(0, 150)]
+    );
+    await conn.commit();
     res.json({ message: 'Cortesía canjeada' });
   } catch (err) {
+    await conn.rollback();
     fail(res, err);
+  } finally {
+    conn.release();
   }
 });
 

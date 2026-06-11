@@ -6,6 +6,54 @@
   p { font-size: 13px; color: var(--n-500); margin: 0; }
 }
 
+/* Programa de fidelidad: tarjeta destacada de cortesía */
+.reward-hero {
+  position: relative; overflow: hidden; margin-bottom: 16px;
+  border-radius: 22px; padding: 18px 18px 16px;
+  background: linear-gradient(135deg, var(--rose-50), var(--amber-100));
+  border: 1px solid var(--hairline);
+
+  .rh-tag { display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--ion-color-primary);
+    ion-icon { font-size: 15px; } }
+  h3 { font-family: var(--font-display); font-size: 18px; font-weight: 800; letter-spacing: -0.02em;
+    margin: 10px 0 4px; color: #0a0a0a;
+    strong { color: var(--ion-color-primary); } }
+  .rh-sub { font-size: 12.5px; color: #525252; margin: 0 0 14px; line-height: 1.5; }
+
+  .rh-blocks { display: flex; gap: 6px; }
+  .rb { flex: 1; height: 16px; border-radius: 6px; background: rgba(255, 255, 255, 0.55);
+    display: flex; align-items: center; justify-content: center;
+    &.on { background: var(--ion-color-primary); }
+    &.gift { background: rgba(255, 255, 255, 0.75); color: var(--amber-700); height: 26px; flex: 0 0 34px; border-radius: 9px;
+      ion-icon { font-size: 15px; }
+      &.on { background: #fcd34d; color: #92400e; } } }
+
+  .rh-foot { margin-top: 12px; font-size: 11.5px; font-weight: 700; color: #525252; }
+
+  // Historial de cortesías canjeadas (toggle + lista).
+  .rh-hist-tog { margin-top: 12px; width: 100%; background: rgba(255, 255, 255, 0.5); border: none; cursor: pointer;
+    border-radius: 12px; padding: 9px 12px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: inherit; font-size: 12px; font-weight: 800; color: #7c2d12;
+    ion-icon { font-size: 15px; } &:active { transform: scale(.99); } }
+  .rh-hist { margin-top: 8px; background: rgba(255, 255, 255, 0.55); border-radius: 12px; padding: 4px 12px; }
+  .rh-hist-row { display: flex; align-items: center; gap: 8px; padding: 9px 0; font-size: 12.5px; color: #3f2d1a;
+    & + .rh-hist-row { border-top: 1px solid rgba(0, 0, 0, 0.07); }
+    ion-icon { font-size: 16px; color: var(--amber-700); flex-shrink: 0; }
+    .rhh-desc { flex: 1; font-weight: 600; min-width: 0; }
+    .rhh-fecha { font-size: 11px; color: #78350f; flex-shrink: 0; } }
+
+  // Estado "cortesía lista": degradado dorado y celebración.
+  &.ready {
+    background: linear-gradient(135deg, #fde68a, #fbbf24);
+    h3 { color: #7c2d12; strong { color: #7c2d12; } }
+    .rh-tag { color: #92400e; }
+    .rh-sub, .rh-foot { color: #78350f; }
+    .rb.gift.on { background: #fff; }
+  }
+}
+
 .of {
   background: var(--ion-card-background); border: 1px solid var(--hairline);
   border-radius: 20px; box-shadow: var(--shadow-sm); overflow: hidden; cursor: pointer;

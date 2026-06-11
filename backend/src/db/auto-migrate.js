@@ -108,6 +108,22 @@ async function ensureSchema() {
     await addColumnIfMissing('clientes', 'cortesia_disponible', 'TINYINT(1) DEFAULT 0');
     await addColumnIfMissing('ordenes_trabajo', 'visita_contada', 'TINYINT(1) DEFAULT 0');
 
+    // Historial de cortesías canjeadas: registra cada vez que el taller aplica una
+    // cortesía a un cliente (quién, cuándo, sobre qué orden). El cliente lo ve en el portal.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS recompensas_canjeadas (
+        id           INT AUTO_INCREMENT PRIMARY KEY,
+        cliente_id   INT NOT NULL,
+        orden_id     INT NULL,
+        aplicado_por INT NULL,
+        descripcion  VARCHAR(150) NOT NULL DEFAULT 'Servicio de cortesía',
+        created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_rc_cliente (cliente_id),
+        FOREIGN KEY (cliente_id)   REFERENCES clientes(id),
+        FOREIGN KEY (aplicado_por) REFERENCES usuarios(id)
+      )
+    `);
+
     // Panel del mecánico: la cita es la unidad de trabajo del técnico.
     await addColumnIfMissing('citas', 'tecnico_id', 'INT NULL');
     await addColumnIfMissing('citas', 'tipo_servicio', 'VARCHAR(100) NULL');

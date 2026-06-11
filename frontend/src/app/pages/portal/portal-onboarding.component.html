@@ -1,0 +1,22 @@
+<div class="ob" *ngIf="visible" role="dialog" aria-modal="true" aria-label="Bienvenida">
+  <div class="ob-card">
+    <button class="ob-skip" (click)="saltar()" aria-label="Saltar introducción">Saltar</button>
+
+    <div class="ob-illu" [attr.data-paso]="paso">
+      <ion-icon [name]="pasos[paso].icon"></ion-icon>
+    </div>
+
+    <h2>{{ pasos[paso].titulo }}</h2>
+    <p>{{ pasos[paso].texto }}</p>
+
+    <div class="ob-dots">
+      <button class="ob-dot" *ngFor="let p of pasos; let i = index" [class.on]="i === paso"
+              (click)="ir(i)" [attr.aria-label]="'Ir al paso ' + (i + 1)"></button>
+    </div>
+
+    <button class="ob-next" (click)="siguiente()">
+      {{ ultimo ? '¡Empezar!' : 'Siguiente' }}
+      <ion-icon [name]="ultimo ? 'checkmark' : 'arrow-forward'"></ion-icon>
+    </button>
+  </div>
+</div>

@@ -14,6 +14,7 @@ import { PortalLegalPage } from './portal-legal.page';
 import { PortalCitaDetallePage } from './portal-cita-detalle.page';
 import { PortalMotoHistorialPage } from './portal-moto-historial.page';
 import { PortalActionsComponent } from './portal-actions.component';
+import { PortalOnboardingComponent } from './portal-onboarding.component';
 import { SharedModule } from '../../shared/shared.module';
 
 @NgModule({
@@ -22,7 +23,8 @@ import { SharedModule } from '../../shared/shared.module';
     PortalLoginPage, PortalRegistroPage, PortalRecuperarPage,
     PortalTabsPage, PortalInicioPage, PortalAgendarPage,
     PortalCitasPage, PortalMotosPage, PortalOfertasPage, PortalPerfilPage,
-    PortalLegalPage, PortalCitaDetallePage, PortalMotoHistorialPage, PortalActionsComponent,
+    PortalLegalPage, PortalCitaDetallePage, PortalMotoHistorialPage,
+    PortalActionsComponent, PortalOnboardingComponent,
   ],
 })
 export class PortalPageModule {}

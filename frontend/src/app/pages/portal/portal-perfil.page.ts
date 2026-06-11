@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
+import { AccesibilidadService } from '../../services/accesibilidad.service';
 import { comprimirImagen } from '../../utils/imagen';
 
 @Component({
@@ -25,10 +26,19 @@ export class PortalPerfilPage implements OnInit {
 
   constructor(
     public portal: PortalService,
+    public a11y: AccesibilidadService,
     private router: Router,
     private toast: ToastController,
     private alert: AlertController,
   ) {}
+
+  // Niveles de tamaño de texto (accesibilidad).
+  readonly nivelesTexto = [
+    { i: 0, etiqueta: 'A', nombre: 'Normal' },
+    { i: 1, etiqueta: 'A', nombre: 'Grande' },
+    { i: 2, etiqueta: 'A', nombre: 'Muy grande' },
+  ];
+  setTexto(i: number) { this.a11y.setNivel(i); }
 
   ngOnInit() { this.cargar(); }
   ionViewWillEnter() { this.cargar(); }

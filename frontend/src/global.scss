@@ -942,3 +942,38 @@ ion-col { padding: 4px 8px; }
   // Toolbars/segmentos/searchbars: alinear el contenido al mismo eje central
   ion-content.ion-padding { --padding-start: 24px; --padding-end: 24px; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Accesibilidad + estado de conexión (global)
+   ═══════════════════════════════════════════════════════════ */
+
+/* Tamaño de texto: zoom global controlado desde Perfil (AccesibilidadService). */
+html { zoom: var(--app-zoom, 1); }
+
+/* Foco visible para navegación por teclado (no afecta el clic con mouse). */
+:focus-visible {
+  outline: 2px solid var(--ion-color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Respeta la preferencia del sistema de reducir el movimiento. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Banner global "sin conexión". */
+.net-banner {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10000;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 14px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  background: #1f2937; color: #fff; font-size: 12.5px; font-weight: 700;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.25);
+  ion-icon { font-size: 16px; }
+}

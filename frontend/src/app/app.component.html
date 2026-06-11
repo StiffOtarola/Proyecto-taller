@@ -1,3 +1,9 @@
 <ion-app>
+  <!-- Banner global de sin conexión -->
+  <div class="net-banner" *ngIf="!enLinea" role="status" aria-live="polite">
+    <ion-icon name="cloud-offline-outline"></ion-icon>
+    Sin conexión — mostrando datos guardados
+  </div>
+
   <ion-router-outlet></ion-router-outlet>
 </ion-app>

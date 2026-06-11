@@ -49,6 +49,22 @@
         <button class="cta" [disabled]="guardando" (click)="guardarCuenta()">💾 Guardar cambios</button>
       </section>
 
+      <!-- Accesibilidad -->
+      <section class="card">
+        <span class="section-label">Accesibilidad</span>
+        <div class="a11y-row">
+          <div class="a11y-info">
+            <strong>Tamaño de texto</strong>
+            <span>{{ nivelesTexto[a11y.nivel].nombre }}</span>
+          </div>
+          <div class="a11y-opts" role="group" aria-label="Tamaño de texto">
+            <button *ngFor="let n of nivelesTexto" class="a11y-opt" [class.on]="a11y.nivel === n.i"
+                    (click)="setTexto(n.i)" [attr.aria-pressed]="a11y.nivel === n.i" [attr.aria-label]="n.nombre"
+                    [style.font-size.px]="13 + n.i * 5">{{ n.etiqueta }}</button>
+          </div>
+        </div>
+      </section>
+
       <!-- Información legal -->
       <section class="card">
         <span class="section-label">Información legal</span>

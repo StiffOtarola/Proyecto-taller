@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, of, tap, catchError, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface ClientePortal {
@@ -64,6 +64,8 @@ export class PortalService {
   logout() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(CLIENTE_KEY);
+    // Limpia el cache offline para no mostrar datos de otra cuenta tras cerrar sesión.
+    ['citas', 'resumen', 'motos'].forEach(n => localStorage.removeItem(`tallerms_cache_${n}`));
     this.clienteSubject.next(null);
   }
 
@@ -90,7 +92,7 @@ export class PortalService {
   }
 
   getMotos(): Observable<{ data: any[] }> {
-    return this.http.get<{ data: any[] }>(`${this.url}/motos`);
+    return this.conCache('motos', this.http.get<{ data: any[] }>(`${this.url}/motos`));
   }
 
   crearMoto(data: { marca: string; modelo: string; placa: string; anio?: number | null; color?: string; kilometraje_actual?: number | null; foto?: string | null }): Observable<{ data: any }> {
@@ -105,8 +107,22 @@ export class PortalService {
     return this.http.delete(`${this.url}/motos/${id}`);
   }
 
+  // Cache offline "suave": guarda la última respuesta buena en localStorage y, si la
+  // red falla, devuelve esa copia (para ver citas/motos/inicio sin conexión).
+  private conCache<T>(nombre: string, fuente: Observable<T>): Observable<T> {
+    const key = `tallerms_cache_${nombre}`;
+    return fuente.pipe(
+      tap(res => { try { localStorage.setItem(key, JSON.stringify(res)); } catch {} }),
+      catchError(err => {
+        const raw = localStorage.getItem(key);
+        if (raw) { try { return of(JSON.parse(raw) as T); } catch {} }
+        return throwError(() => err);
+      })
+    );
+  }
+
   getCitas(): Observable<{ data: any[] }> {
-    return this.http.get<{ data: any[] }>(`${this.url}/citas`);
+    return this.conCache('citas', this.http.get<{ data: any[] }>(`${this.url}/citas`));
   }
 
   getCita(id: number): Observable<{ data: any }> {
@@ -131,7 +147,7 @@ export class PortalService {
   }
 
   getResumen(): Observable<{ data: any }> {
-    return this.http.get<{ data: any }>(`${this.url}/resumen`);
+    return this.conCache('resumen', this.http.get<{ data: any }>(`${this.url}/resumen`));
   }
 
   getNotificaciones(): Observable<{ data: any[] }> {

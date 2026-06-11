@@ -1,10 +1,12 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
 const { testConnection } = require('./db/pool');
 const { ensureSchema } = require('./db/auto-migrate');
+const { apiLimiter, authLimiter } = require('./middleware/rate-limit');
 
 const app = express();
 const frontendDist = path.join(__dirname, '../../frontend/www');
@@ -22,6 +24,14 @@ if (!process.env.JWT_SECRET) {
   process.env.JWT_SECRET = 'dev-inseguro-no-usar-en-produccion';
   console.warn('⚠️  JWT_SECRET no definido: usando secreto de desarrollo (NO usar en producción).');
 }
+
+// En producción la app va detrás del proxy de Railway: confiar en el primer hop
+// para que req.ip sea la IP real del cliente (necesario para el rate limiting).
+if (esProduccion) app.set('trust proxy', 1);
+
+// Compresión gzip/brotli de las respuestas (JSON y estáticos). Recorta el ancho
+// de banda de forma notable, sobre todo en listados.
+app.use(compression());
 
 // Headers de seguridad básicos (sin dependencias). No tocan el CSP para no romper
 // el SPA de Angular/Ionic, que usa estilos/scripts inline.
@@ -42,7 +52,12 @@ if (!hasFrontend) {
 
 app.use(express.json({ limit: '10mb' }));
 
+// Health check exento del rate limiting (lo sondea la plataforma con frecuencia).
 app.get('/api/health', (req, res) => res.json({ ok: true, ts: new Date().toISOString() }));
+
+// Rate limiting: estricto en autenticación (fuerza bruta + bcrypt), general en el resto.
+app.use(['/api/auth/login', '/api/portal/login', '/api/portal/registro', '/api/portal/recuperar'], authLimiter);
+app.use('/api', apiLimiter);
 
 app.use('/api/auth',      require('./routes/auth.routes'));
 app.use('/api/clientes',  require('./routes/clientes.routes'));

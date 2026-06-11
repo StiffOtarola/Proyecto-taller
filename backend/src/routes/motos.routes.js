@@ -8,7 +8,14 @@ router.use(auth);
 router.get('/', async (req, res) => {
   try {
     const { q, cliente_id } = req.query;
-    let sql = `SELECT m.*, c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.telefono AS cliente_telefono
+    // Columnas explícitas SIN la foto base64 (MEDIUMTEXT): este listado es global y
+    // sin paginar, así que devolver la imagen de cada moto haría respuestas enormes.
+    // Se expone `tiene_foto`; la imagen se obtiene en el detalle (GET /motos/:id).
+    let sql = `SELECT m.id, m.cliente_id, m.marca, m.modelo, m.anio, m.placa, m.color,
+                      m.numero_motor, m.numero_chasis, m.kilometraje_actual, m.foto_url,
+                      m.activa, m.created_at, m.updated_at,
+                      (m.foto IS NOT NULL) AS tiene_foto,
+                      c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.telefono AS cliente_telefono
                FROM motos m JOIN clientes c ON m.cliente_id = c.id WHERE m.activa = 1`;
     const params = [];
     if (cliente_id) { sql += ' AND m.cliente_id = ?'; params.push(cliente_id); }

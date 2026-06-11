@@ -135,6 +135,20 @@ export class PortalInicioPage implements OnInit {
 
   irAgendar() { this.router.navigate(['/portal/agendar']); }
   irCitas() { this.router.navigate(['/portal/mis-citas']); }
+  verCita(p: any) { if (p?.id) this.router.navigate(['/portal/cita', p.id]); }
+
+  // Título de la tarjeta destacada según el tipo de cita resuelto en el backend.
+  tituloCita(tipo?: string): string {
+    if (tipo === 'en_curso') return 'En el taller';
+    if (tipo === 'vencida') return 'Cita vencida';
+    return 'Próxima cita';
+  }
+  // Etiqueta de la fila de fecha: "Ingreso" si ya está en el taller, etc.
+  labelFecha(tipo?: string): string {
+    if (tipo === 'en_curso') return 'Ingreso';
+    if (tipo === 'vencida') return 'Fecha agendada';
+    return 'Fecha y hora';
+  }
 
   // Al tocar una notificación de avance: si está ligada a una cita, abre su detalle;
   // si no (p. ej. aviso de presupuesto), lleva al listado de citas.

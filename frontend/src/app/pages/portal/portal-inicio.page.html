@@ -92,14 +92,26 @@
       </div>
     </section>
 
-    <!-- Próxima cita -->
-    <section class="card next" *ngIf="resumen?.proxima_cita as p">
-      <span class="section-label">Próxima cita</span>
+    <!-- Cita destacada: próxima / en curso / vencida -->
+    <section class="card next" *ngIf="resumen?.proxima_cita as p" [class.is-vencida]="p.tipo === 'vencida'" [class.is-curso]="p.tipo === 'en_curso'">
+      <span class="section-label">{{ tituloCita(p.tipo) }}</span>
       <div class="next-title">{{ p.marca }} {{ p.modelo }}</div>
       <div class="nx-r"><span class="k">Servicio</span><span class="v">{{ p.tipo_servicio || 'Servicio' }}</span></div>
-      <div class="nx-r"><span class="k">Fecha y hora</span><span class="v mono">{{ p.fecha | date:'dd/MM/yyyy' }} · {{ p.hora }}</span></div>
+      <div class="nx-r"><span class="k">{{ labelFecha(p.tipo) }}</span><span class="v mono">{{ p.fecha | date:'dd/MM/yyyy' }} · {{ p.hora }}</span></div>
       <div class="nx-r"><span class="k">Mecánico</span><span class="v">{{ p.tecnico_nombre || 'Por asignar' }}</span></div>
-      <div class="nx-r"><span class="k">Estado</span><span class="pill rose">{{ estadoLabel[p.estado] }}</span></div>
+      <div class="nx-r"><span class="k">Estado</span><span class="pill" [ngClass]="p.tipo === 'vencida' ? 'amber' : 'rose'">{{ estadoLabel[p.estado] }}</span></div>
+
+      <!-- Aviso + reagendar para citas vencidas -->
+      <div class="next-aviso" *ngIf="p.tipo === 'vencida'">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>Esta cita ya pasó y no se registró tu ingreso. Reagendá o comunicate con el taller.</span>
+      </div>
+      <button class="next-cta" *ngIf="p.tipo === 'vencida'" (click)="irAgendar()">
+        <ion-icon name="calendar-outline"></ion-icon> Reagendar
+      </button>
+      <button class="next-cta ghost" *ngIf="p.tipo !== 'vencida'" (click)="verCita(p)">
+        Ver detalle <ion-icon name="chevron-forward"></ion-icon>
+      </button>
     </section>
     <section class="card next vacia" *ngIf="resumen && !resumen.proxima_cita">
       <p>No tenés citas próximas.</p>

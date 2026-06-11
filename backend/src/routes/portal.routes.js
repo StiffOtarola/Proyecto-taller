@@ -211,21 +211,45 @@ router.get('/resumen', async (req, res) => {
               AND id NOT IN (SELECT orden_id FROM citas WHERE orden_id IS NOT NULL)) AS completadas`,
       [id, id]
     );
-    const [[proxima_cita]] = await pool.query(
-      `SELECT ci.id, ci.fecha, ci.hora, ci.tipo_servicio, ci.estado,
+    // Cita destacada del inicio. Antes se tomaba la cita no-terminal más antigua,
+    // lo que mostraba citas ya vencidas (o en curso) bajo el título "Próxima cita".
+    // Ahora clasificamos y elegimos por prioridad:
+    //   1) en_curso  → la moto ya está en el taller (estado != 'agendado').
+    //   2) proxima   → agendada para hoy o más adelante.
+    //   3) vencida   → agendada pero la fecha ya pasó y nunca se inició.
+    const hoy = hoyCR();
+    const [citasAbiertas] = await pool.query(
+      `SELECT ci.id, DATE_FORMAT(ci.fecha,'%Y-%m-%d') AS fecha, TIME_FORMAT(ci.hora,'%H:%i') AS hora,
+              ci.tipo_servicio, ci.estado,
               m.marca, m.modelo, m.placa, t.nombre AS tecnico_nombre
        FROM citas ci
        LEFT JOIN motos m ON m.id = ci.moto_id
        LEFT JOIN usuarios t ON t.id = ci.tecnico_id
        WHERE ci.cliente_id = ? AND ci.estado NOT IN ('entregado','cancelado')
-       ORDER BY ci.fecha ASC, ci.hora ASC LIMIT 1`,
+       ORDER BY ci.fecha ASC, ci.hora ASC`,
       [id]
     );
+
+    const enCurso = citasAbiertas.filter(c => c.estado !== 'agendado');
+    const futuras = citasAbiertas.filter(c => c.estado === 'agendado' && c.fecha >= hoy);
+    const vencidas = citasAbiertas.filter(c => c.estado === 'agendado' && c.fecha < hoy);
+
+    let proxima_cita = null;
+    if (enCurso.length) {
+      // La que entró más recientemente al taller (última por fecha/hora).
+      proxima_cita = { ...enCurso[enCurso.length - 1], tipo: 'en_curso' };
+    } else if (futuras.length) {
+      proxima_cita = { ...futuras[0], tipo: 'proxima' };
+    } else if (vencidas.length) {
+      // La vencida más reciente, para invitar a reagendar.
+      proxima_cita = { ...vencidas[vencidas.length - 1], tipo: 'vencida' };
+    }
+
     res.json({
       data: {
         citas_totales, citas_pendientes, motos_registradas, total_pagado,
         recompensas: recompensas(completadas),
-        proxima_cita: proxima_cita || null,
+        proxima_cita,
       },
     });
   } catch (err) {

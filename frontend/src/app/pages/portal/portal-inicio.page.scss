@@ -56,6 +56,30 @@
     .v { font-weight: 600; text-align: right; }
   }
   &.vacia { display: flex; align-items: center; justify-content: space-between; p { margin: 0; color: var(--n-500); } }
+
+  // Cinta de acento a la izquierda según el tipo de cita.
+  &.is-curso { border-left: 3px solid var(--ion-color-primary); }
+  &.is-vencida { border-left: 3px solid var(--amber-700); }
+
+  // Aviso de cita vencida.
+  .next-aviso {
+    display: flex; align-items: flex-start; gap: 8px; margin: 12px 0 2px;
+    padding: 10px 12px; border-radius: 12px;
+    background: var(--amber-100); color: var(--amber-700);
+    font-size: 12px; font-weight: 600; line-height: 1.4;
+    ion-icon { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+  }
+
+  // Botón de acción de la tarjeta (Reagendar / Ver detalle).
+  .next-cta {
+    width: 100%; margin-top: 12px; padding: 11px; border-radius: var(--radius-pill);
+    border: none; cursor: pointer; font-family: inherit; font-size: 13.5px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--ion-color-primary); color: #fff;
+    ion-icon { font-size: 16px; }
+    &:active { transform: scale(.98); }
+    &.ghost { background: none; border: 1.5px solid var(--hairline); color: var(--ion-color-primary); }
+  }
 }
 
 /* Presupuestos por aprobar */

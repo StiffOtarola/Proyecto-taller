@@ -14,6 +14,7 @@ import { PortalPerfilPage } from './portal-perfil.page';
 import { PortalLegalPage } from './portal-legal.page';
 import { PortalCitaDetallePage } from './portal-cita-detalle.page';
 import { PortalMotoHistorialPage } from './portal-moto-historial.page';
+import { PortalNotificacionesPage } from './portal-notificaciones.page';
 
 const routes: Routes = [
   { path: 'login', component: PortalLoginPage },
@@ -23,6 +24,7 @@ const routes: Routes = [
   { path: 'cita/:id', component: PortalCitaDetallePage, canActivate: [PortalGuard] },
   { path: 'cita/:id/editar', component: PortalAgendarPage, canActivate: [PortalGuard] },
   { path: 'moto/:id/historial', component: PortalMotoHistorialPage, canActivate: [PortalGuard] },
+  { path: 'notificaciones', component: PortalNotificacionesPage, canActivate: [PortalGuard] },
   {
     path: '',
     component: PortalTabsPage,

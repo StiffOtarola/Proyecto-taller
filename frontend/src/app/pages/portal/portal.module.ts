@@ -13,6 +13,7 @@ import { PortalPerfilPage } from './portal-perfil.page';
 import { PortalLegalPage } from './portal-legal.page';
 import { PortalCitaDetallePage } from './portal-cita-detalle.page';
 import { PortalMotoHistorialPage } from './portal-moto-historial.page';
+import { PortalNotificacionesPage } from './portal-notificaciones.page';
 import { PortalActionsComponent } from './portal-actions.component';
 import { PortalOnboardingComponent } from './portal-onboarding.component';
 import { SharedModule } from '../../shared/shared.module';
@@ -23,7 +24,7 @@ import { SharedModule } from '../../shared/shared.module';
     PortalLoginPage, PortalRegistroPage, PortalRecuperarPage,
     PortalTabsPage, PortalInicioPage, PortalAgendarPage,
     PortalCitasPage, PortalMotosPage, PortalOfertasPage, PortalPerfilPage,
-    PortalLegalPage, PortalCitaDetallePage, PortalMotoHistorialPage,
+    PortalLegalPage, PortalCitaDetallePage, PortalMotoHistorialPage, PortalNotificacionesPage,
     PortalActionsComponent, PortalOnboardingComponent,
   ],
 })

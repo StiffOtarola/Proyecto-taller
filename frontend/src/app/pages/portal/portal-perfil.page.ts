@@ -14,7 +14,6 @@ import { comprimirImagen } from '../../utils/imagen';
 export class PortalPerfilPage implements OnInit {
   perfil: any = null;
   cuenta = { nombre: '', apellido: '', telefono: '', email: '' };
-  notificaciones: any[] = [];
   cargando = true;
   guardando = false;
   eliminando = false;
@@ -58,25 +57,12 @@ export class PortalPerfilPage implements OnInit {
       },
       error: () => { this.cargando = false; this.aviso('No se pudo cargar el perfil', 'danger'); },
     });
-    this.portal.getNotificaciones().subscribe({
-      next: r => { this.notificaciones = r.data; },
-    });
   }
 
   get iniciales(): string {
     const n = (this.cuenta.nombre || '').trim()[0] || '';
     const a = (this.cuenta.apellido || '').trim()[0] || '';
     return (n + a).toUpperCase() || 'U';
-  }
-
-  hace(fecha: string): string {
-    if (!fecha) return '';
-    const min = Math.round((Date.now() - new Date(fecha).getTime()) / 60000);
-    if (min < 1) return 'Recién';
-    if (min < 60) return `Hace ${min} min`;
-    const h = Math.round(min / 60);
-    if (h < 24) return `Hace ${h} h`;
-    return `Hace ${Math.round(h / 24)} d`;
   }
 
   guardarCuenta() {
@@ -171,12 +157,6 @@ export class PortalPerfilPage implements OnInit {
       },
       error: (e) => { this.eliminando = false; this.aviso(e.error?.error || 'No se pudo eliminar la cuenta', 'danger'); },
     });
-  }
-
-  // Al tocar una notificación: si está ligada a una cita, abre su detalle.
-  abrirNotificacion(n: any) {
-    if (n?.cita_id) this.router.navigate(['/portal/cita', n.cita_id]);
-    else this.router.navigate(['/portal/mis-citas']);
   }
 
   logout() {

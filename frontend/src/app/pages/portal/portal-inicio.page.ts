@@ -13,7 +13,6 @@ import { badgeProximidad, BadgeProximidad } from '../../utils/fecha-cita';
 })
 export class PortalInicioPage implements OnInit {
   resumen: any = null;
-  notificaciones: any[] = [];
   presupuestos: any[] = [];      // órdenes esperando la aprobación del cliente
   detalle: Record<number, any> = {};
   expandido: number | null = null;
@@ -21,17 +20,6 @@ export class PortalInicioPage implements OnInit {
   cargando = true;
   readonly estadoLabel = ESTADO_CITA_LABEL;
   readonly fechaHoy = new Date().toLocaleDateString('es-CR', { weekday: 'short', day: 'numeric', month: 'short' });
-
-  // Tiempo relativo legible para el feed de notificaciones ("Hace 2 h").
-  hace(fecha: string): string {
-    if (!fecha) return '';
-    const min = Math.round((Date.now() - new Date(fecha).getTime()) / 60000);
-    if (min < 1) return 'Recién';
-    if (min < 60) return `Hace ${min} min`;
-    const h = Math.round(min / 60);
-    if (h < 24) return `Hace ${h} h`;
-    return `Hace ${Math.round(h / 24)} d`;
-  }
 
   constructor(
     public portal: PortalService,
@@ -48,12 +36,6 @@ export class PortalInicioPage implements OnInit {
     this.portal.getResumen().subscribe({
       next: r => { this.resumen = r.data; this.cargando = false; },
       error: () => { this.cargando = false; },
-    });
-    this.portal.getNotificaciones().subscribe({
-      next: r => {
-        this.notificaciones = r.data;
-        if (r.data.some(n => !n.leida)) this.portal.leerNotificaciones().subscribe();
-      },
     });
     this.cargarPresupuestos();
   }
@@ -155,13 +137,6 @@ export class PortalInicioPage implements OnInit {
   // Badge "Hoy/Mañana/En N días" solo para la próxima cita agendada.
   badgeCita(p: any): BadgeProximidad | null {
     return p?.tipo === 'proxima' ? badgeProximidad(p.fecha) : null;
-  }
-
-  // Al tocar una notificación de avance: si está ligada a una cita, abre su detalle;
-  // si no (p. ej. aviso de presupuesto), lleva al listado de citas.
-  abrirNotificacion(n: any) {
-    if (n?.cita_id) this.router.navigate(['/portal/cita', n.cita_id]);
-    else this.router.navigate(['/portal/mis-citas']);
   }
 
   logout() {

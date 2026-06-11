@@ -1,0 +1,42 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/portal/inicio" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Notificaciones</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="notis">
+    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px">
+      <div class="skeleton" style="height:64px;border-radius:16px"></div>
+      <div class="skeleton" style="height:64px;border-radius:16px"></div>
+      <div class="skeleton" style="height:64px;border-radius:16px"></div>
+    </div>
+
+    <section class="card" *ngIf="!cargando && notificaciones.length">
+      <span class="section-label">📢 Avances de tus servicios</span>
+      <div class="nf" *ngFor="let n of notificaciones" [class.nueva]="!n.leida" (click)="abrir(n)">
+        <span class="nf-d" [class.on]="!n.leida"></span>
+        <div class="nf-b">
+          <span class="nf-msg">{{ n.titulo }}</span>
+          <span class="nf-sub" *ngIf="n.mensaje">{{ n.mensaje }}</span>
+          <span class="nf-t">{{ hace(n.created_at) }}</span>
+        </div>
+        <ion-icon name="chevron-forward" class="nf-chev"></ion-icon>
+      </div>
+    </section>
+
+    <div class="empty" *ngIf="!cargando && !notificaciones.length">
+      <ion-icon name="notifications-off-outline"></ion-icon>
+      <p>No tenés notificaciones por ahora.</p>
+    </div>
+
+    <div style="height:30px"></div>
+  </div>
+</ion-content>

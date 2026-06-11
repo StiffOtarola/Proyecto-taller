@@ -41,6 +41,13 @@ async function enviarCodigoReset(email, nombre, codigo) {
     return true;
   }
 
+  // Aviso útil: con el remitente de prueba de Resend solo se entrega al correo dueño
+  // de la cuenta Resend. Para enviar a cualquier destinatario hay que verificar un
+  // dominio y poner MAIL_FROM con una dirección de ese dominio.
+  if (from.includes('resend.dev')) {
+    console.warn('⚠️  MAIL_FROM usa el remitente de prueba (resend.dev): Resend SOLO entregará al correo verificado de la cuenta. Verificá un dominio y definí MAIL_FROM para enviar a cualquier cuenta.');
+  }
+
   try {
     const resp = await fetch(RESEND_API_URL, {
       method: 'POST',
@@ -57,12 +64,16 @@ async function enviarCodigoReset(email, nombre, codigo) {
     });
     if (!resp.ok) {
       const detalle = await resp.text().catch(() => '');
-      console.error('⚠️  Resend respondió error:', resp.status, detalle);
+      console.error(`⚠️  Resend rechazó el envío a ${email}:`, resp.status, detalle);
+      // Pista concreta para el caso más común (dominio sin verificar).
+      if (resp.status === 403 || /testing|verify a domain|own email/i.test(detalle)) {
+        console.error('   → Causa típica: dominio sin verificar en Resend. Verificá un dominio y definí MAIL_FROM (p. ej. "MS Motos <no-reply@TU-DOMINIO>").');
+      }
       return false;
     }
     return true;
   } catch (err) {
-    console.error('⚠️  Error enviando correo:', err.message);
+    console.error(`⚠️  Error enviando correo a ${email}:`, err.message);
     return false;
   }
 }

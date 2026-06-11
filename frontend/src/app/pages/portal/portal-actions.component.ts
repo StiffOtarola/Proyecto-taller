@@ -9,7 +9,10 @@ import { PortalService } from '../../services/portal.service';
   selector: 'app-portal-actions',
   template: `
     <ion-buttons>
-      <ion-button [routerLink]="['/portal/perfil']" title="Mi perfil">
+      <ion-button [routerLink]="['/portal/notificaciones']" title="Notificaciones" aria-label="Notificaciones">
+        <ion-icon slot="icon-only" name="notifications-outline"></ion-icon>
+      </ion-button>
+      <ion-button [routerLink]="['/portal/perfil']" title="Mi perfil" aria-label="Mi perfil">
         <img *ngIf="(portal.cliente$ | async)?.foto as foto; else icono" class="hdr-avatar" [src]="foto" alt="Mi perfil">
         <ng-template #icono><ion-icon slot="icon-only" name="person-circle-outline"></ion-icon></ng-template>
       </ion-button>

@@ -63,6 +63,7 @@ export class PortalCitasPage implements OnInit {
 
   async calificar(cita: any) {
     const al = await this.alert.create({
+      cssClass: 'portal-alert',
       header: '¿Cómo fue el servicio?',
       inputs: [1, 2, 3, 4, 5].map(n => ({ type: 'radio' as const, label: '★'.repeat(n) + ` (${n})`, value: n })),
       buttons: [
@@ -95,11 +96,12 @@ export class PortalCitasPage implements OnInit {
   async cancelar(c: any, ev?: Event) {
     ev?.stopPropagation();
     const al = await this.alert.create({
+      cssClass: 'portal-alert',
       header: 'Cancelar cita',
       message: 'Esta acción no se puede deshacer. ¿Cancelar esta cita?',
       buttons: [
         { text: 'No', role: 'cancel' },
-        { text: 'Sí, cancelar', role: 'destructive', handler: () => this.confirmarCancelar(c) },
+        { text: 'Sí, cancelar', role: 'destructive', cssClass: 'portal-alert-danger', handler: () => this.confirmarCancelar(c) },
       ],
     });
     await al.present();

@@ -798,6 +798,58 @@ ion-footer.admin-dark { background: #111111; }
   }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Diálogo de confirmación del portal cliente (Crimson Ops).
+   Reemplaza el alert blanco por defecto de Ionic, que en modo
+   oscuro dejaba el título/mensaje en blanco-sobre-blanco. Usa las
+   variables semánticas de :root → legible en claro y oscuro.
+   ═══════════════════════════════════════════════════════════ */
+.portal-alert {
+  --backdrop-opacity: 0.55;
+
+  .alert-wrapper {
+    border-radius: 22px;
+    background: var(--ion-card-background);
+    border: 1px solid var(--hairline);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .28);
+    max-width: 340px;
+    overflow: hidden;
+  }
+
+  .alert-head { padding: 22px 22px 6px; }
+  .alert-title {
+    font-family: var(--font-display, 'Outfit', sans-serif);
+    font-size: 18px; font-weight: 800; letter-spacing: -.02em;
+    color: var(--ion-text-color);
+  }
+  .alert-message {
+    padding: 4px 22px 20px;
+    font-size: 13.5px; line-height: 1.55; color: var(--n-500);
+  }
+
+  // Botonera: dos columnas iguales, separadas por el hairline.
+  .alert-button-group {
+    padding: 0; display: flex; border-top: 1px solid var(--hairline);
+  }
+  .alert-button {
+    flex: 1; margin: 0; height: 52px; border-radius: 0;
+    text-transform: none; letter-spacing: 0;
+    font-size: 14.5px; font-weight: 700;
+    .alert-button-inner { justify-content: center; }
+  }
+  // Botón "No" (cancelar): neutro.
+  .alert-button.alert-button-role-cancel { --ion-color-primary: var(--n-500); color: var(--n-500); }
+  // Separador entre botones.
+  .alert-button + .alert-button { border-left: 1px solid var(--hairline); }
+  // Botón destructivo "Sí, cancelar": rojo, dominante.
+  .alert-button.portal-alert-danger {
+    color: #fff; background: var(--ion-color-danger); font-weight: 800;
+    border-left: none;
+  }
+  .alert-button.portal-alert-danger:hover,
+  .alert-button.portal-alert-danger.ion-activated { background: var(--ion-color-danger-shade); }
+}
+
 // ————————————————————————————————
 // Utilidades varias
 // ————————————————————————————————

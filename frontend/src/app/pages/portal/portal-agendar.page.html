@@ -83,6 +83,11 @@
         <ion-spinner *ngIf="enviando" name="crescent"></ion-spinner>
         {{ enviando ? (editId ? 'Guardando...' : 'Agendando...') : (editId ? '💾 Guardar cambios' : '📅 Agendar cita') }}
       </button>
+
+      <!-- Limpiar el formulario (solo al crear y si hay algo cargado) -->
+      <button type="button" class="btn-limpiar" *ngIf="!editId && hayDatos" (click)="limpiar()" [disabled]="enviando">
+        <ion-icon name="refresh-outline"></ion-icon> Limpiar formulario
+      </button>
     </section>
 
     <div style="height:30px"></div>

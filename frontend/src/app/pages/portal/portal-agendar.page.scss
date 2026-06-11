@@ -92,3 +92,16 @@
   &:disabled { opacity: .5; box-shadow: none; }
   ion-spinner { width: 18px; height: 18px; }
 }
+
+/* Botón secundario: limpiar el formulario */
+.btn-limpiar {
+  width: 100%; margin-top: 10px; padding: 11px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  border: 1.5px solid var(--hairline); border-radius: var(--radius-pill);
+  background: none; color: var(--n-600);
+  font-family: inherit; font-size: 13px; font-weight: 700;
+  transition: transform .15s;
+  ion-icon { font-size: 16px; }
+  &:active { transform: scale(.98); }
+  &:disabled { opacity: .5; }
+}

@@ -52,7 +52,8 @@ router.post('/login', async (req, res) => {
     );
     if (cliente && (await bcrypt.compare(password, cliente.password_hash))) {
       const payload = { id: cliente.id, tipo: 'cliente', nombre: cliente.nombre, apellido: cliente.apellido };
-      return res.json({ data: { token: firmar(payload), tipo: 'cliente', cliente: payload } });
+      // La foto va en la respuesta (para el header), NO en el token (lo mantiene liviano).
+      return res.json({ data: { token: firmar(payload), tipo: 'cliente', cliente: { ...payload, foto: cliente.foto || null } } });
     }
 
     // Anti-enumeración: si el correo no existía en ninguna tabla, no se ejecutó

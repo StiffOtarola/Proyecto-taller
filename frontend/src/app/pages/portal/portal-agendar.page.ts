@@ -131,6 +131,36 @@ export class PortalAgendarPage implements OnInit {
     return !!(this.form.moto_id && this.form.tipo_servicio && this.form.fecha && this.form.hora);
   }
 
+  // ¿Hay algo cargado en el formulario? (para mostrar "Limpiar" solo cuando aplica)
+  get hayDatos(): boolean {
+    return !!(this.form.moto_id || this.form.tipo_servicio || this.form.fecha || this.form.hora || this.form.descripcion.trim());
+  }
+
+  // Limpia el formulario (solo al crear). Guarda el estado previo —incluida la
+  // disponibilidad ya cargada— y ofrece "Deshacer" unos segundos, para que limpiar
+  // sin querer no obligue a rehacer todo a mano.
+  async limpiar() {
+    const previo = { form: { ...this.form }, ocupacion: { ...this.ocupacion }, maxPorHora: this.maxPorHora };
+    this.form = { moto_id: null, tipo_servicio: '', fecha: '', hora: '', descripcion: '' };
+    this.ocupacion = {};
+    this.maxPorHora = 2;
+    this.horaLlenaMsg = false;
+    const t = await this.toast.create({
+      message: 'Formulario limpiado',
+      duration: 5000,
+      color: 'dark',
+      buttons: [{
+        text: 'Deshacer',
+        handler: () => {
+          this.form = previo.form;
+          this.ocupacion = previo.ocupacion;
+          this.maxPorHora = previo.maxPorHora;
+        },
+      }],
+    });
+    await t.present();
+  }
+
   async agendar() {
     if (!this.valido) return this.toastMsg('Completá moto, servicio, fecha y hora', 'warning');
     if (this.horaLlena(this.form.hora)) return this.toastMsg('Esa hora ya no está disponible', 'warning');

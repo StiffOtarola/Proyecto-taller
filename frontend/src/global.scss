@@ -878,6 +878,25 @@ ion-footer.admin-dark { background: #111111; }
   .alert-button.portal-alert-confirm.ion-activated { background: var(--ion-color-primary-shade); }
 }
 
+// Loading (LoadingController) con el look del portal: caja temática y legible en
+// modo oscuro, en vez del recuadro blanco por defecto de Ionic.
+.portal-loading {
+  --backdrop-opacity: 0.5;
+  --background: var(--ion-card-background);
+  --spinner-color: var(--ion-color-primary);
+  color: var(--ion-text-color);
+
+  .loading-wrapper {
+    border-radius: 18px;
+    border: 1px solid var(--hairline);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .3);
+    padding: 20px 24px;
+  }
+  .loading-content {
+    font-size: 14px; font-weight: 700; color: var(--ion-text-color);
+  }
+}
+
 // ————————————————————————————————
 // Utilidades varias
 // ————————————————————————————————

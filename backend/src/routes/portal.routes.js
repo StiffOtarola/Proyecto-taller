@@ -17,6 +17,24 @@ function hoyCR() {
   return new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
+// Valida una foto subida por el cliente (avatar o moto). Acepta:
+//   - null / '' / undefined  → el cliente quita la foto (se guarda NULL).
+//   - data URL de imagen base64 (jpeg/png/webp/gif) de hasta ~4 MB.
+// El cliente ya comprime antes de enviar; este tope solo evita abusos.
+const FOTO_MAX_LEN = 4 * 1024 * 1024; // ~4 MB de string base64
+function fotoValida(foto) {
+  if (foto === null || foto === undefined || foto === '') return true;
+  return (
+    typeof foto === 'string' &&
+    /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(foto) &&
+    foto.length <= FOTO_MAX_LEN
+  );
+}
+// Normaliza el valor recibido a lo que se guarda en la BD (string o NULL).
+function fotoParaGuardar(foto) {
+  return foto && String(foto).length ? foto : null;
+}
+
 // Horas (decimal) que faltan para el inicio de una cita; fecha 'YYYY-MM-DD' + hora
 // 'HH:MM'. Ancla en zona de Costa Rica (UTC-6). Negativo si la cita ya pasó.
 function horasHastaCita(fecha, hora) {
@@ -49,7 +67,8 @@ router.post('/login', async (req, res) => {
     if (!ok) return res.status(401).json({ error: 'Credenciales incorrectas' });
 
     const { payload, token } = tokenCliente(cliente);
-    res.json({ data: { token, cliente: payload } });
+    // La foto va en la respuesta (para el avatar del header) pero NO en el JWT.
+    res.json({ data: { token, cliente: { ...payload, foto: cliente.foto || null } } });
   } catch (err) {
     fail(res, err);
   }
@@ -286,7 +305,7 @@ router.post('/notificaciones/leer', async (req, res) => {
 router.get('/perfil', async (req, res) => {
   try {
     const [[c]] = await pool.query(
-      'SELECT id, nombre, apellido, email, telefono, cedula FROM clientes WHERE id = ? AND activo = 1',
+      'SELECT id, nombre, apellido, email, telefono, cedula, foto FROM clientes WHERE id = ? AND activo = 1',
       [req.cliente.id]
     );
     if (!c) return res.status(404).json({ error: 'Cuenta no encontrada' });
@@ -340,6 +359,23 @@ router.put('/perfil/password', async (req, res) => {
     const hash = await bcrypt.hash(String(nueva), 10);
     await pool.query('UPDATE clientes SET password_hash = ? WHERE id = ?', [hash, req.cliente.id]);
     res.json({ message: 'Contraseña actualizada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// PUT /api/portal/perfil/foto — el cliente sube/cambia/quita su foto de perfil.
+// Se envía aparte de los datos de contacto para no reenviar la imagen en cada
+// edición de nombre/teléfono. `foto` = data URL base64 (o null/'' para quitarla).
+router.put('/perfil/foto', async (req, res) => {
+  try {
+    const { foto } = req.body;
+    if (!fotoValida(foto)) {
+      return res.status(400).json({ error: 'La imagen no es válida o es demasiado grande.' });
+    }
+    const val = fotoParaGuardar(foto);
+    await pool.query('UPDATE clientes SET foto = ? WHERE id = ?', [val, req.cliente.id]);
+    res.json({ data: { foto: val }, message: val ? 'Foto actualizada' : 'Foto eliminada' });
   } catch (err) {
     fail(res, err);
   }
@@ -518,7 +554,7 @@ router.get('/promos', async (req, res) => {
 router.get('/motos', async (req, res) => {
   try {
     const [rows] = await pool.query(
-      'SELECT id, marca, modelo, placa, anio, color, kilometraje_actual FROM motos WHERE cliente_id = ? AND activa = 1 ORDER BY created_at DESC',
+      'SELECT id, marca, modelo, placa, anio, color, kilometraje_actual, foto FROM motos WHERE cliente_id = ? AND activa = 1 ORDER BY created_at DESC',
       [req.cliente.id]
     );
     res.json({ data: rows });
@@ -531,10 +567,11 @@ router.get('/motos', async (req, res) => {
 // Obligatorios: marca, modelo, placa. Evita placas duplicadas.
 router.post('/motos', async (req, res) => {
   try {
-    const { marca, modelo, placa, anio, color, kilometraje_actual } = req.body;
+    const { marca, modelo, placa, anio, color, kilometraje_actual, foto } = req.body;
     if (!marca || !modelo || !placa) {
       return res.status(400).json({ error: 'Marca, modelo y placa son requeridos' });
     }
+    if (!fotoValida(foto)) return res.status(400).json({ error: 'La foto de la moto no es válida o es demasiado grande.' });
     // Bloquea placas ya registradas (normaliza espacios y guiones).
     const [[existe]] = await pool.query(
       `SELECT id FROM motos WHERE activa = 1
@@ -544,11 +581,11 @@ router.post('/motos', async (req, res) => {
     if (existe) return res.status(409).json({ error: 'Esa placa ya está registrada en el taller' });
 
     const [result] = await pool.query(
-      'INSERT INTO motos (cliente_id, marca, modelo, placa, anio, color, kilometraje_actual) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [req.cliente.id, marca, modelo, placa, anio || null, color || null, kilometraje_actual || 0]
+      'INSERT INTO motos (cliente_id, marca, modelo, placa, anio, color, kilometraje_actual, foto) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [req.cliente.id, marca, modelo, placa, anio || null, color || null, kilometraje_actual || 0, fotoParaGuardar(foto)]
     );
     const [[nueva]] = await pool.query(
-      'SELECT id, marca, modelo, placa, anio, color, kilometraje_actual FROM motos WHERE id = ?',
+      'SELECT id, marca, modelo, placa, anio, color, kilometraje_actual, foto FROM motos WHERE id = ?',
       [result.insertId]
     );
     res.status(201).json({ data: nueva, message: 'Moto registrada' });
@@ -560,10 +597,11 @@ router.post('/motos', async (req, res) => {
 // PUT /api/portal/motos/:id — el cliente edita su propia moto
 router.put('/motos/:id', async (req, res) => {
   try {
-    const { marca, modelo, placa, anio, color, kilometraje_actual } = req.body;
+    const { marca, modelo, placa, anio, color, kilometraje_actual, foto } = req.body;
     if (!marca || !modelo || !placa) {
       return res.status(400).json({ error: 'Marca, modelo y placa son requeridos' });
     }
+    if (!fotoValida(foto)) return res.status(400).json({ error: 'La foto de la moto no es válida o es demasiado grande.' });
     // La moto debe ser del cliente
     const [[moto]] = await pool.query('SELECT id FROM motos WHERE id = ? AND cliente_id = ? AND activa = 1', [req.params.id, req.cliente.id]);
     if (!moto) return res.status(404).json({ error: 'Moto no encontrada' });
@@ -576,11 +614,11 @@ router.put('/motos/:id', async (req, res) => {
     if (dup) return res.status(409).json({ error: 'Esa placa ya está registrada en el taller' });
 
     await pool.query(
-      'UPDATE motos SET marca = ?, modelo = ?, placa = ?, anio = ?, color = ?, kilometraje_actual = ? WHERE id = ?',
-      [marca, modelo, placa, anio || null, color || null, kilometraje_actual || 0, req.params.id]
+      'UPDATE motos SET marca = ?, modelo = ?, placa = ?, anio = ?, color = ?, kilometraje_actual = ?, foto = ? WHERE id = ?',
+      [marca, modelo, placa, anio || null, color || null, kilometraje_actual || 0, fotoParaGuardar(foto), req.params.id]
     );
     const [[actualizada]] = await pool.query(
-      'SELECT id, marca, modelo, placa, anio, color, kilometraje_actual FROM motos WHERE id = ?',
+      'SELECT id, marca, modelo, placa, anio, color, kilometraje_actual, foto FROM motos WHERE id = ?',
       [req.params.id]
     );
     res.json({ data: actualizada, message: 'Moto actualizada' });
@@ -615,7 +653,7 @@ router.get('/citas', async (req, res) => {
        LEFT JOIN motos m ON m.id = ci.moto_id
        LEFT JOIN usuarios t ON t.id = ci.tecnico_id
        LEFT JOIN ordenes_trabajo o ON o.id = ci.orden_id
-       WHERE ci.cliente_id = ?
+       WHERE ci.cliente_id = ? AND ci.estado <> 'cancelado'
        ORDER BY ci.fecha DESC, ci.hora DESC`,
       [req.cliente.id]
     );

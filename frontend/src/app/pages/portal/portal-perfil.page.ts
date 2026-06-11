@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
+import { comprimirImagen } from '../../utils/imagen';
 
 @Component({
   standalone: false,
@@ -16,6 +17,7 @@ export class PortalPerfilPage implements OnInit {
   cargando = true;
   guardando = false;
   eliminando = false;
+  subiendoFoto = false;
 
   constructor(
     public portal: PortalService,
@@ -81,6 +83,43 @@ export class PortalPerfilPage implements OnInit {
         this.aviso('Perfil actualizado');
       },
       error: (e) => { this.guardando = false; this.aviso(e.error?.error || 'No se pudo actualizar', 'danger'); },
+    });
+  }
+
+  // —— Foto de perfil ——
+  async onFoto(ev: Event) {
+    const input = ev.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // permite re-elegir el mismo archivo
+    if (!file) return;
+    this.subiendoFoto = true;
+    try {
+      const dataUrl = await comprimirImagen(file, { maxLado: 400, calidad: 0.8 });
+      this.portal.actualizarFotoPerfil(dataUrl).subscribe({
+        next: r => {
+          this.perfil = { ...this.perfil, foto: r.data.foto };
+          this.portal.actualizarClienteLocal({ foto: r.data.foto }); // refresca el avatar del header
+          this.subiendoFoto = false;
+          this.aviso('Foto actualizada');
+        },
+        error: e => { this.subiendoFoto = false; this.aviso(e.error?.error || 'No se pudo subir la foto', 'danger'); },
+      });
+    } catch (e: any) {
+      this.subiendoFoto = false;
+      this.aviso(e?.message || 'No se pudo procesar la imagen', 'danger');
+    }
+  }
+
+  quitarFoto() {
+    this.subiendoFoto = true;
+    this.portal.actualizarFotoPerfil(null).subscribe({
+      next: () => {
+        this.perfil = { ...this.perfil, foto: null };
+        this.portal.actualizarClienteLocal({ foto: null });
+        this.subiendoFoto = false;
+        this.aviso('Foto eliminada');
+      },
+      error: e => { this.subiendoFoto = false; this.aviso(e.error?.error || 'No se pudo quitar la foto', 'danger'); },
     });
   }
 

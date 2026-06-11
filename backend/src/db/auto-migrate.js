@@ -46,6 +46,11 @@ async function ensureSchema() {
     // Portal del cliente: contraseña opcional para acceso al seguimiento.
     await addColumnIfMissing('clientes', 'password_hash', 'VARCHAR(255) NULL');
 
+    // Fotos del portal (data URL base64, igual que orden_fotos/promos): avatar del
+    // cliente y foto de cada moto. MEDIUMTEXT aguanta imágenes comprimidas (~16 MB máx).
+    await addColumnIfMissing('clientes', 'foto', 'MEDIUMTEXT NULL');
+    await addColumnIfMissing('motos', 'foto', 'MEDIUMTEXT NULL');
+
     // Códigos de recuperación de contraseña (olvidé mi contraseña) enviados por correo.
     await pool.query(`
       CREATE TABLE IF NOT EXISTS password_reset_codes (

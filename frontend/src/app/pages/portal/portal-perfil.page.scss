@@ -5,12 +5,30 @@
   background: linear-gradient(135deg, var(--rose-50), var(--emerald-50));
   border: 1px solid var(--hairline); border-radius: 24px; padding: 20px; margin-bottom: 16px;
 
+  // Avatar editable: tocar para cambiar la foto; badge de cámara superpuesto.
+  .avatar-wrap { position: relative; flex-shrink: 0; width: 66px; height: 66px; }
   .avatar {
-    width: 66px; height: 66px; border-radius: 50%; flex-shrink: 0;
-    background: var(--ion-color-primary); color: #fff;
+    width: 66px; height: 66px; border-radius: 50%; padding: 0; overflow: hidden; cursor: pointer;
+    background: var(--ion-color-primary); color: #fff; border: none;
     display: flex; align-items: center; justify-content: center;
     font-family: var(--font-display); font-size: 26px; font-weight: 800;
     box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2);
+    img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    &:active { transform: scale(.96); }
+    &:disabled { opacity: .7; cursor: default; }
+  }
+  .avatar-cam {
+    position: absolute; right: -2px; bottom: -2px; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--ion-card-background); border: 1px solid var(--hairline);
+    display: flex; align-items: center; justify-content: center; pointer-events: none;
+    box-shadow: var(--shadow-sm);
+    ion-icon { font-size: 13px; color: var(--ion-color-primary); }
+    &.cargando ion-icon { color: var(--n-400); }
+  }
+  .quitar-foto {
+    margin-top: 8px; background: none; border: none; padding: 0; cursor: pointer;
+    font-family: inherit; font-size: 11px; font-weight: 700; color: #b91c1c;
+    &:disabled { opacity: .6; }
   }
   // El degradado es claro en ambos temas: el texto va en oscuro fijo (no con vars
   // de tema) para que no quede texto claro sobre fondo claro en modo oscuro.

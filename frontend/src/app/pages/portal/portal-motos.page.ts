@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AlertController, ToastController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
 import { MARCAS_MOTO, modelosDeMarca } from '../../utils/motos-catalogo';
+import { comprimirImagen } from '../../utils/imagen';
 
 @Component({
   standalone: false,
@@ -15,8 +16,9 @@ export class PortalMotosPage implements OnInit {
 
   mostrarForm = false;
   enviando = false;
+  procesandoFoto = false;
   editandoId: number | null = null;
-  nueva = { marca: '', modelo: '', placa: '', anio: null as number | null, color: '', kilometraje: null as number | null };
+  nueva = { marca: '', modelo: '', placa: '', anio: null as number | null, color: '', kilometraje: null as number | null, foto: null as string | null };
 
   // Autocompletado de marca/modelo (catálogo local, no restrictivo).
   marcasSugeridas: string[] = [];
@@ -37,7 +39,7 @@ export class PortalMotosPage implements OnInit {
 
   abrirForm() {
     this.editandoId = null;
-    this.nueva = { marca: '', modelo: '', placa: '', anio: null, color: '', kilometraje: null };
+    this.nueva = { marca: '', modelo: '', placa: '', anio: null, color: '', kilometraje: null, foto: null };
     this.marcasSugeridas = [];
     this.modelosSugeridos = [];
     this.mostrarForm = true;
@@ -48,11 +50,29 @@ export class PortalMotosPage implements OnInit {
     this.nueva = {
       marca: m.marca, modelo: m.modelo, placa: m.placa,
       anio: m.anio || null, color: m.color || '', kilometraje: m.kilometraje_actual || null,
+      foto: m.foto || null,
     };
     this.marcasSugeridas = [];
     this.modelosSugeridos = [];
     this.mostrarForm = true;
   }
+
+  // —— Foto de la moto ——
+  async onFoto(ev: Event) {
+    const input = ev.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    this.procesandoFoto = true;
+    try {
+      this.nueva.foto = await comprimirImagen(file, { maxLado: 800, calidad: 0.82 });
+    } catch (e: any) {
+      this.mostrarToast(e?.message || 'No se pudo procesar la imagen', 'danger');
+    } finally {
+      this.procesandoFoto = false;
+    }
+  }
+  quitarFoto() { this.nueva.foto = null; }
 
   cerrarForm() { this.mostrarForm = false; this.editandoId = null; this.marcasSugeridas = []; this.modelosSugeridos = []; }
 
@@ -98,6 +118,7 @@ export class PortalMotosPage implements OnInit {
       anio: this.nueva.anio || null,
       color: this.nueva.color.trim() || undefined,
       kilometraje_actual: this.nueva.kilometraje || 0,
+      foto: this.nueva.foto || null,
     };
     const op = this.editandoId
       ? this.portal.editarMoto(this.editandoId, datos)

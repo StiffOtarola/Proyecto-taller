@@ -8,6 +8,7 @@ export interface ClientePortal {
   tipo: 'cliente';
   nombre: string;
   apellido: string;
+  foto?: string | null;
 }
 
 const TOKEN_KEY = 'tallerms_portal_token';
@@ -92,11 +93,11 @@ export class PortalService {
     return this.http.get<{ data: any[] }>(`${this.url}/motos`);
   }
 
-  crearMoto(data: { marca: string; modelo: string; placa: string; anio?: number | null; color?: string; kilometraje_actual?: number | null }): Observable<{ data: any }> {
+  crearMoto(data: { marca: string; modelo: string; placa: string; anio?: number | null; color?: string; kilometraje_actual?: number | null; foto?: string | null }): Observable<{ data: any }> {
     return this.http.post<{ data: any }>(`${this.url}/motos`, data);
   }
 
-  editarMoto(id: number, data: { marca: string; modelo: string; placa: string; anio?: number | null; color?: string; kilometraje_actual?: number | null }): Observable<{ data: any }> {
+  editarMoto(id: number, data: { marca: string; modelo: string; placa: string; anio?: number | null; color?: string; kilometraje_actual?: number | null; foto?: string | null }): Observable<{ data: any }> {
     return this.http.put<{ data: any }>(`${this.url}/motos/${id}`, data);
   }
 
@@ -159,6 +160,11 @@ export class PortalService {
 
   updateMiPassword(data: { actual: string; nueva: string }): Observable<any> {
     return this.http.put(`${this.url}/perfil/password`, data);
+  }
+
+  // Sube/cambia/quita la foto de perfil (foto = data URL base64, o null para quitarla).
+  actualizarFotoPerfil(foto: string | null): Observable<{ data: { foto: string | null } }> {
+    return this.http.put<{ data: { foto: string | null } }>(`${this.url}/perfil/foto`, { foto });
   }
 
   eliminarCuenta(): Observable<any> {

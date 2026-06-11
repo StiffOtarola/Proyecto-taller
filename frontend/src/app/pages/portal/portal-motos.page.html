@@ -24,7 +24,10 @@
     <!-- Lista de motos -->
     <div class="moto-list" *ngIf="!cargando && motos.length">
       <div class="mc" *ngFor="let m of motos">
-        <div class="mc-i"><ion-icon name="bicycle"></ion-icon></div>
+        <div class="mc-i" [class.has-foto]="m.foto">
+          <img *ngIf="m.foto; else mcIcon" [src]="m.foto" [alt]="m.marca + ' ' + m.modelo">
+          <ng-template #mcIcon><ion-icon name="bicycle"></ion-icon></ng-template>
+        </div>
         <div class="mc-m">
           <h4>{{ m.marca }} {{ m.modelo }}</h4>
           <p>
@@ -52,6 +55,24 @@
     <!-- Formulario -->
     <section class="cd" *ngIf="mostrarForm">
       <span class="lb">{{ editandoId ? 'Editar moto' : 'Registrar nueva moto' }}</span>
+
+      <!-- Foto de la moto (opcional) -->
+      <div class="moto-foto">
+        <div class="mf-prev" [class.empty]="!nueva.foto" (click)="!procesandoFoto && fotoInput.click()">
+          <img *ngIf="nueva.foto; else mfPlace" [src]="nueva.foto" alt="Foto de la moto">
+          <ng-template #mfPlace>
+            <ion-icon [name]="procesandoFoto ? 'hourglass-outline' : 'camera-outline'"></ion-icon>
+          </ng-template>
+        </div>
+        <div class="mf-actions">
+          <button type="button" class="mf-btn" (click)="fotoInput.click()" [disabled]="procesandoFoto">
+            {{ nueva.foto ? 'Cambiar foto' : 'Agregar foto' }}
+          </button>
+          <button type="button" class="mf-btn del" *ngIf="nueva.foto" (click)="quitarFoto()" [disabled]="procesandoFoto">Quitar</button>
+        </div>
+        <input #fotoInput type="file" accept="image/*" hidden (change)="onFoto($event)">
+      </div>
+
       <div class="fg"><label>Placa *</label><input class="upper" [(ngModel)]="nueva.placa" placeholder="MOT-123"></div>
 
       <div class="fg ac-field">

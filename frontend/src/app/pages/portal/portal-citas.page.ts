@@ -35,12 +35,13 @@ export class PortalCitasPage implements OnInit {
   get pendientes(): any[] {
     return this.citas.filter(c => !['entregado', 'cancelado'].includes(c.estado));
   }
-  // Completadas/canceladas, pero solo del último año: las más viejas se ocultan de la lista.
+  // Completadas (entregadas) del último año: las más viejas se ocultan de la lista.
+  // Las canceladas NO aparecen acá; el backend ya no las devuelve al cliente.
   get historial(): any[] {
     const corte = new Date();
     corte.setFullYear(corte.getFullYear() - 1);
     const corteStr = corte.toISOString().slice(0, 10);
-    return this.citas.filter(c => ['entregado', 'cancelado'].includes(c.estado) && (c.fecha || '') >= corteStr);
+    return this.citas.filter(c => c.estado === 'entregado' && (c.fecha || '') >= corteStr);
   }
   // Total pagado histórico (todas las entregadas, sin importar el filtro de 1 año).
   get totalPagado(): number {

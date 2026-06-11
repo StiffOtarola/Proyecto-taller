@@ -19,11 +19,21 @@
     <ng-container *ngIf="!cargando">
       <!-- Cabecera -->
       <div class="profile-header">
-        <div class="avatar">{{ iniciales }}</div>
+        <div class="avatar-wrap">
+          <button type="button" class="avatar" (click)="fotoInput.click()" [disabled]="subiendoFoto" aria-label="Cambiar foto de perfil">
+            <img *ngIf="perfil?.foto; else iniTpl" [src]="perfil.foto" alt="Foto de perfil">
+            <ng-template #iniTpl>{{ iniciales }}</ng-template>
+          </button>
+          <span class="avatar-cam" [class.cargando]="subiendoFoto">
+            <ion-icon [name]="subiendoFoto ? 'hourglass-outline' : 'camera'"></ion-icon>
+          </span>
+          <input #fotoInput type="file" accept="image/*" hidden (change)="onFoto($event)">
+        </div>
         <div class="info">
           <h2>{{ cuenta.nombre }} {{ cuenta.apellido }}</h2>
           <p class="contact">{{ cuenta.email || '—' }}</p>
           <p class="contact" *ngIf="cuenta.telefono">📞 {{ cuenta.telefono }}</p>
+          <button type="button" class="quitar-foto" *ngIf="perfil?.foto" (click)="quitarFoto()" [disabled]="subiendoFoto">Quitar foto</button>
         </div>
       </div>
 

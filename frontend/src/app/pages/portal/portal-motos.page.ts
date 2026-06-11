@@ -124,11 +124,12 @@ export class PortalMotosPage implements OnInit {
 
   async eliminar(m: any) {
     const al = await this.alert.create({
+      cssClass: 'portal-alert',
       header: 'Eliminar moto',
       message: `¿Querés eliminar tu ${m.marca} ${m.modelo} (${m.placa})? Dejará de aparecer en tu lista.`,
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
-        { text: 'Eliminar', role: 'destructive', handler: () => this.confirmarEliminar(m) },
+        { text: 'Eliminar', role: 'destructive', cssClass: 'portal-alert-danger', handler: () => this.confirmarEliminar(m) },
       ],
     });
     await al.present();

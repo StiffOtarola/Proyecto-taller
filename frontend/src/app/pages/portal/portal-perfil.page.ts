@@ -86,11 +86,12 @@ export class PortalPerfilPage implements OnInit {
 
   async eliminarCuenta() {
     const al = await this.alert.create({
+      cssClass: 'portal-alert',
       header: 'Eliminar cuenta',
       message: 'Se desactivará tu acceso al portal y se cerrará la sesión. Tu historial de servicios queda en el taller. ¿Querés continuar?',
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
-        { text: 'Eliminar', role: 'destructive', handler: () => this.confirmarEliminar() },
+        { text: 'Eliminar', role: 'destructive', cssClass: 'portal-alert-danger', handler: () => this.confirmarEliminar() },
       ],
     });
     await al.present();

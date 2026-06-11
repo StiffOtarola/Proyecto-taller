@@ -86,11 +86,12 @@ export class PortalInicioPage implements OnInit {
 
   async aprobar(o: any) {
     const al = await this.alert.create({
+      cssClass: 'portal-alert',
       header: 'Aprobar presupuesto',
       message: `¿Aprobás el presupuesto de la orden ${o.numero_orden}? El taller comenzará la reparación.`,
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
-        { text: 'Aprobar', handler: () => this.enviarDecision(o, 'aprobar') },
+        { text: 'Aprobar', cssClass: 'portal-alert-confirm', handler: () => this.enviarDecision(o, 'aprobar') },
       ],
     });
     await al.present();
@@ -98,12 +99,13 @@ export class PortalInicioPage implements OnInit {
 
   async rechazar(o: any) {
     const al = await this.alert.create({
+      cssClass: 'portal-alert',
       header: 'Rechazar presupuesto',
       message: `Contanos por qué rechazás el presupuesto de la orden ${o.numero_orden} (opcional).`,
       inputs: [{ name: 'motivo', type: 'textarea', placeholder: 'Motivo (opcional)' }],
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
-        { text: 'Rechazar', role: 'destructive', handler: (d) => this.enviarDecision(o, 'rechazar', d?.motivo) },
+        { text: 'Rechazar', role: 'destructive', cssClass: 'portal-alert-danger', handler: (d) => this.enviarDecision(o, 'rechazar', d?.motivo) },
       ],
     });
     await al.present();

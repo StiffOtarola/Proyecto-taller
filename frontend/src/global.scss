@@ -827,6 +827,17 @@ ion-footer.admin-dark { background: #111111; }
     font-size: 13.5px; line-height: 1.55; color: var(--n-500);
   }
 
+  // Inputs (textarea de "rechazar", radios de "calificar").
+  .alert-input-group { padding: 0 22px 14px; }
+  .alert-input, textarea.alert-input {
+    border-radius: 12px; border: 1px solid var(--hairline);
+    background: var(--n-50); color: var(--ion-text-color);
+    padding: 10px 12px; font-size: 13.5px;
+    &::placeholder { color: var(--n-400); }
+  }
+  .alert-radio-label { color: var(--ion-text-color); font-size: 14px; }
+  [aria-checked="true"] .alert-radio-label { color: var(--ion-color-primary); }
+
   // Botonera: dos columnas iguales, separadas por el hairline.
   .alert-button-group {
     padding: 0; display: flex; border-top: 1px solid var(--hairline);
@@ -848,6 +859,13 @@ ion-footer.admin-dark { background: #111111; }
   }
   .alert-button.portal-alert-danger:hover,
   .alert-button.portal-alert-danger.ion-activated { background: var(--ion-color-danger-shade); }
+  // Botón afirmativo dominante "Aprobar"/"Guardar": primario relleno.
+  .alert-button.portal-alert-confirm {
+    color: #fff; background: var(--ion-color-primary); font-weight: 800;
+    border-left: none;
+  }
+  .alert-button.portal-alert-confirm:hover,
+  .alert-button.portal-alert-confirm.ion-activated { background: var(--ion-color-primary-shade); }
 }
 
 // ————————————————————————————————

@@ -66,12 +66,12 @@
         <label>Hora disponible *</label>
         <div class="tg" *ngIf="form.fecha">
           <div class="ts" *ngFor="let h of horas"
-               [class.sel]="form.hora === h" [class.full]="horaLlena(h)"
+               [class.sel]="form.hora === h" [class.full]="horaLlena(h) || horaPasada(h)"
                (click)="seleccionarHora(h)">{{ h }}</div>
         </div>
         <div class="hint" *ngIf="!form.fecha">Elegí primero una fecha para ver los horarios.</div>
-        <div class="full-msg" *ngIf="horaLlenaMsg">⚠ Esa hora ya tiene el máximo de citas. Elegí otra.</div>
-        <div class="hint" *ngIf="form.fecha">Máximo {{ maxPorHora }} citas por hora. Las horas tachadas están llenas.</div>
+        <div class="full-msg" *ngIf="msgHora">⚠ {{ msgHora }}</div>
+        <div class="hint" *ngIf="form.fecha">Máximo {{ maxPorHora }} citas por hora. Las horas tachadas no están disponibles.</div>
       </div>
 
       <div class="fg">

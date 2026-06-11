@@ -21,7 +21,7 @@ export class PortalAgendarPage implements OnInit {
   maxPorHora = 2;
   enviando = false;
   sugiriendo = false;
-  horaLlenaMsg = false;
+  msgHora = '';   // aviso transitorio al tocar una hora no disponible (llena o pasada)
   editId: number | null = null;   // si está seteado, la pantalla edita esa cita
 
   constructor(
@@ -84,6 +84,15 @@ export class PortalAgendarPage implements OnInit {
     return (this.ocupacion[h] || 0) >= this.maxPorHora;
   }
 
+  // Si la fecha elegida es HOY (zona CR), una hora ya pasada no se puede agendar.
+  // CR es UTC-6 sin horario de verano; comparamos "HH:mm" (orden lexicográfico válido).
+  horaPasada(h: string): boolean {
+    const ahoraCR = new Date(Date.now() - 6 * 60 * 60 * 1000);
+    const hoyCR = ahoraCR.toISOString().slice(0, 10);
+    if (this.form.fecha !== hoyCR) return false;
+    return h <= ahoraCR.toISOString().slice(11, 16);
+  }
+
   // Sugiere el próximo horario libre: precarga fecha + hora listos para confirmar.
   sugerir() {
     if (this.sugiriendo) return;
@@ -113,14 +122,16 @@ export class PortalAgendarPage implements OnInit {
     });
   }
 
-  // Selección desde la grilla de horas: ignora las llenas y avisa brevemente.
+  // Selección desde la grilla de horas: ignora las pasadas/llenas y avisa brevemente.
   seleccionarHora(h: string) {
-    if (this.horaLlena(h)) {
-      this.horaLlenaMsg = true;
-      setTimeout(() => (this.horaLlenaMsg = false), 2500);
-      return;
-    }
+    if (this.horaPasada(h)) return this.flashHora('Esa hora ya pasó. Elegí un horario más tarde.');
+    if (this.horaLlena(h)) return this.flashHora('Esa hora ya tiene el máximo de citas. Elegí otra.');
     this.form.hora = h;
+  }
+
+  private flashHora(m: string) {
+    this.msgHora = m;
+    setTimeout(() => (this.msgHora = ''), 2500);
   }
 
   // Moto seleccionada (para el preview con foto bajo el selector).
@@ -144,7 +155,7 @@ export class PortalAgendarPage implements OnInit {
     this.form = { moto_id: null, tipo_servicio: '', fecha: '', hora: '', descripcion: '' };
     this.ocupacion = {};
     this.maxPorHora = 2;
-    this.horaLlenaMsg = false;
+    this.msgHora = '';
     const t = await this.toast.create({
       message: 'Formulario limpiado',
       duration: 5000,
@@ -163,6 +174,7 @@ export class PortalAgendarPage implements OnInit {
 
   async agendar() {
     if (!this.valido) return this.toastMsg('Completá moto, servicio, fecha y hora', 'warning');
+    if (this.horaPasada(this.form.hora)) return this.toastMsg('Esa hora ya pasó. Elegí un horario más tarde.', 'warning');
     if (this.horaLlena(this.form.hora)) return this.toastMsg('Esa hora ya no está disponible', 'warning');
     const editando = this.editId;
     const l = await this.loading.create({ message: editando ? 'Guardando...' : 'Agendando...', cssClass: 'portal-loading', spinner: 'crescent' });

@@ -888,6 +888,9 @@ router.put('/citas/:id', async (req, res) => {
     }
     const hoy = hoyCR();
     if (fecha < hoy) return res.status(400).json({ error: 'La fecha no puede ser en el pasado' });
+    if (fecha === hoy && horasHastaCita(fecha, hora) <= 0) {
+      return res.status(400).json({ error: 'Esa hora ya pasó. Elegí un horario más tarde.' });
+    }
     const limiteFecha = new Date(`${hoy}T12:00:00Z`);
     limiteFecha.setUTCDate(limiteFecha.getUTCDate() + Number(config.dias_anticipacion || 30));
     if (fecha > limiteFecha.toISOString().slice(0, 10)) {
@@ -951,6 +954,10 @@ router.post('/citas', async (req, res) => {
     const hoy = hoyCR();
     if (fecha < hoy) {
       return res.status(400).json({ error: 'La fecha no puede ser en el pasado' });
+    }
+    // Si es hoy, no permitir horas que ya pasaron (el slot debe iniciar en el futuro).
+    if (fecha === hoy && horasHastaCita(fecha, hora) <= 0) {
+      return res.status(400).json({ error: 'Esa hora ya pasó. Elegí un horario más tarde.' });
     }
     // Tope de anticipación configurable: no se agenda más allá de N días.
     const limiteFecha = new Date(`${hoy}T12:00:00Z`);

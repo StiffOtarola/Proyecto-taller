@@ -5,6 +5,6 @@
 // desde capacitor://localhost, así que '/api' no llegaría al backend: hay que apuntar a
 // la URL ABSOLUTA del servidor de producción.
 //
-// 👉 Reemplazá esto por la URL pública de tu backend en Railway (sin barra final),
-//    p. ej. 'https://proyecto-taller-production.up.railway.app'.
-export const NATIVE_API_URL = 'https://CAMBIAME.up.railway.app';
+// URL pública del backend en Railway (sin barra final ni ruta). El interceptor le
+// agrega '/api/...' a cada llamada cuando la app corre en nativo.
+export const NATIVE_API_URL = 'https://proyecto-taller-production-0e4b.up.railway.app';

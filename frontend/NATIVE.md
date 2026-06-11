@@ -11,12 +11,12 @@ API se redirigen al backend absoluto. Falta solo correr la cadena nativa en tu m
   - `@aparajita/capacitor-biometric-auth` (huella / Face ID)
   - `@aparajita/capacitor-secure-storage` (Keystore / Keychain)
 
-## 1. Configurar la URL del backend  ⚠️ obligatorio
-La app nativa NO puede usar la ruta relativa `/api`. Editá
-[`src/app/native-config.ts`](src/app/native-config.ts) y poné la URL pública de Railway:
+## 1. URL del backend  ✅ ya configurada
+La app nativa NO puede usar la ruta relativa `/api`. Ya está puesta en
+[`src/app/native-config.ts`](src/app/native-config.ts):
 
 ```ts
-export const NATIVE_API_URL = 'https://TU-APP.up.railway.app';
+export const NATIVE_API_URL = 'https://proyecto-taller-production-0e4b.up.railway.app';
 ```
 
 > El `ApiUrlInterceptor` reescribe `/api/...` → `${NATIVE_API_URL}/api/...` **solo en nativo**.
@@ -28,7 +28,7 @@ En **Railway**, agregá ese origen a la variable `CORS_ORIGIN` del backend (sepa
 hay varios), por ejemplo:
 
 ```
-CORS_ORIGIN=https://TU-APP.up.railway.app,capacitor://localhost,http://localhost
+CORS_ORIGIN=https://proyecto-taller-production-0e4b.up.railway.app,capacitor://localhost,http://localhost
 ```
 
 ## 3. Agregar plataformas

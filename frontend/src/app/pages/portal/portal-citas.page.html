@@ -43,6 +43,7 @@
         </div>
         <p class="cita-tec" *ngIf="c.tecnico_nombre"><ion-icon name="construct-outline"></ion-icon> Mecánico: {{ c.tecnico_nombre }}</p>
         <button class="ver-detalle" (click)="verDetalle(c)">Ver detalle <ion-icon name="chevron-forward"></ion-icon></button>
+        <button class="cancelar-link" *ngIf="c.estado === 'agendado'" (click)="cancelar(c, $event)">Cancelar cita</button>
       </div>
       <div class="empty-state" *ngIf="pendientes.length === 0">
         <ion-icon name="checkmark-done-circle-outline"></ion-icon>

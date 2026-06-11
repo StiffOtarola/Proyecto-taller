@@ -112,8 +112,16 @@ export class PortalService {
     return this.http.get<{ data: any }>(`${this.url}/citas/${id}`);
   }
 
+  cancelarCita(id: number): Observable<any> {
+    return this.http.patch(`${this.url}/citas/${id}/cancelar`, {});
+  }
+
   crearCita(data: { moto_id: number; fecha: string; hora: string; tipo_servicio: string; descripcion?: string }): Observable<{ data: any }> {
     return this.http.post<{ data: any }>(`${this.url}/citas`, data);
+  }
+
+  editarCita(id: number, data: { moto_id: number; fecha: string; hora: string; tipo_servicio: string; descripcion?: string }): Observable<{ data: any }> {
+    return this.http.put<{ data: any }>(`${this.url}/citas/${id}`, data);
   }
 
   getResumen(): Observable<{ data: any }> {

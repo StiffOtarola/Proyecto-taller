@@ -92,6 +92,33 @@ export class PortalCitasPage implements OnInit {
 
   verDetalle(c: any) { this.router.navigate(['/portal/cita', c.id]); }
 
+  async cancelar(c: any, ev?: Event) {
+    ev?.stopPropagation();
+    const al = await this.alert.create({
+      header: 'Cancelar cita',
+      message: 'Esta acción no se puede deshacer. ¿Cancelar esta cita?',
+      buttons: [
+        { text: 'No', role: 'cancel' },
+        { text: 'Sí, cancelar', role: 'destructive', handler: () => this.confirmarCancelar(c) },
+      ],
+    });
+    await al.present();
+  }
+
+  private confirmarCancelar(c: any) {
+    this.portal.cancelarCita(c.id).subscribe({
+      next: async () => {
+        c.estado = 'cancelado';
+        const t = await this.toast.create({ message: 'Cita cancelada', duration: 2000, color: 'medium' });
+        await t.present();
+      },
+      error: async (e) => {
+        const t = await this.toast.create({ message: e.error?.error || 'No se pudo cancelar', duration: 2400, color: 'danger' });
+        await t.present();
+      },
+    });
+  }
+
   // El presupuesto se aprueba en Inicio (donde está el flujo aprobar/rechazar).
   irAInicio() { this.router.navigate(['/portal/inicio']); }
 }

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { LoadingController, ToastController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
 import { SERVICIOS, HORAS } from '../../utils/servicios';
@@ -21,18 +21,53 @@ export class PortalAgendarPage implements OnInit {
   maxPorHora = 2;
   enviando = false;
   horaLlenaMsg = false;
+  editId: number | null = null;   // si está seteado, la pantalla edita esa cita
 
   constructor(
     private portal: PortalService,
+    private route: ActivatedRoute,
     private router: Router,
     private loading: LoadingController,
     private toast: ToastController
   ) {}
 
-  ngOnInit() { this.cargarMotos(); }
+  ngOnInit() {
+    this.cargarMotos();
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) this.cargarParaEditar(+id);
+  }
   ionViewWillEnter() { this.cargarMotos(); }
 
   cargarMotos() { this.portal.getMotos().subscribe(r => this.motos = r.data); }
+
+  // Modo edición: precarga la cita y la disponibilidad de su fecha (sin borrar la hora).
+  private cargarParaEditar(id: number) {
+    this.portal.getCita(id).subscribe({
+      next: r => {
+        const c = r.data;
+        if (c.estado !== 'agendado' || c.orden_id) {
+          this.toastMsg('Esta cita ya no se puede editar', 'warning');
+          this.router.navigate(['/portal/cita', id], { replaceUrl: true });
+          return;
+        }
+        this.editId = id;
+        this.form = {
+          moto_id: c.moto_id ?? null,
+          tipo_servicio: c.tipo_servicio || '',
+          fecha: String(c.fecha).slice(0, 10),
+          hora: String(c.hora || '').slice(0, 5),
+          descripcion: (c.motivo && c.motivo !== c.tipo_servicio) ? c.motivo : '',
+        };
+        if (this.form.fecha) {
+          this.portal.getDisponibilidad(this.form.fecha).subscribe(d => {
+            this.ocupacion = d.data.ocupacion || {};
+            this.maxPorHora = d.data.max || 2;
+          });
+        }
+      },
+      error: () => { this.toastMsg('No se pudo cargar la cita', 'danger'); this.router.navigate(['/portal/mis-citas']); },
+    });
+  }
 
   // Al elegir fecha, consulta cupos para deshabilitar horas llenas.
   onFecha() {
@@ -65,25 +100,29 @@ export class PortalAgendarPage implements OnInit {
   async agendar() {
     if (!this.valido) return this.toastMsg('Completá moto, servicio, fecha y hora', 'warning');
     if (this.horaLlena(this.form.hora)) return this.toastMsg('Esa hora ya no está disponible', 'warning');
-    const l = await this.loading.create({ message: 'Agendando...' });
+    const editando = this.editId;
+    const l = await this.loading.create({ message: editando ? 'Guardando...' : 'Agendando...' });
     await l.present();
     this.enviando = true;
-    this.portal.crearCita({
+    const datos = {
       moto_id: this.form.moto_id!,
       tipo_servicio: this.form.tipo_servicio,
       fecha: this.form.fecha,
       hora: this.form.hora,
       descripcion: this.form.descripcion.trim() || undefined,
-    }).subscribe({
+    };
+    const op = editando ? this.portal.editarCita(editando, datos) : this.portal.crearCita(datos);
+    op.subscribe({
       next: async () => {
         await l.dismiss(); this.enviando = false;
-        this.toastMsg('¡Cita agendada!');
+        this.toastMsg(editando ? 'Cita actualizada' : '¡Cita agendada!');
         this.form = { moto_id: null, tipo_servicio: '', fecha: '', hora: '', descripcion: '' };
-        this.router.navigate(['/portal/mis-citas']);
+        this.editId = null;
+        this.router.navigate(editando ? ['/portal/cita', editando] : ['/portal/mis-citas']);
       },
       error: async (err) => {
         await l.dismiss(); this.enviando = false;
-        this.toastMsg(err.error?.error || 'No se pudo agendar', 'danger');
+        this.toastMsg(err.error?.error || (editando ? 'No se pudo actualizar' : 'No se pudo agendar'), 'danger');
         if (this.form.fecha) this.onFecha(); // refresca cupos
       },
     });

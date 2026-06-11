@@ -1,15 +1,18 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Agendar cita</ion-title>
-    <app-portal-actions slot="end"></app-portal-actions>
+    <ion-buttons slot="start" *ngIf="editId">
+      <ion-back-button [defaultHref]="'/portal/cita/' + editId" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ editId ? 'Editar cita' : 'Agendar cita' }}</ion-title>
+    <app-portal-actions slot="end" *ngIf="!editId"></app-portal-actions>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
   <div class="agendar">
     <div class="intro">
-      <h2>Reservá tu cita</h2>
-      <p>Elegí tu moto, el servicio y el horario.</p>
+      <h2>{{ editId ? 'Editá tu cita' : 'Reservá tu cita' }}</h2>
+      <p>{{ editId ? 'Cambiá la moto, el servicio o el horario.' : 'Elegí tu moto, el servicio y el horario.' }}</p>
     </div>
 
     <section class="card">
@@ -54,7 +57,7 @@
 
       <button class="cta" (click)="agendar()" [disabled]="!valido || enviando">
         <ion-spinner *ngIf="enviando" name="crescent"></ion-spinner>
-        {{ enviando ? 'Agendando...' : '📅 Agendar cita' }}
+        {{ enviando ? (editId ? 'Guardando...' : 'Agendando...') : (editId ? '💾 Guardar cambios' : '📅 Agendar cita') }}
       </button>
     </section>
 

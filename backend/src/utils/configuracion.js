@@ -14,6 +14,8 @@ const DEFAULTS = {
   max_citas_hora: 2,
   dias_anticipacion: 30,
   duracion_cita_min: 90,
+  // Horas mínimas de anticipación para que el cliente cancele/reprograme (0 = sin límite).
+  cancelacion_horas_min: 2,
   // 0=Domingo … 6=Sábado.
   horarios: [
     { dia: 0, abre: '08:00', cierra: '13:00', activo: 0 },

@@ -20,6 +20,7 @@ const routes: Routes = [
   { path: 'recuperar', component: PortalRecuperarPage },
   { path: 'legal/:doc', component: PortalLegalPage },
   { path: 'cita/:id', component: PortalCitaDetallePage, canActivate: [PortalGuard] },
+  { path: 'cita/:id/editar', component: PortalAgendarPage, canActivate: [PortalGuard] },
   {
     path: '',
     component: PortalTabsPage,

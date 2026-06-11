@@ -310,6 +310,11 @@ router.put('/configuracion', async (req, res) => {
       const n = parseInt(v, 10);
       return Number.isFinite(n) && n > 0 ? n : def;
     };
+    // Igual que num pero admite 0 (p. ej. "sin límite" de horas para cancelar).
+    const numNoNeg = (v, def) => {
+      const n = parseInt(v, 10);
+      return Number.isFinite(n) && n >= 0 ? n : def;
+    };
     const bit = (v) => (v ? 1 : 0);
     // Normaliza horarios: solo los 7 días válidos con campos saneados.
     const horarios = Array.isArray(b.horarios)
@@ -326,7 +331,7 @@ router.put('/configuracion', async (req, res) => {
     await pool.query(
       `UPDATE configuracion SET
          nombre_taller = ?, telefono = ?, email = ?, direccion = ?, logo = ?,
-         max_citas_hora = ?, dias_anticipacion = ?, duracion_cita_min = ?,
+         max_citas_hora = ?, dias_anticipacion = ?, duracion_cita_min = ?, cancelacion_horas_min = ?,
          ${horarios ? 'horarios = ?,' : ''}
          notif_estado = ?, notif_recordatorio = ?, notif_cotizacion = ?, notif_email_entrega = ?
        WHERE id = 1`,
@@ -339,6 +344,7 @@ router.put('/configuracion', async (req, res) => {
         num(b.max_citas_hora, 2),
         num(b.dias_anticipacion, 30),
         num(b.duracion_cita_min, 90),
+        numNoNeg(b.cancelacion_horas_min, 2),
         ...(horarios ? [JSON.stringify(horarios)] : []),
         bit(b.notif_estado),
         bit(b.notif_recordatorio),

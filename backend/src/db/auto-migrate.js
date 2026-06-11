@@ -276,6 +276,8 @@ async function ensureSchema() {
         updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
     `);
+    // Ventana mínima (horas) para que el cliente cancele/reprograme su cita.
+    await addColumnIfMissing('configuracion', 'cancelacion_horas_min', 'INT DEFAULT 2');
     // Siembra la fila única con valores por defecto (idempotente: INSERT IGNORE).
     // Horarios: 0=Dom … 6=Sáb. L-V 08-17, Sáb 08-13, Dom cerrado.
     await tryStep('seed configuracion', () =>

@@ -61,6 +61,7 @@
           <div class="fg"><label>Máx. citas por hora</label><input type="number" min="1" max="20" [(ngModel)]="config.max_citas_hora"><div class="hint">Cuántas citas puede atender el taller por franja horaria.</div></div>
           <div class="fg"><label>Días de anticipación para agendar</label><input type="number" min="1" max="365" [(ngModel)]="config.dias_anticipacion"><div class="hint">Hasta cuántos días adelante puede reservar un cliente desde el portal.</div></div>
           <div class="fg"><label>Duración promedio por cita (minutos)</label><input type="number" min="15" max="480" [(ngModel)]="config.duracion_cita_min"><div class="hint">Informativo (los cupos del portal son por hora).</div></div>
+          <div class="fg"><label>Horas mínimas para cancelar/editar</label><input type="number" min="0" max="168" [(ngModel)]="config.cancelacion_horas_min"><div class="hint">El cliente no puede cancelar ni reprogramar si faltan menos de estas horas para la cita (0 = sin límite).</div></div>
           <button class="btn btn-cr" style="width:100%;justify-content:center;padding:12px" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar capacidad</button>
         </div>
 

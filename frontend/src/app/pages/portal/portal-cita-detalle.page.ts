@@ -62,6 +62,40 @@ export class PortalCitaDetallePage implements OnInit {
 
   estrellas(n: number): string { return '★'.repeat(n) + '☆'.repeat(5 - n); }
 
+  // El cliente puede cancelar/editar solo mientras la cita sigue 'agendado' (sin orden).
+  // La ventana mínima de horas la valida el backend (mensaje claro si es muy tarde).
+  get puedeCancelar(): boolean {
+    return this.cita?.estado === 'agendado' && !this.cita?.orden_id;
+  }
+
+  editar() { this.router.navigate(['/portal/cita', this.cita.id, 'editar']); }
+
+  async cancelar() {
+    const al = await this.alert.create({
+      header: 'Cancelar cita',
+      message: 'Esta acción no se puede deshacer. ¿Querés cancelar esta cita?',
+      buttons: [
+        { text: 'No', role: 'cancel' },
+        { text: 'Sí, cancelar', role: 'destructive', handler: () => this.confirmarCancelar() },
+      ],
+    });
+    await al.present();
+  }
+
+  private confirmarCancelar() {
+    this.portal.cancelarCita(this.cita.id).subscribe({
+      next: async () => {
+        this.cita.estado = 'cancelado';
+        const t = await this.toast.create({ message: 'Cita cancelada', duration: 2000, color: 'medium' });
+        await t.present();
+      },
+      error: async (e) => {
+        const t = await this.toast.create({ message: e.error?.error || 'No se pudo cancelar', duration: 2400, color: 'danger' });
+        await t.present();
+      },
+    });
+  }
+
   async calificar() {
     const al = await this.alert.create({
       header: '¿Cómo fue el servicio?',

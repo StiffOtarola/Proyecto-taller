@@ -24,6 +24,14 @@
   &:active { transform: scale(.98); }
 }
 
+/* Cancelar cita (link sutil bajo "Ver detalle") */
+.cancelar-link {
+  width: 100%; margin-top: 8px; padding: 8px; cursor: pointer;
+  border: none; background: none; color: var(--ion-color-danger);
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  &:active { opacity: .6; }
+}
+
 /* Aviso de presupuesto por aprobar */
 .presu-aviso {
   width: 100%; margin: 10px 0 2px; padding: 10px 12px; cursor: pointer;

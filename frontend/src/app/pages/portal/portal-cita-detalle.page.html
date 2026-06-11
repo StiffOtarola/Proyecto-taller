@@ -88,6 +88,14 @@
       </div>
     </section>
 
+    <!-- Editar / cancelar (solo mientras está agendada) -->
+    <button class="btn-editar" *ngIf="puedeCancelar" (click)="editar()">
+      <ion-icon name="create-outline"></ion-icon> Editar cita
+    </button>
+    <button class="btn-cancelar" *ngIf="puedeCancelar" (click)="cancelar()">
+      <ion-icon name="close-circle-outline"></ion-icon> Cancelar cita
+    </button>
+
     <!-- Calificar -->
     <button class="cta" *ngIf="cita.estado === 'entregado' && !cita.calificacion" (click)="calificar()">
       <ion-icon name="star-outline"></ion-icon> Calificar el servicio

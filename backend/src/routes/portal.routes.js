@@ -17,6 +17,14 @@ function hoyCR() {
   return new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
+// Horas (decimal) que faltan para el inicio de una cita; fecha 'YYYY-MM-DD' + hora
+// 'HH:MM'. Ancla en zona de Costa Rica (UTC-6). Negativo si la cita ya pasó.
+function horasHastaCita(fecha, hora) {
+  const hhmm = String(hora || '00:00').slice(0, 5);
+  const inicio = new Date(`${fecha}T${hhmm}:00-06:00`);
+  return (inicio.getTime() - Date.now()) / 3600000;
+}
+
 // Firma el JWT del cliente y arma el payload estándar.
 function tokenCliente(cliente) {
   const payload = { id: cliente.id, tipo: 'cliente', nombre: cliente.nombre, apellido: cliente.apellido };
@@ -597,7 +605,8 @@ router.get('/citas', async (req, res) => {
 router.get('/citas/:id', async (req, res) => {
   try {
     const [[cita]] = await pool.query(
-      `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado,
+      `SELECT ci.id, DATE_FORMAT(ci.fecha, '%Y-%m-%d') AS fecha, TIME_FORMAT(ci.hora, '%H:%i') AS hora,
+              ci.motivo, ci.tipo_servicio, ci.estado, ci.moto_id,
               ci.monto, ci.calificacion, ci.comentario_satisfaccion, ci.fecha_inicio, ci.fecha_fin,
               ci.orden_id, o.numero_orden, o.estado AS orden_estado, o.aprobacion_cliente,
               m.marca, m.modelo, m.placa,
@@ -611,6 +620,87 @@ router.get('/citas/:id', async (req, res) => {
     );
     if (!cita) return res.status(404).json({ error: 'Cita no encontrada' });
     res.json({ data: cita });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// PUT /api/portal/citas/:id — el cliente reprograma/edita su cita.
+// Solo mientras está 'agendado', sin orden iniciada y respetando la ventana mínima.
+// Revalida la NUEVA fecha/hora con las mismas reglas que agendar (cupo atómico).
+router.put('/citas/:id', async (req, res) => {
+  try {
+    const { moto_id, fecha, hora, tipo_servicio, descripcion } = req.body;
+    if (!moto_id || !fecha || !hora || !tipo_servicio) {
+      return res.status(400).json({ error: 'Moto, servicio, fecha y hora son requeridos' });
+    }
+    if (!SERVICIOS.includes(tipo_servicio)) {
+      return res.status(400).json({ error: 'Servicio no válido' });
+    }
+
+    const [[cita]] = await pool.query(
+      "SELECT id, estado, orden_id, DATE_FORMAT(fecha, '%Y-%m-%d') AS fecha, TIME_FORMAT(hora, '%H:%i') AS hora FROM citas WHERE id = ? AND cliente_id = ?",
+      [req.params.id, req.cliente.id]
+    );
+    if (!cita) return res.status(404).json({ error: 'Cita no encontrada' });
+    if (cita.estado !== 'agendado' || cita.orden_id) {
+      return res.status(400).json({ error: 'Esta cita ya no se puede modificar. Comunicate con el taller.' });
+    }
+
+    const config = await getConfig();
+    const minH = Number(config.cancelacion_horas_min || 0);
+    // Ventana mínima sobre la cita ACTUAL (no reprogramar a último momento).
+    if (minH > 0 && horasHastaCita(cita.fecha, cita.hora) < minH) {
+      return res.status(400).json({ error: `No se puede modificar con menos de ${minH} h de anticipación. Comunicate con el taller.` });
+    }
+
+    // Validaciones de la NUEVA fecha/hora (mismas reglas que agendar).
+    const horas = horasDisponibles(fecha, config);
+    if (!horas.includes(hora)) {
+      return res.status(400).json({ error: 'Ese día/hora no está disponible para agendar' });
+    }
+    const hoy = hoyCR();
+    if (fecha < hoy) return res.status(400).json({ error: 'La fecha no puede ser en el pasado' });
+    const limiteFecha = new Date(`${hoy}T12:00:00Z`);
+    limiteFecha.setUTCDate(limiteFecha.getUTCDate() + Number(config.dias_anticipacion || 30));
+    if (fecha > limiteFecha.toISOString().slice(0, 10)) {
+      return res.status(400).json({ error: `Solo se puede agendar hasta ${config.dias_anticipacion} días por adelantado` });
+    }
+
+    const [[moto]] = await pool.query('SELECT id FROM motos WHERE id = ? AND cliente_id = ?', [moto_id, req.cliente.id]);
+    if (!moto) return res.status(400).json({ error: 'Moto no válida' });
+
+    const motivo = (descripcion || '').trim() || tipo_servicio;
+
+    // Cupo atómico de la NUEVA franja, excluyendo esta misma cita.
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      const [[{ ocupadas }]] = await conn.query(
+        "SELECT COUNT(*) AS ocupadas FROM citas WHERE fecha = ? AND hora = ? AND estado != 'cancelado' AND id != ? FOR UPDATE",
+        [fecha, hora, req.params.id]
+      );
+      if (ocupadas >= config.max_citas_hora) {
+        await conn.rollback();
+        return res.status(400).json({ error: 'Esa hora ya no está disponible, elegí otra.' });
+      }
+      await conn.query(
+        'UPDATE citas SET moto_id = ?, fecha = ?, hora = ?, tipo_servicio = ?, motivo = ? WHERE id = ?',
+        [moto_id, fecha, hora, tipo_servicio, motivo, req.params.id]
+      );
+      const [[actualizada]] = await conn.query(
+        `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado, m.marca, m.modelo, m.placa
+         FROM citas ci LEFT JOIN motos m ON m.id = ci.moto_id WHERE ci.id = ?`,
+        [req.params.id]
+      );
+      await conn.commit();
+      res.json({ data: actualizada, message: 'Cita actualizada' });
+    } catch (e) {
+      await conn.rollback();
+      throw e;
+    } finally {
+      conn.release();
+    }
   } catch (err) {
     fail(res, err);
   }
@@ -709,6 +799,31 @@ router.post('/citas/:id/calificar', async (req, res) => {
       [calificacion, req.body.comentario || null, req.params.id]
     );
     res.json({ message: '¡Gracias por tu opinión!' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// PATCH /api/portal/citas/:id/cancelar — el cliente cancela su propia cita.
+// Solo se permite mientras está 'agendado' y sin orden de trabajo iniciada
+// (después la gestiona el taller). Libera el cupo de la franja.
+router.patch('/citas/:id/cancelar', async (req, res) => {
+  try {
+    const [[cita]] = await pool.query(
+      "SELECT id, estado, orden_id, DATE_FORMAT(fecha, '%Y-%m-%d') AS fecha, TIME_FORMAT(hora, '%H:%i') AS hora FROM citas WHERE id = ? AND cliente_id = ?",
+      [req.params.id, req.cliente.id]
+    );
+    if (!cita) return res.status(404).json({ error: 'Cita no encontrada' });
+    if (cita.estado !== 'agendado' || cita.orden_id) {
+      return res.status(400).json({ error: 'Esta cita ya no se puede cancelar. Comunicate con el taller.' });
+    }
+    const config = await getConfig();
+    const minH = Number(config.cancelacion_horas_min || 0);
+    if (minH > 0 && horasHastaCita(cita.fecha, cita.hora) < minH) {
+      return res.status(400).json({ error: `No se puede cancelar con menos de ${minH} h de anticipación. Comunicate con el taller.` });
+    }
+    await pool.query("UPDATE citas SET estado = 'cancelado' WHERE id = ?", [req.params.id]);
+    res.json({ message: 'Cita cancelada' });
   } catch (err) {
     fail(res, err);
   }

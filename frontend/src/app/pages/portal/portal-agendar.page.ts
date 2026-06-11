@@ -165,7 +165,7 @@ export class PortalAgendarPage implements OnInit {
     if (!this.valido) return this.toastMsg('Completá moto, servicio, fecha y hora', 'warning');
     if (this.horaLlena(this.form.hora)) return this.toastMsg('Esa hora ya no está disponible', 'warning');
     const editando = this.editId;
-    const l = await this.loading.create({ message: editando ? 'Guardando...' : 'Agendando...' });
+    const l = await this.loading.create({ message: editando ? 'Guardando...' : 'Agendando...', cssClass: 'portal-loading', spinner: 'crescent' });
     await l.present();
     this.enviando = true;
     const datos = {

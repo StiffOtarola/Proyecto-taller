@@ -78,7 +78,7 @@ export class PortalLoginPage implements OnInit {
       const t = await this.toast.create({ message: 'Ingresá un correo válido', duration: 2500, color: 'warning' });
       return await t.present();
     }
-    const l = await this.loading.create({ message: 'Ingresando...' });
+    const l = await this.loading.create({ message: 'Ingresando...', cssClass: 'portal-loading', spinner: 'crescent' });
     await l.present();
     this.auth.loginUnificado(this.email.trim(), this.password).subscribe({
       next: async (res) => {

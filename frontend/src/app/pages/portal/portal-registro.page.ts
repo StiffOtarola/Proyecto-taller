@@ -40,7 +40,7 @@ export class PortalRegistroPage {
       if (this.password !== this.confirmar) return this.mostrar('Las contraseñas no coinciden', 'warning');
       return;
     }
-    const l = await this.loading.create({ message: 'Creando tu cuenta...' });
+    const l = await this.loading.create({ message: 'Creando tu cuenta...', cssClass: 'portal-loading', spinner: 'crescent' });
     await l.present();
     this.portal.registro({
       nombre: this.nombre.trim(), apellido: this.apellido.trim(), telefono: this.telefono.trim(),

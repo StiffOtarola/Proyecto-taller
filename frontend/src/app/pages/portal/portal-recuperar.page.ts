@@ -45,7 +45,7 @@ export class PortalRecuperarPage implements OnDestroy {
 
   async solicitar() {
     if (!this.emailOk) return this.mostrar('Ingresá un correo válido', 'warning');
-    const l = await this.loading.create({ message: 'Enviando código...' });
+    const l = await this.loading.create({ message: 'Enviando código...', cssClass: 'portal-loading', spinner: 'crescent' });
     await l.present();
     this.portal.solicitarCodigo(this.email.trim()).subscribe({
       next: async (res) => {
@@ -73,7 +73,7 @@ export class PortalRecuperarPage implements OnDestroy {
       if (this.password !== this.confirmar) return this.mostrar('Las contraseñas no coinciden', 'warning');
       return;
     }
-    const l = await this.loading.create({ message: 'Verificando...' });
+    const l = await this.loading.create({ message: 'Verificando...', cssClass: 'portal-loading', spinner: 'crescent' });
     await l.present();
     this.portal.confirmarRecuperacion({ email: this.email.trim(), codigo: this.codigo.trim(), password: this.password }).subscribe({
       next: async () => {

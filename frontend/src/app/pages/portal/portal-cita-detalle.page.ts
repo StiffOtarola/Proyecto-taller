@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ToastController, AlertController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
 import { FLUJO_CITA, ESTADO_CITA_LABEL } from '../../utils/servicios';
@@ -20,10 +20,14 @@ export class PortalCitaDetallePage implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private portal: PortalService,
     private toast: ToastController,
     private alert: AlertController,
   ) {}
+
+  // El presupuesto se aprueba/rechaza en Inicio (donde está ese flujo).
+  irAInicio() { this.router.navigate(['/portal/inicio']); }
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));

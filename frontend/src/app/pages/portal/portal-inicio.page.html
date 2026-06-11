@@ -109,13 +109,14 @@
     <!-- Notificaciones -->
     <section class="card noti-sec" *ngIf="notificaciones.length">
       <span class="section-label">📢 Notificaciones de avance</span>
-      <div class="nf" *ngFor="let n of notificaciones" [class.nueva]="!n.leida">
+      <div class="nf" *ngFor="let n of notificaciones" [class.nueva]="!n.leida" (click)="abrirNotificacion(n)">
         <span class="nf-d" [class.on]="!n.leida"></span>
         <div class="nf-b">
           <span class="nf-msg">{{ n.titulo }}</span>
           <span class="nf-sub" *ngIf="n.mensaje">{{ n.mensaje }}</span>
           <span class="nf-t">{{ hace(n.created_at) }}</span>
         </div>
+        <ion-icon name="chevron-forward" class="nf-chev"></ion-icon>
       </div>
     </section>
 

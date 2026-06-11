@@ -136,6 +136,13 @@ export class PortalInicioPage implements OnInit {
   irAgendar() { this.router.navigate(['/portal/agendar']); }
   irCitas() { this.router.navigate(['/portal/mis-citas']); }
 
+  // Al tocar una notificación de avance: si está ligada a una cita, abre su detalle;
+  // si no (p. ej. aviso de presupuesto), lleva al listado de citas.
+  abrirNotificacion(n: any) {
+    if (n?.cita_id) this.router.navigate(['/portal/cita', n.cita_id]);
+    else this.router.navigate(['/portal/mis-citas']);
+  }
+
   logout() {
     this.portal.logout();
     this.router.navigate(['/portal/login'], { replaceUrl: true });

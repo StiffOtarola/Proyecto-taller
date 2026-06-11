@@ -36,6 +36,13 @@
       </div>
     </section>
 
+    <!-- Presupuesto por aprobar -->
+    <button class="presu-aviso" *ngIf="cita.orden_estado === 'esperando_aprobacion' && cita.aprobacion_cliente === 'pendiente'" (click)="irAInicio()">
+      <ion-icon name="receipt-outline"></ion-icon>
+      <span>Tenés un presupuesto por aprobar. Tocá para revisarlo.</span>
+      <ion-icon name="chevron-forward" class="chev"></ion-icon>
+    </button>
+
     <!-- Diagnóstico de la orden -->
     <section class="card" *ngIf="orden?.diagnostico">
       <span class="section-label">Diagnóstico</span>

@@ -422,7 +422,8 @@ router.post('/cotizaciones/:id/enviar', async (req, res) => {
     }
     // Aviso en el feed del cliente (además del WhatsApp que abre la recepción).
     const [[o]] = await pool.query(
-      `SELECT o.cliente_id, o.numero_orden, m.marca, m.modelo
+      `SELECT o.cliente_id, o.numero_orden, m.marca, m.modelo,
+              (SELECT id FROM citas WHERE orden_id = o.id LIMIT 1) AS cita_id
        FROM ordenes_trabajo o JOIN motos m ON m.id = o.moto_id WHERE o.id = ?`,
       [req.params.id]
     );
@@ -431,8 +432,8 @@ router.post('/cotizaciones/:id/enviar', async (req, res) => {
     if (o && config.notif_cotizacion) {
       const moto = [o.marca, o.modelo].filter(Boolean).join(' ') || 'tu moto';
       await pool.query(
-        'INSERT INTO notificaciones (cliente_id, titulo, mensaje) VALUES (?, ?, ?)',
-        [o.cliente_id, `Presupuesto listo: ${moto}`, `Tu presupuesto (orden ${o.numero_orden}) está listo. Revisalo y aprobalo desde el portal.`]
+        'INSERT INTO notificaciones (cliente_id, cita_id, titulo, mensaje) VALUES (?, ?, ?, ?)',
+        [o.cliente_id, o.cita_id || null, `Presupuesto listo: ${moto}`, `Tu presupuesto (orden ${o.numero_orden}) está listo. Revisalo y aprobalo desde el portal.`]
       );
     }
     res.json({ message: 'Cotización enviada al cliente' });

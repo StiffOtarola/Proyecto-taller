@@ -55,11 +55,12 @@
       <!-- Historial de notificaciones -->
       <section class="card" *ngIf="notificaciones.length">
         <span class="section-label">📢 Historial de notificaciones</span>
-        <div class="nf" *ngFor="let n of notificaciones">
+        <div class="nf" *ngFor="let n of notificaciones" (click)="abrirNotificacion(n)">
           <div class="nf-b">
             <span class="nf-msg">{{ n.titulo }}</span>
             <span class="nf-t">{{ hace(n.created_at) }}</span>
           </div>
+          <ion-icon name="chevron-forward" class="nf-chev"></ion-icon>
         </div>
       </section>
 

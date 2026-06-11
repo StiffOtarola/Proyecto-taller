@@ -30,6 +30,17 @@
 
 .diag { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--n-700); }
 
+/* Aviso de presupuesto por aprobar */
+.presu-aviso {
+  width: 100%; margin: 0 0 12px; padding: 12px 14px; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  border: 1px solid var(--amber-100); border-radius: 16px; background: var(--amber-100); color: var(--amber-700);
+  font-family: inherit; font-size: 12.5px; font-weight: 700; text-align: left;
+  span { flex: 1; }
+  ion-icon { font-size: 18px; } .chev { font-size: 15px; opacity: .8; }
+  &:active { transform: scale(.99); }
+}
+
 /* Avances */
 .avance { display: flex; gap: 10px; padding: 6px 0;
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ion-color-primary); margin-top: 6px; flex-shrink: 0; }

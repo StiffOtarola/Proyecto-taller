@@ -42,11 +42,15 @@
 }
 
 .nf {
-  display: flex; padding: 10px 0; border-bottom: 1px solid var(--hairline);
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--hairline);
+  cursor: pointer; transition: opacity .15s;
   &:last-child { border-bottom: none; }
-  .nf-b { display: flex; flex-direction: column; gap: 2px; }
+  &:active { opacity: .6; }
+  .nf-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .nf-msg { font-size: 13px; font-weight: 600; color: var(--ion-text-color); }
   .nf-t { font-size: 11px; color: var(--n-400); }
+  .nf-chev { font-size: 16px; color: var(--n-400); flex-shrink: 0; }
 }
 
 .cta {

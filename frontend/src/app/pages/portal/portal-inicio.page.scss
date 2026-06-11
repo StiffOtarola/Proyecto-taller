@@ -107,14 +107,17 @@
 /* Feed de notificaciones (look del mockup: punto de color + mensaje + tiempo) */
 .noti-sec { padding-bottom: 6px; }
 .nf {
-  display: flex; align-items: flex-start; gap: 10px;
+  display: flex; align-items: center; gap: 10px;
   padding: 10px 0; border-bottom: 1px solid var(--hairline);
+  cursor: pointer; transition: opacity .15s;
   &:last-child { border-bottom: none; }
-  .nf-d { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0;
+  &:active { opacity: .6; }
+  .nf-d { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; align-self: flex-start; margin-top: 5px;
     background: var(--n-300); &.on { background: var(--ion-color-primary); } }
   .nf-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;
     .nf-msg { font-size: 12.5px; color: var(--n-800); line-height: 1.35; }
     .nf-sub { font-size: 12px; color: var(--n-500); line-height: 1.35; }
     .nf-t { font-size: 10px; color: var(--n-400); margin-top: 1px; } }
+  .nf-chev { font-size: 16px; color: var(--n-400); flex-shrink: 0; }
   &.nueva .nf-msg { font-weight: 700; }
 }

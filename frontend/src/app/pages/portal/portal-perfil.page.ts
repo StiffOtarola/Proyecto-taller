@@ -109,6 +109,12 @@ export class PortalPerfilPage implements OnInit {
     });
   }
 
+  // Al tocar una notificación: si está ligada a una cita, abre su detalle.
+  abrirNotificacion(n: any) {
+    if (n?.cita_id) this.router.navigate(['/portal/cita', n.cita_id]);
+    else this.router.navigate(['/portal/mis-citas']);
+  }
+
   logout() {
     this.portal.logout();
     this.router.navigate(['/portal/login'], { replaceUrl: true });

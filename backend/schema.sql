@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS clientes (
   password_hash VARCHAR(255) NULL,  -- acceso opcional al portal del cliente
   visitas       INT DEFAULT 0,            -- fidelización: entregas acumuladas
   cortesia_disponible TINYINT(1) DEFAULT 0, -- fidelización: cortesía ganada
+  notif_avances       TINYINT(1) NOT NULL DEFAULT 1, -- preferencia: avisos de avance
+  notif_recordatorios TINYINT(1) NOT NULL DEFAULT 1, -- preferencia: recordatorio de cita
   activo        TINYINT(1) DEFAULT 1,
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

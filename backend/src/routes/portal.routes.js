@@ -368,7 +368,7 @@ router.delete('/notificaciones/:id', async (req, res) => {
 router.get('/perfil', async (req, res) => {
   try {
     const [[c]] = await pool.query(
-      'SELECT id, nombre, apellido, email, telefono, cedula, foto FROM clientes WHERE id = ? AND activo = 1',
+      'SELECT id, nombre, apellido, email, telefono, cedula, foto, notif_avances, notif_recordatorios FROM clientes WHERE id = ? AND activo = 1',
       [req.cliente.id]
     );
     if (!c) return res.status(404).json({ error: 'Cuenta no encontrada' });
@@ -404,6 +404,21 @@ router.put('/perfil', async (req, res) => {
       [req.cliente.id]
     );
     res.json({ data: c, message: 'Perfil actualizado' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// PUT /api/portal/perfil/notificaciones — preferencias de notificación del cliente.
+router.put('/perfil/notificaciones', async (req, res) => {
+  try {
+    const avances = req.body.notif_avances ? 1 : 0;
+    const recordatorios = req.body.notif_recordatorios ? 1 : 0;
+    await pool.query(
+      'UPDATE clientes SET notif_avances = ?, notif_recordatorios = ? WHERE id = ?',
+      [avances, recordatorios, req.cliente.id]
+    );
+    res.json({ data: { notif_avances: avances, notif_recordatorios: recordatorios }, message: 'Preferencias actualizadas' });
   } catch (err) {
     fail(res, err);
   }

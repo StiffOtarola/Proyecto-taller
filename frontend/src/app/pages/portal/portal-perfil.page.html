@@ -65,6 +65,44 @@
         </div>
       </section>
 
+      <!-- Preferencias de notificación -->
+      <section class="card">
+        <span class="section-label">Notificaciones</span>
+        <div class="notif-row">
+          <div class="notif-info">
+            <strong>Avisos de avance</strong>
+            <span>Cuando cambia el estado de tu servicio</span>
+          </div>
+          <ion-toggle [(ngModel)]="notif.avances" (ionChange)="guardarNotif('avances')"
+                      [disabled]="guardandoNotif" aria-label="Avisos de avance"></ion-toggle>
+        </div>
+        <div class="notif-row">
+          <div class="notif-info">
+            <strong>Recordatorios de cita <span class="tag-pronto">Pronto</span></strong>
+            <span>Un aviso antes de tu próxima cita</span>
+          </div>
+          <ion-toggle [(ngModel)]="notif.recordatorios" (ionChange)="guardarNotif('recordatorios')"
+                      [disabled]="guardandoNotif" aria-label="Recordatorios de cita"></ion-toggle>
+        </div>
+      </section>
+
+      <!-- Seguridad: ingreso con huella / Face ID (solo app móvil con biometría) -->
+      <section class="card" *ngIf="bioDisponible">
+        <span class="section-label">Seguridad</span>
+        <div class="a11y-row">
+          <div class="a11y-info">
+            <strong>Ingreso con huella / Face ID</strong>
+            <span>{{ bioActivado ? 'Activado en este dispositivo' : 'Entrá sin escribir tu contraseña' }}</span>
+          </div>
+          <button type="button" class="bio-btn" [class.on]="bioActivado" [disabled]="bioProcesando"
+                  (click)="bioActivado ? desactivarBiometria() : activarBiometria()"
+                  [attr.aria-pressed]="bioActivado">
+            <ion-icon name="finger-print"></ion-icon>
+            {{ bioActivado ? 'Desactivar' : 'Activar' }}
+          </button>
+        </div>
+      </section>
+
       <!-- Información legal -->
       <section class="card">
         <span class="section-label">Información legal</span>

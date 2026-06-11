@@ -51,6 +51,12 @@ async function ensureSchema() {
     await addColumnIfMissing('clientes', 'foto', 'MEDIUMTEXT NULL');
     await addColumnIfMissing('motos', 'foto', 'MEDIUMTEXT NULL');
 
+    // Preferencias de notificación por cliente (el cliente decide si quiere recibirlas).
+    // notif_avances: avisos de cambio de estado de sus servicios (aplicado hoy).
+    // notif_recordatorios: recordatorio antes de la cita (se persiste; el envío aún no existe).
+    await addColumnIfMissing('clientes', 'notif_avances', 'TINYINT(1) NOT NULL DEFAULT 1');
+    await addColumnIfMissing('clientes', 'notif_recordatorios', 'TINYINT(1) NOT NULL DEFAULT 1');
+
     // Códigos de recuperación de contraseña (olvidé mi contraseña) enviados por correo.
     await pool.query(`
       CREATE TABLE IF NOT EXISTS password_reset_codes (

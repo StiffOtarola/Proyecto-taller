@@ -233,6 +233,11 @@ export class PortalService {
     return this.http.put<{ data: any }>(`${this.url}/perfil`, data);
   }
 
+  // Preferencias de notificación del cliente (avisos de avance / recordatorios).
+  updatePreferenciasNotif(data: { notif_avances: boolean; notif_recordatorios: boolean }): Observable<{ data: any }> {
+    return this.http.put<{ data: any }>(`${this.url}/perfil/notificaciones`, data);
+  }
+
   updateMiPassword(data: { actual: string; nueva: string }): Observable<any> {
     return this.http.put(`${this.url}/perfil/password`, data);
   }

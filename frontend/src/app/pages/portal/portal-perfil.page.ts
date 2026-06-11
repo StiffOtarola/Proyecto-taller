@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
 import { AccesibilidadService } from '../../services/accesibilidad.service';
+import { BiometriaService } from '../../services/biometria.service';
 import { comprimirImagen } from '../../utils/imagen';
 
 @Component({
@@ -23,9 +24,19 @@ export class PortalPerfilPage implements OnInit {
   zoomAbierto = false;
   zoomActivo = false;
 
+  // Biometría (solo app nativa): disponibilidad del dispositivo y estado del ingreso rápido.
+  bioDisponible = false;
+  bioActivado = false;
+  bioProcesando = false;
+
+  // Preferencias de notificación del cliente.
+  notif = { avances: true, recordatorios: true };
+  guardandoNotif = false;
+
   constructor(
     public portal: PortalService,
     public a11y: AccesibilidadService,
+    private bio: BiometriaService,
     private router: Router,
     private toast: ToastController,
     private alert: AlertController,
@@ -39,8 +50,98 @@ export class PortalPerfilPage implements OnInit {
   ];
   setTexto(i: number) { this.a11y.setNivel(i); }
 
-  ngOnInit() { this.cargar(); }
-  ionViewWillEnter() { this.cargar(); }
+  // —— Biometría: activar / desactivar el ingreso con huella o Face ID ——
+  // Para activar necesitamos la contraseña (no se guarda en la sesión): la pedimos
+  // y la verificamos contra el backend antes de cifrarla en el dispositivo.
+  async activarBiometria() {
+    const email = (this.cuenta.email || '').trim();
+    if (!email) { this.aviso('Tu cuenta no tiene un correo configurado', 'warning'); return; }
+    const al = await this.alert.create({
+      cssClass: 'portal-alert',
+      header: 'Activar huella / Face ID',
+      message: 'Confirmá tu contraseña para guardar el acceso rápido de forma segura en este dispositivo.',
+      inputs: [{ name: 'password', type: 'password', placeholder: 'Tu contraseña', cssClass: 'alert-input' }],
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Activar', cssClass: 'portal-alert-confirm', handler: (d) => { this.confirmarActivarBio(email, d?.password); } },
+      ],
+    });
+    await al.present();
+  }
+
+  private confirmarActivarBio(email: string, password: string) {
+    if (!password) { this.aviso('Ingresá tu contraseña', 'warning'); return; }
+    if (this.bioProcesando) return;
+    this.bioProcesando = true;
+    // 1) Verificar credenciales con el backend (no guardamos una contraseña inválida).
+    this.portal.login(email, password).subscribe({
+      next: async () => {
+        try {
+          // 2) Confirmar identidad biométrica y cifrar las credenciales en el dispositivo.
+          await this.bio.activar(email, password);
+          this.bioActivado = true;
+          this.aviso('Ingreso con huella / Face ID activado');
+        } catch {
+          this.aviso('No se pudo activar la biometría', 'danger');
+        } finally {
+          this.bioProcesando = false;
+        }
+      },
+      error: () => { this.bioProcesando = false; this.aviso('Contraseña incorrecta', 'danger'); },
+    });
+  }
+
+  async desactivarBiometria() {
+    const al = await this.alert.create({
+      cssClass: 'portal-alert',
+      header: 'Desactivar ingreso rápido',
+      message: 'Se borrará el acceso guardado en este dispositivo. Tendrás que ingresar con tu correo y contraseña.',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Desactivar', role: 'destructive', cssClass: 'portal-alert-danger', handler: () => this.confirmarDesactivarBio() },
+      ],
+    });
+    await al.present();
+  }
+
+  private async confirmarDesactivarBio() {
+    if (this.bioProcesando) return;
+    this.bioProcesando = true;
+    await this.bio.desactivar();
+    this.bioActivado = false;
+    this.bioProcesando = false;
+    this.aviso('Ingreso rápido desactivado');
+  }
+
+  // —— Preferencias de notificación ——
+  // El ngModel ya cambió el valor; persistimos y revertimos si el guardado falla.
+  // `revirtiendo` evita re-disparar el guardado cuando el revert vuelve a emitir ionChange.
+  private revirtiendo = false;
+  guardarNotif(clave: 'avances' | 'recordatorios') {
+    if (this.revirtiendo) { this.revirtiendo = false; return; }
+    this.guardandoNotif = true;
+    this.portal.updatePreferenciasNotif({
+      notif_avances: this.notif.avances,
+      notif_recordatorios: this.notif.recordatorios,
+    }).subscribe({
+      next: () => { this.guardandoNotif = false; },
+      error: () => {
+        this.guardandoNotif = false;
+        this.revirtiendo = true;
+        this.notif[clave] = !this.notif[clave]; // revertir el toggle
+        this.aviso('No se pudo guardar la preferencia', 'danger');
+      },
+    });
+  }
+
+  ngOnInit() { this.cargar(); this.cargarBio(); }
+  ionViewWillEnter() { this.cargar(); this.cargarBio(); }
+
+  // Estado de la biometría (en web siempre queda oculto: disponible() devuelve false).
+  async cargarBio() {
+    this.bioDisponible = await this.bio.disponible();
+    this.bioActivado = this.bioDisponible ? await this.bio.activado() : false;
+  }
 
   cargar() {
     this.cargando = true;
@@ -52,6 +153,10 @@ export class PortalPerfilPage implements OnInit {
           apellido: r.data.apellido || '',
           telefono: r.data.telefono || '',
           email: r.data.email || '',
+        };
+        this.notif = {
+          avances: r.data.notif_avances !== 0,
+          recordatorios: r.data.notif_recordatorios !== 0,
         };
         this.cargando = false;
       },

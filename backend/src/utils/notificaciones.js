@@ -33,12 +33,16 @@ async function notificarCambioEstado(citaId, estado) {
     const config = await getConfig();
     if (!config.notif_estado) return;
     const [[cita]] = await pool.query(
-      `SELECT ci.cliente_id, m.marca, m.modelo
-       FROM citas ci LEFT JOIN motos m ON m.id = ci.moto_id
+      `SELECT ci.cliente_id, cl.notif_avances, m.marca, m.modelo
+       FROM citas ci
+       LEFT JOIN motos m ON m.id = ci.moto_id
+       LEFT JOIN clientes cl ON cl.id = ci.cliente_id
        WHERE ci.id = ?`,
       [citaId]
     );
     if (!cita) return;
+    // Preferencia del cliente: si desactivó los avisos de avance, no se le notifica.
+    if (cita.notif_avances === 0) return;
     const moto = [cita.marca, cita.modelo].filter(Boolean).join(' ') || 'tu moto';
     const legible = ESTADO_LEGIBLE[estado] || estado;
     await crearNotificacion({

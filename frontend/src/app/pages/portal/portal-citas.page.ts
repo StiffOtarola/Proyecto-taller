@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { ToastController, AlertController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
 import { FLUJO_CITA, ESTADO_CITA_LABEL } from '../../utils/servicios';
-import { badgeProximidad, BadgeProximidad } from '../../utils/fecha-cita';
+import { badgeProximidad, BadgeProximidad, diasHastaCita } from '../../utils/fecha-cita';
 
 @Component({
   standalone: false,
@@ -78,6 +78,14 @@ export class PortalCitasPage implements OnInit {
     return c?.estado === 'agendado' ? badgeProximidad(c.fecha) : null;
   }
 
+  // El botón de confirmar asistencia aparece desde el día antes de la cita
+  // (hoy o mañana) y solo si está agendada y aún no la confirmó.
+  puedeConfirmar(c: any): boolean {
+    if (c?.estado !== 'agendado' || c.confirmada_cliente) return false;
+    const d = diasHastaCita(c.fecha);
+    return d !== null && d >= 0 && d <= 1;
+  }
+
   // Confirmar asistencia a una cita agendada.
   confirmar(c: any, ev?: Event) {
     ev?.stopPropagation();
@@ -149,34 +157,6 @@ export class PortalCitasPage implements OnInit {
   estrellas(n: number): string { return '★'.repeat(n) + '☆'.repeat(5 - n); }
 
   verDetalle(c: any) { this.router.navigate(['/portal/cita', c.id]); }
-
-  async cancelar(c: any, ev?: Event) {
-    ev?.stopPropagation();
-    const al = await this.alert.create({
-      cssClass: 'portal-alert',
-      header: 'Cancelar cita',
-      message: 'Esta acción no se puede deshacer. ¿Cancelar esta cita?',
-      buttons: [
-        { text: 'No', role: 'cancel' },
-        { text: 'Sí, cancelar', role: 'destructive', cssClass: 'portal-alert-danger', handler: () => this.confirmarCancelar(c) },
-      ],
-    });
-    await al.present();
-  }
-
-  private confirmarCancelar(c: any) {
-    this.portal.cancelarCita(c.id).subscribe({
-      next: async () => {
-        c.estado = 'cancelado';
-        const t = await this.toast.create({ message: 'Cita cancelada', duration: 2000, color: 'medium' });
-        await t.present();
-      },
-      error: async (e) => {
-        const t = await this.toast.create({ message: e.error?.error || 'No se pudo cancelar', duration: 2400, color: 'danger' });
-        await t.present();
-      },
-    });
-  }
 
   // El presupuesto se aprueba en Inicio (donde está el flujo aprobar/rechazar).
   irAInicio() { this.router.navigate(['/portal/inicio']); }

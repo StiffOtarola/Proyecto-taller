@@ -91,14 +91,6 @@
       </div>
     </section>
 
-    <!-- Confirmar asistencia (cita agendada) -->
-    <button class="btn-confirmar" *ngIf="puedeConfirmar" (click)="confirmar()" [disabled]="confirmando">
-      <ion-icon name="checkmark-circle-outline"></ion-icon> Confirmar asistencia
-    </button>
-    <div class="confirmada-banner" *ngIf="cita.estado === 'agendado' && cita.confirmada_cliente">
-      <ion-icon name="checkmark-circle"></ion-icon> Confirmaste tu asistencia. ¡Te esperamos!
-    </div>
-
     <!-- Descargar comprobante (cuando hay orden/monto) -->
     <button class="btn-descargar" *ngIf="puedeDescargar" (click)="descargarComprobante()">
       <ion-icon name="download-outline"></ion-icon> Descargar comprobante

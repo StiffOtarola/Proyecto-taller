@@ -59,8 +59,8 @@
         </div>
         <p class="cita-tec" *ngIf="c.tecnico_nombre"><ion-icon name="construct-outline"></ion-icon> Mecánico: {{ c.tecnico_nombre }}</p>
 
-        <!-- Confirmar asistencia (solo agendada) -->
-        <button class="confirmar-btn" *ngIf="c.estado === 'agendado' && !c.confirmada_cliente" (click)="confirmar(c, $event)" [disabled]="confirmando.has(c.id)">
+        <!-- Confirmar asistencia: aparece desde el día antes de la cita -->
+        <button class="confirmar-btn" *ngIf="puedeConfirmar(c)" (click)="confirmar(c, $event)" [disabled]="confirmando.has(c.id)">
           <ion-icon name="checkmark-circle-outline"></ion-icon> Confirmar asistencia
         </button>
         <div class="confirmada-chip" *ngIf="c.estado === 'agendado' && c.confirmada_cliente">
@@ -68,7 +68,6 @@
         </div>
 
         <button class="ver-detalle" (click)="verDetalle(c)">Ver detalle <ion-icon name="chevron-forward"></ion-icon></button>
-        <button class="cancelar-link" *ngIf="c.estado === 'agendado'" (click)="cancelar(c, $event)">Cancelar cita</button>
       </div>
 
       <!-- Vacío: sin resultados (hay filtro) vs sin citas (CTA guiado) -->

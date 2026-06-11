@@ -14,7 +14,6 @@ export class PortalCitaDetallePage implements OnInit {
   cita: any = null;
   orden: any = null;        // detalle de la orden vinculada (si hay)
   cargando = true;
-  confirmando = false;
 
   readonly flujo = FLUJO_CITA;
   readonly estadoLabel = ESTADO_CITA_LABEL;
@@ -70,28 +69,6 @@ export class PortalCitaDetallePage implements OnInit {
   }
 
   editar() { this.router.navigate(['/portal/cita', this.cita.id, 'editar']); }
-
-  // Confirmar asistencia (solo cuando la cita está agendada y aún no se confirmó).
-  get puedeConfirmar(): boolean {
-    return this.cita?.estado === 'agendado' && !this.cita?.confirmada_cliente;
-  }
-  confirmar() {
-    if (this.confirmando) return;
-    this.confirmando = true;
-    this.portal.confirmarCita(this.cita.id).subscribe({
-      next: async () => {
-        this.cita.confirmada_cliente = 1;
-        this.confirmando = false;
-        const t = await this.toast.create({ message: '¡Asistencia confirmada! Te esperamos.', duration: 2200, color: 'success' });
-        await t.present();
-      },
-      error: async (e) => {
-        this.confirmando = false;
-        const t = await this.toast.create({ message: e.error?.error || 'No se pudo confirmar', duration: 2400, color: 'danger' });
-        await t.present();
-      },
-    });
-  }
 
   // ¿Hay algo que valga la pena exportar? (orden vinculada o monto/entrega)
   get puedeDescargar(): boolean {

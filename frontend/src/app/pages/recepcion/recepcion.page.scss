@@ -70,9 +70,14 @@
   display: flex; align-items: center; gap: 12px; padding: 10px 0;
   & + .cita-row { border-top: 1px solid var(--hairline); }
   .cita-hora { font-size: 13px; font-weight: 700; color: var(--ion-color-primary); min-width: 44px; }
-  .cita-info { flex: 1; min-width: 0; display: flex; flex-direction: column;
+  .cita-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px;
     strong { font-size: 14px; font-weight: 700; }
     span { font-size: 12px; color: var(--n-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    // Señal de confirmación de asistencia del cliente (no-show).
+    .conf { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 11px; margin-top: 2px;
+      ion-icon { font-size: 13px; }
+      &.ok { color: var(--emerald-700); }
+      &.pend { color: var(--amber-700); } }
   }
   .cita-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
   .cita-act {

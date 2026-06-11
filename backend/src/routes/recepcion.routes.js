@@ -66,7 +66,7 @@ router.get('/citas-hoy', async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado, ci.monto,
-              ci.orden_id, o.numero_orden,
+              ci.confirmada_cliente, ci.orden_id, o.numero_orden,
               c.id AS cliente_id, c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.telefono AS cliente_telefono,
               m.marca, m.modelo, m.placa,
               t.nombre AS tecnico_nombre

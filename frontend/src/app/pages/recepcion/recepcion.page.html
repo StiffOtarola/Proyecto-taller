@@ -73,6 +73,8 @@
             <div class="cita-info">
               <strong>{{ c.cliente_nombre }} {{ c.cliente_apellido }}</strong>
               <span>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}<ng-container *ngIf="c.tipo_servicio"> · {{ c.tipo_servicio }}</ng-container></span>
+              <span class="conf ok" *ngIf="c.confirmada_cliente"><ion-icon name="checkmark-circle"></ion-icon> Asistencia confirmada</span>
+              <span class="conf pend" *ngIf="!c.confirmada_cliente && c.estado === 'agendado'"><ion-icon name="alert-circle-outline"></ion-icon> Sin confirmar</span>
             </div>
             <div class="cita-right">
               <span class="pill" [ngClass]="estadoPill[c.estado]">{{ estadoLabel[c.estado] }}</span>

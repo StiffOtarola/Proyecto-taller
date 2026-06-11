@@ -65,6 +65,14 @@
             <span class="cc-monto mono" *ngIf="c.monto > 0"> · {{ c.monto | currency:'CRC':'symbol-narrow':'1.0-0' }}</span>
           </div>
 
+          <!-- Confirmación de asistencia del cliente (solo mientras está agendada) -->
+          <div class="conf ok" *ngIf="c.confirmada_cliente && c.estado === 'agendado'">
+            <ion-icon name="checkmark-circle"></ion-icon> Cliente confirmó asistencia
+          </div>
+          <div class="conf pend" *ngIf="!c.confirmada_cliente && c.estado === 'agendado'">
+            <ion-icon name="alert-circle-outline"></ion-icon> Sin confirmar
+          </div>
+
           <div class="pr-t"><div class="pr-f" [class.full]="c.estado === 'entregado'" [style.width.%]="progresoPct(c.estado)"></div></div>
           <span class="pr-l">{{ progresoPct(c.estado) }}%</span>
 

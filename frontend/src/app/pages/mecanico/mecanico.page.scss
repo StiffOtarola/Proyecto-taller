@@ -51,6 +51,13 @@
     strong { color: var(--n-700); }
     .cc-monto { color: var(--emerald-700); font-weight: 700; } }
   .cita-rating { font-size: 12px; color: var(--n-500); margin: 8px 0 0; .stars { color: var(--amber-700); letter-spacing: 1px; } }
+
+  // Señal de confirmación de asistencia del cliente (no-show).
+  .conf { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700;
+    padding: 5px 11px; border-radius: 999px; margin: 2px 0;
+    ion-icon { font-size: 14px; }
+    &.ok { background: var(--emerald-50); color: var(--emerald-700); }
+    &.pend { background: var(--amber-100); color: var(--amber-700); } }
 }
 
 .st-badge { font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 999px; display: inline-flex; flex-shrink: 0; }

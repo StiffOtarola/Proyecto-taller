@@ -16,6 +16,7 @@ const EN_PROCESO = ['en_revision', 'en_mantenimiento'];
 const SELECT_CITA = `
   SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado,
          ci.monto, ci.calificacion, ci.comentario_satisfaccion, ci.fecha_inicio, ci.fecha_fin,
+         ci.confirmada_cliente,
          ci.orden_id, o.numero_orden, o.estado AS orden_estado,
          o.aprobacion_cliente, o.motivo_rechazo,
          (o.costo_mano_obra + o.costo_repuestos - o.descuento) AS orden_total,

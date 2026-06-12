@@ -118,14 +118,14 @@
 
     </ng-container>
 
-    <div style="height:200px"></div>
+    <div style="height:200px" *ngIf="!(vista === 'taller' && chatAbierto)"></div>
   </div>
 
   <!-- Redactor del chat del taller (solo dentro de una conversación) -->
-  <div class="quick-send" *ngIf="vista === 'taller' && chatAbierto">
+  <div class="quick-send chat" *ngIf="vista === 'taller' && chatAbierto">
     <div class="qs-inner">
       <div class="qs-row">
-        <input type="text" [(ngModel)]="borrador" placeholder="Mensaje para el mecánico…" class="qs-msg" (keyup.enter)="enviarChat()" />
+        <input type="text" [(ngModel)]="borrador" placeholder="Escribí un mensaje…" class="qs-msg" (keyup.enter)="enviarChat()" />
         <button class="qs-send" (click)="enviarChat()" [disabled]="!borrador.trim() || enviandoChat">
           <ion-icon name="send"></ion-icon>
         </button>

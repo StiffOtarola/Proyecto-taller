@@ -11,7 +11,7 @@
   </ion-refresher>
 
   <div class="rec">
-    <div class="segment">
+    <div class="segment" *ngIf="!chatAbierto">
       <button class="seg-btn" [class.on]="vista==='mecanicos'" (click)="vista='mecanicos'">Mecánicos</button>
       <button class="seg-btn" [class.on]="vista==='clientes'" (click)="vista='clientes'">Clientes</button>
       <button class="seg-btn" [class.on]="vista==='taller'" (click)="vista='taller'">Taller</button>
@@ -71,29 +71,66 @@
       </div>
     </div>
 
-    <!-- Taller (mensajería interna con mecánicos) -->
-    <div class="msg-list" *ngIf="!cargando && vista === 'taller'">
-      <div class="msg-card" *ngFor="let m of internos">
-        <div class="msg-head">
-          <span class="avatar" [ngClass]="m.remitente_rol === 'recepcion' ? 'green' : 'rose'">{{ iniciales(m.remitente_nombre) }}</span>
-          <div class="msg-who">
-            <strong>{{ m.remitente_nombre }}</strong>
-            <span>{{ m.remitente_rol === 'recepcion' ? ('Recepción → ' + (m.destino_nombre || 'mecánico')) : 'Mecánico → Recepción' }}</span>
-          </div>
-          <span class="msg-time">{{ hace(m.created_at) }}</span>
-        </div>
-        <p class="msg-body">{{ m.mensaje }}</p>
-        <button class="msg-fwd" *ngIf="m.remitente_rol !== 'recepcion'" (click)="responderTaller(m)">
-          <ion-icon name="arrow-undo-outline"></ion-icon> Responder
+    <!-- Taller: chat interno con mecánicos (estilo conversación) -->
+    <ng-container *ngIf="!cargando && vista === 'taller'">
+
+      <!-- Lista de conversaciones -->
+      <div class="chat-list" *ngIf="!chatAbierto">
+        <button class="chat-nuevo" (click)="nuevoChat()">
+          <ion-icon name="create-outline"></ion-icon> Nuevo mensaje
         </button>
+        <button class="chat-item" *ngFor="let c of conversaciones" (click)="abrirChat(c)">
+          <span class="avatar rose">{{ iniciales(c.nombre) }}</span>
+          <div class="chat-meta">
+            <div class="chat-top">
+              <strong>{{ c.nombre }}</strong>
+              <span class="chat-time">{{ hace(c.ultimo.created_at) }}</span>
+            </div>
+            <div class="chat-prev">
+              <span class="chat-last">{{ esMio(c.ultimo) ? 'Vos: ' : '' }}{{ c.ultimo.mensaje }}</span>
+              <span class="chat-badge" *ngIf="c.noLeidos">{{ c.noLeidos }}</span>
+            </div>
+          </div>
+        </button>
+        <div class="empty-state" *ngIf="!conversaciones.length">
+          <ion-icon name="chatbubbles-outline"></ion-icon>
+          <p>Sin conversaciones. Tocá “Nuevo mensaje” para escribirle a un mecánico.</p>
+        </div>
       </div>
-      <div class="empty-state" *ngIf="!internos.length">
-        <ion-icon name="construct-outline"></ion-icon>
-        <p>Sin mensajes del taller.</p>
+
+      <!-- Hilo de conversación -->
+      <div class="chat-thread" *ngIf="chatAbierto">
+        <div class="thread-head">
+          <button class="th-back" (click)="cerrarChat()" aria-label="Volver"><ion-icon name="chevron-back"></ion-icon></button>
+          <span class="avatar rose">{{ iniciales(chatAbierto.nombre) }}</span>
+          <div class="th-info"><strong>{{ chatAbierto.nombre }}</strong><span>Mecánico</span></div>
+        </div>
+        <div class="bubbles">
+          <div class="bubble-row" *ngFor="let m of hilo" [class.mio]="esMio(m)">
+            <div class="bubble">
+              <p>{{ m.mensaje }}</p>
+              <span class="b-time">{{ hace(m.created_at) }}</span>
+            </div>
+          </div>
+          <div class="empty-thread" *ngIf="!hilo.length">Escribí el primer mensaje 👇</div>
+        </div>
       </div>
-    </div>
+
+    </ng-container>
 
     <div style="height:200px"></div>
+  </div>
+
+  <!-- Redactor del chat del taller (solo dentro de una conversación) -->
+  <div class="quick-send" *ngIf="vista === 'taller' && chatAbierto">
+    <div class="qs-inner">
+      <div class="qs-row">
+        <input type="text" [(ngModel)]="borrador" placeholder="Mensaje para el mecánico…" class="qs-msg" (keyup.enter)="enviarChat()" />
+        <button class="qs-send" (click)="enviarChat()" [disabled]="!borrador.trim() || enviandoChat">
+          <ion-icon name="send"></ion-icon>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Envío rápido de notificación a un cliente (no aplica en la vista Taller) -->

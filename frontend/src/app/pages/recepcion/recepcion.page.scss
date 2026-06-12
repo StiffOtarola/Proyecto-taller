@@ -31,6 +31,15 @@
   padding: 16px; text-align: center;
   position: relative; overflow: hidden;
   animation: cardRise .4s var(--ease, cubic-bezier(0.32, 0.72, 0, 1)) both;
+  font-family: inherit; width: 100%; appearance: none; -webkit-appearance: none;
+
+  &.tappable { cursor: pointer; transition: transform .15s, box-shadow .15s;
+    &:active { transform: scale(.97); }
+  }
+  .stat-go {
+    position: absolute; bottom: 8px; right: 8px; z-index: 1;
+    font-size: 13px; color: var(--n-400);
+  }
 
   &::after {
     content: ''; position: absolute; top: 0; right: 0;
@@ -114,6 +123,66 @@
   text-align: center; padding: 28px 16px; color: var(--n-400); font-size: 13px;
   ion-icon { font-size: 34px; opacity: .4; }
 }
+
+/* Buscador rápido */
+.quick-search { margin: 4px 0 16px; position: relative; }
+.qs-box {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--ion-card-background); border: 1px solid var(--hairline);
+  border-radius: 16px; padding: 10px 12px; box-shadow: var(--shadow-sm);
+  .qs-ico { font-size: 18px; color: var(--n-400); flex-shrink: 0; }
+  input { flex: 1; border: none; background: none; outline: none;
+    font-family: inherit; font-size: 14px; color: var(--ion-text-color); }
+  input::placeholder { color: var(--n-400); }
+  .qs-x { background: none; border: none; padding: 0; cursor: pointer; color: var(--n-400);
+    display: flex; ion-icon { font-size: 18px; } }
+}
+.qs-results {
+  margin-top: 8px; background: var(--ion-card-background);
+  border: 1px solid var(--hairline); border-radius: 16px; overflow: hidden;
+  box-shadow: var(--shadow-md, var(--shadow-sm));
+}
+.qs-msg { padding: 14px 16px; font-size: 13px; color: var(--n-400); text-align: center; }
+.qs-item {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 11px 14px; background: none; border: none; cursor: pointer;
+  font-family: inherit; text-align: left;
+  & + .qs-item { border-top: 1px solid var(--hairline); }
+  &:active { background: var(--n-50); }
+  .qs-ava { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--rose-50); color: var(--ion-color-primary);
+    font-weight: 800; font-size: 13px; }
+  .qs-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px;
+    strong { font-size: 14px; font-weight: 700; color: var(--ion-text-color); }
+    span { font-size: 12px; color: var(--n-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
+  ion-icon { font-size: 16px; color: var(--n-400); flex-shrink: 0; }
+}
+
+/* Resumen de confirmación de citas */
+.conf-resumen {
+  display: flex; gap: 14px; flex-wrap: wrap; margin: -2px 0 10px;
+  .cr { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700;
+    ion-icon { font-size: 14px; }
+    &.ok { color: var(--emerald-700); }
+    &.pend { color: var(--amber-700); } }
+}
+
+/* Resaltado de la próxima cita y de las atrasadas */
+.cita-row.proxima { background: var(--rose-50); border-radius: 12px;
+  margin: 0 -8px; padding-left: 8px; padding-right: 8px; }
+.cita-row.atrasada .cita-hora { color: var(--amber-700); }
+.tag-prox, .tag-atr {
+  font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
+  padding: 2px 6px; border-radius: 999px; margin-left: 6px; vertical-align: middle;
+}
+.tag-prox { background: var(--ion-color-primary); color: #fff; }
+.tag-atr { background: var(--amber-100); color: var(--amber-700); }
+
+/* Alertas clickeables */
+.alert-row.tappable { cursor: pointer; margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 10px;
+  &:active { background: var(--n-50); } }
+.alert-go { font-size: 15px; color: var(--n-400); flex-shrink: 0; align-self: center; }
 
 @media (min-width: 820px) {
   .stat-grid { grid-template-columns: repeat(4, 1fr); }

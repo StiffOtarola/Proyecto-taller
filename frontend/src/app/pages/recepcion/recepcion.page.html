@@ -28,6 +28,30 @@
       <span class="greet-date mono">{{ fechaHoy }}</span>
     </div>
 
+    <!-- Buscador rápido: cliente / teléfono / placa -->
+    <div class="quick-search">
+      <div class="qs-box">
+        <ion-icon name="search-outline" class="qs-ico"></ion-icon>
+        <input type="text" [value]="buscarTexto" (input)="onBuscar($any($event.target).value)"
+               placeholder="Buscar cliente, teléfono o placa…" autocapitalize="off" autocomplete="off" />
+        <button *ngIf="buscarTexto" class="qs-x" (click)="limpiarBusqueda()" aria-label="Limpiar">
+          <ion-icon name="close-circle"></ion-icon>
+        </button>
+      </div>
+      <div class="qs-results" *ngIf="buscando || resultados.length || buscarTexto.length >= 2">
+        <div class="qs-msg" *ngIf="buscando">Buscando…</div>
+        <button class="qs-item" *ngFor="let c of resultados" (click)="abrirResultado(c)">
+          <span class="qs-ava">{{ (c.nombre || '?').charAt(0) }}{{ (c.apellido || '').charAt(0) }}</span>
+          <span class="qs-info">
+            <strong>{{ c.nombre }} {{ c.apellido }}</strong>
+            <span>{{ c.telefono }}<ng-container *ngIf="c.total_motos"> · {{ c.total_motos }} moto(s)</ng-container></span>
+          </span>
+          <ion-icon name="chevron-forward"></ion-icon>
+        </button>
+        <div class="qs-msg" *ngIf="!buscando && !resultados.length && buscarTexto.length >= 2">Sin coincidencias</div>
+      </div>
+    </div>
+
     <!-- Skeleton -->
     <div *ngIf="cargando">
       <div class="stat-grid">
@@ -41,24 +65,28 @@
     </div>
 
     <div *ngIf="!cargando">
-      <!-- 4 stat-cards -->
+      <!-- 4 stat-cards (clickeables → su sección) -->
       <div class="stat-grid">
-        <div class="stat accent">
+        <button type="button" class="stat accent tappable" (click)="irA('agendar')">
           <div class="stat-num">{{ resumen?.citas_hoy ?? 0 }}</div>
           <div class="stat-lbl">Citas hoy</div>
-        </div>
-        <div class="stat accent">
+          <ion-icon name="chevron-forward" class="stat-go"></ion-icon>
+        </button>
+        <button type="button" class="stat accent tappable" (click)="irA('ordenes')">
           <div class="stat-num">{{ resumen?.ordenes_activas ?? 0 }}</div>
           <div class="stat-lbl">Órdenes activas</div>
-        </div>
-        <div class="stat">
+          <ion-icon name="chevron-forward" class="stat-go"></ion-icon>
+        </button>
+        <button type="button" class="stat tappable" (click)="irA('cotizaciones')">
           <div class="stat-num amber">{{ resumen?.cotizaciones_pendientes ?? 0 }}</div>
           <div class="stat-lbl">Cotizaciones pend.</div>
-        </div>
-        <div class="stat">
+          <ion-icon name="chevron-forward" class="stat-go"></ion-icon>
+        </button>
+        <button type="button" class="stat tappable" (click)="irA('mensajes')">
           <div class="stat-num ink">{{ resumen?.mecanicos_ocupados ?? 0 }}/{{ resumen?.mecanicos_totales ?? 0 }}</div>
           <div class="stat-lbl">Mecánicos</div>
-        </div>
+          <ion-icon name="chevron-forward" class="stat-go"></ion-icon>
+        </button>
       </div>
 
       <!-- Citas de hoy -->
@@ -67,11 +95,20 @@
           <span class="section-label">Citas de hoy</span>
           <span class="cnt-badge" *ngIf="citas.length">{{ citas.length }}</span>
         </div>
+        <!-- Resumen de confirmación -->
+        <div class="conf-resumen" *ngIf="totalConfirmadas || totalSinConfirmar">
+          <span class="cr ok"><ion-icon name="checkmark-circle"></ion-icon> {{ totalConfirmadas }} confirmada(s)</span>
+          <span class="cr pend" *ngIf="totalSinConfirmar"><ion-icon name="alert-circle-outline"></ion-icon> {{ totalSinConfirmar }} sin confirmar</span>
+        </div>
         <div class="cita-list">
-          <div class="cita-row" *ngFor="let c of citas">
+          <div class="cita-row" *ngFor="let c of citas" [class.proxima]="c.id === proximaId" [class.atrasada]="esAtrasada(c)">
             <span class="cita-hora mono">{{ c.hora?.slice(0,5) }}</span>
             <div class="cita-info">
-              <strong>{{ c.cliente_nombre }} {{ c.cliente_apellido }}</strong>
+              <strong>
+                {{ c.cliente_nombre }} {{ c.cliente_apellido }}
+                <span class="tag-prox" *ngIf="c.id === proximaId">Próxima</span>
+                <span class="tag-atr" *ngIf="esAtrasada(c)">Atrasada</span>
+              </strong>
               <span>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}<ng-container *ngIf="c.tipo_servicio"> · {{ c.tipo_servicio }}</ng-container></span>
               <span class="conf ok" *ngIf="c.confirmada_cliente"><ion-icon name="checkmark-circle"></ion-icon> Asistencia confirmada</span>
               <span class="conf pend" *ngIf="!c.confirmada_cliente && c.estado === 'agendado'"><ion-icon name="alert-circle-outline"></ion-icon> Sin confirmar</span>
@@ -98,12 +135,13 @@
       <section class="card">
         <span class="section-label" style="margin-bottom:12px">Alertas recientes</span>
         <div class="alert-list">
-          <div class="alert-row" *ngFor="let a of alertas">
+          <div class="alert-row" *ngFor="let a of alertas" [class.tappable]="alertaClickable(a)" (click)="abrirAlerta(a)">
             <span class="alert-ico" [ngClass]="alertaColor(a)"><ion-icon [name]="alertaIcono(a)"></ion-icon></span>
             <div class="alert-body">
               <span class="alert-txt">{{ alertaTexto(a) }}</span>
-              <span class="alert-time">{{ hace(a.created_at) }}</span>
+              <span class="alert-time">{{ hace(a.created_at) }}<ng-container *ngIf="a.numero_orden"> · {{ a.numero_orden }}</ng-container></span>
             </div>
+            <ion-icon name="chevron-forward" class="alert-go" *ngIf="alertaClickable(a)"></ion-icon>
           </div>
           <div class="empty-row" *ngIf="!alertas.length">
             <ion-icon name="notifications-off-outline"></ion-icon>

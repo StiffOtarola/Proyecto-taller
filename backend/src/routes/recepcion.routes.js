@@ -65,7 +65,7 @@ router.get('/resumen', async (req, res) => {
 router.get('/citas-hoy', async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado, ci.monto,
+      `SELECT ci.id, ci.fecha, TIME_FORMAT(ci.hora,'%H:%i') AS hora, ci.motivo, ci.tipo_servicio, ci.estado, ci.monto,
               ci.confirmada_cliente, ci.orden_id, o.numero_orden,
               c.id AS cliente_id, c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.telefono AS cliente_telefono,
               m.marca, m.modelo, m.placa,
@@ -75,7 +75,7 @@ router.get('/citas-hoy', async (req, res) => {
        LEFT JOIN motos m ON ci.moto_id = m.id
        LEFT JOIN usuarios t ON ci.tecnico_id = t.id
        LEFT JOIN ordenes_trabajo o ON o.id = ci.orden_id
-       WHERE ci.fecha = CURDATE()
+       WHERE ci.fecha = CURDATE() AND ci.estado <> 'cancelado'
        ORDER BY ci.hora ASC`
     );
     res.json({ data: rows });
@@ -145,8 +145,11 @@ router.get('/alertas', async (req, res) => {
        ORDER BY f.created_at DESC LIMIT 10`
     );
     const [estados] = await pool.query(
-      `SELECT 'estado' AS tipo, n.created_at, n.titulo, n.mensaje, n.cita_id
+      `SELECT 'estado' AS tipo, n.created_at, n.titulo, n.mensaje, n.cita_id,
+              ci.orden_id, o.numero_orden
        FROM notificaciones n
+       LEFT JOIN citas ci ON ci.id = n.cita_id
+       LEFT JOIN ordenes_trabajo o ON o.id = ci.orden_id
        WHERE n.created_at >= NOW() - INTERVAL 24 HOUR
        ORDER BY n.created_at DESC LIMIT 10`
     );
@@ -591,9 +594,11 @@ router.get('/clientes', async (req, res) => {
       WHERE c.activo = 1`;
     const params = [];
     if (q) {
-      sql += ' AND (c.nombre LIKE ? OR c.apellido LIKE ? OR c.telefono LIKE ? OR c.email LIKE ? OR CONCAT(c.nombre, " ", c.apellido) LIKE ?)';
+      sql += ` AND (c.nombre LIKE ? OR c.apellido LIKE ? OR c.telefono LIKE ? OR c.email LIKE ?
+               OR CONCAT(c.nombre, " ", c.apellido) LIKE ?
+               OR EXISTS (SELECT 1 FROM motos mm WHERE mm.cliente_id = c.id AND mm.activa = 1 AND mm.placa LIKE ?))`;
       const like = `%${q}%`;
-      params.push(like, like, like, like, like);
+      params.push(like, like, like, like, like, like);
     }
     sql += ' ORDER BY c.nombre, c.apellido';
     const [rows] = await pool.query(sql, params);

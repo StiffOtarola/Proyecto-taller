@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { RecepcionService, ResumenRecepcion } from '../../services/recepcion.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -10,11 +12,17 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './recepcion.page.html',
   styleUrls: ['./recepcion.page.scss'],
 })
-export class RecepcionPage implements OnInit {
+export class RecepcionPage implements OnInit, OnDestroy {
   resumen?: ResumenRecepcion;
   citas: any[] = [];
   alertas: any[] = [];
   cargando = true;
+
+  // Buscador rápido (cliente / placa).
+  buscarTexto = '';
+  resultados: any[] = [];
+  buscando = false;
+  private busqueda$ = new Subject<string>();
 
   // Etiquetas y colores de los estados de la cita.
   readonly estadoLabel: Record<string, string> = {
@@ -43,8 +51,57 @@ export class RecepcionPage implements OnInit {
     private toast: ToastController
   ) {}
 
-  ngOnInit() { this.cargar(); }
+  ngOnInit() {
+    this.cargar();
+    // Buscador con debounce: ≥2 caracteres consulta clientes; vacío limpia resultados.
+    this.busqueda$.pipe(debounceTime(300), distinctUntilChanged()).subscribe(q => {
+      if (q.length < 2) { this.resultados = []; this.buscando = false; return; }
+      this.rec.getClientes(q).subscribe({
+        next: r => { this.resultados = r.data.slice(0, 6); this.buscando = false; },
+        error: () => { this.resultados = []; this.buscando = false; },
+      });
+    });
+  }
   ionViewWillEnter() { this.cargar(); }
+  ngOnDestroy() { this.busqueda$.complete(); }
+
+  // —— Buscador rápido ——
+  onBuscar(v: string) {
+    this.buscarTexto = v;
+    const q = (v || '').trim();
+    this.buscando = q.length >= 2;
+    this.busqueda$.next(q);
+  }
+  limpiarBusqueda() { this.buscarTexto = ''; this.resultados = []; this.buscando = false; this.busqueda$.next(''); }
+  abrirResultado(c: any) { this.limpiarBusqueda(); this.router.navigate(['/cliente-detalle', c.id]); }
+
+  // —— Navegación de las métricas (tarjetas accionables) ——
+  irA(seccion: string) { this.router.navigate(['/recepcion', seccion]); }
+
+  // —— Priorización de citas de hoy ——
+  // Hora actual en zona Costa Rica (UTC-6) como "HH:mm" para comparar con la cita.
+  private get ahoraCR(): string {
+    return new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().slice(11, 16);
+  }
+  // Cita agendada cuya hora ya pasó y que aún no ingresó al taller (sin orden).
+  esAtrasada(c: any): boolean {
+    return c.estado === 'agendado' && !c.orden_id && (c.hora || '') < this.ahoraCR;
+  }
+  // Id de la próxima cita por atender hoy (primera agendada cuya hora no pasó).
+  get proximaId(): number | null {
+    const p = this.citas.find(c => c.estado === 'agendado' && (c.hora || '') >= this.ahoraCR);
+    return p ? p.id : null;
+  }
+  get totalConfirmadas(): number {
+    return this.citas.filter(c => c.estado === 'agendado' && c.confirmada_cliente).length;
+  }
+  get totalSinConfirmar(): number {
+    return this.citas.filter(c => c.estado === 'agendado' && !c.confirmada_cliente).length;
+  }
+
+  // —— Alertas accionables ——
+  alertaClickable(a: any): boolean { return !!a.orden_id; }
+  abrirAlerta(a: any) { if (a.orden_id) this.router.navigate(['/detalle-orden', a.orden_id]); }
 
   get nombre(): string { return this.auth.getUsuario()?.nombre || 'Recepción'; }
   get primerNombre(): string { return this.nombre.split(' ')[0]; }

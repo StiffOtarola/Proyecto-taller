@@ -62,10 +62,10 @@
       </div>
     </section>
 
-    <!-- Asignar técnico -->
-    <section class="card" *ngIf="auth.tieneRol('admin') && tecnicos.length">
-      <span class="section-label">Asignar técnico</span>
-      <ion-select placeholder="Seleccionar técnico" [(ngModel)]="orden.tecnico_id"
+    <!-- Asignar mecánico (admin y recepción) -->
+    <section class="card" *ngIf="auth.tieneRol('admin', 'recepcion') && tecnicos.length">
+      <span class="section-label">Asignar mecánico</span>
+      <ion-select placeholder="Seleccionar mecánico" [(ngModel)]="orden.tecnico_id"
         (ngModelChange)="asignarTecnico($event)" interface="action-sheet" class="sel-line">
         <ion-select-option *ngFor="let t of tecnicos" [value]="t.id">{{ t.nombre }}</ion-select-option>
       </ion-select>

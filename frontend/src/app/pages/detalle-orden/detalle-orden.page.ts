@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ActionSheetController, AlertController, LoadingController, ToastController } from '@ionic/angular';
 import { OrdenesService } from '../../services/ordenes.service';
 import { UsuariosService } from '../../services/usuarios.service';
+import { RecepcionService } from '../../services/recepcion.service';
 import { GarantiasService } from '../../services/garantias.service';
 import { AuthService } from '../../services/auth.service';
 import { Orden, OrdenAvance, OrdenRepuesto, OrdenChecklist, OrdenFoto, EstadoOrden, ESTADO_CONFIG } from '../../models/orden.model';
@@ -71,6 +72,7 @@ export class DetalleOrdenPage implements OnInit {
     private router: Router,
     private ordenSvc: OrdenesService,
     private usuarioSvc: UsuariosService,
+    private rec: RecepcionService,
     private garantiaSvc: GarantiasService,
     public auth: AuthService,
     private alert: AlertController,
@@ -106,11 +108,14 @@ export class DetalleOrdenPage implements OnInit {
         };
       }
     });
-    // Solo admin asigna técnicos (y /api/usuarios es admin): evita un 403 silencioso al resto.
+    // Asignación de técnico: la hacen admin y recepción, cada uno por su endpoint
+    // permitido (/api/usuarios es admin; recepción tiene /api/recepcion/tecnicos).
     if (this.auth.tieneRol('admin')) {
       this.usuarioSvc.getAll().subscribe(res => {
         this.tecnicos = res.data.filter(u => u.rol === 'tecnico' && u.activo);
       });
+    } else if (this.auth.tieneRol('recepcion')) {
+      this.rec.getTecnicos().subscribe(res => { this.tecnicos = res.data; });
     }
   }
 
@@ -155,8 +160,13 @@ export class DetalleOrdenPage implements OnInit {
   }
 
   async asignarTecnico(tecnico_id: number) {
-    this.ordenSvc.asignarTecnico(this.orden!.id!, tecnico_id).subscribe({
-      next: () => { this.cargar(this.orden!.id!); this.mostrarToast('Técnico asignado'); },
+    // Cada rol usa el endpoint que tiene permitido (admin → /ordenes, recepción → /recepcion).
+    const op = this.auth.tieneRol('admin')
+      ? this.ordenSvc.asignarTecnico(this.orden!.id!, tecnico_id)
+      : this.rec.asignarTecnico(this.orden!.id!, tecnico_id);
+    op.subscribe({
+      next: () => { this.cargar(this.orden!.id!); this.mostrarToast('Mecánico asignado'); },
+      error: () => this.mostrarToast('No se pudo asignar el mecánico'),
     });
   }
 

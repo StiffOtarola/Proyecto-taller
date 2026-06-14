@@ -54,7 +54,7 @@ botones, sin fluctuar entre grises cálidos y fríos (toda la escala es neutral 
 - Grilla CSS primero; sin hacks de `calc()` por porcentaje.
 - Contenedores con max-width (dashboard ~1240px centrado; detalle/formularios ~760–860px).
 - **Mobile-first:** todo colapsa a una columna < 768px; sin scroll horizontal jamás.
-- En escritorio, las tarjetas fluyen en **masonry de 2–3 columnas** (dashboard, detalle de orden); las listas en grilla `auto-fill minmax(360px, 1fr)`.
+- En escritorio, las tarjetas fluyen en una **grilla responsiva** que se autoajusta por ancho (`grid` con `auto-fill`/`minmax`, p. ej. `repeat(auto-fill, minmax(360px, 1fr))`, o `1fr 1fr` en detalle), colapsando a una columna en móvil. **No se usa masonry real** (`grid-template-rows: masonry` es experimental y `columns` rompe el orden de lectura/tabulación): se prioriza la accesibilidad por teclado y el orden del DOM. <!-- Si en el futuro se quisiera el efecto visual masonry en alguna pantalla puntual de tarjetas muy desiguales, se evaluaría una solución JS que preserve el orden del DOM; no implementado. -->
 - Toolbars **limpias de superficie** (no barras de color sólido); el acento es detalle, no fondo de barra. Header con hairline inferior.
 - Tap targets mínimo 44px. Full-height con `min-h-[100dvh]`, nunca `h-screen`.
 

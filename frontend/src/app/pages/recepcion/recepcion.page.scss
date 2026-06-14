@@ -78,7 +78,7 @@
 .cita-row {
   display: flex; align-items: center; gap: 12px; padding: 10px 0;
   & + .cita-row { border-top: 1px solid var(--hairline); }
-  .cita-hora { font-size: 13px; font-weight: 700; color: var(--ion-color-primary); min-width: 44px; }
+  .cita-hora { font-size: 13px; font-weight: 700; color: var(--text-accent); min-width: 44px; }  // AA
   .cita-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px;
     strong { font-size: 14px; font-weight: 700; }
     span { font-size: 12px; color: var(--n-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -96,7 +96,7 @@
     ion-icon { font-size: 13px; }
     &:active { transform: scale(.96); }
     &:disabled { opacity: .6; }
-    &.ver { background: none; color: var(--ion-color-primary); }
+    &.ver { background: none; color: var(--text-accent); }  // AA (el borde sigue carmín)
   }
 }
 
@@ -151,8 +151,8 @@
   &:active { background: var(--n-50); }
   .qs-ava { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    background: var(--rose-50); color: var(--ion-color-primary);
-    font-weight: 800; font-size: 13px; }
+    background: var(--rose-50); color: var(--rose-700);
+    font-weight: 800; font-size: 13px; }  // AA: iniciales sobre pastilla clara
   .qs-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px;
     strong { font-size: 14px; font-weight: 700; color: var(--ion-text-color); }
     span { font-size: 12px; color: var(--n-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }

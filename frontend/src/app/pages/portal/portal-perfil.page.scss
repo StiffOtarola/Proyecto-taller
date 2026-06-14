@@ -165,7 +165,7 @@
   &:disabled { opacity: 0.5; cursor: default; }
 
   &.outline { background: none; border: 1.5px solid var(--hairline); color: var(--ion-text-color); }
-  &.danger { background: var(--rose-50); color: var(--ion-color-primary); border: 1px solid var(--rose-200); }
+  &.danger { background: var(--rose-50); color: var(--rose-700); border: 1px solid var(--rose-200); }  // AA sobre pastilla clara
   &.danger-outline { background: none; border: 1.5px solid var(--ion-color-danger); color: var(--ion-color-danger); margin-top: 10px; }
 }
 

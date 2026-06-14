@@ -24,7 +24,7 @@
   .mc-m { flex: 1; min-width: 0;
     h4 { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
     p { margin: 3px 0 0; font-size: 12px; color: var(--n-500); }
-    .placa { font-weight: 700; color: var(--ion-color-primary);
+    .placa { font-weight: 700; color: var(--rose-700);  // AA sobre pastilla clara
       background: var(--rose-50); padding: 1px 7px; border-radius: 6px; letter-spacing: .04em; font-size: 11px; } }
   .mc-e { background: none; border: none; cursor: pointer; color: var(--n-500); padding: 4px; flex-shrink: 0;
     ion-icon { font-size: 18px; } &:active { transform: scale(.9); }
@@ -67,7 +67,7 @@
   .mf-btn {
     background: none; border: 1.5px solid var(--hairline); border-radius: var(--radius-pill);
     padding: 7px 14px; cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 700;
-    color: var(--ion-color-primary);
+    color: var(--text-accent);  // AA
     &.del { border: none; color: var(--ion-color-danger); padding: 4px 6px; }
     &:disabled { opacity: .6; }
     &:active { transform: scale(.97); }
@@ -101,7 +101,7 @@
     font-family: inherit; font-size: 14px;
     border-bottom: 1px solid var(--hairline);
     &:last-child { border-bottom: none; }
-    &:active, &:hover { background: var(--rose-50); color: var(--ion-color-primary); }
+    &:active, &:hover { background: var(--rose-50); color: var(--rose-700); }  // AA sobre fondo claro
   }
 }
 

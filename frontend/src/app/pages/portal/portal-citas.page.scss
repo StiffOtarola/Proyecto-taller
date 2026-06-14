@@ -43,7 +43,7 @@
   width: 100%; margin-top: 12px; padding: 9px 12px; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; gap: 5px;
   border: 1px solid var(--hairline); border-radius: 12px; background: var(--ion-card-background);
-  font-family: inherit; font-size: 12px; font-weight: 700; color: var(--ion-color-primary);
+  font-family: inherit; font-size: 12px; font-weight: 700; color: var(--text-accent);  // AA
   ion-icon { font-size: 15px; }
   &:active { transform: scale(.98); }
 }
@@ -139,6 +139,6 @@
     box-shadow: var(--shadow-accent);
     ion-icon { font-size: 17px; margin: 0; opacity: 1; display: inline; }
     &:active { transform: scale(.97); }
-    &.ghost { background: none; border: 1.5px solid var(--hairline); color: var(--ion-color-primary); box-shadow: none; }
+    &.ghost { background: none; border: 1.5px solid var(--hairline); color: var(--text-accent); box-shadow: none; }  // AA
   }
 }

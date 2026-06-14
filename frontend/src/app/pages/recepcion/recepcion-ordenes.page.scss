@@ -15,7 +15,7 @@
 
   .oc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
   .oc-id { min-width: 0; }
-  .oc-num { font-size: 12px; font-weight: 700; color: var(--ion-color-primary); letter-spacing: .03em; }
+  .oc-num { font-size: 12px; font-weight: 700; color: var(--text-accent); letter-spacing: .03em; }  // AA
   .oc-title { font-size: 14px; font-weight: 700; margin-top: 2px; letter-spacing: -0.01em; line-height: 1.3; overflow-wrap: anywhere; }
 
   .oc-meta {
@@ -78,7 +78,7 @@
   &:active { transform: scale(.97); }
   &:disabled { opacity: .6; }
 }
-.btn-upload { background: var(--rose-50); color: var(--ion-color-primary); }
+.btn-upload { background: var(--rose-50); color: var(--rose-700); }  // AA: texto sobre pastilla clara (rose-50 sigue claro en oscuro)
 .btn-send { background: var(--ion-color-primary); color: #fff; }
 
 .empty-state {

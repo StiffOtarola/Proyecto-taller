@@ -15,11 +15,11 @@
 
   .rh-tag { display: inline-flex; align-items: center; gap: 6px;
     font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
-    color: var(--ion-color-primary);
+    color: var(--rose-700);  // AA sobre tarjeta clara (gradiente rose/amber)
     ion-icon { font-size: 15px; } }
   h3 { font-family: var(--font-display); font-size: 18px; font-weight: 800; letter-spacing: -0.02em;
     margin: 10px 0 4px; color: #0a0a0a;
-    strong { color: var(--ion-color-primary); } }
+    strong { color: var(--rose-700); } }  // AA sobre tarjeta clara
   .rh-sub { font-size: 12.5px; color: #525252; margin: 0 0 14px; line-height: 1.5; }
 
   .rh-blocks { display: flex; gap: 6px; }
@@ -78,7 +78,7 @@
 
   .of-d { margin: 8px 0 0; font-size: 13px; color: var(--n-500); line-height: 1.5; display: none; }
   &.open .of-d { display: block; }
-  .of-tog { display: block; margin-top: 6px; font-size: 12px; font-weight: 600; color: var(--ion-color-primary); }
+  .of-tog { display: block; margin-top: 6px; font-size: 12px; font-weight: 600; color: var(--text-accent); }  // AA
 }
 
 .empty-state {

@@ -37,7 +37,7 @@
   .reward-top { display: flex; align-items: center; justify-content: space-between;
     ion-icon { color: var(--ion-color-primary); font-size: 20px; } }
   .reward-count { font-size: 13px; font-weight: 700; color: var(--n-800); margin-top: 2px; }
-  .reward-txt { margin: 2px 0 12px; font-size: 12.5px; color: var(--n-500); strong { color: var(--ion-color-primary); } }
+  .reward-txt { margin: 2px 0 12px; font-size: 12.5px; color: var(--n-500); strong { color: var(--text-accent); } }  // AA
   .reward-blocks { display: flex; gap: 6px; }
   .blk { flex: 1; height: 14px; border-radius: 5px; background: var(--n-200);
     display: flex; align-items: center; justify-content: center;
@@ -80,7 +80,7 @@
     background: var(--ion-color-primary); color: #fff;
     ion-icon { font-size: 16px; }
     &:active { transform: scale(.98); }
-    &.ghost { background: none; border: 1.5px solid var(--hairline); color: var(--ion-color-primary); }
+    &.ghost { background: none; border: 1.5px solid var(--hairline); color: var(--text-accent); }  // AA
   }
 }
 
@@ -92,7 +92,7 @@
   .presu-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
   .presu-tag {
     display: inline-flex; align-items: center; gap: 5px;
-    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--ion-color-primary);
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--text-accent);  // AA
     ion-icon { font-size: 14px; }
   }
   h3 { margin: 6px 0 2px; font-size: 17px; font-weight: 700; }
@@ -102,7 +102,7 @@
   .presu-ver {
     margin-top: 10px; background: none; border: none; cursor: pointer;
     display: inline-flex; align-items: center; gap: 6px;
-    font-size: 13px; font-weight: 700; color: var(--ion-color-primary);
+    font-size: 13px; font-weight: 700; color: var(--text-accent);  // AA
     ion-icon { font-size: 16px; }
   }
 
@@ -115,7 +115,7 @@
     & + .presu-row { border-top: 1px dashed var(--hairline); }
     .presu-cant { color: var(--n-400); }
     &.total { border-top: 1.5px solid var(--hairline); margin-top: 2px; padding-top: 10px; font-weight: 800;
-      span:last-child { font-family: var(--font-display); font-size: 18px; color: var(--ion-color-primary); } }
+      span:last-child { font-family: var(--font-display); font-size: 18px; color: var(--text-accent); } }  // AA (18px no llega a "texto grande")
   }
 
   .presu-acc { display: flex; gap: 8px; margin-top: 14px; }

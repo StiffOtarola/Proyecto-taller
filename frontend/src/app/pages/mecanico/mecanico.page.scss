@@ -103,7 +103,7 @@
 
 /* Notas */
 .notas-btn { background: none; border: none; padding: 8px 0 2px; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--ion-color-primary);
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--text-accent);  // AA
   ion-icon { font-size: 15px; } }
 .notas-box { margin: 4px 0 2px; font-size: 13px; color: var(--n-600); font-style: italic;
   background: var(--n-50); border: 1px dashed var(--n-300); border-radius: 12px; padding: 10px 12px; }
@@ -136,7 +136,7 @@
   display: flex; align-items: center; gap: 12px;
   background: var(--ion-card-background); border: 1px solid var(--hairline);
   border-radius: 14px; box-shadow: var(--shadow-xs); padding: 10px 14px; margin-bottom: 8px;
-  .ag-hora { font-size: 13px; font-weight: 700; color: var(--ion-color-primary); min-width: 48px; }
+  .ag-hora { font-size: 13px; font-weight: 700; color: var(--text-accent); min-width: 48px; }  // AA
   .ag-info { flex: 1; min-width: 0; display: flex; flex-direction: column;
     strong { font-size: 13.5px; } span { font-size: 12px; color: var(--n-500); } }
 }

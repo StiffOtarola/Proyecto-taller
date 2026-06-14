@@ -25,7 +25,7 @@
   width: 100%; margin: 0 0 14px; padding: 11px; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   border: 1.5px dashed var(--ion-color-primary); border-radius: var(--radius-pill);
-  background: var(--rose-50); color: var(--ion-color-primary);
+  background: var(--rose-50); color: var(--rose-700);  // AA sobre pastilla clara
   font-family: inherit; font-size: 13px; font-weight: 800;
   ion-icon { font-size: 17px; }
   &:active { transform: scale(.98); }
@@ -44,7 +44,7 @@
     &.empty { background: var(--n-100); color: var(--n-400); } }
   .ms-info { display: flex; flex-direction: column; min-width: 0;
     strong { font-size: 14px; font-weight: 700; }
-    span { font-size: 12px; color: var(--ion-color-primary); font-weight: 600; margin-top: 2px; } }
+    span { font-size: 12px; color: var(--text-accent); font-weight: 600; margin-top: 2px; } }  // AA
 }
 
 /* Grupos de formulario (look del mockup) */

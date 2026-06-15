@@ -6,6 +6,7 @@ const requireRol = require('../middleware/roles');
 const { soloRoles } = require('../middleware/roles');
 const { notificarCambioEstado } = require('../utils/notificaciones');
 const { TRANSICIONES_CITA, transicionPermitida } = require('../utils/transiciones');
+const { sucursalValida } = require('../utils/sucursales');
 
 const ESTADOS = ['agendado', 'en_revision', 'en_mantenimiento', 'listo', 'entregado', 'cancelado'];
 
@@ -19,21 +20,24 @@ router.use(auth, requireRol('recepcion'));
 
 router.get('/', async (req, res) => {
   try {
-    const { fecha, estado, tecnico_id, q } = req.query;
+    const { fecha, estado, tecnico_id, sucursal_id, q } = req.query;
     let sql = `SELECT ci.*, c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.telefono AS cliente_telefono,
                       m.marca, m.modelo, m.placa,
                       u.nombre AS usuario_nombre,
-                      t.nombre AS tecnico_nombre
+                      t.nombre AS tecnico_nombre,
+                      s.nombre AS sucursal_nombre
                FROM citas ci
                JOIN clientes c ON ci.cliente_id = c.id
                LEFT JOIN motos m ON ci.moto_id = m.id
                LEFT JOIN usuarios u ON ci.usuario_id = u.id
                LEFT JOIN usuarios t ON ci.tecnico_id = t.id
+               LEFT JOIN sucursales s ON s.id = ci.sucursal_id
                WHERE 1=1`;
     const params = [];
     if (fecha) { sql += ' AND ci.fecha = ?'; params.push(fecha); }
     if (estado) { sql += ' AND ci.estado = ?'; params.push(estado); }
     if (tecnico_id) { sql += ' AND ci.tecnico_id = ?'; params.push(tecnico_id); }
+    if (sucursal_id) { sql += ' AND ci.sucursal_id = ?'; params.push(sucursal_id); }
     if (q) {
       sql += ' AND (c.nombre LIKE ? OR c.apellido LIKE ? OR CONCAT(c.nombre, " ", c.apellido) LIKE ? OR m.placa LIKE ?)';
       const like = `%${q}%`;
@@ -53,9 +57,10 @@ router.post('/', soloRoles(...GESTIONA_AGENDA), async (req, res) => {
     if (!cliente_id || !fecha || !hora || !motivo) {
       return res.status(400).json({ error: 'cliente_id, fecha, hora y motivo son requeridos' });
     }
+    const sucursal_id = (await sucursalValida(req.body.sucursal_id)) ? Number(req.body.sucursal_id) : null;
     const [result] = await pool.query(
-      'INSERT INTO citas (cliente_id, moto_id, usuario_id, tecnico_id, fecha, hora, motivo, tipo_servicio) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [cliente_id, moto_id || null, req.usuario.id, tecnico_id || null, fecha, hora, motivo, tipo_servicio || null]
+      'INSERT INTO citas (cliente_id, moto_id, usuario_id, tecnico_id, sucursal_id, fecha, hora, motivo, tipo_servicio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [cliente_id, moto_id || null, req.usuario.id, tecnico_id || null, sucursal_id, fecha, hora, motivo, tipo_servicio || null]
     );
     const [[nueva]] = await pool.query('SELECT * FROM citas WHERE id = ?', [result.insertId]);
     res.status(201).json({ data: nueva, message: 'Cita creada' });
@@ -85,9 +90,12 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', soloRoles(...GESTIONA_AGENDA), async (req, res) => {
   try {
     const { cliente_id, moto_id, fecha, hora, motivo, tipo_servicio, tecnico_id } = req.body;
+    // Solo cambia la sucursal si llega una válida (no la borra al editar otros campos).
+    const sucursalNueva = (await sucursalValida(req.body.sucursal_id)) ? Number(req.body.sucursal_id) : null;
     await pool.query(
-      'UPDATE citas SET cliente_id=?, moto_id=?, tecnico_id=?, fecha=?, hora=?, motivo=?, tipo_servicio=? WHERE id=?',
-      [cliente_id, moto_id || null, tecnico_id || null, fecha, hora, motivo, tipo_servicio || null, req.params.id]
+      `UPDATE citas SET cliente_id=?, moto_id=?, tecnico_id=?, fecha=?, hora=?, motivo=?, tipo_servicio=?,
+         sucursal_id = COALESCE(?, sucursal_id) WHERE id=?`,
+      [cliente_id, moto_id || null, tecnico_id || null, fecha, hora, motivo, tipo_servicio || null, sucursalNueva, req.params.id]
     );
     const [[actualizada]] = await pool.query('SELECT * FROM citas WHERE id = ?', [req.params.id]);
     res.json({ data: actualizada, message: 'Cita actualizada' });

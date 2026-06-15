@@ -34,6 +34,7 @@
         <div class="row"><span class="k">Servicio</span><span class="v">{{ cita.tipo_servicio || cita.motivo }}</span></div>
         <div class="row"><span class="k">Fecha</span><span class="v mono">{{ cita.fecha | date:'dd/MM/yyyy' }}<ng-container *ngIf="cita.hora"> · {{ cita.hora }}</ng-container></span></div>
         <div class="row"><span class="k">Mecánico</span><span class="v">{{ cita.tecnico_nombre || 'Por asignar' }}</span></div>
+        <div class="row" *ngIf="cita.sucursal_nombre"><span class="k">Sucursal</span><span class="v">{{ cita.sucursal_nombre }}<ng-container *ngIf="cita.sucursal_direccion"> · {{ cita.sucursal_direccion }}</ng-container></span></div>
         <div class="row" *ngIf="cita.numero_orden"><span class="k">Orden</span><span class="v mono">{{ cita.numero_orden }}</span></div>
         <div class="row" *ngIf="cita.motivo && cita.motivo !== cita.tipo_servicio"><span class="k">Descripción</span><span class="v">{{ cita.motivo }}</span></div>
       </div>

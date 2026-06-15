@@ -24,6 +24,16 @@
     </section>
 
     <section class="card" *ngIf="motos.length > 0">
+      <div class="fg" *ngIf="sucursales.length > 1">
+        <label>Sucursal *</label>
+        <select [(ngModel)]="form.sucursal_id" (ngModelChange)="onSucursal()">
+          <option [ngValue]="null" disabled>Elegí la sucursal</option>
+          <option *ngFor="let s of sucursales" [ngValue]="s.id">{{ s.nombre }}</option>
+        </select>
+        <!-- Dirección de la sucursal elegida (ayuda a no equivocarse de local) -->
+        <p class="suc-dir" *ngIf="sucursalSelDir"><ion-icon name="location-outline"></ion-icon> {{ sucursalSelDir }}</p>
+      </div>
+
       <div class="fg">
         <label>Seleccionar moto *</label>
         <select [(ngModel)]="form.moto_id">
@@ -64,12 +74,13 @@
 
       <div class="fg">
         <label>Hora disponible *</label>
-        <div class="tg" *ngIf="form.fecha">
+        <div class="tg" *ngIf="form.fecha && form.sucursal_id">
           <div class="ts" *ngFor="let h of horas"
                [class.sel]="form.hora === h" [class.full]="horaLlena(h) || horaPasada(h)"
                (click)="seleccionarHora(h)">{{ h }}</div>
         </div>
-        <div class="hint" *ngIf="!form.fecha">Elegí primero una fecha para ver los horarios.</div>
+        <div class="hint" *ngIf="!form.sucursal_id">Elegí primero la sucursal y la fecha para ver los horarios.</div>
+        <div class="hint" *ngIf="form.sucursal_id && !form.fecha">Elegí primero una fecha para ver los horarios.</div>
         <div class="full-msg" *ngIf="msgHora">⚠ {{ msgHora }}</div>
         <div class="hint" *ngIf="form.fecha">Máximo {{ maxPorHora }} citas por hora. Las horas tachadas no están disponibles.</div>
       </div>

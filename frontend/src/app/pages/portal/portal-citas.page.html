@@ -45,6 +45,7 @@
           </div>
         </div>
         <p class="cita-info">{{ c.tipo_servicio || c.motivo }} · {{ c.fecha | date:'dd/MM' }} · {{ c.hora }}</p>
+        <p class="cita-suc" *ngIf="c.sucursal_nombre"><ion-icon name="location-outline"></ion-icon> {{ c.sucursal_nombre }}</p>
 
         <!-- Presupuesto por aprobar (la orden vinculada espera la decisión del cliente) -->
         <button class="presu-aviso" *ngIf="c.orden_estado === 'esperando_aprobacion' && c.aprobacion_cliente === 'pendiente'" (click)="irAInicio()">
@@ -96,6 +97,7 @@
           <span class="pill" [ngClass]="c.estado === 'entregado' ? 'green' : 'gris'">{{ estadoLabel[c.estado] }}</span>
         </div>
         <p class="cita-info">{{ c.tipo_servicio || c.motivo }} · {{ c.fecha | date:'dd/MM/yyyy' }}</p>
+        <p class="cita-suc" *ngIf="c.sucursal_nombre"><ion-icon name="location-outline"></ion-icon> {{ c.sucursal_nombre }}</p>
 
         <div class="prog" *ngIf="c.estado === 'entregado'">
           <div class="pr-t"><div class="pr-f" style="width:100%"></div></div>

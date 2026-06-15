@@ -30,6 +30,7 @@
       <p><span class="k">Problema</span>{{ orden.problema_reportado }}</p>
       <p *ngIf="orden.diagnostico"><span class="k">Diagnóstico</span>{{ orden.diagnostico }}</p>
       <p *ngIf="orden.tecnico_nombre"><span class="k">Técnico</span>{{ orden.tecnico_nombre }}</p>
+      <p *ngIf="orden.sucursal_nombre"><span class="k">Sucursal</span>{{ orden.sucursal_nombre }}</p>
       <p *ngIf="orden.fecha_estimada_entrega"><span class="k">Entrega estimada</span>{{ orden.fecha_estimada_entrega | date:'dd/MM/yyyy' }}</p>
     </section>
 

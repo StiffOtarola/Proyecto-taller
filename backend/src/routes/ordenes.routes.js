@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
 const { generarNumeroOrden, sincronizarCitaDesdeOrden } = require('../utils/ordenes');
 const { TRANSICIONES_ORDEN, transicionPermitida } = require('../utils/transiciones');
+const { sucursalValida } = require('../utils/sucursales');
 
 // Piso de rol: recepción o superior (recepción crea órdenes, el técnico las trabaja).
 // Sin esto, cualquier token válido podía leer/alterar órdenes ajenas y sus costos.
@@ -52,6 +53,7 @@ router.post('/', async (req, res) => {
     if (!moto_id || !cliente_id || !problema_reportado) {
       return res.status(400).json({ error: 'moto_id, cliente_id y problema_reportado son requeridos' });
     }
+    const sucursal_id = (await sucursalValida(req.body.sucursal_id)) ? Number(req.body.sucursal_id) : null;
 
     const numero_orden = await generarNumeroOrden();
 
@@ -62,12 +64,12 @@ router.post('/', async (req, res) => {
       await conn.beginTransaction();
       const [result] = await conn.query(
         `INSERT INTO ordenes_trabajo
-          (numero_orden, moto_id, cliente_id, recepcionista_id, problema_reportado,
+          (numero_orden, moto_id, cliente_id, sucursal_id, recepcionista_id, problema_reportado,
            kilometraje_ingreso, nivel_combustible, accesorios_entregados, estado_fisico,
            prioridad, categoria, fecha_estimada_entrega)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          numero_orden, moto_id, cliente_id, req.usuario.id, problema_reportado,
+          numero_orden, moto_id, cliente_id, sucursal_id, req.usuario.id, problema_reportado,
           kilometraje_ingreso || null, nivel_combustible || 'cuarto',
           accesorios_entregados || null, estado_fisico || null,
           prioridad || 'normal', categoria || 'diagnostico',
@@ -98,12 +100,14 @@ router.get('/:id', async (req, res) => {
               m.marca, m.modelo, m.placa, m.color, m.anio, m.kilometraje_actual,
               u.nombre AS tecnico_nombre,
               r.nombre AS recepcionista_nombre,
+              s.nombre AS sucursal_nombre, s.direccion AS sucursal_direccion, s.telefono AS sucursal_telefono,
               (ot.costo_mano_obra + ot.costo_repuestos - ot.descuento) AS total
        FROM ordenes_trabajo ot
        JOIN clientes c ON ot.cliente_id = c.id
        JOIN motos m ON ot.moto_id = m.id
        LEFT JOIN usuarios u ON ot.tecnico_id = u.id
        LEFT JOIN usuarios r ON ot.recepcionista_id = r.id
+       LEFT JOIN sucursales s ON s.id = ot.sucursal_id
        WHERE ot.id = ?`,
       [req.params.id]
     );

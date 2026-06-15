@@ -142,12 +142,17 @@ export class PortalService {
     return this.http.patch(`${this.url}/citas/${id}/confirmar`, {});
   }
 
-  crearCita(data: { moto_id: number; fecha: string; hora: string; tipo_servicio: string; descripcion?: string }): Observable<{ data: any }> {
+  crearCita(data: { moto_id: number; sucursal_id: number; fecha: string; hora: string; tipo_servicio: string; descripcion?: string }): Observable<{ data: any }> {
     return this.http.post<{ data: any }>(`${this.url}/citas`, data);
   }
 
-  editarCita(id: number, data: { moto_id: number; fecha: string; hora: string; tipo_servicio: string; descripcion?: string }): Observable<{ data: any }> {
+  editarCita(id: number, data: { moto_id: number; sucursal_id: number; fecha: string; hora: string; tipo_servicio: string; descripcion?: string }): Observable<{ data: any }> {
     return this.http.put<{ data: any }>(`${this.url}/citas/${id}`, data);
+  }
+
+  // Sucursales (locales) activas para el selector del formulario de citas.
+  getSucursales(): Observable<{ data: { id: number; nombre: string; direccion: string | null }[] }> {
+    return this.http.get<{ data: any[] }>(`${this.url}/sucursales`);
   }
 
   getResumen(): Observable<{ data: any }> {
@@ -192,13 +197,13 @@ export class PortalService {
   // Ajusta el contador local sin pegar al backend (tras leer/borrar en el feed).
   fijarContador(n: number): void { this.noLeidasSubject.next(Math.max(0, n)); }
 
-  getDisponibilidad(fecha: string): Observable<{ data: { horas: string[]; max: number; ocupacion: Record<string, number> } }> {
-    return this.http.get<{ data: any }>(`${this.url}/disponibilidad`, { params: { fecha } as any });
+  getDisponibilidad(fecha: string, sucursalId: number): Observable<{ data: { horas: string[]; max: number; ocupacion: Record<string, number>; sucursal_id: number } }> {
+    return this.http.get<{ data: any }>(`${this.url}/disponibilidad`, { params: { fecha, sucursal_id: sucursalId } as any });
   }
 
-  // Primer horario con cupo (para el botón "Sugerir próximo horario libre"). data = null si no hay.
-  getProximoLibre(): Observable<{ data: { fecha: string; hora: string } | null }> {
-    return this.http.get<{ data: any }>(`${this.url}/proximo-libre`);
+  // Primer horario con cupo en esa sucursal (botón "Sugerir próximo horario libre"). data = null si no hay.
+  getProximoLibre(sucursalId: number): Observable<{ data: { fecha: string; hora: string; sucursal_id: number } | null }> {
+    return this.http.get<{ data: any }>(`${this.url}/proximo-libre`, { params: { sucursal_id: sucursalId } as any });
   }
 
   // Línea de tiempo de servicios de una moto (citas entregadas).

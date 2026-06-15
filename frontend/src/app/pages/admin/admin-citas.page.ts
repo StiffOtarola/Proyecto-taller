@@ -11,10 +11,12 @@ import { descargarCSV, fechaCorta } from '../../shared/csv.util';
 })
 export class AdminCitasPage implements OnInit {
   citas: any[] = [];
+  sucursales: any[] = [];
   cargando = true;
   estado = '';
   q = '';
   fecha = '';
+  sucursalId: number | '' = '';
 
   readonly estadoLabel = ESTADO_CITA_LABEL;
   readonly filtros = [
@@ -29,18 +31,23 @@ export class AdminCitasPage implements OnInit {
 
   constructor(private admin: AdminService, private router: Router) {}
 
-  ngOnInit() { this.cargar(); }
+  ngOnInit() { this.cargar(); this.cargarSucursales(); }
   ionViewWillEnter() { this.cargar(); }
 
   cargar(ev?: any) {
     this.cargando = true;
-    this.admin.getCitas({ estado: this.estado, q: this.q.trim(), fecha: this.fecha }).subscribe({
+    this.admin.getCitas({ estado: this.estado, q: this.q.trim(), fecha: this.fecha, sucursal_id: this.sucursalId || undefined }).subscribe({
       next: r => { this.citas = r.data; this.cargando = false; if (ev) ev.target.complete(); },
       error: () => { this.cargando = false; if (ev) ev.target.complete(); },
     });
   }
 
+  cargarSucursales() {
+    this.admin.getSucursales().subscribe({ next: r => this.sucursales = r.data || [] });
+  }
+
   setFiltro(v: string) { this.estado = v; this.cargar(); }
+  setSucursal(v: number | '') { this.sucursalId = v; this.cargar(); }
   abrir(c: any) { if (c.orden_id) this.router.navigate(['/detalle-orden', c.orden_id]); }
 
   exportar() {
@@ -48,7 +55,7 @@ export class AdminCitasPage implements OnInit {
       { key: 'id', label: '#' }, { key: 'moto', label: 'Moto' }, { key: 'placa', label: 'Placa' },
       { key: 'cliente', label: 'Cliente' }, { key: 'servicio', label: 'Servicio' },
       { key: 'fecha', label: 'Fecha' }, { key: 'hora', label: 'Hora' },
-      { key: 'tecnico', label: 'Mecánico' }, { key: 'estado', label: 'Estado' },
+      { key: 'tecnico', label: 'Mecánico' }, { key: 'sucursal', label: 'Sucursal' }, { key: 'estado', label: 'Estado' },
     ], this.citas.map(c => ({
       id: c.id,
       moto: `${c.marca || ''} ${c.modelo || ''}`.trim(),
@@ -58,6 +65,7 @@ export class AdminCitasPage implements OnInit {
       fecha: fechaCorta(c.fecha),
       hora: (c.hora || '').slice(0, 5),
       tecnico: c.tecnico_nombre || '',
+      sucursal: c.sucursal_nombre || '',
       estado: this.estadoLabel[c.estado] || c.estado,
     })));
   }

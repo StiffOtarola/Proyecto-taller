@@ -22,6 +22,11 @@ export class AdminConfigPage implements OnInit {
   cuenta = { nombre: '', email: '' };
   pass = { actual: '', nueva: '' };
 
+  // Sucursales (locales del taller).
+  sucursales: any[] = [];
+  nuevaSucursal = { nombre: '', direccion: '', telefono: '' };
+  guardandoSucursal = false;
+
   // Orden de presentación: lunes → domingo.
   private readonly diasOrden = [
     { dia: 1, l: 'Lunes' }, { dia: 2, l: 'Martes' }, { dia: 3, l: 'Miércoles' },
@@ -37,6 +42,7 @@ export class AdminConfigPage implements OnInit {
     const u = this.auth.getUsuario();
     this.cuenta = { nombre: u?.nombre || '', email: u?.email || '' };
     this.cargar();
+    this.cargarSucursales();
   }
 
   cargar() {
@@ -44,6 +50,45 @@ export class AdminConfigPage implements OnInit {
     this.admin.getConfig().subscribe({
       next: r => { this.config = r.data; this.normalizarHorarios(); this.cargando = false; },
       error: () => { this.cargando = false; this.aviso('No se pudo cargar la configuración', 'danger'); },
+    });
+  }
+
+  cargarSucursales() {
+    this.admin.getSucursales().subscribe({ next: r => this.sucursales = r.data || [] });
+  }
+
+  agregarSucursal() {
+    const nombre = this.nuevaSucursal.nombre.trim();
+    if (!nombre) { this.aviso('Escribí el nombre de la sucursal', 'warning'); return; }
+    this.guardandoSucursal = true;
+    this.admin.createSucursal({
+      nombre,
+      direccion: this.nuevaSucursal.direccion.trim() || undefined,
+      telefono: this.nuevaSucursal.telefono.trim() || undefined,
+    }).subscribe({
+      next: () => {
+        this.guardandoSucursal = false;
+        this.nuevaSucursal = { nombre: '', direccion: '', telefono: '' };
+        this.cargarSucursales();
+        this.aviso('Sucursal creada');
+      },
+      error: (e) => { this.guardandoSucursal = false; this.aviso(e.error?.error || 'No se pudo crear', 'danger'); },
+    });
+  }
+
+  guardarSucursal(s: any) {
+    if (!s.nombre?.trim()) { this.aviso('La sucursal necesita un nombre', 'warning'); return; }
+    this.admin.updateSucursal(s.id, { nombre: s.nombre.trim(), direccion: s.direccion?.trim() || undefined, telefono: s.telefono?.trim() || undefined }).subscribe({
+      next: () => this.aviso('Sucursal actualizada'),
+      error: (e) => this.aviso(e.error?.error || 'No se pudo guardar', 'danger'),
+    });
+  }
+
+  toggleSucursal(s: any) {
+    const activa = !Number(s.activa);
+    this.admin.toggleSucursal(s.id, activa).subscribe({
+      next: () => { s.activa = activa ? 1 : 0; },
+      error: (e) => this.aviso(e.error?.error || 'No se pudo cambiar', 'danger'),
     });
   }
 

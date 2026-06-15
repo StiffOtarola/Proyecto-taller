@@ -17,7 +17,23 @@ DROP TABLE IF EXISTS citas;
 DROP TABLE IF EXISTS motos;
 DROP TABLE IF EXISTS clientes;
 DROP TABLE IF EXISTS usuarios;
+DROP TABLE IF EXISTS sucursales;
 DROP TABLE IF EXISTS items;
+
+-- Sucursales (locales) del taller. El sistema soporta varios; se siembran Liberia y Cañas.
+-- La cita, la orden y el personal se asocian a una sucursal.
+CREATE TABLE IF NOT EXISTS sucursales (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  nombre        VARCHAR(100) NOT NULL,
+  direccion     VARCHAR(200),
+  telefono      VARCHAR(40),
+  activa        TINYINT(1) DEFAULT 1,
+  orden         INT DEFAULT 0,                         -- orden de presentación en el selector
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+-- Ids explícitos: las filas viejas se rellenan a Liberia (id=1) de forma determinista.
+INSERT IGNORE INTO sucursales (id, nombre, orden) VALUES (1, 'Liberia', 1), (2, 'Cañas', 2);
 
 CREATE TABLE IF NOT EXISTS usuarios (
   id            INT AUTO_INCREMENT PRIMARY KEY,
@@ -28,9 +44,11 @@ CREATE TABLE IF NOT EXISTS usuarios (
   telefono      VARCHAR(20),                 -- perfil del mecánico
   especialidades VARCHAR(300),               -- perfil del mecánico (lista separada por comas)
   horario       VARCHAR(200),                -- perfil del mecánico
+  sucursal_id   INT,                         -- local del empleado (NULL = atiende ambas)
   activo        TINYINT(1) DEFAULT 1,
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (sucursal_id) REFERENCES sucursales(id)
 );
 
 CREATE TABLE IF NOT EXISTS clientes (
@@ -92,6 +110,7 @@ CREATE TABLE IF NOT EXISTS citas (
   moto_id       INT,
   usuario_id    INT,
   tecnico_id    INT,                                  -- mecánico asignado
+  sucursal_id   INT,                                  -- local donde se atiende la cita
   fecha         DATE NOT NULL,
   hora          TIME NOT NULL,
   motivo        TEXT NOT NULL,                        -- notas del cliente
@@ -107,10 +126,12 @@ CREATE TABLE IF NOT EXISTS citas (
   updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_citas_fecha_hora (fecha, hora),
   INDEX idx_citas_orden (orden_id),
+  INDEX idx_citas_sucursal_fecha_hora (sucursal_id, fecha, hora),
   FOREIGN KEY (cliente_id) REFERENCES clientes(id),
   FOREIGN KEY (moto_id)    REFERENCES motos(id),
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-  FOREIGN KEY (tecnico_id) REFERENCES usuarios(id)
+  FOREIGN KEY (tecnico_id) REFERENCES usuarios(id),
+  FOREIGN KEY (sucursal_id) REFERENCES sucursales(id)
 );
 
 CREATE TABLE IF NOT EXISTS ordenes_trabajo (
@@ -118,6 +139,7 @@ CREATE TABLE IF NOT EXISTS ordenes_trabajo (
   numero_orden          VARCHAR(20) UNIQUE NOT NULL,
   moto_id               INT NOT NULL,
   cliente_id            INT NOT NULL,
+  sucursal_id           INT,                          -- local que atiende la orden (heredado de la cita)
   recepcionista_id      INT,
   tecnico_id            INT,
   estado                ENUM('recepcion','diagnostico','esperando_aprobacion','esperando_repuestos','en_reparacion','lista_entrega','entregada','cancelada') NOT NULL DEFAULT 'recepcion',
@@ -150,6 +172,7 @@ CREATE TABLE IF NOT EXISTS ordenes_trabajo (
   updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (moto_id)          REFERENCES motos(id),
   FOREIGN KEY (cliente_id)       REFERENCES clientes(id),
+  FOREIGN KEY (sucursal_id)      REFERENCES sucursales(id),
   FOREIGN KEY (recepcionista_id) REFERENCES usuarios(id),
   FOREIGN KEY (tecnico_id)       REFERENCES usuarios(id)
 );

@@ -69,12 +69,14 @@ router.get('/citas-hoy', async (req, res) => {
               ci.confirmada_cliente, ci.orden_id, o.numero_orden,
               c.id AS cliente_id, c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.telefono AS cliente_telefono,
               m.marca, m.modelo, m.placa,
-              t.nombre AS tecnico_nombre
+              t.nombre AS tecnico_nombre,
+              ci.sucursal_id, s.nombre AS sucursal_nombre
        FROM citas ci
        JOIN clientes c ON ci.cliente_id = c.id
        LEFT JOIN motos m ON ci.moto_id = m.id
        LEFT JOIN usuarios t ON ci.tecnico_id = t.id
        LEFT JOIN ordenes_trabajo o ON o.id = ci.orden_id
+       LEFT JOIN sucursales s ON s.id = ci.sucursal_id
        WHERE ci.fecha = CURDATE() AND ci.estado <> 'cancelado'
        ORDER BY ci.hora ASC`
     );
@@ -88,7 +90,7 @@ router.get('/citas-hoy', async (req, res) => {
 router.post('/citas/:id/crear-orden', async (req, res) => {
   try {
     const [[cita]] = await pool.query(
-      'SELECT id, cliente_id, moto_id, motivo, tecnico_id, orden_id FROM citas WHERE id = ?',
+      'SELECT id, cliente_id, moto_id, motivo, tecnico_id, sucursal_id, orden_id FROM citas WHERE id = ?',
       [req.params.id]
     );
     if (!cita) return res.status(404).json({ error: 'Cita no encontrada' });
@@ -106,9 +108,9 @@ router.post('/citas/:id/crear-orden', async (req, res) => {
       await conn.beginTransaction();
       const [result] = await conn.query(
         `INSERT INTO ordenes_trabajo
-          (numero_orden, moto_id, cliente_id, recepcionista_id, tecnico_id, problema_reportado, estado)
-         VALUES (?, ?, ?, ?, ?, ?, 'diagnostico')`,
-        [numero_orden, cita.moto_id, cita.cliente_id, req.usuario.id, cita.tecnico_id || null, cita.motivo || 'Orden generada desde la cita']
+          (numero_orden, moto_id, cliente_id, sucursal_id, recepcionista_id, tecnico_id, problema_reportado, estado)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'diagnostico')`,
+        [numero_orden, cita.moto_id, cita.cliente_id, cita.sucursal_id || null, req.usuario.id, cita.tecnico_id || null, cita.motivo || 'Orden generada desde la cita']
       );
       await conn.query('INSERT INTO orden_tiempos (orden_id, etapa) VALUES (?, ?)', [result.insertId, 'diagnostico']);
       await conn.query('UPDATE citas SET orden_id = ? WHERE id = ?', [result.insertId, req.params.id]);

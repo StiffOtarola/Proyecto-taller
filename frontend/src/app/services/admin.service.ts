@@ -14,12 +14,13 @@ export class AdminService {
     return this.http.get<{ data: any }>(`${this.url}/resumen`);
   }
 
-  // Gestión de citas: reusa /api/citas con filtros (estado, búsqueda, fecha).
-  getCitas(filtros: { estado?: string; q?: string; fecha?: string } = {}): Observable<{ data: any[] }> {
+  // Gestión de citas: reusa /api/citas con filtros (estado, búsqueda, fecha, sucursal).
+  getCitas(filtros: { estado?: string; q?: string; fecha?: string; sucursal_id?: number | string } = {}): Observable<{ data: any[] }> {
     const params: any = {};
     if (filtros.estado) params.estado = filtros.estado;
     if (filtros.q) params.q = filtros.q;
     if (filtros.fecha) params.fecha = filtros.fecha;
+    if (filtros.sucursal_id) params.sucursal_id = filtros.sucursal_id;
     return this.http.get<{ data: any[] }>(this.citasUrl, { params });
   }
 
@@ -61,5 +62,19 @@ export class AdminService {
   }
   updatePassword(payload: { actual: string; nueva: string }): Observable<{ message: string }> {
     return this.http.put<{ message: string }>(`${this.url}/cuenta/password`, payload);
+  }
+
+  // Sucursales (locales del taller).
+  getSucursales(): Observable<{ data: any[] }> {
+    return this.http.get<{ data: any[] }>(`${this.url}/sucursales`);
+  }
+  createSucursal(payload: { nombre: string; direccion?: string; telefono?: string }): Observable<{ data: any; message: string }> {
+    return this.http.post<{ data: any; message: string }>(`${this.url}/sucursales`, payload);
+  }
+  updateSucursal(id: number, payload: { nombre: string; direccion?: string; telefono?: string }): Observable<{ data: any; message: string }> {
+    return this.http.put<{ data: any; message: string }>(`${this.url}/sucursales/${id}`, payload);
+  }
+  toggleSucursal(id: number, activa: boolean): Observable<{ message: string }> {
+    return this.http.patch<{ message: string }>(`${this.url}/sucursales/${id}/activa`, { activa });
   }
 }

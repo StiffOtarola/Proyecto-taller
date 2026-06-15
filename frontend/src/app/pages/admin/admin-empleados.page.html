@@ -22,6 +22,12 @@
             <option value="recepcion">🗂 Recepcionista</option>
           </select>
         </div>
+        <div class="fg" *ngIf="sucursales.length"><label>Sucursal</label>
+          <select [(ngModel)]="nuevo.sucursal_id">
+            <option [ngValue]="null">Ambas / sin asignar</option>
+            <option *ngFor="let s of sucursales" [ngValue]="s.id">{{ s.nombre }}</option>
+          </select>
+        </div>
         <button class="btn btn-cr btn-block" (click)="crear()" [disabled]="!valido || creando">{{ creando ? 'Creando…' : 'Crear empleado' }}</button>
       </div>
 
@@ -38,6 +44,13 @@
             <div class="emp-info">
               <strong>{{ u.nombre }}</strong>
               <span>{{ rolLabel[u.rol] || u.rol }}<span *ngIf="u.telefono"> · {{ u.telefono }}</span></span>
+              <!-- Sucursal del empleado (el admin no se ata a un local) -->
+              <select *ngIf="u.rol !== 'admin' && sucursales.length" class="emp-suc"
+                      [ngModel]="u.sucursal_id ?? null" (ngModelChange)="cambiarSucursal(u, $event)"
+                      style="margin-top:4px;padding:3px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx2);font-size:11px;max-width:170px">
+                <option [ngValue]="null">📍 Ambas sucursales</option>
+                <option *ngFor="let s of sucursales" [ngValue]="s.id">📍 {{ s.nombre }}</option>
+              </select>
             </div>
             <div class="emp-actions">
               <span class="bg" [ngClass]="u.activo ? 'bg-em' : 'bg-rd'">{{ u.activo ? 'Activo' : 'Inactivo' }}</span>

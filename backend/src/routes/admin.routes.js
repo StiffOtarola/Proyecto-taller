@@ -5,6 +5,7 @@ const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
 const { getConfig, clearCache } = require('../utils/configuracion');
+const { getSucursales, clearCache: clearSucursalesCache } = require('../utils/sucursales');
 
 // Panel del administrador: métricas ejecutivas. Solo admin.
 router.use(auth, requireRol('admin'));
@@ -390,6 +391,71 @@ router.put('/cuenta/password', async (req, res) => {
     const hash = await bcrypt.hash(String(nueva), 10);
     await pool.query('UPDATE usuarios SET password_hash = ? WHERE id = ?', [hash, req.usuario.id]);
     res.json({ message: 'Contraseña actualizada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// ───────────────────────────────────────────────────────────
+// Sucursales (locales del taller). El admin las administra desde Configuración.
+// ───────────────────────────────────────────────────────────
+// GET /api/admin/sucursales — todas (incluidas las inactivas).
+router.get('/sucursales', async (req, res) => {
+  try {
+    res.json({ data: await getSucursales() });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// POST /api/admin/sucursales — alta de una sucursal nueva.
+router.post('/sucursales', async (req, res) => {
+  try {
+    const nombre = (req.body.nombre || '').trim();
+    if (!nombre) return res.status(400).json({ error: 'El nombre de la sucursal es requerido' });
+    const [[{ orden }]] = await pool.query('SELECT COALESCE(MAX(orden), 0) + 1 AS orden FROM sucursales');
+    const [result] = await pool.query(
+      'INSERT INTO sucursales (nombre, direccion, telefono, orden) VALUES (?, ?, ?, ?)',
+      [nombre, (req.body.direccion || '').trim() || null, (req.body.telefono || '').trim() || null, orden]
+    );
+    clearSucursalesCache();
+    const [[nueva]] = await pool.query('SELECT id, nombre, direccion, telefono, activa, orden FROM sucursales WHERE id = ?', [result.insertId]);
+    res.status(201).json({ data: nueva, message: 'Sucursal creada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// PUT /api/admin/sucursales/:id — edita nombre/dirección/teléfono.
+router.put('/sucursales/:id', async (req, res) => {
+  try {
+    const nombre = (req.body.nombre || '').trim();
+    if (!nombre) return res.status(400).json({ error: 'El nombre de la sucursal es requerido' });
+    const [result] = await pool.query(
+      'UPDATE sucursales SET nombre = ?, direccion = ?, telefono = ? WHERE id = ?',
+      [nombre, (req.body.direccion || '').trim() || null, (req.body.telefono || '').trim() || null, req.params.id]
+    );
+    if (!result.affectedRows) return res.status(404).json({ error: 'Sucursal no encontrada' });
+    clearSucursalesCache();
+    const [[actualizada]] = await pool.query('SELECT id, nombre, direccion, telefono, activa, orden FROM sucursales WHERE id = ?', [req.params.id]);
+    res.json({ data: actualizada, message: 'Sucursal actualizada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// PATCH /api/admin/sucursales/:id/activa — activa/desactiva (no deja cero activas).
+router.patch('/sucursales/:id/activa', async (req, res) => {
+  try {
+    const activa = req.body.activa ? 1 : 0;
+    if (!activa) {
+      const [[{ activas }]] = await pool.query('SELECT COUNT(*) AS activas FROM sucursales WHERE activa = 1 AND id <> ?', [req.params.id]);
+      if (!activas) return res.status(400).json({ error: 'Debe quedar al menos una sucursal activa' });
+    }
+    const [result] = await pool.query('UPDATE sucursales SET activa = ? WHERE id = ?', [activa, req.params.id]);
+    if (!result.affectedRows) return res.status(404).json({ error: 'Sucursal no encontrada' });
+    clearSucursalesCache();
+    res.json({ message: activa ? 'Sucursal activada' : 'Sucursal desactivada' });
   } catch (err) {
     fail(res, err);
   }

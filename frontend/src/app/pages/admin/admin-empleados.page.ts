@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ToastController } from '@ionic/angular';
 import { UsuariosService } from '../../services/usuarios.service';
+import { AdminService } from '../../services/admin.service';
 import { Usuario } from '../../models/usuario.model';
 
 @Component({
@@ -10,17 +11,18 @@ import { Usuario } from '../../models/usuario.model';
 })
 export class AdminEmpleadosPage implements OnInit {
   usuarios: Usuario[] = [];
+  sucursales: any[] = [];
   cargando = true;
   creando = false;
-  nuevo = { nombre: '', email: '', password: '', rol: 'tecnico', telefono: '' };
+  nuevo = { nombre: '', email: '', password: '', rol: 'tecnico', telefono: '', sucursal_id: null as number | null };
 
   readonly rolLabel: Record<string, string> = {
     tecnico: '🔧 Mecánico', recepcion: '🗂 Recepcionista', admin: 'Administración',
   };
 
-  constructor(private svc: UsuariosService, private toast: ToastController) {}
+  constructor(private svc: UsuariosService, private admin: AdminService, private toast: ToastController) {}
 
-  ngOnInit() { this.cargar(); }
+  ngOnInit() { this.cargar(); this.cargarSucursales(); }
   ionViewWillEnter() { this.cargar(); }
 
   cargar() {
@@ -28,6 +30,23 @@ export class AdminEmpleadosPage implements OnInit {
     this.svc.getAll().subscribe({
       next: r => { this.usuarios = r.data; this.cargando = false; },
       error: () => { this.cargando = false; },
+    });
+  }
+
+  cargarSucursales() {
+    this.admin.getSucursales().subscribe({ next: r => this.sucursales = (r.data || []).filter((s: any) => s.activa) });
+  }
+
+  // Cambia el local de un empleado desde la lista (null = atiende ambas).
+  cambiarSucursal(u: Usuario, valor: any) {
+    const sucursal_id = valor === '' || valor == null ? null : Number(valor);
+    this.svc.setSucursal(u.id!, sucursal_id).subscribe({
+      next: () => {
+        u.sucursal_id = sucursal_id;
+        u.sucursal_nombre = this.sucursales.find(s => s.id === sucursal_id)?.nombre || null;
+        this.aviso('Sucursal actualizada');
+      },
+      error: (e) => this.aviso(e.error?.error || 'No se pudo cambiar', 'danger'),
     });
   }
 
@@ -44,10 +63,11 @@ export class AdminEmpleadosPage implements OnInit {
       password: this.nuevo.password,
       rol: this.nuevo.rol,
       telefono: this.nuevo.telefono.trim() || undefined,
+      sucursal_id: this.nuevo.sucursal_id,
     }).subscribe({
       next: () => {
         this.creando = false;
-        this.nuevo = { nombre: '', email: '', password: '', rol: 'tecnico', telefono: '' };
+        this.nuevo = { nombre: '', email: '', password: '', rol: 'tecnico', telefono: '', sucursal_id: null };
         this.cargar();
         this.aviso('Empleado creado');
       },

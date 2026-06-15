@@ -23,6 +23,11 @@
       <div class="fac-marca">
         <img src="assets/logo/ms-logo.png" alt="MS Motos" style="height:64px;width:auto" />
         <p>Motos · Repuestos · Taller</p>
+        <p class="fac-suc" *ngIf="orden.sucursal_nombre">
+          <strong>Sucursal {{ orden.sucursal_nombre }}</strong>
+          <ng-container *ngIf="orden.sucursal_direccion"><br>{{ orden.sucursal_direccion }}</ng-container>
+          <ng-container *ngIf="orden.sucursal_telefono"><br>Tel: {{ orden.sucursal_telefono }}</ng-container>
+        </p>
       </div>
       <div class="fac-num">
         <span class="etiqueta">Orden</span>

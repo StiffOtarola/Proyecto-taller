@@ -14,9 +14,10 @@ export class PortalAgendarPage implements OnInit {
   readonly servicios = SERVICIOS;
   readonly horas = HORAS;
   motos: any[] = [];
+  sucursales: any[] = [];
   hoy = new Date().toISOString().slice(0, 10);
 
-  form = { moto_id: null as number | null, tipo_servicio: '', fecha: '', hora: '', descripcion: '' };
+  form = { sucursal_id: null as number | null, moto_id: null as number | null, tipo_servicio: '', fecha: '', hora: '', descripcion: '' };
   ocupacion: Record<string, number> = {};
   maxPorHora = 2;
   enviando = false;
@@ -34,12 +35,30 @@ export class PortalAgendarPage implements OnInit {
 
   ngOnInit() {
     this.cargarMotos();
+    this.cargarSucursales();
     const id = this.route.snapshot.paramMap.get('id');
     if (id) this.cargarParaEditar(+id);
   }
   ionViewWillEnter() { this.cargarMotos(); }
 
   cargarMotos() { this.portal.getMotos().subscribe(r => this.motos = r.data); }
+
+  // Carga las sucursales activas. Si solo hay una, la preselecciona (no hay que elegir).
+  cargarSucursales() {
+    this.portal.getSucursales().subscribe(r => {
+      this.sucursales = r.data || [];
+      if (!this.form.sucursal_id && this.sucursales.length === 1) {
+        this.form.sucursal_id = this.sucursales[0].id;
+      }
+    });
+  }
+
+  // Al cambiar de sucursal, el cupo es otro: se descarta la hora y se recargan los horarios.
+  onSucursal() {
+    this.form.hora = '';
+    this.ocupacion = {};
+    if (this.form.fecha) this.onFecha();
+  }
 
   // Modo edición: precarga la cita y la disponibilidad de su fecha (sin borrar la hora).
   private cargarParaEditar(id: number) {
@@ -53,14 +72,15 @@ export class PortalAgendarPage implements OnInit {
         }
         this.editId = id;
         this.form = {
+          sucursal_id: c.sucursal_id ?? null,
           moto_id: c.moto_id ?? null,
           tipo_servicio: c.tipo_servicio || '',
           fecha: String(c.fecha).slice(0, 10),
           hora: String(c.hora || '').slice(0, 5),
           descripcion: (c.motivo && c.motivo !== c.tipo_servicio) ? c.motivo : '',
         };
-        if (this.form.fecha) {
-          this.portal.getDisponibilidad(this.form.fecha).subscribe(d => {
+        if (this.form.fecha && this.form.sucursal_id) {
+          this.portal.getDisponibilidad(this.form.fecha, this.form.sucursal_id).subscribe(d => {
             this.ocupacion = d.data.ocupacion || {};
             this.maxPorHora = d.data.max || 2;
           });
@@ -70,11 +90,11 @@ export class PortalAgendarPage implements OnInit {
     });
   }
 
-  // Al elegir fecha, consulta cupos para deshabilitar horas llenas.
+  // Al elegir fecha, consulta cupos (de esa sucursal) para deshabilitar horas llenas.
   onFecha() {
     this.form.hora = '';
-    if (!this.form.fecha) return;
-    this.portal.getDisponibilidad(this.form.fecha).subscribe(r => {
+    if (!this.form.fecha || !this.form.sucursal_id) return;
+    this.portal.getDisponibilidad(this.form.fecha, this.form.sucursal_id).subscribe(r => {
       this.ocupacion = r.data.ocupacion || {};
       this.maxPorHora = r.data.max || 2;
     });
@@ -93,11 +113,12 @@ export class PortalAgendarPage implements OnInit {
     return h <= ahoraCR.toISOString().slice(11, 16);
   }
 
-  // Sugiere el próximo horario libre: precarga fecha + hora listos para confirmar.
+  // Sugiere el próximo horario libre (en la sucursal elegida): precarga fecha + hora.
   sugerir() {
     if (this.sugiriendo) return;
+    if (!this.form.sucursal_id) { this.toastMsg('Elegí primero una sucursal', 'warning'); return; }
     this.sugiriendo = true;
-    this.portal.getProximoLibre().subscribe({
+    this.portal.getProximoLibre(this.form.sucursal_id).subscribe({
       next: r => {
         if (!r.data) {
           this.sugiriendo = false;
@@ -107,7 +128,7 @@ export class PortalAgendarPage implements OnInit {
         const { fecha, hora } = r.data;
         this.form.fecha = fecha;
         // Carga la disponibilidad de ese día y deja la hora seleccionada.
-        this.portal.getDisponibilidad(fecha).subscribe({
+        this.portal.getDisponibilidad(fecha, this.form.sucursal_id!).subscribe({
           next: d => {
             this.ocupacion = d.data.ocupacion || {};
             this.maxPorHora = d.data.max || 2;
@@ -136,15 +157,20 @@ export class PortalAgendarPage implements OnInit {
 
   // Moto seleccionada (para el preview con foto bajo el selector).
   get motoSel(): any { return this.motos.find(m => m.id === this.form.moto_id) || null; }
+
+  // Dirección de la sucursal elegida (para mostrarla bajo el selector).
+  get sucursalSelDir(): string | null {
+    return this.sucursales.find(s => s.id === this.form.sucursal_id)?.direccion || null;
+  }
   irAMotos() { this.router.navigate(['/portal/motos']); }
 
   get valido(): boolean {
-    return !!(this.form.moto_id && this.form.tipo_servicio && this.form.fecha && this.form.hora);
+    return !!(this.form.sucursal_id && this.form.moto_id && this.form.tipo_servicio && this.form.fecha && this.form.hora);
   }
 
   // ¿Hay algo cargado en el formulario? (para mostrar "Limpiar" solo cuando aplica)
   get hayDatos(): boolean {
-    return !!(this.form.moto_id || this.form.tipo_servicio || this.form.fecha || this.form.hora || this.form.descripcion.trim());
+    return !!(this.form.sucursal_id || this.form.moto_id || this.form.tipo_servicio || this.form.fecha || this.form.hora || this.form.descripcion.trim());
   }
 
   // Limpia el formulario (solo al crear). Guarda el estado previo —incluida la
@@ -152,7 +178,9 @@ export class PortalAgendarPage implements OnInit {
   // sin querer no obligue a rehacer todo a mano.
   async limpiar() {
     const previo = { form: { ...this.form }, ocupacion: { ...this.ocupacion }, maxPorHora: this.maxPorHora };
-    this.form = { moto_id: null, tipo_servicio: '', fecha: '', hora: '', descripcion: '' };
+    // Si solo hay una sucursal, se conserva preseleccionada al limpiar.
+    const sucursalDefault = this.sucursales.length === 1 ? this.sucursales[0].id : null;
+    this.form = { sucursal_id: sucursalDefault, moto_id: null, tipo_servicio: '', fecha: '', hora: '', descripcion: '' };
     this.ocupacion = {};
     this.maxPorHora = 2;
     this.msgHora = '';
@@ -181,6 +209,7 @@ export class PortalAgendarPage implements OnInit {
     await l.present();
     this.enviando = true;
     const datos = {
+      sucursal_id: this.form.sucursal_id!,
       moto_id: this.form.moto_id!,
       tipo_servicio: this.form.tipo_servicio,
       fecha: this.form.fecha,
@@ -192,7 +221,7 @@ export class PortalAgendarPage implements OnInit {
       next: async () => {
         await l.dismiss(); this.enviando = false;
         this.toastMsg(editando ? 'Cita actualizada' : '¡Cita agendada!');
-        this.form = { moto_id: null, tipo_servicio: '', fecha: '', hora: '', descripcion: '' };
+        this.form = { sucursal_id: null, moto_id: null, tipo_servicio: '', fecha: '', hora: '', descripcion: '' };
         this.editId = null;
         this.router.navigate(editando ? ['/portal/cita', editando] : ['/portal/mis-citas']);
       },

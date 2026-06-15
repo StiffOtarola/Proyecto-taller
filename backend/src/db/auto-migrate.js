@@ -329,6 +329,41 @@ async function ensureSchema() {
         ])]
       )
     );
+
+    // Sucursales (locales del taller). El sistema pasa de single-local a multi-local:
+    // la cita, la orden y el personal se asocian a una sucursal. Se siembran Liberia y
+    // Cañas con ids fijos para poder rellenar los datos viejos de forma determinista.
+    // Orden importante: crear+sembrar la tabla ANTES de las columnas y el backfill.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS sucursales (
+        id         INT AUTO_INCREMENT PRIMARY KEY,
+        nombre     VARCHAR(100) NOT NULL,
+        direccion  VARCHAR(200),
+        telefono   VARCHAR(40),
+        activa     TINYINT(1) DEFAULT 1,
+        orden      INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+    await tryStep('seed sucursales', () =>
+      pool.query("INSERT IGNORE INTO sucursales (id, nombre, orden) VALUES (1, 'Liberia', 1), (2, 'Cañas', 2)")
+    );
+
+    // Columna sucursal_id (sin FK aquí, igual que citas.tecnico_id/orden_id; las FK van
+    // solo en schema.sql para instalación limpia). NULL en usuarios = "atiende ambas".
+    await addColumnIfMissing('citas', 'sucursal_id', 'INT NULL');
+    await addColumnIfMissing('ordenes_trabajo', 'sucursal_id', 'INT NULL');
+    await addColumnIfMissing('usuarios', 'sucursal_id', 'INT NULL');
+    // Backfill: las citas y órdenes históricas quedan en Liberia (id=1).
+    await tryStep('backfill citas.sucursal_id', () =>
+      pool.query('UPDATE citas SET sucursal_id = 1 WHERE sucursal_id IS NULL')
+    );
+    await tryStep('backfill ordenes.sucursal_id', () =>
+      pool.query('UPDATE ordenes_trabajo SET sucursal_id = 1 WHERE sucursal_id IS NULL')
+    );
+    // Índice por (sucursal, fecha, hora): hace preciso el bloqueo FOR UPDATE del cupo por local.
+    await crearIndiceSiFalta('citas', 'idx_citas_sucursal_fecha_hora', '(sucursal_id, fecha, hora)');
   } catch (err) {
     console.error('⚠️  Auto-migración falló:', err.code || err.message);
   }

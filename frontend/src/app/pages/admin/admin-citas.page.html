@@ -14,6 +14,11 @@
 
     <div class="search-row">
       <input class="grow" type="text" [(ngModel)]="q" (keyup.enter)="cargar()" placeholder="🔍 Buscar cliente o placa...">
+      <select *ngIf="sucursales.length > 1" [(ngModel)]="sucursalId" (ngModelChange)="cargar()"
+              style="padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--sur2);color:var(--tx);font-size:13px">
+        <option [ngValue]="''">📍 Todas las sucursales</option>
+        <option *ngFor="let s of sucursales" [ngValue]="s.id">📍 {{ s.nombre }}</option>
+      </select>
       <input type="date" [(ngModel)]="fecha">
       <button class="btn btn-cr" (click)="cargar()">Buscar</button>
       <button class="btn btn-ou" (click)="exportar()" [disabled]="!citas.length">Exportar</button>
@@ -23,7 +28,7 @@
       <div class="tbl-wrap">
         <table class="tbl">
           <thead>
-            <tr><th>#</th><th>Moto / Placa</th><th>Cliente</th><th>Servicio</th><th>Fecha y hora</th><th>Mecánico</th><th>Estado</th><th>Acción</th></tr>
+            <tr><th>#</th><th>Moto / Placa</th><th>Cliente</th><th>Servicio</th><th>Fecha y hora</th><th>Mecánico</th><th>Sucursal</th><th>Estado</th><th>Acción</th></tr>
           </thead>
           <tbody>
             <tr *ngFor="let c of citas">
@@ -33,6 +38,7 @@
               <td style="font-size:12px">{{ c.tipo_servicio || c.motivo }}</td>
               <td class="mono" style="font-size:11px">{{ c.fecha | date:'dd/MM/yy' }} · {{ c.hora?.slice(0,5) }}</td>
               <td>{{ c.tecnico_nombre || '—' }}</td>
+              <td style="font-size:12px">{{ c.sucursal_nombre || '—' }}</td>
               <td><span class="bg" [ngClass]="estadoBadge[c.estado]">{{ estadoLabel[c.estado] }}</span></td>
               <td>
                 <button class="btn btn-ou btn-sm" *ngIf="c.orden_id" (click)="abrir(c)">Ver orden</button>

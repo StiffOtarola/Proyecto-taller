@@ -51,6 +51,41 @@
           </div>
           <button class="btn btn-cr" style="width:100%;justify-content:center;padding:12px;margin-top:6px" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar horarios</button>
         </div>
+
+        <!-- Sucursales (locales del taller) -->
+        <div class="cd">
+          <span class="cd-title">📍 Sucursales</span>
+          <div class="hint" style="margin:-4px 0 12px">Locales donde el cliente puede agendar. El horario es compartido; el cupo se cuenta por sucursal.</div>
+
+          <div *ngFor="let s of sucursales"
+               style="padding:10px;background:var(--sur2);border-radius:10px;margin-bottom:8px"
+               [style.opacity]="s.activa ? 1 : 0.55">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+              <input [(ngModel)]="s.nombre" placeholder="Nombre"
+                     style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx);font-size:12px;font-weight:700">
+              <button class="btn btn-sm" [ngClass]="s.activa ? 'btn-rd' : 'btn-cr'" (click)="toggleSucursal(s)">{{ s.activa ? 'Desactivar' : 'Activar' }}</button>
+            </div>
+            <input [(ngModel)]="s.direccion" placeholder="Dirección"
+                   style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx);font-size:11px;margin-bottom:6px">
+            <div style="display:flex;gap:8px;align-items:center">
+              <input [(ngModel)]="s.telefono" placeholder="Teléfono"
+                     style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx);font-size:11px">
+              <button class="btn btn-ou btn-sm" (click)="guardarSucursal(s)">💾 Guardar</button>
+            </div>
+          </div>
+
+          <!-- Agregar nueva sucursal -->
+          <div style="border:2px dashed var(--bd2);border-radius:10px;padding:12px;margin-top:4px">
+            <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Agregar sucursal</div>
+            <input [(ngModel)]="nuevaSucursal.nombre" placeholder="Nombre (ej. Liberia)"
+                   style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx);font-size:12px;margin-bottom:6px">
+            <input [(ngModel)]="nuevaSucursal.direccion" placeholder="Dirección (opcional)"
+                   style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx);font-size:12px;margin-bottom:6px">
+            <input [(ngModel)]="nuevaSucursal.telefono" placeholder="Teléfono (opcional)"
+                   style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx);font-size:12px;margin-bottom:8px">
+            <button class="btn btn-cr" style="width:100%;justify-content:center;padding:10px" [disabled]="guardandoSucursal" (click)="agregarSucursal()">➕ Agregar sucursal</button>
+          </div>
+        </div>
       </div>
 
       <!-- Columna derecha -->

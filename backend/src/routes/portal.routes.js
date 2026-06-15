@@ -9,6 +9,7 @@ const { consumir } = require('../utils/rate-limit');
 const { enviarCodigoReset } = require('../services/mailer');
 const { SERVICIOS } = require('../utils/servicios');
 const { getConfig, horasDisponibles } = require('../utils/configuracion');
+const { getSucursales, sucursalValida, sucursalPorDefecto } = require('../utils/sucursales');
 const { recompensas } = require('../utils/recompensas');
 
 // Fecha de hoy en zona de Costa Rica (UTC-6, sin horario de verano).
@@ -471,21 +472,36 @@ router.delete('/perfil', async (req, res) => {
   }
 });
 
-// GET /api/portal/disponibilidad?fecha= — conteo de citas por hora ese día
+// GET /api/portal/sucursales — locales activos para el selector del formulario de citas.
+router.get('/sucursales', async (req, res) => {
+  try {
+    const activas = await getSucursales({ soloActivas: true });
+    res.json({ data: activas.map((s) => ({ id: s.id, nombre: s.nombre, direccion: s.direccion })) });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// GET /api/portal/disponibilidad?fecha=&sucursal_id= — conteo de citas por hora ese día
+// y sucursal. El horario es compartido (config), pero el cupo se cuenta POR sucursal:
+// una cita en un local no ocupa el cupo del otro.
 router.get('/disponibilidad', async (req, res) => {
   try {
     const { fecha } = req.query;
     if (!fecha) return res.status(400).json({ error: 'Fecha requerida' });
+    // Sucursal: la pedida (si es válida) o la primera activa por compatibilidad.
+    let sucursalId = Number(req.query.sucursal_id);
+    if (!(await sucursalValida(sucursalId))) sucursalId = await sucursalPorDefecto();
     const config = await getConfig();
     const horas = horasDisponibles(fecha, config);
     const [rows] = await pool.query(
       `SELECT TIME_FORMAT(hora, '%H:%i') AS hora, COUNT(*) AS n
-       FROM citas WHERE fecha = ? AND estado != 'cancelado' GROUP BY 1`,
-      [fecha]
+       FROM citas WHERE fecha = ? AND sucursal_id = ? AND estado != 'cancelado' GROUP BY 1`,
+      [fecha, sucursalId]
     );
     const ocupacion = {};
     for (const r of rows) ocupacion[r.hora] = r.n;
-    res.json({ data: { horas, max: config.max_citas_hora, ocupacion } });
+    res.json({ data: { horas, max: config.max_citas_hora, ocupacion, sucursal_id: sucursalId } });
   } catch (err) {
     fail(res, err);
   }
@@ -495,6 +511,9 @@ router.get('/disponibilidad', async (req, res) => {
 // Recorre día por día desde hoy hasta dias_anticipacion, según horarios y cupo configurados.
 router.get('/proximo-libre', async (req, res) => {
   try {
+    // El cupo es por sucursal: la sugerencia se calcula para la sucursal pedida.
+    let sucursalId = Number(req.query.sucursal_id);
+    if (!(await sucursalValida(sucursalId))) sucursalId = await sucursalPorDefecto();
     const config = await getConfig();
     const max = Number(config.max_citas_hora) || 1;
     const dias = Number(config.dias_anticipacion) || 30;
@@ -503,11 +522,11 @@ router.get('/proximo-libre', async (req, res) => {
     fin.setUTCDate(fin.getUTCDate() + dias);
     const finStr = fin.toISOString().slice(0, 10);
 
-    // Ocupación de todo el rango en una sola consulta (fecha+hora → cantidad).
+    // Ocupación de todo el rango en una sola consulta (fecha+hora → cantidad), por sucursal.
     const [filas] = await pool.query(
       `SELECT DATE_FORMAT(fecha, '%Y-%m-%d') AS f, TIME_FORMAT(hora, '%H:%i') AS h, COUNT(*) AS n
-       FROM citas WHERE fecha BETWEEN ? AND ? AND estado <> 'cancelado' GROUP BY f, h`,
-      [hoy, finStr]
+       FROM citas WHERE fecha BETWEEN ? AND ? AND sucursal_id = ? AND estado <> 'cancelado' GROUP BY f, h`,
+      [hoy, finStr, sucursalId]
     );
     const ocup = {};
     for (const r of filas) { (ocup[r.f] || (ocup[r.f] = {}))[r.h] = Number(r.n); }
@@ -519,7 +538,7 @@ router.get('/proximo-libre', async (req, res) => {
       for (const hora of horasDisponibles(fecha, config)) {
         const usados = (ocup[fecha] || {})[hora] || 0;
         if (usados < max && horasHastaCita(fecha, hora) > 0) {
-          return res.json({ data: { fecha, hora } });
+          return res.json({ data: { fecha, hora, sucursal_id: sucursalId } });
         }
       }
       cursor.setUTCDate(cursor.getUTCDate() + 1);
@@ -812,11 +831,13 @@ router.get('/citas', async (req, res) => {
               ci.monto, ci.calificacion, ci.confirmada_cliente,
               ci.orden_id, o.numero_orden, o.estado AS orden_estado, o.aprobacion_cliente,
               m.marca, m.modelo, m.placa,
-              t.nombre AS tecnico_nombre
+              t.nombre AS tecnico_nombre,
+              ci.sucursal_id, s.nombre AS sucursal_nombre
        FROM citas ci
        LEFT JOIN motos m ON m.id = ci.moto_id
        LEFT JOIN usuarios t ON t.id = ci.tecnico_id
        LEFT JOIN ordenes_trabajo o ON o.id = ci.orden_id
+       LEFT JOIN sucursales s ON s.id = ci.sucursal_id
        WHERE ci.cliente_id = ? AND ci.estado <> 'cancelado'
        ORDER BY ci.fecha DESC, ci.hora DESC`,
       [req.cliente.id]
@@ -837,11 +858,13 @@ router.get('/citas/:id', async (req, res) => {
               ci.confirmada_cliente,
               ci.orden_id, o.numero_orden, o.estado AS orden_estado, o.aprobacion_cliente,
               m.marca, m.modelo, m.placa, m.foto AS moto_foto,
-              t.nombre AS tecnico_nombre
+              t.nombre AS tecnico_nombre,
+              ci.sucursal_id, s.nombre AS sucursal_nombre, s.direccion AS sucursal_direccion
        FROM citas ci
        LEFT JOIN motos m ON m.id = ci.moto_id
        LEFT JOIN usuarios t ON t.id = ci.tecnico_id
        LEFT JOIN ordenes_trabajo o ON o.id = ci.orden_id
+       LEFT JOIN sucursales s ON s.id = ci.sucursal_id
        WHERE ci.id = ? AND ci.cliente_id = ?`,
       [req.params.id, req.cliente.id]
     );
@@ -864,9 +887,11 @@ router.put('/citas/:id', async (req, res) => {
     if (!SERVICIOS.includes(tipo_servicio)) {
       return res.status(400).json({ error: 'Servicio no válido' });
     }
+    // Sucursal: la pedida (si es válida) o se conserva la actual de la cita más abajo.
+    const sucursalPedida = (await sucursalValida(req.body.sucursal_id)) ? Number(req.body.sucursal_id) : null;
 
     const [[cita]] = await pool.query(
-      "SELECT id, estado, orden_id, DATE_FORMAT(fecha, '%Y-%m-%d') AS fecha, TIME_FORMAT(hora, '%H:%i') AS hora FROM citas WHERE id = ? AND cliente_id = ?",
+      "SELECT id, estado, orden_id, sucursal_id, DATE_FORMAT(fecha, '%Y-%m-%d') AS fecha, TIME_FORMAT(hora, '%H:%i') AS hora FROM citas WHERE id = ? AND cliente_id = ?",
       [req.params.id, req.cliente.id]
     );
     if (!cita) return res.status(404).json({ error: 'Cita no encontrada' });
@@ -901,22 +926,24 @@ router.put('/citas/:id', async (req, res) => {
     if (!moto) return res.status(400).json({ error: 'Moto no válida' });
 
     const motivo = (descripcion || '').trim() || tipo_servicio;
+    // Sucursal efectiva: la nueva pedida, o la que ya tenía la cita (fallback al default).
+    const sucursalId = sucursalPedida || cita.sucursal_id || (await sucursalPorDefecto());
 
-    // Cupo atómico de la NUEVA franja, excluyendo esta misma cita.
+    // Cupo atómico de la NUEVA franja (por sucursal), excluyendo esta misma cita.
     const conn = await pool.getConnection();
     try {
       await conn.beginTransaction();
       const [[{ ocupadas }]] = await conn.query(
-        "SELECT COUNT(*) AS ocupadas FROM citas WHERE fecha = ? AND hora = ? AND estado != 'cancelado' AND id != ? FOR UPDATE",
-        [fecha, hora, req.params.id]
+        "SELECT COUNT(*) AS ocupadas FROM citas WHERE fecha = ? AND hora = ? AND sucursal_id = ? AND estado != 'cancelado' AND id != ? FOR UPDATE",
+        [fecha, hora, sucursalId, req.params.id]
       );
       if (ocupadas >= config.max_citas_hora) {
         await conn.rollback();
         return res.status(400).json({ error: 'Esa hora ya no está disponible, elegí otra.' });
       }
       await conn.query(
-        'UPDATE citas SET moto_id = ?, fecha = ?, hora = ?, tipo_servicio = ?, motivo = ? WHERE id = ?',
-        [moto_id, fecha, hora, tipo_servicio, motivo, req.params.id]
+        'UPDATE citas SET moto_id = ?, fecha = ?, hora = ?, tipo_servicio = ?, motivo = ?, sucursal_id = ? WHERE id = ?',
+        [moto_id, fecha, hora, tipo_servicio, motivo, sucursalId, req.params.id]
       );
       const [[actualizada]] = await conn.query(
         `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado, m.marca, m.modelo, m.placa
@@ -946,6 +973,9 @@ router.post('/citas', async (req, res) => {
     if (!SERVICIOS.includes(tipo_servicio)) {
       return res.status(400).json({ error: 'Servicio no válido' });
     }
+    // Sucursal obligatoria y válida (activa). El cupo se controla por sucursal.
+    const sucursalId = (await sucursalValida(req.body.sucursal_id)) ? Number(req.body.sucursal_id) : null;
+    if (!sucursalId) return res.status(400).json({ error: 'Elegí una sucursal válida' });
     const config = await getConfig();
     const horas = horasDisponibles(fecha, config);
     if (!horas.includes(hora)) {
@@ -985,16 +1015,16 @@ router.post('/citas', async (req, res) => {
     try {
       await conn.beginTransaction();
       const [[{ ocupadas }]] = await conn.query(
-        "SELECT COUNT(*) AS ocupadas FROM citas WHERE fecha = ? AND hora = ? AND estado != 'cancelado' FOR UPDATE",
-        [fecha, hora]
+        "SELECT COUNT(*) AS ocupadas FROM citas WHERE fecha = ? AND hora = ? AND sucursal_id = ? AND estado != 'cancelado' FOR UPDATE",
+        [fecha, hora, sucursalId]
       );
       if (ocupadas >= config.max_citas_hora) {
         await conn.rollback();
         return res.status(400).json({ error: 'Esa hora ya no está disponible, elegí otra.' });
       }
       const [result] = await conn.query(
-        "INSERT INTO citas (cliente_id, moto_id, fecha, hora, motivo, tipo_servicio, estado) VALUES (?, ?, ?, ?, ?, ?, 'agendado')",
-        [req.cliente.id, moto_id, fecha, hora, motivo, tipo_servicio]
+        "INSERT INTO citas (cliente_id, moto_id, sucursal_id, fecha, hora, motivo, tipo_servicio, estado) VALUES (?, ?, ?, ?, ?, ?, ?, 'agendado')",
+        [req.cliente.id, moto_id, sucursalId, fecha, hora, motivo, tipo_servicio]
       );
       const [[nueva]] = await conn.query(
         `SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado, m.marca, m.modelo, m.placa

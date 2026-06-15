@@ -100,8 +100,15 @@
           <span class="cr ok"><ion-icon name="checkmark-circle"></ion-icon> {{ totalConfirmadas }} confirmada(s)</span>
           <span class="cr pend" *ngIf="totalSinConfirmar"><ion-icon name="alert-circle-outline"></ion-icon> {{ totalSinConfirmar }} sin confirmar</span>
         </div>
+        <!-- Filtro por sucursal (solo si hoy hay citas en más de un local) -->
+        <div class="suc-filtro" *ngIf="sucursalesHoy.length > 1">
+          <button class="suc-chip" [class.on]="!sucursalFiltro" (click)="setSucursalFiltro('')">Todas</button>
+          <button class="suc-chip" *ngFor="let s of sucursalesHoy" [class.on]="sucursalFiltro === s.id" (click)="setSucursalFiltro(s.id)">
+            <ion-icon name="location-outline"></ion-icon> {{ s.nombre }}
+          </button>
+        </div>
         <div class="cita-list">
-          <div class="cita-row" *ngFor="let c of citas" [class.proxima]="c.id === proximaId" [class.atrasada]="esAtrasada(c)">
+          <div class="cita-row" *ngFor="let c of citasVista" [class.proxima]="c.id === proximaId" [class.atrasada]="esAtrasada(c)">
             <span class="cita-hora mono">{{ c.hora?.slice(0,5) }}</span>
             <div class="cita-info">
               <strong>
@@ -110,6 +117,7 @@
                 <span class="tag-atr" *ngIf="esAtrasada(c)">Atrasada</span>
               </strong>
               <span>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}<ng-container *ngIf="c.tipo_servicio"> · {{ c.tipo_servicio }}</ng-container></span>
+              <span class="cita-suc" *ngIf="c.sucursal_nombre"><ion-icon name="location-outline"></ion-icon> {{ c.sucursal_nombre }}</span>
               <span class="conf ok" *ngIf="c.confirmada_cliente"><ion-icon name="checkmark-circle"></ion-icon> Asistencia confirmada</span>
               <span class="conf pend" *ngIf="!c.confirmada_cliente && c.estado === 'agendado'"><ion-icon name="alert-circle-outline"></ion-icon> Sin confirmar</span>
             </div>

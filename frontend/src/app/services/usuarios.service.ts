@@ -13,7 +13,7 @@ export class UsuariosService {
     return this.http.get<{ data: Usuario[] }>(this.url);
   }
 
-  create(data: { nombre: string; email: string; password: string; rol: string; telefono?: string }): Observable<{ data: Usuario }> {
+  create(data: { nombre: string; email: string; password: string; rol: string; telefono?: string; sucursal_id?: number | null }): Observable<{ data: Usuario }> {
     return this.http.post<{ data: Usuario }>(this.url, data);
   }
 
@@ -23,5 +23,10 @@ export class UsuariosService {
 
   toggleActivo(id: number, activo: boolean): Observable<any> {
     return this.http.patch(`${this.url}/${id}/activo`, { activo });
+  }
+
+  // Cambia el local del empleado desde la lista (sucursal_id = null → atiende ambas).
+  setSucursal(id: number, sucursal_id: number | null): Observable<any> {
+    return this.http.patch(`${this.url}/${id}/sucursal`, { sucursal_id });
   }
 }

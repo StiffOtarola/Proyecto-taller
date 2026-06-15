@@ -44,6 +44,9 @@ export class RecepcionPage implements OnInit, OnDestroy {
 
   creandoOrden: number | null = null;
 
+  // Filtro por sucursal sobre las citas de hoy (las opciones salen de las citas cargadas).
+  sucursalFiltro: number | '' = '';
+
   constructor(
     private rec: RecepcionService,
     private auth: AuthService,
@@ -92,6 +95,20 @@ export class RecepcionPage implements OnInit, OnDestroy {
     const p = this.citas.find(c => c.estado === 'agendado' && (c.hora || '') >= this.ahoraCR);
     return p ? p.id : null;
   }
+  // Sucursales presentes en las citas de hoy (para el filtro). Distintas, ordenadas.
+  get sucursalesHoy(): { id: number; nombre: string }[] {
+    const map = new Map<number, string>();
+    for (const c of this.citas) {
+      if (c.sucursal_id && c.sucursal_nombre && !map.has(c.sucursal_id)) map.set(c.sucursal_id, c.sucursal_nombre);
+    }
+    return [...map].map(([id, nombre]) => ({ id, nombre })).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+  // Citas de hoy aplicando el filtro de sucursal (si hay uno activo).
+  get citasVista(): any[] {
+    return this.sucursalFiltro ? this.citas.filter(c => c.sucursal_id === this.sucursalFiltro) : this.citas;
+  }
+  setSucursalFiltro(v: number | '') { this.sucursalFiltro = v; }
+
   get totalConfirmadas(): number {
     return this.citas.filter(c => c.estado === 'agendado' && c.confirmada_cliente).length;
   }

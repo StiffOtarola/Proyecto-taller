@@ -3,58 +3,120 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/portal/mis-citas" text=""></ion-back-button>
     </ion-buttons>
-    <ion-title>Detalle de la cita</ion-title>
+    <ion-title>Seguimiento</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
   <div class="det" *ngIf="cargando">
-    <div class="skeleton" style="height:140px;border-radius:20px;margin-bottom:12px"></div>
-    <div class="skeleton" style="height:200px;border-radius:20px"></div>
+    <div class="skeleton" style="height:170px;border-radius:24px;margin-bottom:12px"></div>
+    <div class="skeleton" style="height:240px;border-radius:20px"></div>
   </div>
 
   <div class="det" *ngIf="!cargando && cita">
-    <!-- Cabecera -->
-    <section class="card">
-      <div class="head">
-        <div class="head-moto">
-          <div class="moto-thumb" *ngIf="cita.moto_foto"><img [src]="cita.moto_foto" [alt]="cita.marca + ' ' + cita.modelo"></div>
-          <h2>{{ cita.marca }} {{ cita.modelo }}</h2>
+
+    <!-- ═══ HERO: panel de control ═══ -->
+    <section class="cockpit">
+      <div class="ck-top">
+        <span class="ck-live" *ngIf="!cancelada && cita.estado !== 'entregado'"><i></i> EN VIVO</span>
+        <span class="ck-live done" *ngIf="cita.estado === 'entregado'"><ion-icon name="checkmark-done"></ion-icon> Entregado</span>
+        <span class="ck-live off" *ngIf="cancelada"><ion-icon name="close"></ion-icon> Cancelada</span>
+        <span class="ck-status">{{ estadoLabel[cita.estado] }}</span>
+      </div>
+
+      <div class="ck-main">
+        <div class="ck-moto" [class.has-photo]="cita.moto_foto">
+          <img *ngIf="cita.moto_foto; else motoSvg" [src]="cita.moto_foto" [alt]="cita.marca + ' ' + cita.modelo">
+          <ng-template #motoSvg>
+            <svg viewBox="0 0 64 40" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="13" cy="28" r="9"/><circle cx="51" cy="28" r="9"/>
+              <path d="M13 28l9-13h11l7 9"/><path d="M22 15l-4-5h-7"/><path d="M40 24l5-9h8"/>
+            </svg>
+          </ng-template>
         </div>
-        <span class="pill" [ngClass]="cita.estado === 'entregado' ? 'green' : cita.estado === 'cancelado' ? 'gris' : 'rose'">{{ estadoLabel[cita.estado] }}</span>
-      </div>
-      <p class="placa mono" *ngIf="cita.placa">{{ cita.placa }}</p>
-
-      <div class="prog" *ngIf="cita.estado !== 'cancelado'">
-        <div class="pr-t"><div class="pr-f" [style.width.%]="progresoPct(cita.estado)"></div></div>
-        <div class="pr-l">{{ cita.estado === 'entregado' ? 'Completado ✓' : progresoPct(cita.estado) + '%' }}</div>
+        <div class="ck-id">
+          <h1>{{ cita.marca }} {{ cita.modelo }}</h1>
+          <span class="ck-plate mono" *ngIf="cita.placa">{{ cita.placa | uppercase }}</span>
+        </div>
       </div>
 
-      <div class="rows">
-        <div class="row"><span class="k">Servicio</span><span class="v">{{ cita.tipo_servicio || cita.motivo }}</span></div>
-        <div class="row"><span class="k">Fecha</span><span class="v mono">{{ cita.fecha | date:'dd/MM/yyyy' }}<ng-container *ngIf="cita.hora"> · {{ cita.hora }}</ng-container></span></div>
-        <div class="row"><span class="k">Mecánico</span><span class="v">{{ cita.tecnico_nombre || 'Por asignar' }}</span></div>
-        <div class="row" *ngIf="cita.sucursal_nombre"><span class="k">Sucursal</span><span class="v">{{ cita.sucursal_nombre }}<ng-container *ngIf="cita.sucursal_direccion"> · {{ cita.sucursal_direccion }}</ng-container></span></div>
-        <div class="row" *ngIf="cita.numero_orden"><span class="k">Orden</span><span class="v mono">{{ cita.numero_orden }}</span></div>
-        <div class="row" *ngIf="cita.motivo && cita.motivo !== cita.tipo_servicio"><span class="k">Descripción</span><span class="v">{{ cita.motivo }}</span></div>
+      <div class="ck-tele">
+        <div class="tl"><span class="tk">Servicio</span><span class="tv">{{ cita.tipo_servicio || cita.motivo }}</span></div>
+        <div class="tl" *ngIf="cita.numero_orden"><span class="tk">Orden</span><span class="tv mono">{{ cita.numero_orden }}</span></div>
+        <div class="tl"><span class="tk">Fecha</span><span class="tv mono">{{ cita.fecha | date:'dd/MM/yy' }}<ng-container *ngIf="cita.hora"> · {{ cita.hora }}</ng-container></span></div>
+        <div class="tl" *ngIf="orden?.fecha_estimada_entrega"><span class="tk">Entrega est.</span><span class="tv mono">{{ orden.fecha_estimada_entrega | date:'dd/MM/yy' }}</span></div>
+        <div class="tl" *ngIf="cita.sucursal_nombre"><span class="tk">Sucursal</span><span class="tv">{{ cita.sucursal_nombre }}</span></div>
       </div>
     </section>
 
-    <!-- Presupuesto por aprobar -->
-    <button class="presu-aviso" *ngIf="cita.orden_estado === 'esperando_aprobacion' && cita.aprobacion_cliente === 'pendiente'" (click)="irAInicio()">
-      <ion-icon name="receipt-outline"></ion-icon>
-      <span>Tenés un presupuesto por aprobar. Tocá para revisarlo.</span>
-      <ion-icon name="chevron-forward" class="chev"></ion-icon>
-    </button>
+    <!-- ═══ TIMELINE activa ═══ -->
+    <section class="card tl-card" *ngIf="!cancelada">
+      <span class="section-label">Seguimiento en tiempo real</span>
+      <div class="timeline">
+        <div class="step" *ngFor="let e of etapas; let last = last" [ngClass]="e.estado" [class.is-last]="last">
+          <div class="spine">
+            <span class="node"><ion-icon [name]="e.icon"></ion-icon></span>
+            <span class="seg" *ngIf="!last"></span>
+          </div>
+          <div class="body">
+            <span class="step-label">{{ e.label }}</span>
 
-    <!-- Diagnóstico de la orden -->
+            <!-- Transparencia operativa: tu mecánico, en la etapa de trabajo -->
+            <div class="tec" *ngIf="e.key === 'en_mantenimiento' && e.estado !== 'futuro' && cita.tecnico_nombre">
+              <span class="tec-av">{{ iniciales(cita.tecnico_nombre) }}</span>
+              <span class="tec-info"><small>TU MECÁNICO</small><strong>{{ cita.tecnico_nombre }}</strong></span>
+            </div>
+
+            <!-- Bitácora (avances del taller) bajo el nodo activo -->
+            <div class="log" *ngIf="e.estado === 'activo' && orden?.avances?.length">
+              <div class="log-row" *ngFor="let a of orden.avances">
+                <span class="log-dot"></span>
+                <div class="log-b">
+                  <p>{{ a.descripcion }}</p>
+                  <span class="log-meta mono">{{ a.usuario_nombre || 'Taller' }} · {{ a.created_at | date:'dd/MM HH:mm' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ═══ ZONA DE FRICCIÓN CERO: el presupuesto emerge y rompe la línea ═══ -->
+            <div class="budget" *ngIf="e.estado === 'activo' && esperandoAprobacion">
+              <div class="bud-head"><ion-icon name="document-text-outline"></ion-icon> PRESUPUESTO POR APROBAR</div>
+              <div class="bud-lines" *ngIf="orden">
+                <div class="bl" *ngFor="let r of orden.repuestos">
+                  <span>{{ r.nombre }}<ng-container *ngIf="r.cantidad > 1"> ×{{ r.cantidad }}</ng-container></span>
+                  <span class="mono">{{ (r.cantidad * r.costo_unitario) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span>
+                </div>
+                <div class="bl"><span>Mano de obra</span><span class="mono">{{ (orden.costo_mano_obra || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div>
+                <div class="bl" *ngIf="orden.descuento > 0"><span>Descuento</span><span class="mono">− {{ orden.descuento | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div>
+              </div>
+              <div class="bud-total">
+                <span class="bt-k">Total a pagar</span>
+                <span class="bt-v mono">{{ total | currency:'CRC':'symbol-narrow':'1.0-0' }}</span>
+              </div>
+              <button class="bud-cta" (click)="aprobar()" [disabled]="procesando">
+                <ion-icon name="checkmark-circle"></ion-icon> APROBAR Y COMENZAR
+              </button>
+              <button class="bud-rej" (click)="rechazar()" [disabled]="procesando">Rechazar presupuesto</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cancelada: estado terminal -->
+    <section class="card cancel-card" *ngIf="cancelada">
+      <ion-icon name="close-circle-outline"></ion-icon>
+      <div><strong>Cita cancelada</strong><p>Esta cita fue cancelada. Si necesitás reprogramar, agendá una nueva.</p></div>
+    </section>
+
+    <!-- Diagnóstico del taller -->
     <section class="card" *ngIf="orden?.diagnostico">
       <span class="section-label">Diagnóstico</span>
       <p class="diag">{{ orden.diagnostico }}</p>
     </section>
 
-    <!-- Repuestos y costos -->
-    <section class="card" *ngIf="orden && (orden.repuestos?.length || orden.costo_mano_obra || total)">
+    <!-- Desglose del presupuesto (cuando ya no está pendiente de aprobar pero hay costos) -->
+    <section class="card" *ngIf="!esperandoAprobacion && orden && (orden.repuestos?.length || orden.costo_mano_obra || total)">
       <span class="section-label">Presupuesto</span>
       <div class="rows">
         <div class="row" *ngFor="let r of orden.repuestos">
@@ -72,19 +134,7 @@
       <div class="rows"><div class="row total"><span class="k">Total</span><span class="v mono">{{ total | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div></div>
     </section>
 
-    <!-- Avances del mecánico -->
-    <section class="card" *ngIf="orden?.avances?.length">
-      <span class="section-label">Avances</span>
-      <div class="avance" *ngFor="let a of orden.avances">
-        <div class="dot"></div>
-        <div class="av-b">
-          <p class="av-txt">{{ a.descripcion }}</p>
-          <p class="av-meta">{{ a.usuario_nombre || 'Taller' }} · {{ a.created_at | date:'dd/MM/yyyy HH:mm' }}</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Fotos -->
+    <!-- Fotos del taller -->
     <section class="card" *ngIf="orden?.fotos?.length">
       <span class="section-label">Fotos</span>
       <div class="fotos">
@@ -92,7 +142,7 @@
       </div>
     </section>
 
-    <!-- Descargar comprobante (cuando hay orden/monto) -->
+    <!-- Descargar comprobante -->
     <button class="btn-descargar" *ngIf="puedeDescargar" (click)="descargarComprobante()">
       <ion-icon name="download-outline"></ion-icon> Descargar comprobante
     </button>

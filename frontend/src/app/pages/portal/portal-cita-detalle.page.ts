@@ -14,9 +14,19 @@ export class PortalCitaDetallePage implements OnInit {
   cita: any = null;
   orden: any = null;        // detalle de la orden vinculada (si hay)
   cargando = true;
+  procesando = false;       // aprobar/rechazar en curso (deshabilita los CTA)
 
   readonly flujo = FLUJO_CITA;
   readonly estadoLabel = ESTADO_CITA_LABEL;
+
+  // Etapas de la timeline (cockpit): los estados macro que ve el cliente, con su ícono.
+  private readonly etapasMeta = [
+    { key: 'agendado', label: 'Agendado', icon: 'calendar-outline' },
+    { key: 'en_revision', label: 'En revisión', icon: 'search-outline' },
+    { key: 'en_mantenimiento', label: 'En mantenimiento', icon: 'construct-outline' },
+    { key: 'listo', label: 'Listo para entrega', icon: 'checkmark-done-outline' },
+    { key: 'entregado', label: 'Entregado', icon: 'flag-outline' },
+  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -26,8 +36,27 @@ export class PortalCitaDetallePage implements OnInit {
     private alert: AlertController,
   ) {}
 
-  // El presupuesto se aprueba/rechaza en Inicio (donde está ese flujo).
-  irAInicio() { this.router.navigate(['/portal/inicio']); }
+  // Cada etapa con su posición relativa al estado actual (pasado | activo | futuro).
+  get etapas(): { key: string; label: string; icon: string; estado: 'pasado' | 'activo' | 'futuro' }[] {
+    const iActual = this.flujo.indexOf(this.cita?.estado);
+    return this.etapasMeta.map((e, i) => ({
+      ...e,
+      estado: iActual < 0 ? 'futuro' : i < iActual ? 'pasado' : i === iActual ? 'activo' : 'futuro',
+    }));
+  }
+
+  get cancelada(): boolean { return this.cita?.estado === 'cancelado'; }
+
+  // ¿La orden vinculada espera que el cliente apruebe el presupuesto?
+  get esperandoAprobacion(): boolean {
+    return this.cita?.orden_estado === 'esperando_aprobacion' && this.cita?.aprobacion_cliente === 'pendiente';
+  }
+
+  // Iniciales para el avatar del mecánico (no hay foto de staff en la BD).
+  iniciales(nombre?: string): string {
+    const p = (nombre || '').trim().split(/\s+/);
+    return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || '·';
+  }
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -48,10 +77,57 @@ export class PortalCitaDetallePage implements OnInit {
     });
   }
 
-  progresoPct(estado: string): number {
-    const i = this.flujo.indexOf(estado);
-    if (i < 0) return 0;
-    return Math.round((i / (this.flujo.length - 1)) * 100);
+  // —— Aprobar / rechazar el presupuesto SIN salir del cockpit (fricción cero) ——
+  // Reusa los mismos endpoints y el diálogo de confirmación que el flujo de Inicio.
+  async aprobar() {
+    const al = await this.alert.create({
+      cssClass: 'portal-alert',
+      header: 'Aprobar presupuesto',
+      message: `¿Aprobás el presupuesto de la orden ${this.cita?.numero_orden}? El taller comenzará la reparación.`,
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Aprobar', cssClass: 'portal-alert-confirm', handler: () => this.enviarDecision('aprobar') },
+      ],
+    });
+    await al.present();
+  }
+
+  async rechazar() {
+    const al = await this.alert.create({
+      cssClass: 'portal-alert',
+      header: 'Rechazar presupuesto',
+      message: 'Contanos por qué rechazás el presupuesto (opcional).',
+      inputs: [{ name: 'motivo', type: 'textarea', placeholder: 'Motivo (opcional)' }],
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Rechazar', role: 'destructive', cssClass: 'portal-alert-danger', handler: (d) => this.enviarDecision('rechazar', d?.motivo) },
+      ],
+    });
+    await al.present();
+  }
+
+  private enviarDecision(decision: 'aprobar' | 'rechazar', motivo?: string) {
+    const ordenId = this.cita?.orden_id;
+    if (this.procesando || !ordenId) return;
+    this.procesando = true;
+    const req = decision === 'aprobar' ? this.portal.aprobar(ordenId) : this.portal.rechazar(ordenId, motivo || '');
+    req.subscribe({
+      next: async () => {
+        this.procesando = false;
+        const t = await this.toast.create({
+          message: decision === 'aprobar' ? 'Presupuesto aprobado ✓' : 'Presupuesto rechazado',
+          duration: 1800,
+          color: decision === 'aprobar' ? 'success' : 'medium',
+        });
+        await t.present();
+        this.cargar(this.cita.id); // recarga → la timeline avanza al nuevo estado
+      },
+      error: async () => {
+        this.procesando = false;
+        const t = await this.toast.create({ message: 'No se pudo procesar, intentá de nuevo', duration: 2200, color: 'danger' });
+        await t.present();
+      },
+    });
   }
 
   // Total: el de la orden vinculada si existe; si no, el monto de la cita.

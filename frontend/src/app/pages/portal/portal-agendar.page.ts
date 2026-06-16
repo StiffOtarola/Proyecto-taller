@@ -33,15 +33,32 @@ export class PortalAgendarPage implements OnInit {
     private toast: ToastController
   ) {}
 
+  // Prefill desde "Mi Garaje" (?moto=&servicio=): se aplica una sola vez al cargar motos.
+  private prefill: { moto?: number; servicio?: string } | null = null;
+
   ngOnInit() {
     this.cargarMotos();
     this.cargarSucursales();
     const id = this.route.snapshot.paramMap.get('id');
-    if (id) this.cargarParaEditar(+id);
+    if (id) { this.cargarParaEditar(+id); return; }
+    const qp = this.route.snapshot.queryParamMap;
+    const motoQ = qp.get('moto');
+    const servQ = qp.get('servicio');
+    if (motoQ || servQ) this.prefill = { moto: motoQ ? +motoQ : undefined, servicio: servQ || undefined };
   }
   ionViewWillEnter() { this.cargarMotos(); }
 
-  cargarMotos() { this.portal.getMotos().subscribe(r => this.motos = r.data); }
+  cargarMotos() {
+    this.portal.getMotos().subscribe(r => { this.motos = r.data; this.aplicarPrefill(); });
+  }
+
+  // Precarga moto + servicio sugeridos (validados contra los datos reales), una sola vez.
+  private aplicarPrefill() {
+    if (!this.prefill || this.editId) return;
+    if (this.prefill.moto && this.motos.some(m => m.id === this.prefill!.moto)) this.form.moto_id = this.prefill.moto;
+    if (this.prefill.servicio && this.servicios.includes(this.prefill.servicio)) this.form.tipo_servicio = this.prefill.servicio;
+    this.prefill = null;
+  }
 
   // Carga las sucursales activas. Si solo hay una, la preselecciona (no hay que elegir).
   cargarSucursales() {

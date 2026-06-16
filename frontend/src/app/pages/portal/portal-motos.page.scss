@@ -12,21 +12,34 @@
 }
 
 .mc {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
   background: var(--ion-card-background); border: 1px solid var(--hairline);
-  border-radius: 18px; box-shadow: var(--shadow-xs); padding: 12px 14px; margin-bottom: 8px;
+  border-radius: 20px; box-shadow: var(--shadow-sm); padding: 14px; margin-bottom: 10px;
+  transition: transform .12s var(--ease-out);
+  &:active { transform: scale(.99); }
 
-  .mc-i { width: 42px; height: 42px; border-radius: 13px; flex-shrink: 0; overflow: hidden;
+  .mc-i { width: 54px; height: 54px; border-radius: 14px; flex-shrink: 0; overflow: hidden;
     display: flex; align-items: center; justify-content: center;
     background: var(--rose-50); color: var(--ion-color-primary);
-    ion-icon { font-size: 21px; }
+    ion-icon { font-size: 26px; }
     img { width: 100%; height: 100%; object-fit: cover; display: block; } }
+
   .mc-m { flex: 1; min-width: 0;
-    h4 { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
-    p { margin: 3px 0 0; font-size: 12px; color: var(--n-500); }
-    .placa { font-weight: 700; color: var(--rose-700);  // AA sobre pastilla clara
-      background: var(--rose-50); padding: 1px 7px; border-radius: 6px; letter-spacing: .04em; font-size: 11px; } }
-  .mc-e { background: none; border: none; cursor: pointer; color: var(--n-500); padding: 4px; flex-shrink: 0;
+    h4 { margin: 0 0 5px; font-family: var(--font-display); font-size: 15.5px; font-weight: 800; letter-spacing: -0.02em; }
+    .mc-tags { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .mc-plate { font-weight: 700; color: var(--rose-700);  // AA sobre pastilla clara
+      background: var(--rose-50); padding: 1px 7px; border-radius: 6px; letter-spacing: .06em; font-size: 11px; }
+    .mc-km { font-size: 11.5px; color: var(--n-500); }
+    .mc-aviso { display: inline-flex; align-items: center; gap: 5px; margin-top: 7px;
+      font-size: 11px; font-weight: 700;
+      i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+      &.ok   { color: var(--emerald-700); }
+      &.warn { color: var(--amber-700); }
+      &.due  { color: var(--text-accent); }
+      &.none { color: var(--n-400); } } }
+
+  .mc-acts { display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
+  .mc-e { background: none; border: none; cursor: pointer; color: var(--n-400); padding: 5px;
     ion-icon { font-size: 18px; } &:active { transform: scale(.9); }
     &.del { color: var(--ion-color-danger); } }
 }

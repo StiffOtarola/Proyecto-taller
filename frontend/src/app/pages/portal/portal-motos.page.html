@@ -12,34 +12,34 @@
 
   <div class="motos">
     <div class="intro">
-      <h2>Tus motos</h2>
-      <p>Registrá y administrá tus motos.</p>
+      <h2>Mi Garaje</h2>
+      <p>Tus motos, su historial y cuándo les toca servicio.</p>
     </div>
 
     <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px">
-      <div class="skeleton" style="height:70px;border-radius:18px"></div>
-      <div class="skeleton" style="height:70px;border-radius:18px"></div>
+      <div class="skeleton" style="height:96px;border-radius:20px"></div>
+      <div class="skeleton" style="height:96px;border-radius:20px"></div>
     </div>
 
-    <!-- Lista de motos -->
+    <!-- Lista de motos (cada tarjeta abre el perfil) -->
     <div class="moto-list" *ngIf="!cargando && motos.length">
-      <div class="mc" *ngFor="let m of motos">
+      <div class="mc" *ngFor="let m of motos" (click)="verHistorial(m)">
         <div class="mc-i" [class.has-foto]="m.foto">
           <img *ngIf="m.foto; else mcIcon" [src]="m.foto" [alt]="m.marca + ' ' + m.modelo">
           <ng-template #mcIcon><ion-icon name="bicycle"></ion-icon></ng-template>
         </div>
         <div class="mc-m">
           <h4>{{ m.marca }} {{ m.modelo }}</h4>
-          <p>
-            <span class="placa mono">{{ m.placa }}</span>
-            <span *ngIf="m.anio"> · {{ m.anio }}</span>
-            <span *ngIf="m.color"> · {{ m.color }}</span>
-            <span *ngIf="m.kilometraje_actual"> · {{ m.kilometraje_actual | number }} km</span>
-          </p>
+          <div class="mc-tags">
+            <span class="mc-plate mono" *ngIf="m.placa">{{ m.placa }}</span>
+            <span class="mc-km mono" *ngIf="m.kilometraje_actual">{{ m.kilometraje_actual | number }} km</span>
+          </div>
+          <span class="mc-aviso" [ngClass]="avisoMoto(m).tono"><i></i>{{ avisoMoto(m).texto }}</span>
         </div>
-        <button class="mc-e" (click)="verHistorial(m)" title="Ver historial" aria-label="Ver historial de servicios"><ion-icon name="time-outline"></ion-icon></button>
-        <button class="mc-e" (click)="editar(m)" title="Editar" aria-label="Editar moto"><ion-icon name="create-outline"></ion-icon></button>
-        <button class="mc-e del" (click)="eliminar(m)" title="Eliminar" aria-label="Eliminar moto"><ion-icon name="trash-outline"></ion-icon></button>
+        <div class="mc-acts" (click)="$event.stopPropagation()">
+          <button class="mc-e" (click)="editar(m)" title="Editar" aria-label="Editar moto"><ion-icon name="create-outline"></ion-icon></button>
+          <button class="mc-e del" (click)="eliminar(m)" title="Eliminar" aria-label="Eliminar moto"><ion-icon name="trash-outline"></ion-icon></button>
+        </div>
       </div>
     </div>
 

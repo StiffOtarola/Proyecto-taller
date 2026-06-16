@@ -707,7 +707,10 @@ router.get('/promos', async (req, res) => {
 router.get('/motos', async (req, res) => {
   try {
     const [rows] = await pool.query(
-      'SELECT id, marca, modelo, placa, anio, color, kilometraje_actual, foto FROM motos WHERE cliente_id = ? AND activa = 1 ORDER BY created_at DESC',
+      `SELECT m.id, m.marca, m.modelo, m.placa, m.anio, m.color, m.kilometraje_actual, m.foto,
+              (SELECT DATE_FORMAT(MAX(COALESCE(c.fecha_fin, c.fecha)), '%Y-%m-%d')
+               FROM citas c WHERE c.moto_id = m.id AND c.estado = 'entregado') AS ultimo_servicio
+       FROM motos m WHERE m.cliente_id = ? AND m.activa = 1 ORDER BY m.created_at DESC`,
       [req.cliente.id]
     );
     res.json({ data: rows });

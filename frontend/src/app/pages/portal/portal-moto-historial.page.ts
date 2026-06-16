@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PortalService } from '../../services/portal.service';
+import { proximoServicio, ProximoServicio } from '../../utils/mantenimiento';
 
 @Component({
   standalone: false,
@@ -13,6 +14,7 @@ export class PortalMotoHistorialPage implements OnInit {
   servicios: any[] = [];
   cargando = true;
   totalGastado = 0;
+  proximo: ProximoServicio | null = null;   // próximo servicio recomendado (por tiempo)
 
   constructor(private route: ActivatedRoute, private router: Router, private portal: PortalService) {}
 
@@ -28,10 +30,36 @@ export class PortalMotoHistorialPage implements OnInit {
         this.moto = r.data.moto;
         this.servicios = r.data.servicios || [];
         this.totalGastado = this.servicios.reduce((s, x) => s + Number(x.monto || 0), 0);
+        this.proximo = proximoServicio(this.servicios);
         this.cargando = false;
       },
       error: () => { this.cargando = false; },
     });
+  }
+
+  // Texto del estado del próximo servicio (cabecera de la tarjeta).
+  get proximoTitulo(): string {
+    if (!this.proximo) return '';
+    if (this.proximo.sinHistorial) return 'Servicio sugerido';
+    return this.proximo.estado === 'vencido' ? 'Te toca este servicio'
+      : this.proximo.estado === 'pronto' ? 'Próximo servicio'
+      : 'Mantenimiento al día';
+  }
+  get proximoIcono(): string {
+    if (!this.proximo) return 'time-outline';
+    return this.proximo.estado === 'vencido' ? 'alert-circle'
+      : this.proximo.estado === 'al_dia' ? 'checkmark-circle' : 'time-outline';
+  }
+
+  // Lleva a Agendar con la moto y el servicio recomendado precargados.
+  agendarServicio() {
+    if (!this.moto) return;
+    this.router.navigate(['/portal/agendar'], {
+      queryParams: { moto: this.moto.id, servicio: this.proximo?.servicio || undefined },
+    });
+  }
+  agendarPrimero() {
+    if (this.moto) this.router.navigate(['/portal/agendar'], { queryParams: { moto: this.moto.id } });
   }
 
   verCita(s: any) { this.router.navigate(['/portal/cita', s.id]); }

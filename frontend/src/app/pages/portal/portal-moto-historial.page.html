@@ -3,65 +3,96 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/portal/motos" text=""></ion-back-button>
     </ion-buttons>
-    <ion-title>Historial de la moto</ion-title>
+    <ion-title>Perfil de la moto</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
   <div class="hist" *ngIf="cargando">
+    <div class="skeleton" style="height:170px;border-radius:24px;margin-bottom:12px"></div>
     <div class="skeleton" style="height:120px;border-radius:20px;margin-bottom:12px"></div>
-    <div class="skeleton" style="height:180px;border-radius:20px"></div>
+    <div class="skeleton" style="height:200px;border-radius:20px"></div>
   </div>
 
   <div class="hist" *ngIf="!cargando && moto">
-    <!-- Cabecera de la moto -->
-    <section class="moto-card">
-      <div class="moto-thumb" [class.empty]="!moto.foto">
-        <img *ngIf="moto.foto; else mIcon" [src]="moto.foto" [alt]="moto.marca + ' ' + moto.modelo">
-        <ng-template #mIcon><ion-icon name="bicycle"></ion-icon></ng-template>
+
+    <!-- ═══ HERO: perfil de la moto ═══ -->
+    <section class="cockpit">
+      <div class="ck-main">
+        <div class="ck-moto" [class.has-photo]="moto.foto">
+          <img *ngIf="moto.foto; else motoSvg" [src]="moto.foto" [alt]="moto.marca + ' ' + moto.modelo">
+          <ng-template #motoSvg>
+            <svg viewBox="0 0 64 40" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="13" cy="28" r="9"/><circle cx="51" cy="28" r="9"/>
+              <path d="M13 28l9-13h11l7 9"/><path d="M22 15l-4-5h-7"/><path d="M40 24l5-9h8"/>
+            </svg>
+          </ng-template>
+        </div>
+        <div class="ck-id">
+          <h1>{{ moto.marca }} {{ moto.modelo }}</h1>
+          <span class="ck-plate mono" *ngIf="moto.placa">{{ moto.placa | uppercase }}</span>
+        </div>
       </div>
-      <div class="moto-info">
-        <h2>{{ moto.marca }} {{ moto.modelo }}</h2>
-        <p class="placa mono" *ngIf="moto.placa">{{ moto.placa }}</p>
-        <p class="meta">
-          <span *ngIf="moto.anio">{{ moto.anio }}</span>
-          <span *ngIf="moto.color"> · {{ moto.color }}</span>
-          <span *ngIf="moto.kilometraje_actual"> · {{ moto.kilometraje_actual | number }} km</span>
-        </p>
+      <div class="ck-tele">
+        <div class="tl" *ngIf="moto.kilometraje_actual"><span class="tk">Kilometraje</span><span class="tv mono">{{ moto.kilometraje_actual | number }} km</span></div>
+        <div class="tl" *ngIf="moto.anio"><span class="tk">Año</span><span class="tv mono">{{ moto.anio }}</span></div>
+        <div class="tl" *ngIf="moto.color"><span class="tk">Color</span><span class="tv">{{ moto.color }}</span></div>
+        <div class="tl"><span class="tk">Servicios</span><span class="tv mono">{{ servicios.length }}</span></div>
       </div>
     </section>
 
-    <!-- Resumen -->
+    <!-- ═══ PRÓXIMO SERVICIO RECOMENDADO ═══ -->
+    <section class="proximo" *ngIf="proximo" [ngClass]="proximo.estado">
+      <div class="px-head">
+        <ion-icon [name]="proximoIcono"></ion-icon>
+        <span class="px-title">{{ proximoTitulo }}</span>
+      </div>
+      <div class="px-serv">{{ proximo.servicio }}</div>
+      <p class="px-sub" *ngIf="!proximo.sinHistorial && proximo.fechaUltimo">
+        Último: {{ proximo.fechaUltimo | date:'dd/MM/yyyy' }} · hace {{ proximo.meses }} {{ proximo.meses === 1 ? 'mes' : 'meses' }}
+      </p>
+      <p class="px-sub" *ngIf="proximo.sinHistorial">Recomendado para arrancar el historial de mantenimiento.</p>
+      <button class="px-cta" (click)="agendarServicio()">
+        <ion-icon name="calendar-outline"></ion-icon> AGENDAR ESTE SERVICIO
+      </button>
+    </section>
+
+    <!-- ═══ RESUMEN (stat readouts) ═══ -->
     <div class="resumen" *ngIf="servicios.length">
-      <div class="rs"><span class="rs-n">{{ servicios.length }}</span><span class="rs-l">Servicios</span></div>
+      <div class="rs"><span class="rs-n mono">{{ servicios.length }}</span><span class="rs-l">Servicios</span></div>
       <div class="rs"><span class="rs-n mono">{{ totalGastado | currency:'CRC':'symbol-narrow':'1.0-0' }}</span><span class="rs-l">Total invertido</span></div>
     </div>
 
-    <!-- Línea de tiempo -->
-    <section class="tl" *ngIf="servicios.length">
-      <span class="section-label">Línea de tiempo</span>
-      <div class="tl-item" *ngFor="let s of servicios" (click)="verCita(s)">
-        <div class="tl-rail"><span class="tl-dot"></span></div>
-        <div class="tl-body">
-          <div class="tl-top">
-            <strong>{{ s.tipo_servicio || s.motivo || 'Servicio' }}</strong>
-            <span class="tl-monto mono" *ngIf="s.monto > 0">{{ s.monto | currency:'CRC':'symbol-narrow':'1.0-0' }}</span>
-          </div>
-          <p class="tl-fecha mono">{{ s.fecha | date:'dd/MM/yyyy' }}<ng-container *ngIf="s.numero_orden"> · {{ s.numero_orden }}</ng-container></p>
-          <p class="tl-diag" *ngIf="s.diagnostico">{{ s.diagnostico }}</p>
-          <div class="tl-foot">
-            <span class="tl-tec" *ngIf="s.tecnico_nombre"><ion-icon name="construct-outline"></ion-icon> {{ s.tecnico_nombre }}</span>
-            <span class="tl-stars" *ngIf="s.calificacion">{{ estrellas(s.calificacion) }}</span>
-            <ion-icon name="chevron-forward" class="tl-chev"></ion-icon>
+    <!-- ═══ HISTORIAL — timeline ═══ -->
+    <section class="tl-card" *ngIf="servicios.length">
+      <span class="section-label">Bitácora de servicios</span>
+      <div class="timeline">
+        <div class="tl-item" *ngFor="let s of servicios; let last = last" [class.is-last]="last" (click)="verCita(s)">
+          <div class="rail"><span class="node"></span><span class="seg" *ngIf="!last"></span></div>
+          <div class="body">
+            <div class="top">
+              <strong>{{ s.tipo_servicio || s.motivo || 'Servicio' }}</strong>
+              <span class="monto mono" *ngIf="s.monto > 0">{{ s.monto | currency:'CRC':'symbol-narrow':'1.0-0' }}</span>
+            </div>
+            <p class="fecha mono">{{ s.fecha | date:'dd/MM/yyyy' }}<ng-container *ngIf="s.numero_orden"> · {{ s.numero_orden }}</ng-container></p>
+            <p class="diag" *ngIf="s.diagnostico">{{ s.diagnostico }}</p>
+            <div class="foot">
+              <span class="tec" *ngIf="s.tecnico_nombre"><ion-icon name="construct-outline"></ion-icon> {{ s.tecnico_nombre }}</span>
+              <span class="stars" *ngIf="s.calificacion">{{ estrellas(s.calificacion) }}</span>
+              <ion-icon name="chevron-forward" class="chev"></ion-icon>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Vacío -->
+    <!-- Vacío: sin servicios todavía -->
     <div class="empty" *ngIf="!servicios.length">
       <ion-icon name="time-outline"></ion-icon>
       <p>Esta moto todavía no tiene servicios completados.</p>
+      <button class="px-cta solo" (click)="agendarPrimero()">
+        <ion-icon name="calendar-outline"></ion-icon> AGENDAR PRIMER SERVICIO
+      </button>
     </div>
 
     <div style="height:40px"></div>

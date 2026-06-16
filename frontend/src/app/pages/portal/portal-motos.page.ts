@@ -4,6 +4,7 @@ import { AlertController, ToastController } from '@ionic/angular';
 import { PortalService } from '../../services/portal.service';
 import { MARCAS_MOTO, modelosDeMarca } from '../../utils/motos-catalogo';
 import { comprimirImagen } from '../../utils/imagen';
+import { mesesDesde } from '../../utils/mantenimiento';
 
 @Component({
   standalone: false,
@@ -28,6 +29,16 @@ export class PortalMotosPage implements OnInit {
   constructor(private portal: PortalService, private toast: ToastController, private alert: AlertController, private router: Router) {}
 
   verHistorial(m: any) { this.router.navigate(['/portal/moto', m.id, 'historial']); }
+
+  // Aviso de servicio a nivel lista (a partir de la fecha del último servicio entregado).
+  // Umbral por tiempo: ≥12 m "le toca", 6–11 m "revisión sugerida", <6 m "al día".
+  avisoMoto(m: any): { tono: 'ok' | 'warn' | 'due' | 'none'; texto: string } {
+    if (!m.ultimo_servicio) return { tono: 'none', texto: 'Sin servicios aún' };
+    const meses = mesesDesde(m.ultimo_servicio);
+    if (meses >= 12) return { tono: 'due', texto: 'Le toca servicio' };
+    if (meses >= 6) return { tono: 'warn', texto: 'Revisión sugerida' };
+    return { tono: 'ok', texto: meses <= 1 ? 'Al día' : `Al día · hace ${meses} m` };
+  }
 
   ngOnInit() { this.cargar(); }
   ionViewWillEnter() { this.cargar(); }

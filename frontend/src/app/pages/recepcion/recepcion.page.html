@@ -64,28 +64,24 @@
     </div>
 
     <div *ngIf="!cargando">
-      <!-- 4 stat-cards (clickeables → su sección) -->
+      <!-- 4 stat-cards (solo lectura) -->
       <div class="stat-grid">
-        <button type="button" class="stat accent tappable" (click)="irA('agendar')">
+        <div class="stat accent">
           <div class="stat-num">{{ resumen?.citas_hoy ?? 0 }}</div>
           <div class="stat-lbl">Citas hoy</div>
-          <ion-icon name="chevron-forward" class="stat-go"></ion-icon>
-        </button>
-        <button type="button" class="stat accent tappable" (click)="irA('ordenes')">
+        </div>
+        <div class="stat accent">
           <div class="stat-num">{{ resumen?.ordenes_activas ?? 0 }}</div>
           <div class="stat-lbl">Órdenes activas</div>
-          <ion-icon name="chevron-forward" class="stat-go"></ion-icon>
-        </button>
-        <button type="button" class="stat tappable" (click)="irA('cotizaciones')">
+        </div>
+        <div class="stat">
           <div class="stat-num amber">{{ resumen?.cotizaciones_pendientes ?? 0 }}</div>
           <div class="stat-lbl">Cotizaciones pend.</div>
-          <ion-icon name="chevron-forward" class="stat-go"></ion-icon>
-        </button>
-        <button type="button" class="stat tappable" (click)="irA('mensajes')">
+        </div>
+        <div class="stat">
           <div class="stat-num ink">{{ resumen?.mecanicos_ocupados ?? 0 }}/{{ resumen?.mecanicos_totales ?? 0 }}</div>
           <div class="stat-lbl">Mecánicos</div>
-          <ion-icon name="chevron-forward" class="stat-go"></ion-icon>
-        </button>
+        </div>
       </div>
 
       <!-- Citas de hoy -->

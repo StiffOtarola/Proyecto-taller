@@ -33,14 +33,6 @@
   animation: cardRise .4s var(--ease, cubic-bezier(0.32, 0.72, 0, 1)) both;
   font-family: inherit; width: 100%; appearance: none; -webkit-appearance: none;
 
-  &.tappable { cursor: pointer; transition: transform .15s, box-shadow .15s;
-    &:active { transform: scale(.97); }
-  }
-  .stat-go {
-    position: absolute; bottom: 8px; right: 8px; z-index: 1;
-    font-size: 13px; color: var(--n-400);
-  }
-
   &::after {
     content: ''; position: absolute; top: 0; right: 0;
     width: 56px; height: 56px; background: var(--n-100);

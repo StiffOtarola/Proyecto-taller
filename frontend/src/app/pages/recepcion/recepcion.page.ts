@@ -78,9 +78,6 @@ export class RecepcionPage implements OnInit, OnDestroy {
   limpiarBusqueda() { this.buscarTexto = ''; this.resultados = []; this.buscando = false; this.busqueda$.next(''); }
   abrirResultado(c: any) { this.limpiarBusqueda(); this.router.navigate(['/cliente-detalle', c.id]); }
 
-  // —— Navegación de las métricas (tarjetas accionables) ——
-  irA(seccion: string) { this.router.navigate(['/recepcion', seccion]); }
-
   // —— Priorización de citas de hoy ——
   // Hora actual en zona Costa Rica (UTC-6) como "HH:mm" para comparar con la cita.
   private get ahoraCR(): string {

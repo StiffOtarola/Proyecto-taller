@@ -58,10 +58,6 @@ export class PortalMotoHistorialPage implements OnInit {
       queryParams: { moto: this.moto.id, servicio: this.proximo?.servicio || undefined },
     });
   }
-  agendarPrimero() {
-    if (this.moto) this.router.navigate(['/portal/agendar'], { queryParams: { moto: this.moto.id } });
-  }
-
   verCita(s: any) { this.router.navigate(['/portal/cita', s.id]); }
   estrellas(n: number): string { return '★'.repeat(n) + '☆'.repeat(5 - n); }
 }

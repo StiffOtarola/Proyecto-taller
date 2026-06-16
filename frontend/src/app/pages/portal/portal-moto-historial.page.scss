@@ -59,7 +59,6 @@
   box-shadow: var(--shadow-accent); transition: transform .12s var(--ease-out);
   ion-icon { font-size: 17px; }
   &:active { transform: scale(.97); }
-  &.solo { max-width: 320px; margin: 14px auto 0; }
 }
 
 /* ═══ Resumen (stat readouts) ═══ */

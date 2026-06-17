@@ -17,6 +17,14 @@ export class RecepcionOrdenesPage implements OnInit {
   cargando = true;
   subiendo = new Set<number>();
 
+  // Filtros (client-side sobre la lista ya cargada): texto + etapa.
+  busqueda = '';
+  estadoFiltro = '';
+
+  // Etapas posibles por vista (para los chips de filtro).
+  readonly chipsActivas = ['recepcion', 'diagnostico', 'esperando_aprobacion', 'esperando_repuestos', 'en_reparacion', 'lista_entrega'];
+  readonly chipsCompletadas = ['entregada', 'cancelada'];
+
   // Fotos cargadas por orden (prefetch de las que tienen evidencia).
   fotos: Record<number, any[]> = {};
   // Nota corta opcional que la recepción agrega al mensaje del cliente.
@@ -53,7 +61,32 @@ export class RecepcionOrdenesPage implements OnInit {
   abrirDetalle(o: any) { this.router.navigate(['/detalle-orden', o.id]); }
   ionViewWillEnter() { this.cargar(); }
 
-  cambiarVista() { this.cargar(); }
+  // Al cambiar de vista cambian las etapas: se descarta el filtro de etapa.
+  cambiarVista() { this.estadoFiltro = ''; this.cargar(); }
+
+  // —— Filtros ——
+  // Chips de etapa presentes en la lista cargada (solo las que tienen órdenes), con su conteo.
+  get chipsConteo(): { estado: string; label: string; n: number }[] {
+    const fuente = this.vista === 'activas' ? this.chipsActivas : this.chipsCompletadas;
+    return fuente
+      .map(e => ({ estado: e, label: this.estadoLabel[e] || e, n: this.ordenes.filter(o => o.estado === e).length }))
+      .filter(c => c.n > 0);
+  }
+
+  setEstadoFiltro(e: string) { this.estadoFiltro = this.estadoFiltro === e ? '' : e; }
+
+  // Lista aplicando búsqueda (número / cliente / placa / moto) + etapa.
+  get ordenesVista(): any[] {
+    const q = this.busqueda.trim().toLowerCase();
+    return this.ordenes.filter(o => {
+      if (this.estadoFiltro && o.estado !== this.estadoFiltro) return false;
+      if (q) {
+        const txt = `${o.numero_orden} ${o.cliente_nombre} ${o.cliente_apellido} ${o.placa || ''} ${o.marca || ''} ${o.modelo || ''}`.toLowerCase();
+        if (!txt.includes(q)) return false;
+      }
+      return true;
+    });
+  }
 
   cargar(ev?: any) {
     this.cargando = true;

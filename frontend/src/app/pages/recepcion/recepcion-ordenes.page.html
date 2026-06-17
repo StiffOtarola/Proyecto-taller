@@ -16,6 +16,19 @@
       <button class="seg-btn" [class.on]="vista==='completadas'" (click)="vista='completadas'; cambiarVista()">Completadas</button>
     </div>
 
+    <!-- Filtros: búsqueda + chips de etapa -->
+    <div class="ord-search" *ngIf="!cargando && ordenes.length">
+      <ion-icon name="search-outline"></ion-icon>
+      <input [(ngModel)]="busqueda" placeholder="Buscar número, cliente o placa…" autocapitalize="off" autocomplete="off" />
+      <button *ngIf="busqueda" (click)="busqueda=''" aria-label="Limpiar"><ion-icon name="close-circle"></ion-icon></button>
+    </div>
+    <div class="ord-chips" *ngIf="!cargando && ordenes.length">
+      <button class="ord-chip" [class.on]="!estadoFiltro" (click)="estadoFiltro=''">Todas <span>{{ ordenes.length }}</span></button>
+      <button class="ord-chip" *ngFor="let c of chipsConteo" [class.on]="estadoFiltro===c.estado" (click)="setEstadoFiltro(c.estado)">
+        {{ c.label }} <span>{{ c.n }}</span>
+      </button>
+    </div>
+
     <!-- Skeleton -->
     <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:14px">
       <div class="skeleton" style="height:230px;border-radius:24px"></div>
@@ -23,7 +36,7 @@
     </div>
 
     <div class="orden-list" *ngIf="!cargando">
-      <div class="card orden-card" *ngFor="let o of ordenes">
+      <div class="card orden-card" *ngFor="let o of ordenesVista">
         <div class="oc-top tappable" (click)="abrirDetalle(o)">
           <div class="oc-id">
             <div class="oc-num mono">{{ o.numero_orden }}</div>
@@ -67,9 +80,10 @@
         </div>
       </div>
 
-      <div class="empty-state" *ngIf="!ordenes.length">
-        <ion-icon name="clipboard-outline"></ion-icon>
-        <p>No hay órdenes {{ vista === 'activas' ? 'activas' : 'completadas' }}.</p>
+      <div class="empty-state" *ngIf="!ordenesVista.length">
+        <ion-icon [name]="ordenes.length ? 'filter-outline' : 'clipboard-outline'"></ion-icon>
+        <p *ngIf="!ordenes.length">No hay órdenes {{ vista === 'activas' ? 'activas' : 'completadas' }}.</p>
+        <p *ngIf="ordenes.length">Ninguna orden coincide con el filtro.</p>
       </div>
     </div>
 

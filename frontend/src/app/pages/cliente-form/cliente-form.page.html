@@ -1,42 +1,61 @@
 <ion-header>
-  <ion-toolbar color="primary">
+  <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button></ion-back-button>
+      <ion-back-button text=""></ion-back-button>
     </ion-buttons>
-    <ion-title>{{ esEdicion ? 'Editar' : 'Nuevo' }} Cliente</ion-title>
+    <ion-title>{{ esEdicion ? 'Editar' : 'Nuevo' }} cliente</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <ion-list>
-    <ion-item>
-      <ion-label position="stacked">Nombre *</ion-label>
-      <ion-input [(ngModel)]="form.nombre" placeholder="Nombre"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="stacked">Apellido *</ion-label>
-      <ion-input [(ngModel)]="form.apellido" placeholder="Apellido"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="stacked">Teléfono *</ion-label>
-      <ion-input type="tel" [(ngModel)]="form.telefono" placeholder="8888-8888"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="stacked">Cédula</ion-label>
-      <ion-input [(ngModel)]="form.cedula" placeholder="1-2345-6789"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="stacked">Email</ion-label>
-      <ion-input type="email" [(ngModel)]="form.email" placeholder="correo@ejemplo.com"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="stacked">Dirección</ion-label>
-      <ion-textarea [(ngModel)]="form.direccion" rows="2"></ion-textarea>
-    </ion-item>
-  </ion-list>
+<ion-content>
+  <div class="cliente-form">
+    <div class="intro">
+      <h1>{{ esEdicion ? 'Editar cliente' : 'Nuevo cliente' }}</h1>
+      <p>{{ esEdicion ? 'Actualizá los datos del cliente.' : 'Registrá un cliente nuevo en el taller.' }}</p>
+    </div>
 
-  <ion-button expand="block" class="ion-margin-top" (click)="guardar()">
-    <ion-icon name="save-outline" slot="start"></ion-icon>
-    Guardar
-  </ion-button>
+    <!-- Datos personales -->
+    <section class="card">
+      <span class="section-label">Datos personales</span>
+      <div class="grid2">
+        <div class="ig">
+          <label>Nombre *</label>
+          <input [(ngModel)]="form.nombre" placeholder="Nombre" autocapitalize="words">
+        </div>
+        <div class="ig">
+          <label>Apellido *</label>
+          <input [(ngModel)]="form.apellido" placeholder="Apellido" autocapitalize="words">
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="ig">
+          <label>Teléfono *</label>
+          <input type="tel" inputmode="tel" [(ngModel)]="form.telefono" placeholder="8888-8888">
+        </div>
+        <div class="ig">
+          <label>Cédula</label>
+          <input [(ngModel)]="form.cedula" placeholder="1-2345-6789">
+        </div>
+      </div>
+    </section>
+
+    <!-- Contacto -->
+    <section class="card">
+      <span class="section-label">Contacto</span>
+      <div class="ig">
+        <label>Email</label>
+        <input type="email" inputmode="email" autocapitalize="off" [(ngModel)]="form.email" placeholder="correo@ejemplo.com">
+      </div>
+      <div class="ig" style="margin-bottom:4px">
+        <label>Dirección</label>
+        <textarea [(ngModel)]="form.direccion" rows="2" placeholder="Provincia, cantón, señas..."></textarea>
+      </div>
+    </section>
+
+    <button class="cta" [disabled]="!valido || guardando" (click)="guardar()">
+      <ion-icon name="save-outline"></ion-icon> {{ guardando ? 'Guardando…' : 'Guardar' }}
+    </button>
+
+    <div style="height:60px"></div>
+  </div>
 </ion-content>

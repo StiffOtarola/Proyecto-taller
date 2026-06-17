@@ -13,11 +13,17 @@ import { Cliente } from '../../models/cliente.model';
 export class ClienteFormPage implements OnInit {
   esEdicion = false;
   clienteId: number | null = null;
+  guardando = false;
 
   form: Cliente = {
     nombre: '', apellido: '', telefono: '',
     email: '', cedula: '', direccion: '',
   };
+
+  // Requeridos: nombre, apellido y teléfono.
+  get valido(): boolean {
+    return !!(this.form.nombre?.trim() && this.form.apellido?.trim() && this.form.telefono?.trim());
+  }
 
   constructor(
     private route: ActivatedRoute,
@@ -38,20 +44,22 @@ export class ClienteFormPage implements OnInit {
   }
 
   async guardar() {
-    const l = await this.loading.create({ message: 'Guardando...' });
+    if (!this.valido || this.guardando) return;
+    this.guardando = true;
+    const l = await this.loading.create({ message: 'Guardando...', cssClass: 'portal-loading', spinner: 'crescent' });
     await l.present();
     const op = this.esEdicion
       ? this.clienteSvc.update(this.clienteId!, this.form)
       : this.clienteSvc.create(this.form);
     op.subscribe({
       next: async () => {
-        await l.dismiss();
+        await l.dismiss(); this.guardando = false;
         const t = await this.toast.create({ message: 'Cliente guardado', duration: 2000, color: 'success' });
         await t.present();
         this.location.back();
       },
       error: async () => {
-        await l.dismiss();
+        await l.dismiss(); this.guardando = false;
         const t = await this.toast.create({ message: 'Error al guardar', duration: 2000, color: 'danger' });
         await t.present();
       },

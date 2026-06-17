@@ -17,9 +17,15 @@ export class RecepcionOrdenesPage implements OnInit {
   cargando = true;
   subiendo = new Set<number>();
 
-  // Filtros (client-side sobre la lista ya cargada): texto + etapa.
+  // Filtros (client-side sobre la lista ya cargada): texto + etapa + sucursal + prioridad.
   busqueda = '';
   estadoFiltro = '';
+  sucursalFiltro: number | '' = '';
+  prioridadFiltro = '';
+
+  // Prioridades (se filtran solo las no-normales presentes).
+  readonly prioridadOrden = ['urgente', 'emergencia', 'garantia'];
+  readonly prioridadLabel: Record<string, string> = { urgente: 'Urgente', emergencia: 'Emergencia', garantia: 'Garantía' };
 
   // Etapas posibles por vista (para los chips de filtro).
   readonly chipsActivas = ['recepcion', 'diagnostico', 'esperando_aprobacion', 'esperando_repuestos', 'en_reparacion', 'lista_entrega'];
@@ -61,8 +67,25 @@ export class RecepcionOrdenesPage implements OnInit {
   abrirDetalle(o: any) { this.router.navigate(['/detalle-orden', o.id]); }
   ionViewWillEnter() { this.cargar(); }
 
-  // Al cambiar de vista cambian las etapas: se descarta el filtro de etapa.
-  cambiarVista() { this.estadoFiltro = ''; this.cargar(); }
+  // Al cambiar de vista cambian las etapas: se descartan los filtros.
+  cambiarVista() { this.estadoFiltro = ''; this.sucursalFiltro = ''; this.prioridadFiltro = ''; this.cargar(); }
+
+  // Sucursales presentes en la lista cargada (para los chips; solo si hay más de una).
+  get sucursalesPresentes(): { id: number; nombre: string }[] {
+    const map = new Map<number, string>();
+    for (const o of this.ordenes) {
+      if (o.sucursal_id && o.sucursal_nombre && !map.has(o.sucursal_id)) map.set(o.sucursal_id, o.sucursal_nombre);
+    }
+    return [...map].map(([id, nombre]) => ({ id, nombre })).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+  // Prioridades no-normales presentes, con su conteo (para los chips).
+  get prioridadesPresentes(): { valor: string; label: string; n: number }[] {
+    return this.prioridadOrden
+      .map(p => ({ valor: p, label: this.prioridadLabel[p], n: this.ordenes.filter(o => o.prioridad === p).length }))
+      .filter(p => p.n > 0);
+  }
+  setSucursalFiltro(id: number) { this.sucursalFiltro = this.sucursalFiltro === id ? '' : id; }
+  setPrioridadFiltro(p: string) { this.prioridadFiltro = this.prioridadFiltro === p ? '' : p; }
 
   // —— Filtros ——
   // Chips de etapa presentes en la lista cargada (solo las que tienen órdenes), con su conteo.
@@ -80,6 +103,8 @@ export class RecepcionOrdenesPage implements OnInit {
     const q = this.busqueda.trim().toLowerCase();
     return this.ordenes.filter(o => {
       if (this.estadoFiltro && o.estado !== this.estadoFiltro) return false;
+      if (this.sucursalFiltro && o.sucursal_id !== this.sucursalFiltro) return false;
+      if (this.prioridadFiltro && o.prioridad !== this.prioridadFiltro) return false;
       if (q) {
         const txt = `${o.numero_orden} ${o.cliente_nombre} ${o.cliente_apellido} ${o.placa || ''} ${o.marca || ''} ${o.modelo || ''}`.toLowerCase();
         if (!txt.includes(q)) return false;

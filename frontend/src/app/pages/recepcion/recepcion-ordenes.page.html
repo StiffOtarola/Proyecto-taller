@@ -28,6 +28,17 @@
         {{ c.label }} <span>{{ c.n }}</span>
       </button>
     </div>
+    <!-- Segunda fila: sucursal (si hay más de una) + prioridad -->
+    <div class="ord-chips" *ngIf="!cargando && ordenes.length && (sucursalesPresentes.length > 1 || prioridadesPresentes.length)">
+      <ng-container *ngIf="sucursalesPresentes.length > 1">
+        <button class="ord-chip suc" *ngFor="let s of sucursalesPresentes" [class.on]="sucursalFiltro===s.id" (click)="setSucursalFiltro(s.id)">
+          <ion-icon name="location-outline"></ion-icon> {{ s.nombre }}
+        </button>
+      </ng-container>
+      <button class="ord-chip pri" *ngFor="let p of prioridadesPresentes" [class.on]="prioridadFiltro===p.valor" (click)="setPrioridadFiltro(p.valor)">
+        <ion-icon name="flash-outline"></ion-icon> {{ p.label }} <span>{{ p.n }}</span>
+      </button>
+    </div>
 
     <!-- Skeleton -->
     <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:14px">
@@ -49,6 +60,7 @@
         <div class="oc-meta">
           <span><ion-icon name="person-outline"></ion-icon> {{ o.cliente_nombre }} {{ o.cliente_apellido }} · {{ o.marca }} {{ o.modelo }}</span>
           <span *ngIf="o.tecnico_nombre"><ion-icon name="construct-outline"></ion-icon> Mecánico: {{ o.tecnico_nombre }}</span>
+          <span *ngIf="o.sucursal_nombre"><ion-icon name="location-outline"></ion-icon> {{ o.sucursal_nombre }}</span>
         </div>
 
         <!-- Barra de progreso -->

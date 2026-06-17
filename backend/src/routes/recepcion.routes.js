@@ -213,18 +213,20 @@ router.get('/ordenes', async (req, res) => {
     else if (req.query.estado === 'completadas') filtro = "o.estado IN ('entregada','cancelada')";
     else filtro = "o.estado NOT IN ('entregada','cancelada')";
     const [rows] = await pool.query(
-      `SELECT o.id, o.numero_orden, o.estado, o.problema_reportado,
+      `SELECT o.id, o.numero_orden, o.estado, o.problema_reportado, o.prioridad,
               o.costo_mano_obra, o.costo_repuestos, o.descuento,
               (o.costo_mano_obra + o.costo_repuestos - o.descuento) AS total,
               o.fecha_ingreso, o.fecha_estimada_entrega,
               c.id AS cliente_id, c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.telefono AS cliente_telefono,
               m.marca, m.modelo, m.placa,
               t.nombre AS tecnico_nombre,
+              o.sucursal_id, s.nombre AS sucursal_nombre,
               (SELECT COUNT(*) FROM orden_fotos WHERE orden_id = o.id) AS total_fotos
        FROM ordenes_trabajo o
        JOIN clientes c ON o.cliente_id = c.id
        JOIN motos m ON o.moto_id = m.id
        LEFT JOIN usuarios t ON o.tecnico_id = t.id
+       LEFT JOIN sucursales s ON s.id = o.sucursal_id
        WHERE ${filtro}
        ORDER BY o.fecha_ingreso DESC`
     );

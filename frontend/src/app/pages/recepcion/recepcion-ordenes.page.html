@@ -24,12 +24,13 @@
 
     <div class="orden-list" *ngIf="!cargando">
       <div class="card orden-card" *ngFor="let o of ordenes">
-        <div class="oc-top">
+        <div class="oc-top tappable" (click)="abrirDetalle(o)">
           <div class="oc-id">
             <div class="oc-num mono">{{ o.numero_orden }}</div>
             <div class="oc-title">{{ o.problema_reportado }}</div>
           </div>
           <span class="pill" [ngClass]="estadoPill[o.estado]">{{ estadoLabel[o.estado] || o.estado }}</span>
+          <ion-icon name="chevron-forward" class="oc-go"></ion-icon>
         </div>
 
         <div class="oc-meta">

@@ -49,6 +49,15 @@
           <ion-icon name="add-outline"></ion-icon> {{ motos.length ? 'Registrar otra moto' : 'Este cliente no tiene motos · Registrar' }}
         </button>
       </div>
+
+      <!-- Sucursal (compartida por ambos modos; solo si hay más de un local) -->
+      <div class="ig" *ngIf="cliente && sucursales.length > 1">
+        <label>Sucursal *</label>
+        <select [(ngModel)]="form.sucursal_id" (ngModelChange)="onSucursal()">
+          <option [ngValue]="null">Elegí la sucursal</option>
+          <option *ngFor="let s of sucursales" [ngValue]="s.id">{{ s.nombre }}</option>
+        </select>
+      </div>
     </section>
 
     <!-- Decisión: ingresar ahora o agendar (aparece tras elegir cliente) -->
@@ -68,14 +77,6 @@
       <div class="ig">
         <label>Problema reportado *</label>
         <textarea [(ngModel)]="form.problema_reportado" placeholder="Lo que dice el cliente sobre su moto..."></textarea>
-      </div>
-
-      <div class="ig" *ngIf="sucursales.length > 1">
-        <label>Sucursal *</label>
-        <select [(ngModel)]="form.sucursal_id">
-          <option [ngValue]="null">Elegí la sucursal</option>
-          <option *ngFor="let s of sucursales" [ngValue]="s.id">{{ s.nombre }}</option>
-        </select>
       </div>
 
       <div class="grid2">
@@ -123,7 +124,7 @@
         <div class="ig">
           <label>Hora *</label>
           <select [(ngModel)]="form.hora">
-            <option value="">{{ disp && disp.horas.length ? 'Elegí una hora' : 'Día cerrado' }}</option>
+            <option value="">{{ sucursales.length > 1 && !form.sucursal_id ? 'Elegí la sucursal' : (disp && disp.horas.length ? 'Elegí una hora' : 'Día cerrado') }}</option>
             <option *ngFor="let h of disp?.horas || []" [value]="h" [disabled]="llena(h)">
               {{ h }} — {{ llena(h) ? 'LLENA' : restantes(h) + ' disp.' }}
             </option>

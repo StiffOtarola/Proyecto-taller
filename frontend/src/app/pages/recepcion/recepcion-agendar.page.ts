@@ -103,10 +103,17 @@ export class RecepcionAgendarPage implements OnInit {
     if (this.cliente) this.router.navigate(['/moto-form'], { queryParams: { cliente_id: this.cliente.id } });
   }
 
+  // Al cambiar de sucursal, el cupo es otro: se recargan los horarios (en modo agendar).
+  onSucursal() {
+    if (this.modo === 'agendar') this.cargarDisponibilidad();
+  }
+
   cargarDisponibilidad() {
     this.form.hora = '';
     if (!this.form.fecha) { this.disp = null; return; }
-    this.rec.getDisponibilidad(this.form.fecha).subscribe({
+    // Con más de una sucursal, el cupo es por local: hay que elegirla primero.
+    if (this.sucursales.length > 1 && !this.form.sucursal_id) { this.disp = null; return; }
+    this.rec.getDisponibilidad(this.form.fecha, this.form.sucursal_id).subscribe({
       next: r => this.disp = r.data,
       error: () => this.disp = null,
     });
@@ -120,11 +127,11 @@ export class RecepcionAgendarPage implements OnInit {
 
   get valido(): boolean {
     if (!this.cliente) return false;
+    const sucursalOk = this.sucursales.length <= 1 || !!this.form.sucursal_id;
     if (this.modo === 'agendar') {
-      return !!this.form.fecha && !!this.form.hora && !!this.form.tipo_servicio;
+      return !!this.form.fecha && !!this.form.hora && !!this.form.tipo_servicio && sucursalOk;
     }
-    return !!this.form.moto_id && !!this.form.problema_reportado.trim()
-      && (this.sucursales.length <= 1 || !!this.form.sucursal_id);
+    return !!this.form.moto_id && !!this.form.problema_reportado.trim() && sucursalOk;
   }
 
   confirmar() {
@@ -146,6 +153,7 @@ export class RecepcionAgendarPage implements OnInit {
       motivo: this.form.motivo.trim() || this.form.tipo_servicio,
       tipo_servicio: this.form.tipo_servicio || null,
       tecnico_id: this.form.tecnico_id,
+      sucursal_id: this.form.sucursal_id,
     }).subscribe({
       next: () => { this.guardando = false; this.aviso('Cita agendada'); this.reset(); },
       error: (e) => { this.guardando = false; this.aviso(e.error?.error || 'No se pudo agendar', 'danger'); },

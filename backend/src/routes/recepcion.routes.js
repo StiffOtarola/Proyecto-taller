@@ -597,18 +597,20 @@ router.put('/perfil/password', async (req, res) => {
 });
 
 // Disponibilidad de horas para una fecha (agendar manual). Reusa la config del
-// taller: mismas horas/cupos que ve el cliente en el portal.
+// taller: mismas horas/cupos que ve el cliente en el portal. El cupo se cuenta por
+// sucursal (igual que el portal) cuando se indica sucursal_id; si no, global.
 router.get('/disponibilidad', async (req, res) => {
   try {
-    const { fecha } = req.query;
+    const { fecha, sucursal_id } = req.query;
     if (!fecha) return res.status(400).json({ error: 'Fecha requerida' });
     const config = await getConfig();
     const horas = horasDisponibles(fecha, config);
-    const [rows] = await pool.query(
-      `SELECT TIME_FORMAT(hora, '%H:%i') AS hora, COUNT(*) AS n
-       FROM citas WHERE fecha = ? AND estado != 'cancelado' GROUP BY 1`,
-      [fecha]
-    );
+    let sql = `SELECT TIME_FORMAT(hora, '%H:%i') AS hora, COUNT(*) AS n
+               FROM citas WHERE fecha = ? AND estado != 'cancelado'`;
+    const params = [fecha];
+    if (sucursal_id) { sql += ' AND sucursal_id = ?'; params.push(sucursal_id); }
+    sql += ' GROUP BY 1';
+    const [rows] = await pool.query(sql, params);
     const ocupacion = {};
     for (const r of rows) ocupacion[r.hora] = r.n;
     res.json({ data: { horas, max: config.max_citas_hora, ocupacion } });

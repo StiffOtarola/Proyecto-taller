@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { RecepcionService } from '../../services/recepcion.service';
 import { comprimirImagen } from '../../shared/image.util';
@@ -44,9 +45,12 @@ export class RecepcionOrdenesPage implements OnInit {
     cancelada: 'gris',
   };
 
-  constructor(private rec: RecepcionService, private toast: ToastController) {}
+  constructor(private rec: RecepcionService, private router: Router, private toast: ToastController) {}
 
   ngOnInit() { this.cargar(); }
+
+  // Abre el detalle completo de la orden (diagnóstico, costos, estados, tiempos).
+  abrirDetalle(o: any) { this.router.navigate(['/detalle-orden', o.id]); }
   ionViewWillEnter() { this.cargar(); }
 
   cambiarVista() { this.cargar(); }

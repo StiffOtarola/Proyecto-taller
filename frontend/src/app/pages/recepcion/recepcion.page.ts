@@ -91,9 +91,10 @@ export class RecepcionPage implements OnInit, OnDestroy {
   private get ahoraCR(): string {
     return new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().slice(11, 16);
   }
-  // Cita agendada cuya hora ya pasó y que aún no ingresó al taller (sin orden).
+  // Cita agendada cuya hora ya pasó y que aún no ingresó al taller (sin orden) y
+  // sin registrar la llegada del cliente (si ya llegó, no es "atrasada", está esperando).
   esAtrasada(c: any): boolean {
-    return c.estado === 'agendado' && !c.orden_id && (c.hora || '') < this.ahoraCR;
+    return c.estado === 'agendado' && !c.orden_id && !c.hora_llegada && (c.hora || '') < this.ahoraCR;
   }
   // Id de la próxima cita por atender hoy (primera agendada cuya hora no pasó).
   get proximaId(): number | null {

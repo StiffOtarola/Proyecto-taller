@@ -14,6 +14,8 @@
   animation: cardRise .4s var(--ease, cubic-bezier(0.32, 0.72, 0, 1)) both;
 
   .oc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .oc-top.tappable { cursor: pointer; &:active { opacity: .7; } }
+  .oc-go { font-size: 16px; color: var(--n-400); flex-shrink: 0; align-self: center; }
   .oc-id { min-width: 0; }
   .oc-num { font-size: 12px; font-weight: 700; color: var(--text-accent); letter-spacing: .03em; }  // AA
   .oc-title { font-size: 14px; font-weight: 700; margin-top: 2px; letter-spacing: -0.01em; line-height: 1.3; overflow-wrap: anywhere; }

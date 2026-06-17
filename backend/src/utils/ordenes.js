@@ -64,4 +64,56 @@ async function sincronizarCitaDesdeOrden(ordenId, ordenEstado) {
   }
 }
 
-module.exports = { generarNumeroOrden, MAP_ORDEN_A_CITA, sincronizarCitaDesdeOrden };
+// Fidelización: cada cuántas entregas el cliente gana una cortesía.
+const VISITAS_PARA_CORTESIA = 7;
+
+// Cierra (entrega) una orden en una transacción: la marca entregada, registra pago,
+// garantía y observaciones, cuenta la visita una sola vez y otorga cortesía cada N
+// entregas; luego sincroniza la cita vinculada. Compartido por el cierre de admin y
+// la entrega de recepción para no duplicar la lógica de fidelización.
+// Devuelve { notFound } | { estadoInvalido, estadoActual } | { cortesiaGanada }.
+async function cerrarOrden(ordenId, datos = {}, opciones = {}) {
+  const { metodo_pago, garantia_dias, observaciones_finales } = datos;
+  const { soloDesdeListaEntrega = false } = opciones;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [[orden]] = await conn.query(
+      'SELECT estado, cliente_id, visita_contada FROM ordenes_trabajo WHERE id = ? FOR UPDATE',
+      [ordenId]
+    );
+    if (!orden) { await conn.rollback(); return { notFound: true }; }
+    // Recepción solo entrega órdenes que el mecánico ya dejó listas.
+    if (soloDesdeListaEntrega && orden.estado !== 'lista_entrega') {
+      await conn.rollback();
+      return { estadoInvalido: true, estadoActual: orden.estado };
+    }
+    await conn.query(
+      `UPDATE ordenes_trabajo SET estado='entregada', metodo_pago=?, garantia_dias=?,
+       observaciones_finales=?, fecha_entrega_real=NOW() WHERE id=?`,
+      [metodo_pago || null, garantia_dias || 0, observaciones_finales || null, ordenId]
+    );
+
+    let cortesiaGanada = false;
+    if (!orden.visita_contada) {
+      await conn.query('UPDATE ordenes_trabajo SET visita_contada = 1 WHERE id = ?', [ordenId]);
+      await conn.query('UPDATE clientes SET visitas = visitas + 1 WHERE id = ?', [orden.cliente_id]);
+      const [[cli]] = await conn.query('SELECT visitas FROM clientes WHERE id = ?', [orden.cliente_id]);
+      if (cli && cli.visitas > 0 && cli.visitas % VISITAS_PARA_CORTESIA === 0) {
+        await conn.query('UPDATE clientes SET cortesia_disponible = 1 WHERE id = ?', [orden.cliente_id]);
+        cortesiaGanada = true;
+      }
+    }
+
+    await conn.commit();
+    await sincronizarCitaDesdeOrden(ordenId, 'entregada');
+    return { cortesiaGanada };
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+}
+
+module.exports = { generarNumeroOrden, MAP_ORDEN_A_CITA, sincronizarCitaDesdeOrden, cerrarOrden };

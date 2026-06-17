@@ -94,8 +94,13 @@
     // WhatsApp: verde de la marca, outline.
     &.wa { background: none; border-color: var(--emerald-700); color: var(--emerald-700);
       ion-icon { font-size: 14px; } }
+    // Entregar: acción de cierre, esmeralda sólido.
+    &.entregar { background: var(--emerald-700); border-color: var(--emerald-700); color: #fff; }
   }
 }
+
+/* Órdenes listas para entregar */
+.entregas .cita-info .ent-orden { font-size: 11.5px; color: var(--text-accent); margin-top: 2px; }
 
 /* Fila viva: grupos del flujo de mostrador */
 .cita-groups { display: flex; flex-direction: column; gap: 6px; }

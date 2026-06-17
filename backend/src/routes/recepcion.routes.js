@@ -4,7 +4,7 @@ const { pool } = require('../db/pool');
 const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
-const { generarNumeroOrden, sincronizarCitaDesdeOrden } = require('../utils/ordenes');
+const { generarNumeroOrden, sincronizarCitaDesdeOrden, cerrarOrden } = require('../utils/ordenes');
 const { getConfig, horasDisponibles } = require('../utils/configuracion');
 const { SERVICIOS } = require('../utils/servicios');
 const { getSucursales } = require('../utils/sucursales');
@@ -206,11 +206,12 @@ router.get('/alertas', async (req, res) => {
 // ───────────────────────────────────────────────────────────
 router.get('/ordenes', async (req, res) => {
   try {
-    // ?estado=completadas → entregadas/canceladas; por defecto, activas.
-    const completadas = req.query.estado === 'completadas';
-    const filtro = completadas
-      ? "o.estado IN ('entregada','cancelada')"
-      : "o.estado NOT IN ('entregada','cancelada')";
+    // ?estado=completadas → entregadas/canceladas; lista_entrega → listas para entregar;
+    // por defecto, activas.
+    let filtro;
+    if (req.query.estado === 'lista_entrega') filtro = "o.estado = 'lista_entrega'";
+    else if (req.query.estado === 'completadas') filtro = "o.estado IN ('entregada','cancelada')";
+    else filtro = "o.estado NOT IN ('entregada','cancelada')";
     const [rows] = await pool.query(
       `SELECT o.id, o.numero_orden, o.estado, o.problema_reportado,
               o.costo_mano_obra, o.costo_repuestos, o.descuento,
@@ -259,6 +260,25 @@ router.post('/ordenes/:id/fotos', async (req, res) => {
     );
     const [[nueva]] = await pool.query('SELECT * FROM orden_fotos WHERE id = ?', [result.insertId]);
     res.status(201).json({ data: nueva, message: 'Foto agregada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// Entregar (cerrar) una orden lista para entrega: registra pago + garantía y la marca
+// entregada. Reusa la lógica transaccional de cierre (fidelización + sync de cita).
+// Recepción solo puede entregar órdenes que el mecánico ya dejó en 'lista_entrega'.
+router.post('/ordenes/:id/entregar', async (req, res) => {
+  try {
+    const { metodo_pago, garantia_dias, observaciones_finales } = req.body;
+    const r = await cerrarOrden(
+      req.params.id,
+      { metodo_pago, garantia_dias, observaciones_finales },
+      { soloDesdeListaEntrega: true }
+    );
+    if (r.notFound) return res.status(404).json({ error: 'Orden no encontrada' });
+    if (r.estadoInvalido) return res.status(400).json({ error: 'La orden todavía no está lista para entrega' });
+    res.json({ message: 'Orden entregada', cortesia_ganada: r.cortesiaGanada });
   } catch (err) {
     fail(res, err);
   }

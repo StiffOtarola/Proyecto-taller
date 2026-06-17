@@ -32,6 +32,14 @@ export class RecepcionService {
     const params = estado === 'completadas' ? ({ estado: 'completadas' } as any) : undefined;
     return this.http.get<{ data: any[] }>(`${this.url}/ordenes`, { params });
   }
+  // Órdenes listas para entregar (para el cierre desde el mostrador).
+  getListasEntrega(): Observable<{ data: any[] }> {
+    return this.http.get<{ data: any[] }>(`${this.url}/ordenes`, { params: { estado: 'lista_entrega' } as any });
+  }
+  // Entregar (cerrar) una orden lista: registra pago + garantía y la marca entregada.
+  entregarOrden(id: number, data: { metodo_pago: string; garantia_dias: number; observaciones_finales?: string }): Observable<{ message: string; cortesia_ganada: boolean }> {
+    return this.http.post<{ message: string; cortesia_ganada: boolean }>(`${this.url}/ordenes/${id}/entregar`, data);
+  }
   getFotosOrden(id: number): Observable<{ data: any[] }> {
     return this.http.get<{ data: any[] }>(`${this.url}/ordenes/${id}/fotos`);
   }

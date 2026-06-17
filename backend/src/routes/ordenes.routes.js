@@ -3,7 +3,7 @@ const { pool } = require('../db/pool');
 const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
-const { generarNumeroOrden, sincronizarCitaDesdeOrden } = require('../utils/ordenes');
+const { generarNumeroOrden, sincronizarCitaDesdeOrden, cerrarOrden } = require('../utils/ordenes');
 const { TRANSICIONES_ORDEN, transicionPermitida } = require('../utils/transiciones');
 const { sucursalValida } = require('../utils/sucursales');
 
@@ -344,48 +344,15 @@ router.get('/:id/checklist', async (req, res) => {
   }
 });
 
-// Fidelización: cada cuántas entregas el cliente gana una cortesía
-const VISITAS_PARA_CORTESIA = 7;
-
-// PATCH /api/ordenes/:id/cerrar
+// PATCH /api/ordenes/:id/cerrar — cierre + fidelización (lógica compartida en utils).
 router.patch('/:id/cerrar', requireRol('admin'), async (req, res) => {
-  const conn = await pool.getConnection();
   try {
     const { metodo_pago, garantia_dias, observaciones_finales } = req.body;
-    // Cierre + fidelización en una transacción: la visita se cuenta exactamente una
-    // vez y la cortesía se otorga de forma consistente (sin estados a medias).
-    await conn.beginTransaction();
-    const [[orden]] = await conn.query('SELECT cliente_id, visita_contada FROM ordenes_trabajo WHERE id = ? FOR UPDATE', [req.params.id]);
-    if (!orden) {
-      await conn.rollback();
-      return res.status(404).json({ error: 'Orden no encontrada' });
-    }
-    await conn.query(
-      `UPDATE ordenes_trabajo SET estado='entregada', metodo_pago=?, garantia_dias=?,
-       observaciones_finales=?, fecha_entrega_real=NOW() WHERE id=?`,
-      [metodo_pago || null, garantia_dias || 0, observaciones_finales || null, req.params.id]
-    );
-
-    let cortesiaGanada = false;
-    if (!orden.visita_contada) {
-      await conn.query('UPDATE ordenes_trabajo SET visita_contada = 1 WHERE id = ?', [req.params.id]);
-      await conn.query('UPDATE clientes SET visitas = visitas + 1 WHERE id = ?', [orden.cliente_id]);
-      const [[cli]] = await conn.query('SELECT visitas FROM clientes WHERE id = ?', [orden.cliente_id]);
-      if (cli && cli.visitas > 0 && cli.visitas % VISITAS_PARA_CORTESIA === 0) {
-        await conn.query('UPDATE clientes SET cortesia_disponible = 1 WHERE id = ?', [orden.cliente_id]);
-        cortesiaGanada = true;
-      }
-    }
-
-    await conn.commit();
-    // Refleja la entrega en la cita vinculada (si la hay): estado, fecha_fin y monto.
-    await sincronizarCitaDesdeOrden(req.params.id, 'entregada');
-    res.json({ message: 'Orden cerrada y entregada', cortesia_ganada: cortesiaGanada });
+    const r = await cerrarOrden(req.params.id, { metodo_pago, garantia_dias, observaciones_finales });
+    if (r.notFound) return res.status(404).json({ error: 'Orden no encontrada' });
+    res.json({ message: 'Orden cerrada y entregada', cortesia_ganada: r.cortesiaGanada });
   } catch (err) {
-    await conn.rollback();
     fail(res, err);
-  } finally {
-    conn.release();
   }
 });
 

@@ -91,6 +91,31 @@
         </div>
       </div>
 
+      <!-- Listas para entregar (cierre + cobro desde el mostrador) -->
+      <section class="card entregas" *ngIf="listas.length">
+        <div class="card-head">
+          <span class="section-label">Listas para entregar</span>
+          <span class="cnt-badge">{{ listas.length }}</span>
+        </div>
+        <div class="cita-list">
+          <div class="cita-row" *ngFor="let o of listas">
+            <div class="cita-info">
+              <strong>{{ o.cliente_nombre }} {{ o.cliente_apellido }}</strong>
+              <span>{{ o.marca }} {{ o.modelo }}<ng-container *ngIf="o.placa"> · {{ o.placa }}</ng-container></span>
+              <span class="ent-orden mono">{{ o.numero_orden }} · ₡{{ totalOrden(o) | number:'1.0-0' }}</span>
+            </div>
+            <div class="cita-right">
+              <button class="cita-act wa" *ngIf="o.cliente_telefono" (click)="whatsappLista(o)" title="Avisar que está lista">
+                <ion-icon name="logo-whatsapp"></ion-icon> Avisar
+              </button>
+              <button class="cita-act entregar" (click)="entregar(o)" [disabled]="entregando === o.id">
+                <ion-icon name="checkmark-done-outline"></ion-icon> {{ entregando === o.id ? 'Entregando…' : 'Entregar' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Citas de hoy -->
       <section class="card">
         <div class="card-head">

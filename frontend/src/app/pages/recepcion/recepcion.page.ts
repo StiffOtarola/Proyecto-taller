@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { ToastController } from '@ionic/angular';
+import { ToastController, ActionSheetController, AlertController } from '@ionic/angular';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { RecepcionService, ResumenRecepcion } from '../../services/recepcion.service';
@@ -17,7 +17,9 @@ export class RecepcionPage implements OnInit, OnDestroy {
   resumen?: ResumenRecepcion;
   citas: any[] = [];
   alertas: any[] = [];
+  listas: any[] = [];   // órdenes listas para entregar
   cargando = true;
+  entregando: number | null = null;
 
   // Buscador rápido (cliente / placa).
   buscarTexto = '';
@@ -55,7 +57,9 @@ export class RecepcionPage implements OnInit, OnDestroy {
     private rec: RecepcionService,
     private auth: AuthService,
     private router: Router,
-    private toast: ToastController
+    private toast: ToastController,
+    private actionSheet: ActionSheetController,
+    private alertCtrl: AlertController
   ) {}
 
   ngOnInit() {
@@ -182,6 +186,15 @@ export class RecepcionPage implements OnInit, OnDestroy {
       await t.present();
     }
   }
+  // Avisar por WhatsApp que una orden está lista para retirar.
+  async whatsappLista(o: any) {
+    const moto = [o.marca, o.modelo].filter(Boolean).join(' ') || 'tu moto';
+    const msg = `Hola ${o.cliente_nombre} 👋, tu ${moto} ya está lista para retirar (orden ${o.numero_orden}). ¡Te esperamos! 🏍️`;
+    if (!abrirWhatsApp(o.cliente_telefono, msg)) {
+      const t = await this.toast.create({ message: 'Este cliente no tiene teléfono cargado', duration: 2200, color: 'warning' });
+      await t.present();
+    }
+  }
 
   get totalConfirmadas(): number {
     return this.citas.filter(c => c.estado === 'agendado' && c.confirmada_cliente).length;
@@ -203,11 +216,67 @@ export class RecepcionPage implements OnInit, OnDestroy {
 
   cargar(ev?: any) {
     this.cargando = true;
-    let pendientes = 3;
+    let pendientes = 4;
     const listo = () => { if (--pendientes <= 0) this.cargando = false; if (ev) ev.target.complete(); };
     this.rec.getResumen().subscribe({ next: r => { this.resumen = r.data; listo(); }, error: listo });
     this.rec.getCitasHoy().subscribe({ next: r => { this.citas = r.data; listo(); }, error: listo });
     this.rec.getAlertas().subscribe({ next: r => { this.alertas = r.data; listo(); }, error: listo });
+    this.rec.getListasEntrega().subscribe({ next: r => { this.listas = r.data; listo(); }, error: listo });
+  }
+
+  // —— Entrega + cobro desde el mostrador ——
+  totalOrden(o: any): number { return Number(o.total ?? (Number(o.costo_mano_obra || 0) + Number(o.costo_repuestos || 0) - Number(o.descuento || 0))); }
+
+  // Paso 1: elegir método de pago (action sheet con el total a cobrar).
+  async entregar(o: any) {
+    if (this.entregando) return;
+    const total = this.totalOrden(o);
+    const metodos = [
+      { text: 'Efectivo', val: 'efectivo' },
+      { text: 'Tarjeta', val: 'tarjeta' },
+      { text: 'SINPE Móvil', val: 'sinpe' },
+      { text: 'Transferencia', val: 'transferencia' },
+    ];
+    const sheet = await this.actionSheet.create({
+      header: `Cobrar ₡${total.toLocaleString('es-CR')} · ${o.numero_orden}`,
+      subHeader: 'Método de pago',
+      buttons: [
+        ...metodos.map(m => ({ text: m.text, handler: () => { this.confirmarEntrega(o, m.val); } })),
+        { text: 'Cancelar', role: 'cancel' },
+      ],
+    });
+    await sheet.present();
+  }
+
+  // Paso 2: confirmar el cierre y registrar la entrega.
+  private async confirmarEntrega(o: any, metodo_pago: string) {
+    this.entregando = o.id;
+    this.rec.entregarOrden(o.id, { metodo_pago, garantia_dias: 30 }).subscribe({
+      next: async (r) => {
+        this.entregando = null;
+        this.listas = this.listas.filter(x => x.id !== o.id);
+        if (this.resumen && this.resumen.ordenes_activas > 0) this.resumen.ordenes_activas--;
+        await this.ofrecerFactura(o, r.cortesia_ganada);
+      },
+      error: async (err) => {
+        this.entregando = null;
+        const t = await this.toast.create({ message: err.error?.error || 'No se pudo entregar la orden', duration: 2600, color: 'danger' });
+        await t.present();
+      },
+    });
+  }
+
+  // Tras entregar: ofrece abrir la factura (y avisa la cortesía si la ganó).
+  private async ofrecerFactura(o: any, cortesia: boolean) {
+    const al = await this.alertCtrl.create({
+      header: 'Orden entregada',
+      message: cortesia ? '¡El cliente ganó una cortesía! 🎉 ¿Abrir la factura?' : '¿Abrir la factura?',
+      buttons: [
+        { text: 'Ahora no', role: 'cancel' },
+        { text: 'Ver factura', handler: () => this.router.navigate(['/factura', o.id]) },
+      ],
+    });
+    await al.present();
   }
 
   // Ícono y color de cada alerta según su tipo.

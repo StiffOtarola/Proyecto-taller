@@ -1,24 +1,52 @@
-<ion-tabs>
-  <ion-tab-bar slot="bottom">
-    <ion-tab-button tab="inicio">
-      <ion-icon name="home-outline"></ion-icon>
-      <ion-label>Inicio</ion-label>
-    </ion-tab-button>
-    <ion-tab-button tab="ordenes">
-      <ion-icon name="clipboard-outline"></ion-icon>
-      <ion-label>Órdenes</ion-label>
-    </ion-tab-button>
-    <ion-tab-button tab="cotizaciones">
-      <ion-icon name="receipt-outline"></ion-icon>
-      <ion-label>Precios</ion-label>
-    </ion-tab-button>
-    <ion-tab-button tab="mensajes">
-      <ion-icon name="chatbubbles-outline"></ion-icon>
-      <ion-label>Mensajes</ion-label>
-    </ion-tab-button>
-    <ion-tab-button tab="clientes">
-      <ion-icon name="people-outline"></ion-icon>
-      <ion-label>Clientes</ion-label>
-    </ion-tab-button>
-  </ion-tab-bar>
-</ion-tabs>
+<ion-split-pane contentId="recepcion-content" when="lg">
+  <ion-menu contentId="recepcion-content" type="overlay" class="admin-sidebar">
+    <ion-content class="admin-dark sidebar-content">
+      <div class="sb-logo">
+        <img class="sb-brand" src="assets/logo/ms-logo-white.png" alt="MS Motos" />
+        <span>Recepción</span>
+      </div>
+
+      <ion-menu-toggle auto-hide="false">
+        <nav class="sb-nav">
+          <div class="sb-section">Principal</div>
+          <a class="nav-item" routerLink="/recepcion/inicio" routerLinkActive="on">
+            <ion-icon name="home-outline"></ion-icon> Inicio
+          </a>
+          <a class="nav-item" routerLink="/recepcion/ordenes" routerLinkActive="on">
+            <ion-icon name="clipboard-outline"></ion-icon> Órdenes
+          </a>
+          <a class="nav-item" routerLink="/recepcion/cotizaciones" routerLinkActive="on">
+            <ion-icon name="receipt-outline"></ion-icon> Precios
+          </a>
+          <a class="nav-item" routerLink="/recepcion/mensajes" routerLinkActive="on">
+            <ion-icon name="chatbubbles-outline"></ion-icon> Mensajes
+          </a>
+          <a class="nav-item" routerLink="/recepcion/clientes" routerLinkActive="on">
+            <ion-icon name="people-outline"></ion-icon> Clientes
+          </a>
+
+          <div class="sb-section">Acciones</div>
+          <a class="nav-item" routerLink="/recepcion/agendar" routerLinkActive="on">
+            <ion-icon name="calendar-outline"></ion-icon> Agendar cita
+          </a>
+          <a class="nav-item" routerLink="/recepcion/walkin" routerLinkActive="on">
+            <ion-icon name="flash-outline"></ion-icon> Cliente sin cita
+          </a>
+          <a class="nav-item" routerLink="/recepcion/perfil" routerLinkActive="on">
+            <ion-icon name="person-circle-outline"></ion-icon> Mi perfil
+          </a>
+        </nav>
+      </ion-menu-toggle>
+    </ion-content>
+
+    <ion-footer class="admin-dark">
+      <div class="sb-user">
+        <div class="sb-av">{{ iniciales }}</div>
+        <div class="sb-info"><strong>{{ nombre }}</strong><span>{{ rolLabel }}</span></div>
+        <button class="sb-logout" (click)="logout()" title="Cerrar sesión"><ion-icon name="log-out-outline"></ion-icon></button>
+      </div>
+    </ion-footer>
+  </ion-menu>
+
+  <ion-router-outlet id="recepcion-content"></ion-router-outlet>
+</ion-split-pane>

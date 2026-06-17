@@ -1,30 +1,40 @@
+/* La factura es un documento "papel": SIEMPRE fondo blanco y texto oscuro, sin
+   importar el modo claro/oscuro de la app (así se lee en pantalla e imprime igual).
+   Se presenta como una hoja flotante sobre el fondo de la app. */
 .factura {
   max-width: 720px;
-  margin: 0 auto;
-  padding: 24px;
+  margin: 20px auto;
+  padding: 36px 40px;
+  background: #fff;
   color: #1a1a1a;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+@media (max-width: 600px) {
+  .factura { margin: 12px; padding: 24px 20px; }
 }
 
 .fac-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 16px;
   border-bottom: 3px solid var(--ion-color-primary);
   padding-bottom: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .fac-marca {
-  h1 { margin: 0; font-size: 26px; font-weight: 800; color: var(--ion-color-primary); }
+  h1 { margin: 0; font-family: var(--font-display, sans-serif); font-size: 26px; font-weight: 800; color: var(--ion-color-primary); }
   p { margin: 2px 0 0; font-size: 13px; color: #666; }
   .fac-suc { margin-top: 6px; font-size: 12px; line-height: 1.4;
     strong { color: #333; } }
 }
 
 .fac-num {
-  text-align: right;
+  text-align: right; flex-shrink: 0;
   .etiqueta { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: #999; }
-  strong { font-size: 18px; }
+  strong { font-family: var(--font-display, sans-serif); font-size: 20px; font-weight: 800; letter-spacing: -.01em; color: #111; }
   p { margin: 2px 0 0; font-size: 13px; color: #666; }
 }
 
@@ -33,73 +43,84 @@
   text-transform: uppercase;
   letter-spacing: .5px;
   color: #999;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .fac-datos {
   display: flex;
   gap: 24px;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 
-  div { flex: 1; }
-  p { margin: 2px 0; font-size: 14px; }
+  div { flex: 1; min-width: 0; }
+  p { margin: 3px 0 0; font-size: 14px; color: #1a1a1a;
+    strong { font-weight: 700; } }
 }
 
 .fac-seccion {
-  margin-bottom: 16px;
-  p { margin: 4px 0 0; font-size: 14px; }
+  margin-bottom: 18px;
+  p { margin: 4px 0 0; font-size: 14px; line-height: 1.5; }
 }
 
 .fac-tabla {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   font-size: 14px;
 
   th {
     text-align: left;
-    padding: 8px;
+    padding: 9px 8px;
     background: #f3f4f6;
-    font-size: 12px;
+    font-size: 11px;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: .3px;
+    letter-spacing: .4px;
     color: #555;
+    &:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+    &:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
   }
-  td { padding: 8px; border-bottom: 1px solid #eee; }
-  .num { text-align: right; }
+  td { padding: 10px 8px; border-bottom: 1px solid #eee; color: #1a1a1a; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 
 .fac-totales {
   margin-left: auto;
-  width: 260px;
+  width: 280px;
 
   div {
     display: flex;
     justify-content: space-between;
-    padding: 5px 8px;
+    padding: 6px 8px;
     font-size: 14px;
+    color: #444;
+    span:last-child { font-variant-numeric: tabular-nums; color: #1a1a1a; }
   }
   .total {
     border-top: 2px solid #1a1a1a;
-    margin-top: 4px;
+    margin-top: 6px;
+    padding-top: 10px;
+    font-family: var(--font-display, sans-serif);
     font-weight: 800;
-    font-size: 17px;
+    font-size: 19px;
+    color: #111;
+    span:last-child { color: var(--ion-color-primary); }
   }
 }
 
 .fac-pie {
-  margin-top: 28px;
+  margin-top: 30px;
   border-top: 1px solid #eee;
-  padding-top: 16px;
+  padding-top: 18px;
   font-size: 14px;
+  color: #333;
 
   p { margin: 4px 0; }
-  .gracias { margin-top: 16px; text-align: center; color: var(--rose-700); font-weight: 600; }  // AA (factura impresa, fondo blanco)
+  .gracias { margin-top: 18px; text-align: center; color: var(--rose-700); font-weight: 700; }  // AA (factura impresa, fondo blanco)
 }
 
-// Impresión: ocultar la barra y dejar solo la factura en blanco
+// Impresión: sin barra y solo la hoja (plana, sin sombra ni márgenes de pantalla).
 @media print {
   .no-print { display: none !important; }
   ion-content { --background: #fff; }
-  .factura { padding: 0; }
+  .factura { padding: 0; margin: 0; max-width: none; border-radius: 0; box-shadow: none; }
 }

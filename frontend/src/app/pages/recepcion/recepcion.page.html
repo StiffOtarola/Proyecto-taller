@@ -46,10 +46,10 @@
       </div>
     </div>
 
-    <!-- Acceso rápido: abrir orden de un cliente que llegó sin reserva -->
-    <button class="walkin-cta" [routerLink]="['/recepcion/walkin']">
-      <ion-icon name="flash-outline"></ion-icon>
-      <span>Cliente sin cita</span>
+    <!-- Acceso rápido: recibir un cliente (ingresar ahora o agendar) -->
+    <button class="walkin-cta" [routerLink]="['/recepcion/recibir']" [queryParams]="{ modo: 'ahora' }">
+      <ion-icon name="person-add-outline"></ion-icon>
+      <span>Recibir cliente</span>
       <ion-icon name="chevron-forward" class="wc-go"></ion-icon>
     </button>
 

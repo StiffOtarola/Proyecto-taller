@@ -1,54 +1,103 @@
 <ion-header>
   <ion-toolbar>
-    <img slot="start" class="brand-hd light-only" src="assets/logo/ms-iso.png" alt="MS Motos" />
-    <img slot="start" class="brand-hd dark-only" src="assets/logo/ms-iso-white.png" alt="MS Motos" />
-    <ion-title>Agendar cita</ion-title>
+    <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
+    <ion-title>Recibir cliente</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
   <div class="agendar">
     <div class="intro">
-      <h1>Agendar cita</h1>
-      <p>Para un cliente que llamó o llegó al taller.</p>
+      <h1>Recibir cliente</h1>
+      <p>{{ modo === 'ahora' ? 'El cliente está en el taller: abrí su orden ahora.' : 'Reservá fecha y hora para un cliente que llamó o vendrá luego.' }}</p>
     </div>
 
-    <!-- Datos del cliente -->
+    <!-- Datos del cliente (compartido) -->
     <section class="card">
-      <span class="section-label">Datos del cliente</span>
+      <span class="section-label">Cliente</span>
 
-      <div class="ig cli-wrap">
+      <div class="ig cli-wrap" *ngIf="!cliente">
         <label>Buscar cliente *</label>
-        <input [(ngModel)]="qCliente" (ngModelChange)="buscarClientes()" placeholder="Nombre, teléfono o cédula...">
-        <div class="cli-results" *ngIf="clientes.length && !cliente">
+        <input [(ngModel)]="qCliente" (ngModelChange)="buscarClientes()" placeholder="Nombre, teléfono o placa...">
+        <div class="cli-results" *ngIf="clientes.length">
           <button type="button" class="cli-item" *ngFor="let c of clientes" (click)="seleccionarCliente(c)">
             <strong>{{ c.nombre }} {{ c.apellido }}</strong>
             <span *ngIf="c.telefono">· {{ c.telefono }}</span>
           </button>
         </div>
+        <button type="button" class="link-nuevo" *ngIf="qCliente.trim().length > 2 && !clientes.length" (click)="crearCliente()">
+          <ion-icon name="person-add-outline"></ion-icon> Cliente no encontrado · Crear nuevo
+        </button>
       </div>
 
       <div class="cli-pick" *ngIf="cliente">
         <div class="av">{{ iniciales(cliente) }}</div>
         <div class="meta">
           <strong>{{ cliente.nombre }} {{ cliente.apellido }}</strong>
-          <span>{{ cliente.email || cliente.telefono || '—' }}</span>
+          <span>{{ cliente.telefono || cliente.email || '—' }}</span>
         </div>
         <button class="x" (click)="limpiarCliente()" title="Cambiar cliente"><ion-icon name="close-outline"></ion-icon></button>
       </div>
 
       <div class="ig" *ngIf="cliente">
-        <label>Moto</label>
-        <select [(ngModel)]="form.moto_id">
-          <option [ngValue]="null">Sin especificar</option>
+        <label>Moto{{ modo === 'ahora' ? ' *' : '' }}</label>
+        <select [(ngModel)]="form.moto_id" *ngIf="motos.length">
+          <option [ngValue]="null">{{ modo === 'ahora' ? 'Elegí la moto' : 'Sin especificar' }}</option>
           <option *ngFor="let m of motos" [ngValue]="m.id">{{ m.marca }} {{ m.modelo }}{{ m.placa ? ' — ' + m.placa : '' }}</option>
         </select>
+        <button type="button" class="link-nuevo" (click)="registrarMoto()">
+          <ion-icon name="add-outline"></ion-icon> {{ motos.length ? 'Registrar otra moto' : 'Este cliente no tiene motos · Registrar' }}
+        </button>
       </div>
     </section>
 
-    <!-- Detalles del servicio -->
-    <section class="card">
-      <span class="section-label">Detalles del servicio</span>
+    <!-- Decisión: ingresar ahora o agendar (aparece tras elegir cliente) -->
+    <div class="modo-seg" *ngIf="cliente">
+      <button type="button" class="ms-btn" [class.on]="modo === 'ahora'" (click)="setModo('ahora')">
+        <ion-icon name="flash-outline"></ion-icon> Ingresar ahora
+      </button>
+      <button type="button" class="ms-btn" [class.on]="modo === 'agendar'" (click)="setModo('agendar')">
+        <ion-icon name="calendar-outline"></ion-icon> Agendar cita
+      </button>
+    </div>
+
+    <!-- MODO INGRESAR AHORA: abre la orden -->
+    <section class="card" *ngIf="cliente && modo === 'ahora'">
+      <span class="section-label">Ingreso al taller</span>
+
+      <div class="ig">
+        <label>Problema reportado *</label>
+        <textarea [(ngModel)]="form.problema_reportado" placeholder="Lo que dice el cliente sobre su moto..."></textarea>
+      </div>
+
+      <div class="ig" *ngIf="sucursales.length > 1">
+        <label>Sucursal *</label>
+        <select [(ngModel)]="form.sucursal_id">
+          <option [ngValue]="null">Elegí la sucursal</option>
+          <option *ngFor="let s of sucursales" [ngValue]="s.id">{{ s.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="grid2">
+        <div class="ig">
+          <label>Kilometraje (opcional)</label>
+          <input type="number" [(ngModel)]="form.kilometraje_ingreso" placeholder="0">
+        </div>
+        <div class="ig">
+          <label>Prioridad</label>
+          <select [(ngModel)]="form.prioridad">
+            <option value="normal">Normal</option>
+            <option value="urgente">Urgente</option>
+            <option value="emergencia">Emergencia</option>
+            <option value="garantia">Garantía</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODO AGENDAR: reserva fecha + hora -->
+    <section class="card" *ngIf="cliente && modo === 'agendar'">
+      <span class="section-label">Detalles de la cita</span>
 
       <div class="ig">
         <label>Tipo de servicio *</label>
@@ -88,8 +137,9 @@
       </div>
     </section>
 
-    <button class="cta" [disabled]="!valido || guardando" (click)="confirmar()">
-      <ion-icon name="calendar-outline"></ion-icon> {{ guardando ? 'Agendando…' : 'Confirmar cita' }}
+    <button class="cta" *ngIf="cliente" [disabled]="!valido || guardando" (click)="confirmar()">
+      <ion-icon [name]="modo === 'ahora' ? 'document-text-outline' : 'calendar-outline'"></ion-icon>
+      {{ guardando ? (modo === 'ahora' ? 'Creando orden…' : 'Agendando…') : (modo === 'ahora' ? 'Crear orden' : 'Confirmar cita') }}
     </button>
 
     <div style="height:80px"></div>

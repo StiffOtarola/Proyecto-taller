@@ -1,7 +1,12 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { RecepcionService } from '../../services/recepcion.service';
 
+// "Recibir cliente": flujo único de mostrador. Se busca el cliente una sola vez y
+// se elige qué hacer con él:
+//   • Ingresar ahora  → abre la orden de trabajo (el cliente ya está en el taller).
+//   • Agendar cita    → reserva fecha + hora (el cliente llamó o vendrá luego).
 @Component({
   standalone: false,
   selector: 'app-recepcion-agendar',
@@ -9,30 +14,61 @@ import { RecepcionService } from '../../services/recepcion.service';
   styleUrls: ['./recepcion-agendar.page.scss'],
 })
 export class RecepcionAgendarPage implements OnInit {
+  modo: 'ahora' | 'agendar' = 'ahora';
+
   qCliente = '';
   clientes: any[] = [];
   cliente: any = null;
   motos: any[] = [];
   tecnicos: any[] = [];
   servicios: string[] = [];
+  sucursales: any[] = [];
   disp: { horas: string[]; max: number; ocupacion: Record<string, number> } | null = null;
   guardando = false;
 
   form = {
     moto_id: null as number | null,
+    // Agendar cita
     tipo_servicio: '',
     tecnico_id: null as number | null,
     fecha: new Date().toISOString().slice(0, 10),
     hora: '',
     motivo: '',
+    // Ingresar ahora (orden)
+    problema_reportado: '',
+    sucursal_id: null as number | null,
+    kilometraje_ingreso: null as number | null,
+    prioridad: 'normal',
   };
 
-  constructor(private rec: RecepcionService, private toast: ToastController) {}
+  constructor(
+    private rec: RecepcionService,
+    private route: ActivatedRoute,
+    private router: Router,
+    private toast: ToastController
+  ) {}
 
   ngOnInit() {
+    // El dashboard abre este flujo en modo "ahora" (?modo=ahora) para walk-ins.
+    const m = this.route.snapshot.queryParamMap.get('modo');
+    if (m === 'ahora' || m === 'agendar') this.modo = m;
+
     this.rec.getTecnicos().subscribe({ next: r => this.tecnicos = r.data, error: () => {} });
     this.rec.getServicios().subscribe({ next: r => this.servicios = r.data, error: () => {} });
-    this.cargarDisponibilidad();
+    this.rec.getSucursales().subscribe({
+      next: r => { this.sucursales = r.data || []; if (this.sucursales.length === 1) this.form.sucursal_id = this.sucursales[0].id; },
+      error: () => { this.sucursales = []; },
+    });
+    if (this.modo === 'agendar') this.cargarDisponibilidad();
+  }
+
+  // Al volver de crear un cliente/moto, refresca las motos del cliente elegido.
+  ionViewWillEnter() { if (this.cliente) this.cargarMotos(this.cliente.id); }
+
+  setModo(m: 'ahora' | 'agendar') {
+    if (this.modo === m) return;
+    this.modo = m;
+    if (m === 'agendar' && !this.disp) this.cargarDisponibilidad();
   }
 
   buscarClientes() {
@@ -46,7 +82,11 @@ export class RecepcionAgendarPage implements OnInit {
     this.qCliente = `${c.nombre} ${c.apellido || ''}`.trim();
     this.clientes = [];
     this.form.moto_id = null;
-    this.rec.getMotos(c.id).subscribe({
+    this.cargarMotos(c.id);
+  }
+
+  private cargarMotos(clienteId: number) {
+    this.rec.getMotos(clienteId).subscribe({
       next: r => { this.motos = r.data; if (r.data.length === 1) this.form.moto_id = r.data[0].id; },
       error: () => { this.motos = []; },
     });
@@ -55,6 +95,12 @@ export class RecepcionAgendarPage implements OnInit {
   limpiarCliente() {
     this.cliente = null; this.qCliente = ''; this.clientes = [];
     this.motos = []; this.form.moto_id = null;
+  }
+
+  // Altas nuevas: reusan los formularios existentes.
+  crearCliente() { this.router.navigate(['/cliente-form']); }
+  registrarMoto() {
+    if (this.cliente) this.router.navigate(['/moto-form'], { queryParams: { cliente_id: this.cliente.id } });
   }
 
   cargarDisponibilidad() {
@@ -73,12 +119,25 @@ export class RecepcionAgendarPage implements OnInit {
   }
 
   get valido(): boolean {
-    return !!this.cliente && !!this.form.fecha && !!this.form.hora && !!this.form.tipo_servicio;
+    if (!this.cliente) return false;
+    if (this.modo === 'agendar') {
+      return !!this.form.fecha && !!this.form.hora && !!this.form.tipo_servicio;
+    }
+    return !!this.form.moto_id && !!this.form.problema_reportado.trim()
+      && (this.sucursales.length <= 1 || !!this.form.sucursal_id);
   }
 
   confirmar() {
-    if (!this.valido) { this.aviso('Completá cliente, servicio, fecha y hora', 'warning'); return; }
+    if (!this.valido) {
+      this.aviso(this.modo === 'agendar' ? 'Completá servicio, fecha y hora' : 'Elegí moto y describí el problema', 'warning');
+      return;
+    }
     this.guardando = true;
+    if (this.modo === 'agendar') this.confirmarCita();
+    else this.confirmarOrden();
+  }
+
+  private confirmarCita() {
     this.rec.crearCita({
       cliente_id: this.cliente.id,
       moto_id: this.form.moto_id,
@@ -93,10 +152,28 @@ export class RecepcionAgendarPage implements OnInit {
     });
   }
 
+  private confirmarOrden() {
+    this.rec.crearOrden({
+      cliente_id: this.cliente.id,
+      moto_id: this.form.moto_id!,
+      problema_reportado: this.form.problema_reportado.trim(),
+      sucursal_id: this.form.sucursal_id,
+      kilometraje_ingreso: this.form.kilometraje_ingreso || null,
+      prioridad: this.form.prioridad || 'normal',
+    }).subscribe({
+      next: (r) => { this.guardando = false; this.aviso(`Orden ${r.data.numero_orden} creada`); this.router.navigate(['/detalle-orden', r.data.id]); },
+      error: (e) => { this.guardando = false; this.aviso(e.error?.error || 'No se pudo crear la orden', 'danger'); },
+    });
+  }
+
   private reset() {
     const fecha = this.form.fecha;
+    const sucursal_id = this.sucursales.length === 1 ? this.sucursales[0].id : null;
     this.limpiarCliente();
-    this.form = { moto_id: null, tipo_servicio: '', tecnico_id: null, fecha, hora: '', motivo: '' };
+    this.form = {
+      moto_id: null, tipo_servicio: '', tecnico_id: null, fecha, hora: '', motivo: '',
+      problema_reportado: '', sucursal_id, kilometraje_ingreso: null, prioridad: 'normal',
+    };
     this.cargarDisponibilidad();
   }
 

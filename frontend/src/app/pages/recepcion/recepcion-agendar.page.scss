@@ -30,6 +30,30 @@
 }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
+/* Selector de modo: ingresar ahora vs agendar */
+.modo-seg {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;
+  .ms-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 12px; border-radius: 14px; cursor: pointer;
+    border: 1px solid var(--hairline); background: var(--ion-card-background); color: var(--n-500);
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    transition: border-color .15s, color .15s, background .15s;
+    ion-icon { font-size: 17px; }
+    &.on { border-color: var(--ion-color-primary); color: var(--ion-color-primary); background: var(--rose-50); }
+    &:active { transform: scale(.98); }
+  }
+}
+
+/* Enlace para crear cliente / registrar moto */
+.link-nuevo {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
+  background: none; border: none; cursor: pointer; padding: 4px 0;
+  font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--text-accent);
+  ion-icon { font-size: 15px; }
+  &:active { transform: scale(.98); }
+}
+
 /* Autocompletar cliente */
 .cli-wrap { position: relative; }
 .cli-results {

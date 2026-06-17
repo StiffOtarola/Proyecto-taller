@@ -140,6 +140,8 @@ async function ensureSchema() {
     await addColumnIfMissing('citas', 'fecha_fin', 'TIMESTAMP NULL');
     // El cliente confirma que asistirá a su cita agendada (señal de no-show para el taller).
     await addColumnIfMissing('citas', 'confirmada_cliente', 'TINYINT(1) DEFAULT 0');
+    // Check-in en mostrador: momento en que el cliente llegó al taller (antes de crear la orden).
+    await addColumnIfMissing('citas', 'hora_llegada', 'DATETIME NULL');
 
     // Nuevos estados de la cita (flujo que ve el cliente en el portal).
     // Idempotente: solo migra si el enum todavía tiene los estados viejos.

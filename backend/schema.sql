@@ -121,6 +121,7 @@ CREATE TABLE IF NOT EXISTS citas (
   comentario_satisfaccion TEXT,
   fecha_inicio  TIMESTAMP NULL,                       -- al empezar el trabajo
   fecha_fin     TIMESTAMP NULL,                       -- al entregar
+  hora_llegada  DATETIME NULL,                        -- check-in en mostrador (el cliente llegó)
   orden_id      INT,                                  -- orden de trabajo generada/enlazada (puente cita ↔ orden)
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

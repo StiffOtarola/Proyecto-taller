@@ -90,10 +90,13 @@
           <span class="section-label">Citas de hoy</span>
           <span class="cnt-badge" *ngIf="citas.length">{{ citas.length }}</span>
         </div>
-        <!-- Resumen de confirmación -->
+        <!-- Resumen de confirmación. "Sin confirmar" es accionable: filtra para recordar. -->
         <div class="conf-resumen" *ngIf="totalConfirmadas || totalSinConfirmar">
           <span class="cr ok"><ion-icon name="checkmark-circle"></ion-icon> {{ totalConfirmadas }} confirmada(s)</span>
-          <span class="cr pend" *ngIf="totalSinConfirmar"><ion-icon name="alert-circle-outline"></ion-icon> {{ totalSinConfirmar }} sin confirmar</span>
+          <button class="cr pend btn" *ngIf="totalSinConfirmar" [class.on]="soloSinConfirmar" (click)="toggleSinConfirmar()">
+            <ion-icon name="alert-circle-outline"></ion-icon> {{ totalSinConfirmar }} sin confirmar
+          </button>
+          <button class="cr clear" *ngIf="soloSinConfirmar" (click)="toggleSinConfirmar()">Ver todas</button>
         </div>
         <!-- Filtro por sucursal (solo si hoy hay citas en más de un local) -->
         <div class="suc-filtro" *ngIf="sucursalesHoy.length > 1">
@@ -102,29 +105,58 @@
             <ion-icon name="location-outline"></ion-icon> {{ s.nombre }}
           </button>
         </div>
-        <div class="cita-list">
-          <div class="cita-row" *ngFor="let c of citasVista" [class.proxima]="c.id === proximaId" [class.atrasada]="esAtrasada(c)">
-            <span class="cita-hora mono">{{ c.hora?.slice(0,5) }}</span>
-            <div class="cita-info">
-              <strong>
-                {{ c.cliente_nombre }} {{ c.cliente_apellido }}
-                <span class="tag-prox" *ngIf="c.id === proximaId">Próxima</span>
-                <span class="tag-atr" *ngIf="esAtrasada(c)">Atrasada</span>
-              </strong>
-              <span>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}<ng-container *ngIf="c.tipo_servicio"> · {{ c.tipo_servicio }}</ng-container></span>
-              <span class="cita-suc" *ngIf="c.sucursal_nombre"><ion-icon name="location-outline"></ion-icon> {{ c.sucursal_nombre }}</span>
-              <span class="conf ok" *ngIf="c.confirmada_cliente"><ion-icon name="checkmark-circle"></ion-icon> Asistencia confirmada</span>
-              <span class="conf pend" *ngIf="!c.confirmada_cliente && c.estado === 'agendado'"><ion-icon name="alert-circle-outline"></ion-icon> Sin confirmar</span>
+        <div class="cita-groups">
+          <!-- Fila viva: las citas se agrupan por su momento en el flujo del mostrador -->
+          <div class="cita-group" *ngFor="let g of grupos" [attr.data-grp]="g.key">
+            <div class="grp-head">
+              <ion-icon [name]="g.icon"></ion-icon>
+              <span class="grp-label">{{ g.label }}</span>
+              <span class="grp-cnt">{{ g.citas.length }}</span>
             </div>
-            <div class="cita-right">
-              <span class="pill" [ngClass]="estadoPill[c.estado]">{{ estadoLabel[c.estado] }}</span>
-              <button class="cita-act ver" *ngIf="c.orden_id" (click)="verOrden(c)">
-                <ion-icon name="document-text-outline"></ion-icon> {{ c.numero_orden || 'Ver orden' }}
-              </button>
-              <button class="cita-act" *ngIf="!c.orden_id && c.estado !== 'entregado' && c.estado !== 'cancelado'"
-                      (click)="crearOrden(c)" [disabled]="creandoOrden === c.id">
-                <ion-icon name="add-circle-outline"></ion-icon> {{ creandoOrden === c.id ? 'Creando…' : 'Crear orden' }}
-              </button>
+            <div class="cita-list">
+              <div class="cita-row" *ngFor="let c of g.citas"
+                   [class.proxima]="c.id === proximaId && g.key === 'porVenir'"
+                   [class.atrasada]="esAtrasada(c)"
+                   [class.espera-larga]="g.key === 'esperando' && esperaLarga(c)">
+                <span class="cita-hora mono">{{ c.hora?.slice(0,5) }}</span>
+                <div class="cita-info">
+                  <strong>
+                    {{ c.cliente_nombre }} {{ c.cliente_apellido }}
+                    <span class="tag-prox" *ngIf="c.id === proximaId && g.key === 'porVenir'">Próxima</span>
+                    <span class="tag-atr" *ngIf="esAtrasada(c)">Atrasada</span>
+                  </strong>
+                  <span>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}<ng-container *ngIf="c.tipo_servicio"> · {{ c.tipo_servicio }}</ng-container></span>
+                  <span class="cita-suc" *ngIf="c.sucursal_nombre"><ion-icon name="location-outline"></ion-icon> {{ c.sucursal_nombre }}</span>
+                  <!-- En espera: cuánto lleva. Si no, la señal de confirmación de asistencia. -->
+                  <span class="conf espera" *ngIf="g.key === 'esperando'" [class.larga]="esperaLarga(c)">
+                    <ion-icon name="hourglass-outline"></ion-icon> {{ esperaTexto(c) }}
+                    <button class="undo-llegada" (click)="deshacerLlegada(c)">deshacer</button>
+                  </span>
+                  <span class="conf ok" *ngIf="g.key !== 'esperando' && c.confirmada_cliente && c.estado === 'agendado'"><ion-icon name="checkmark-circle"></ion-icon> Asistencia confirmada</span>
+                  <span class="conf pend" *ngIf="g.key !== 'esperando' && !c.confirmada_cliente && c.estado === 'agendado'"><ion-icon name="alert-circle-outline"></ion-icon> Sin confirmar</span>
+                </div>
+                <div class="cita-right">
+                  <span class="pill" [ngClass]="estadoPill[c.estado]">{{ estadoLabel[c.estado] }}</span>
+                  <!-- Avisar al cliente por WhatsApp (mensaje según su estado). -->
+                  <button class="cita-act wa" *ngIf="c.cliente_telefono && c.estado !== 'entregado'"
+                          (click)="whatsappCita(c)" title="Avisar por WhatsApp">
+                    <ion-icon name="logo-whatsapp"></ion-icon> WhatsApp
+                  </button>
+                  <!-- Por venir: marcar que el cliente llegó (check-in de mostrador). -->
+                  <button class="cita-act llegada" *ngIf="g.key === 'porVenir'"
+                          (click)="marcarLlegada(c)" [disabled]="marcando === c.id">
+                    <ion-icon name="enter-outline"></ion-icon> {{ marcando === c.id ? '…' : 'Marcar llegada' }}
+                  </button>
+                  <!-- Con orden: verla. Sin orden y ya en proceso: crearla. -->
+                  <button class="cita-act ver" *ngIf="c.orden_id" (click)="verOrden(c)">
+                    <ion-icon name="document-text-outline"></ion-icon> {{ c.numero_orden || 'Ver orden' }}
+                  </button>
+                  <button class="cita-act" *ngIf="!c.orden_id && c.estado !== 'entregado'"
+                          (click)="crearOrden(c)" [disabled]="creandoOrden === c.id">
+                    <ion-icon name="add-circle-outline"></ion-icon> {{ creandoOrden === c.id ? 'Creando…' : 'Crear orden' }}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           <div class="empty-row" *ngIf="!citas.length">

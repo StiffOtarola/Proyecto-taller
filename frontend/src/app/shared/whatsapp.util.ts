@@ -72,7 +72,34 @@ export function mensajeSugerido(estado?: string): string {
   return (estado && ESTADO_A_MENSAJE[estado]) || 'recibida';
 }
 
-export function abrirWhatsApp(telefono: string, mensaje: string) {
-  const tel = (telefono || '').replace(/\D/g, '');
+// Normaliza un teléfono a dígitos con código de país para wa.me.
+// En Costa Rica los números son de 8 dígitos: se les antepone 506.
+export function normalizarTelefono(telefono?: string | null): string {
+  let tel = (telefono || '').replace(/\D/g, '');
+  if (tel.startsWith('00')) tel = tel.slice(2);
+  if (tel.length === 8) tel = '506' + tel;
+  return tel;
+}
+
+// Abre WhatsApp con el mensaje. Devuelve false si no hay teléfono válido.
+export function abrirWhatsApp(telefono: string | null | undefined, mensaje: string): boolean {
+  const tel = normalizarTelefono(telefono);
+  if (!tel) return false;
   window.open(`https://wa.me/${tel}?text=${encodeURIComponent(mensaje)}`, '_blank');
+  return true;
+}
+
+// Mensaje contextual para una CITA del día (recordatorio / lista / seguimiento),
+// según el estado de la cita (distinto del estado de la orden).
+export function mensajeCita(c: any): string {
+  const nombre = (c?.cliente_nombre || '').trim();
+  const moto = `${c?.marca || ''} ${c?.modelo || ''}`.trim() || 'tu moto';
+  if (c?.estado === 'listo') {
+    return `Hola ${nombre}, ¡buenas noticias! Tu ${moto} ya está lista para retirar${c?.numero_orden ? ` (orden ${c.numero_orden})` : ''}. Te esperamos en el taller. 🎉`;
+  }
+  if (c?.estado === 'en_revision' || c?.estado === 'en_mantenimiento') {
+    return `Hola ${nombre}, te contamos sobre el avance de tu ${moto} en el taller.`;
+  }
+  const hora = (c?.hora || '').slice(0, 5);
+  return `Hola ${nombre} 👋, te recordamos tu cita${hora ? ` hoy a las ${hora}` : ''} para ${moto}. ¿Nos confirmás tu asistencia? 🏍️`;
 }

@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { RecepcionService, ResumenRecepcion } from '../../services/recepcion.service';
 import { AuthService } from '../../services/auth.service';
+import { abrirWhatsApp, mensajeCita } from '../../shared/whatsapp.util';
 
 @Component({
   standalone: false,
@@ -43,9 +44,12 @@ export class RecepcionPage implements OnInit, OnDestroy {
   };
 
   creandoOrden: number | null = null;
+  marcando: number | null = null;
 
   // Filtro por sucursal sobre las citas de hoy (las opciones salen de las citas cargadas).
   sucursalFiltro: number | '' = '';
+  // Modo "trabajar los sin confirmar": muestra solo las citas por venir sin confirmar.
+  soloSinConfirmar = false;
 
   constructor(
     private rec: RecepcionService,
@@ -100,11 +104,84 @@ export class RecepcionPage implements OnInit, OnDestroy {
     }
     return [...map].map(([id, nombre]) => ({ id, nombre })).sort((a, b) => a.nombre.localeCompare(b.nombre));
   }
-  // Citas de hoy aplicando el filtro de sucursal (si hay uno activo).
+  // Citas de hoy aplicando el filtro de sucursal y, si está activo, el de sin confirmar.
   get citasVista(): any[] {
-    return this.sucursalFiltro ? this.citas.filter(c => c.sucursal_id === this.sucursalFiltro) : this.citas;
+    let v = this.sucursalFiltro ? this.citas.filter(c => c.sucursal_id === this.sucursalFiltro) : this.citas;
+    if (this.soloSinConfirmar) v = v.filter(c => c.estado === 'agendado' && !c.confirmada_cliente && !c.hora_llegada);
+    return v;
   }
   setSucursalFiltro(v: number | '') { this.sucursalFiltro = v; }
+  toggleSinConfirmar() { this.soloSinConfirmar = !this.soloSinConfirmar; }
+
+  // —— Fila viva del mostrador ——
+  // Agrupa las citas de hoy por su momento en el flujo. Mutuamente excluyentes y
+  // exhaustivos sobre los estados (citas-hoy ya excluye 'cancelado').
+  get grupos(): { key: string; label: string; icon: string; citas: any[] }[] {
+    const v = this.citasVista;
+    const grupos = [
+      { key: 'esperando', label: 'Esperando atención', icon: 'hourglass-outline',
+        citas: v.filter(c => c.estado === 'agendado' && c.hora_llegada) },
+      { key: 'taller', label: 'En taller', icon: 'construct-outline',
+        citas: v.filter(c => ['en_revision', 'en_mantenimiento', 'listo'].includes(c.estado)) },
+      { key: 'porVenir', label: 'Por venir', icon: 'time-outline',
+        citas: v.filter(c => c.estado === 'agendado' && !c.hora_llegada) },
+      { key: 'entregadas', label: 'Entregadas hoy', icon: 'checkmark-done-outline',
+        citas: v.filter(c => c.estado === 'entregado') },
+    ];
+    return grupos.filter(g => g.citas.length);
+  }
+
+  // Minutos que el cliente lleva esperando desde que se marcó su llegada.
+  esperaMin(c: any): number {
+    if (!c.hora_llegada) return 0;
+    return Math.max(0, Math.round((Date.now() - new Date(c.hora_llegada).getTime()) / 60000));
+  }
+  esperaTexto(c: any): string {
+    const m = this.esperaMin(c);
+    if (m < 1) return 'Recién llegó';
+    if (m < 60) return `Esperando ${m} min`;
+    const h = Math.floor(m / 60), r = m % 60;
+    return `Esperando ${h} h${r ? ` ${r} min` : ''}`;
+  }
+  // Espera larga (más de 20 min sin entrar al taller): la resaltamos en ámbar.
+  esperaLarga(c: any): boolean { return this.esperaMin(c) >= 20; }
+
+  // Marca / deshace la llegada del cliente (check-in de mostrador).
+  marcarLlegada(c: any) {
+    if (this.marcando) return;
+    this.marcando = c.id;
+    this.rec.marcarLlegada(c.id).subscribe({
+      next: async (r) => {
+        this.marcando = null;
+        c.hora_llegada = r.data.hora_llegada;
+        const t = await this.toast.create({ message: 'Llegada registrada', duration: 1400, color: 'success' });
+        await t.present();
+      },
+      error: async (err) => {
+        this.marcando = null;
+        const t = await this.toast.create({ message: err.error?.error || 'No se pudo registrar la llegada', duration: 2400, color: 'danger' });
+        await t.present();
+      },
+    });
+  }
+  deshacerLlegada(c: any) {
+    this.rec.deshacerLlegada(c.id).subscribe({
+      next: () => { c.hora_llegada = null; },
+      error: async () => {
+        const t = await this.toast.create({ message: 'No se pudo deshacer', duration: 1800, color: 'danger' });
+        await t.present();
+      },
+    });
+  }
+
+  // —— WhatsApp ——
+  // Abre WhatsApp con el mensaje según el estado de la cita (recordatorio / lista / seguimiento).
+  async whatsappCita(c: any) {
+    if (!abrirWhatsApp(c.cliente_telefono, mensajeCita(c))) {
+      const t = await this.toast.create({ message: 'Este cliente no tiene teléfono cargado', duration: 2200, color: 'warning' });
+      await t.present();
+    }
+  }
 
   get totalConfirmadas(): number {
     return this.citas.filter(c => c.estado === 'agendado' && c.confirmada_cliente).length;

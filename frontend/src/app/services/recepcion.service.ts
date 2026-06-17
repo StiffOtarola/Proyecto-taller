@@ -114,6 +114,14 @@ export class RecepcionService {
     return this.http.post<{ data: any }>(`${this.url}/citas/${citaId}/crear-orden`, {});
   }
 
+  // Check-in de mostrador: marca / deshace la llegada del cliente.
+  marcarLlegada(citaId: number): Observable<{ data: { hora_llegada: string } }> {
+    return this.http.patch<{ data: any }>(`${this.url}/citas/${citaId}/llegada`, {});
+  }
+  deshacerLlegada(citaId: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.url}/citas/${citaId}/llegada`);
+  }
+
   // Clientes
   getClientes(q?: string): Observable<{ data: any[] }> {
     const params = q ? ({ q } as any) : undefined;

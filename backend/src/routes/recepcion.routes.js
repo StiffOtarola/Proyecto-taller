@@ -66,7 +66,7 @@ router.get('/citas-hoy', async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT ci.id, ci.fecha, TIME_FORMAT(ci.hora,'%H:%i') AS hora, ci.motivo, ci.tipo_servicio, ci.estado, ci.monto,
-              ci.confirmada_cliente, ci.orden_id, o.numero_orden,
+              ci.confirmada_cliente, ci.hora_llegada, ci.orden_id, o.numero_orden,
               c.id AS cliente_id, c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.telefono AS cliente_telefono,
               m.marca, m.modelo, m.placa,
               t.nombre AS tecnico_nombre,
@@ -123,6 +123,42 @@ router.post('/citas/:id/crear-orden', async (req, res) => {
     } finally {
       conn.release();
     }
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// Check-in de mostrador: marca que el cliente llegó (antes de crear la orden).
+// Solo aplica a citas agendadas y sin orden todavía. Idempotente.
+router.patch('/citas/:id/llegada', async (req, res) => {
+  try {
+    const [[cita]] = await pool.query(
+      'SELECT id, estado, orden_id, hora_llegada FROM citas WHERE id = ?',
+      [req.params.id]
+    );
+    if (!cita) return res.status(404).json({ error: 'Cita no encontrada' });
+    if (cita.estado !== 'agendado' || cita.orden_id) {
+      return res.status(400).json({ error: 'La cita ya está en proceso; no aplica marcar llegada' });
+    }
+    if (!cita.hora_llegada) {
+      await pool.query('UPDATE citas SET hora_llegada = NOW() WHERE id = ?', [req.params.id]);
+    }
+    const [[r]] = await pool.query('SELECT hora_llegada FROM citas WHERE id = ?', [req.params.id]);
+    res.json({ data: { hora_llegada: r.hora_llegada }, message: 'Llegada registrada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// Deshacer la llegada (si se marcó por error).
+router.delete('/citas/:id/llegada', async (req, res) => {
+  try {
+    const [result] = await pool.query(
+      'UPDATE citas SET hora_llegada = NULL WHERE id = ? AND orden_id IS NULL',
+      [req.params.id]
+    );
+    if (!result.affectedRows) return res.status(400).json({ error: 'No se pudo deshacer la llegada' });
+    res.json({ message: 'Llegada deshecha' });
   } catch (err) {
     fail(res, err);
   }

@@ -98,6 +98,14 @@ export class RecepcionService {
     return this.http.post<{ data: any }>(`${environment.apiUrl}/citas`, data);
   }
 
+  // ── Cliente sin cita (walk-in): sucursales activas + alta de orden directa ──
+  getSucursales(): Observable<{ data: any[] }> {
+    return this.http.get<{ data: any[] }>(`${this.url}/sucursales`);
+  }
+  crearOrden(data: { cliente_id: number; moto_id: number; problema_reportado: string; sucursal_id?: number | null; kilometraje_ingreso?: number | null; prioridad?: string }): Observable<{ data: any }> {
+    return this.http.post<{ data: any }>(`${environment.apiUrl}/ordenes`, data);
+  }
+
   // ── Perfil propio (cuenta del recepcionista) ──
   getMiPerfil(): Observable<{ data: any }> {
     return this.http.get<{ data: any }>(`${this.url}/perfil`);

@@ -1,0 +1,96 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/recepcion/inicio" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Cliente sin cita</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="walkin">
+    <div class="intro">
+      <h1>Cliente sin cita</h1>
+      <p>Abrí la orden de un cliente que llegó sin reserva.</p>
+    </div>
+
+    <!-- Datos del cliente -->
+    <section class="card">
+      <span class="section-label">Cliente</span>
+
+      <div class="ig cli-wrap" *ngIf="!cliente">
+        <label>Buscar cliente *</label>
+        <input [(ngModel)]="qCliente" (ngModelChange)="buscarClientes()" placeholder="Nombre, teléfono o placa...">
+        <div class="cli-results" *ngIf="clientes.length">
+          <button type="button" class="cli-item" *ngFor="let c of clientes" (click)="seleccionarCliente(c)">
+            <strong>{{ c.nombre }} {{ c.apellido }}</strong>
+            <span *ngIf="c.telefono">· {{ c.telefono }}</span>
+          </button>
+        </div>
+        <button type="button" class="link-nuevo" *ngIf="qCliente.trim().length > 2 && !clientes.length" (click)="crearCliente()">
+          <ion-icon name="person-add-outline"></ion-icon> Cliente no encontrado · Crear nuevo
+        </button>
+      </div>
+
+      <div class="cli-pick" *ngIf="cliente">
+        <div class="av">{{ iniciales(cliente) }}</div>
+        <div class="meta">
+          <strong>{{ cliente.nombre }} {{ cliente.apellido }}</strong>
+          <span>{{ cliente.telefono || cliente.email || '—' }}</span>
+        </div>
+        <button class="x" (click)="limpiarCliente()" title="Cambiar cliente"><ion-icon name="close-outline"></ion-icon></button>
+      </div>
+
+      <div class="ig" *ngIf="cliente">
+        <label>Moto *</label>
+        <select [(ngModel)]="form.moto_id" *ngIf="motos.length">
+          <option [ngValue]="null">Elegí la moto</option>
+          <option *ngFor="let m of motos" [ngValue]="m.id">{{ m.marca }} {{ m.modelo }}{{ m.placa ? ' — ' + m.placa : '' }}</option>
+        </select>
+        <button type="button" class="link-nuevo" (click)="registrarMoto()">
+          <ion-icon name="add-outline"></ion-icon> {{ motos.length ? 'Registrar otra moto' : 'Este cliente no tiene motos · Registrar' }}
+        </button>
+      </div>
+    </section>
+
+    <!-- Datos de recepción -->
+    <section class="card" *ngIf="cliente">
+      <span class="section-label">Recepción</span>
+
+      <div class="ig">
+        <label>Problema reportado *</label>
+        <textarea [(ngModel)]="form.problema_reportado" placeholder="Lo que dice el cliente sobre su moto..."></textarea>
+      </div>
+
+      <div class="ig" *ngIf="sucursales.length > 1">
+        <label>Sucursal *</label>
+        <select [(ngModel)]="form.sucursal_id">
+          <option [ngValue]="null">Elegí la sucursal</option>
+          <option *ngFor="let s of sucursales" [ngValue]="s.id">{{ s.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="grid2">
+        <div class="ig">
+          <label>Kilometraje (opcional)</label>
+          <input type="number" [(ngModel)]="form.kilometraje_ingreso" placeholder="0">
+        </div>
+        <div class="ig">
+          <label>Prioridad</label>
+          <select [(ngModel)]="form.prioridad">
+            <option value="normal">Normal</option>
+            <option value="urgente">Urgente</option>
+            <option value="emergencia">Emergencia</option>
+            <option value="garantia">Garantía</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <button class="cta" [disabled]="!valido || guardando" (click)="confirmar()">
+      <ion-icon name="document-text-outline"></ion-icon> {{ guardando ? 'Creando orden…' : 'Crear orden' }}
+    </button>
+
+    <div style="height:80px"></div>
+  </div>
+</ion-content>

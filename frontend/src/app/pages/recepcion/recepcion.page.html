@@ -51,6 +51,13 @@
       </div>
     </div>
 
+    <!-- Acceso rápido: abrir orden de un cliente que llegó sin reserva -->
+    <button class="walkin-cta" [routerLink]="['/recepcion/walkin']">
+      <ion-icon name="flash-outline"></ion-icon>
+      <span>Cliente sin cita</span>
+      <ion-icon name="chevron-forward" class="wc-go"></ion-icon>
+    </button>
+
     <!-- Skeleton -->
     <div *ngIf="cargando">
       <div class="stat-grid">

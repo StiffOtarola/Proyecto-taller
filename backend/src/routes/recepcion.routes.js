@@ -7,6 +7,7 @@ const requireRol = require('../middleware/roles');
 const { generarNumeroOrden, sincronizarCitaDesdeOrden } = require('../utils/ordenes');
 const { getConfig, horasDisponibles } = require('../utils/configuracion');
 const { SERVICIOS } = require('../utils/servicios');
+const { getSucursales } = require('../utils/sucursales');
 
 // Panel de recepción: intermediaria entre cliente y mecánico.
 // Accesible a recepción y superiores.
@@ -518,6 +519,16 @@ router.get('/tecnicos', async (req, res) => {
 // Catálogo de servicios (para el formulario de agendar).
 router.get('/servicios', (req, res) => {
   res.json({ data: SERVICIOS });
+});
+
+// Sucursales activas (para elegir local al ingresar un cliente sin cita).
+router.get('/sucursales', async (req, res) => {
+  try {
+    const data = await getSucursales({ soloActivas: true });
+    res.json({ data });
+  } catch (err) {
+    fail(res, err);
+  }
 });
 
 // ── Perfil del recepcionista (su propia cuenta) ──

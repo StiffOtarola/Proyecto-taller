@@ -1,50 +1,71 @@
 <ion-header>
-  <ion-toolbar color="primary">
+  <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button></ion-back-button>
+      <ion-back-button text=""></ion-back-button>
     </ion-buttons>
-    <ion-title>{{ esEdicion ? 'Editar' : 'Nueva' }} Moto</ion-title>
+    <ion-title>{{ esEdicion ? 'Editar' : 'Nueva' }} moto</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <ion-list>
-    <ion-item>
-      <ion-label position="stacked">Marca *</ion-label>
-      <ion-input [(ngModel)]="form.marca" placeholder="Honda, Yamaha, Kawasaki..."></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="stacked">Modelo *</ion-label>
-      <ion-input [(ngModel)]="form.modelo" placeholder="CBR150, FZ25..."></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="stacked">Año</ion-label>
-      <ion-input type="number" [(ngModel)]="form.anio" placeholder="2020"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="stacked">Placa</ion-label>
-      <ion-input [(ngModel)]="form.placa" placeholder="ABC-123"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="stacked">Color</ion-label>
-      <ion-input [(ngModel)]="form.color" placeholder="Rojo, Azul..."></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="stacked">Kilometraje actual</ion-label>
-      <ion-input type="number" [(ngModel)]="form.kilometraje_actual"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="stacked">Número de motor</ion-label>
-      <ion-input [(ngModel)]="form.numero_motor"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="stacked">Número de chasis</ion-label>
-      <ion-input [(ngModel)]="form.numero_chasis"></ion-input>
-    </ion-item>
-  </ion-list>
+<ion-content>
+  <div class="moto-form">
+    <div class="intro">
+      <h1>{{ esEdicion ? 'Editar moto' : 'Nueva moto' }}</h1>
+      <p>{{ esEdicion ? 'Actualizá los datos de la moto.' : 'Registrá la moto del cliente.' }}</p>
+    </div>
 
-  <ion-button expand="block" class="ion-margin-top" (click)="guardar()">
-    <ion-icon name="save-outline" slot="start"></ion-icon>
-    Guardar
-  </ion-button>
+    <!-- Identificación -->
+    <section class="card">
+      <span class="section-label">Identificación</span>
+      <div class="grid2">
+        <div class="ig">
+          <label>Marca *</label>
+          <input [(ngModel)]="form.marca" placeholder="Honda, Yamaha..." autocapitalize="words">
+        </div>
+        <div class="ig">
+          <label>Modelo *</label>
+          <input [(ngModel)]="form.modelo" placeholder="CBR150, FZ25...">
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="ig">
+          <label>Año</label>
+          <input type="number" inputmode="numeric" [(ngModel)]="form.anio" placeholder="2020">
+        </div>
+        <div class="ig">
+          <label>Placa</label>
+          <input class="upper" [(ngModel)]="form.placa" placeholder="ABC-123">
+        </div>
+      </div>
+      <div class="ig" style="margin-bottom:4px">
+        <label>Color</label>
+        <input [(ngModel)]="form.color" placeholder="Rojo, Azul..." autocapitalize="words">
+      </div>
+    </section>
+
+    <!-- Datos técnicos -->
+    <section class="card">
+      <span class="section-label">Datos técnicos</span>
+      <div class="ig">
+        <label>Kilometraje actual</label>
+        <input type="number" inputmode="numeric" [(ngModel)]="form.kilometraje_actual" placeholder="0">
+      </div>
+      <div class="grid2">
+        <div class="ig">
+          <label>Número de motor</label>
+          <input [(ngModel)]="form.numero_motor" placeholder="Opcional">
+        </div>
+        <div class="ig">
+          <label>Número de chasis</label>
+          <input [(ngModel)]="form.numero_chasis" placeholder="Opcional">
+        </div>
+      </div>
+    </section>
+
+    <button class="cta" [disabled]="!valido || guardando" (click)="guardar()">
+      <ion-icon name="save-outline"></ion-icon> {{ guardando ? 'Guardando…' : 'Guardar' }}
+    </button>
+
+    <div style="height:60px"></div>
+  </div>
 </ion-content>

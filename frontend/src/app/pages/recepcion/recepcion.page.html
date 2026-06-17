@@ -2,12 +2,8 @@
   <ion-toolbar>
     <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
     <ion-title>Recepción</ion-title>
-    <app-recepcion-actions slot="end"></app-recepcion-actions>
     <ion-buttons slot="end">
       <span class="hdr-badge" *ngIf="!cargando && alertas.length">{{ alertas.length }} nuevas</span>
-      <ion-button (click)="logout()" title="Salir">
-        <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
-      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>

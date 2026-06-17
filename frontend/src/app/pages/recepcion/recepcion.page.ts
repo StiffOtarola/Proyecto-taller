@@ -232,17 +232,17 @@ export class RecepcionPage implements OnInit, OnDestroy {
     if (this.entregando) return;
     const total = this.totalOrden(o);
     const metodos = [
-      { text: 'Efectivo', val: 'efectivo' },
-      { text: 'Tarjeta', val: 'tarjeta' },
-      { text: 'SINPE Móvil', val: 'sinpe' },
-      { text: 'Transferencia', val: 'transferencia' },
+      { text: 'Efectivo', val: 'efectivo', icon: 'cash-outline' },
+      { text: 'Tarjeta', val: 'tarjeta', icon: 'card-outline' },
+      { text: 'SINPE Móvil', val: 'sinpe', icon: 'phone-portrait-outline' },
+      { text: 'Transferencia', val: 'transferencia', icon: 'swap-horizontal-outline' },
     ];
     const sheet = await this.actionSheet.create({
       header: `Cobrar ₡${total.toLocaleString('es-CR')} · ${o.numero_orden}`,
       subHeader: 'Método de pago',
       buttons: [
-        ...metodos.map(m => ({ text: m.text, handler: () => { this.confirmarEntrega(o, m.val); } })),
-        { text: 'Cancelar', role: 'cancel' },
+        ...metodos.map(m => ({ text: m.text, icon: m.icon, handler: () => { this.confirmarEntrega(o, m.val); } })),
+        { text: 'Cancelar', icon: 'close', role: 'cancel' },
       ],
     });
     await sheet.present();

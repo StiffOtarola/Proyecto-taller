@@ -884,6 +884,54 @@ ion-footer.admin-dark { background: #111111; }
   .alert-button.portal-alert-confirm.ion-activated { background: var(--ion-color-primary-shade); }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Action sheet (ActionSheetController) con el look Crimson Ops.
+   Aplica a TODA la app (sin cssClass): reemplaza el sheet plano y
+   de bajo contraste de Ionic por tarjetas flotantes legibles en
+   claro y oscuro, usando las variables semánticas de :root.
+   ═══════════════════════════════════════════════════════════ */
+ion-action-sheet {
+  --backdrop-opacity: 0.5;
+
+  // Grupos como tarjetas flotantes (acciones + cancelar, separados).
+  .action-sheet-group {
+    background: var(--ion-card-background);
+    border: 1px solid var(--hairline);
+    border-radius: 20px;
+    margin: 0 8px 8px;
+    overflow: hidden;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, .24);
+  }
+  .action-sheet-group-cancel { margin-bottom: max(8px, var(--ion-safe-area-bottom, 8px)); }
+
+  // Encabezado: título en Outfit + subtítulo como etiqueta tenue.
+  .action-sheet-title {
+    color: var(--ion-text-color);
+    font-family: var(--font-display, 'Outfit', sans-serif);
+    font-size: 15px; font-weight: 800; letter-spacing: -.01em;
+    padding-top: 18px; padding-bottom: 6px;
+  }
+  .action-sheet-sub-title {
+    color: var(--n-400);
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+  }
+
+  // Botones: altos, legibles, con separador hairline entre opciones.
+  .action-sheet-button {
+    color: var(--ion-text-color);
+    font-size: 15px; font-weight: 600;
+    min-height: 56px;
+  }
+  .action-sheet-button + .action-sheet-button { border-top: 1px solid var(--hairline); }
+  .action-sheet-button.ion-activated,
+  .action-sheet-button:hover { background: var(--n-100); }
+  .action-sheet-icon { color: var(--text-accent); font-size: 21px; }
+
+  // Destructivo (rojo) y cancelar (neutro, en negrita).
+  .action-sheet-button.action-sheet-destructive { color: var(--ion-color-danger); }
+  .action-sheet-group-cancel .action-sheet-button { color: var(--n-600); font-weight: 800; }
+}
+
 // Loading (LoadingController) con el look del portal: caja temática y legible en
 // modo oscuro, en vez del recuadro blanco por defecto de Ionic.
 .portal-loading {

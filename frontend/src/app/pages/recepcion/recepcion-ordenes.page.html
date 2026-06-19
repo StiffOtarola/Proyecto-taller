@@ -23,20 +23,35 @@
       <button *ngIf="busqueda" (click)="busqueda=''" aria-label="Limpiar"><ion-icon name="close-circle"></ion-icon></button>
     </div>
     <div class="ord-chips" *ngIf="!cargando && ordenes.length">
-      <button class="ord-chip" [class.on]="!estadoFiltro" (click)="estadoFiltro=''">Todas <span>{{ ordenes.length }}</span></button>
+      <button class="ord-chip" [class.on]="!estadoFiltro" (click)="estadoFiltro=''">Todas <span>{{ totalSinEtapa }}</span></button>
       <button class="ord-chip" *ngFor="let c of chipsConteo" [class.on]="estadoFiltro===c.estado" (click)="setEstadoFiltro(c.estado)">
         {{ c.label }} <span>{{ c.n }}</span>
       </button>
     </div>
-    <!-- Segunda fila: sucursal (si hay más de una) + prioridad -->
-    <div class="ord-chips" *ngIf="!cargando && ordenes.length && (sucursalesPresentes.length > 1 || prioridadesPresentes.length)">
+    <!-- Segunda fila: sucursal (si hay más de una) + prioridad + sin asignar -->
+    <div class="ord-chips" *ngIf="!cargando && ordenes.length && (sucursalesPresentes.length > 1 || prioridadesPresentes.length || haySinAsignar)">
       <ng-container *ngIf="sucursalesPresentes.length > 1">
         <button class="ord-chip suc" *ngFor="let s of sucursalesPresentes" [class.on]="sucursalFiltro===s.id" (click)="setSucursalFiltro(s.id)">
-          <ion-icon name="location-outline"></ion-icon> {{ s.nombre }}
+          <ion-icon name="location-outline"></ion-icon> {{ s.nombre }} <span>{{ s.n }}</span>
         </button>
       </ng-container>
       <button class="ord-chip pri" *ngFor="let p of prioridadesPresentes" [class.on]="prioridadFiltro===p.valor" (click)="setPrioridadFiltro(p.valor)">
         <ion-icon name="flash-outline"></ion-icon> {{ p.label }} <span>{{ p.n }}</span>
+      </button>
+      <button class="ord-chip warn" *ngIf="haySinAsignar" [class.on]="sinAsignar" (click)="setSinAsignar()">
+        <ion-icon name="person-outline"></ion-icon> Sin asignar <span>{{ sinAsignarConteo }}</span>
+      </button>
+    </div>
+    <!-- Tercera fila: orden de la lista + limpiar filtros -->
+    <div class="ord-tools" *ngIf="!cargando && ordenes.length">
+      <div class="ord-sort">
+        <ion-icon name="swap-vertical-outline"></ion-icon>
+        <button [class.on]="orden==='recientes'" (click)="orden='recientes'">Recientes</button>
+        <button [class.on]="orden==='antiguas'" (click)="orden='antiguas'">Antiguas</button>
+        <button [class.on]="orden==='prioridad'" (click)="orden='prioridad'">Prioridad</button>
+      </div>
+      <button class="ord-clear" *ngIf="hayFiltros" (click)="limpiar()">
+        <ion-icon name="close-circle-outline"></ion-icon> Limpiar
       </button>
     </div>
 

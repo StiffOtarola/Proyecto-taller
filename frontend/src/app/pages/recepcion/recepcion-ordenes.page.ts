@@ -17,15 +17,20 @@ export class RecepcionOrdenesPage implements OnInit {
   cargando = true;
   subiendo = new Set<number>();
 
-  // Filtros (client-side sobre la lista ya cargada): texto + etapa + sucursal + prioridad.
+  // Filtros (client-side sobre la lista ya cargada): texto + etapa + sucursal + prioridad + sin asignar.
   busqueda = '';
   estadoFiltro = '';
   sucursalFiltro: number | '' = '';
   prioridadFiltro = '';
+  sinAsignar = false;
+  // Orden de la lista resultante.
+  orden: 'recientes' | 'antiguas' | 'prioridad' = 'recientes';
 
   // Prioridades (se filtran solo las no-normales presentes).
   readonly prioridadOrden = ['urgente', 'emergencia', 'garantia'];
   readonly prioridadLabel: Record<string, string> = { urgente: 'Urgente', emergencia: 'Emergencia', garantia: 'Garantía' };
+  // Peso para ordenar por prioridad (mayor = más arriba).
+  readonly prioridadRank: Record<string, number> = { emergencia: 3, urgente: 2, garantia: 1, normal: 0 };
 
   // Etapas posibles por vista (para los chips de filtro).
   readonly chipsActivas = ['recepcion', 'diagnostico', 'esperando_aprobacion', 'esperando_repuestos', 'en_reparacion', 'lista_entrega'];
@@ -68,49 +73,86 @@ export class RecepcionOrdenesPage implements OnInit {
   ionViewWillEnter() { this.cargar(); }
 
   // Al cambiar de vista cambian las etapas: se descartan los filtros.
-  cambiarVista() { this.estadoFiltro = ''; this.sucursalFiltro = ''; this.prioridadFiltro = ''; this.cargar(); }
+  cambiarVista() { this.estadoFiltro = ''; this.sucursalFiltro = ''; this.prioridadFiltro = ''; this.sinAsignar = false; this.cargar(); }
 
-  // Sucursales presentes en la lista cargada (para los chips; solo si hay más de una).
-  get sucursalesPresentes(): { id: number; nombre: string }[] {
-    const map = new Map<number, string>();
-    for (const o of this.ordenes) {
-      if (o.sucursal_id && o.sucursal_nombre && !map.has(o.sucursal_id)) map.set(o.sucursal_id, o.sucursal_nombre);
-    }
-    return [...map].map(([id, nombre]) => ({ id, nombre })).sort((a, b) => a.nombre.localeCompare(b.nombre));
-  }
-  // Prioridades no-normales presentes, con su conteo (para los chips).
-  get prioridadesPresentes(): { valor: string; label: string; n: number }[] {
-    return this.prioridadOrden
-      .map(p => ({ valor: p, label: this.prioridadLabel[p], n: this.ordenes.filter(o => o.prioridad === p).length }))
-      .filter(p => p.n > 0);
-  }
-  setSucursalFiltro(id: number) { this.sucursalFiltro = this.sucursalFiltro === id ? '' : id; }
-  setPrioridadFiltro(p: string) { this.prioridadFiltro = this.prioridadFiltro === p ? '' : p; }
-
-  // —— Filtros ——
-  // Chips de etapa presentes en la lista cargada (solo las que tienen órdenes), con su conteo.
-  get chipsConteo(): { estado: string; label: string; n: number }[] {
-    const fuente = this.vista === 'activas' ? this.chipsActivas : this.chipsCompletadas;
-    return fuente
-      .map(e => ({ estado: e, label: this.estadoLabel[e] || e, n: this.ordenes.filter(o => o.estado === e).length }))
-      .filter(c => c.n > 0);
-  }
-
-  setEstadoFiltro(e: string) { this.estadoFiltro = this.estadoFiltro === e ? '' : e; }
-
-  // Lista aplicando búsqueda (número / cliente / placa / moto) + etapa.
-  get ordenesVista(): any[] {
+  // Aplica todos los filtros activos SALVO el indicado en `omit`. Así cada grupo de
+  // chips cuenta de forma coherente con el resto de filtros (los números no mienten).
+  private base(omit: 'estado' | 'sucursal' | 'prioridad' | 'sinAsignar' | null): any[] {
     const q = this.busqueda.trim().toLowerCase();
     return this.ordenes.filter(o => {
-      if (this.estadoFiltro && o.estado !== this.estadoFiltro) return false;
-      if (this.sucursalFiltro && o.sucursal_id !== this.sucursalFiltro) return false;
-      if (this.prioridadFiltro && o.prioridad !== this.prioridadFiltro) return false;
+      if (omit !== 'estado' && this.estadoFiltro && o.estado !== this.estadoFiltro) return false;
+      if (omit !== 'sucursal' && this.sucursalFiltro && o.sucursal_id !== this.sucursalFiltro) return false;
+      if (omit !== 'prioridad' && this.prioridadFiltro && o.prioridad !== this.prioridadFiltro) return false;
+      if (omit !== 'sinAsignar' && this.sinAsignar && o.tecnico_nombre) return false;
       if (q) {
         const txt = `${o.numero_orden} ${o.cliente_nombre} ${o.cliente_apellido} ${o.placa || ''} ${o.marca || ''} ${o.modelo || ''}`.toLowerCase();
         if (!txt.includes(q)) return false;
       }
       return true;
     });
+  }
+
+  // Sucursales presentes en la lista cargada (chip estable; solo si hay más de una),
+  // con conteo reactivo a los demás filtros.
+  get sucursalesPresentes(): { id: number; nombre: string; n: number }[] {
+    const fuente = this.base('sucursal');
+    const map = new Map<number, string>();
+    for (const o of this.ordenes) {
+      if (o.sucursal_id && o.sucursal_nombre && !map.has(o.sucursal_id)) map.set(o.sucursal_id, o.sucursal_nombre);
+    }
+    return [...map]
+      .map(([id, nombre]) => ({ id, nombre, n: fuente.filter(o => o.sucursal_id === id).length }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+  // Prioridades no-normales presentes, con su conteo reactivo (para los chips).
+  get prioridadesPresentes(): { valor: string; label: string; n: number }[] {
+    const fuente = this.base('prioridad');
+    return this.prioridadOrden
+      .map(p => ({ valor: p, label: this.prioridadLabel[p], n: fuente.filter(o => o.prioridad === p).length }))
+      .filter(p => p.n > 0);
+  }
+  setSucursalFiltro(id: number) { this.sucursalFiltro = this.sucursalFiltro === id ? '' : id; }
+  setPrioridadFiltro(p: string) { this.prioridadFiltro = this.prioridadFiltro === p ? '' : p; }
+  setSinAsignar() { this.sinAsignar = !this.sinAsignar; }
+
+  // —— Filtros ——
+  // Chips de etapa presentes (solo las que tienen órdenes bajo los demás filtros), con conteo reactivo.
+  get chipsConteo(): { estado: string; label: string; n: number }[] {
+    const fuente = this.vista === 'activas' ? this.chipsActivas : this.chipsCompletadas;
+    const base = this.base('estado');
+    return fuente
+      .map(e => ({ estado: e, label: this.estadoLabel[e] || e, n: base.filter(o => o.estado === e).length }))
+      .filter(c => c.n > 0);
+  }
+  // Total bajo los filtros no-etapa (lo que muestra el chip "Todas").
+  get totalSinEtapa(): number { return this.base('estado').length; }
+  // ¿Hay alguna orden sin mecánico en lo cargado? (para mostrar el chip "Sin asignar").
+  get haySinAsignar(): boolean { return this.ordenes.some(o => !o.tecnico_nombre); }
+  // Órdenes sin mecánico bajo los demás filtros (conteo del chip "Sin asignar").
+  get sinAsignarConteo(): number { return this.base('sinAsignar').filter(o => !o.tecnico_nombre).length; }
+
+  setEstadoFiltro(e: string) { this.estadoFiltro = this.estadoFiltro === e ? '' : e; }
+
+  // ¿Hay algún filtro activo? (para mostrar "Limpiar").
+  get hayFiltros(): boolean {
+    return !!(this.busqueda.trim() || this.estadoFiltro || this.sucursalFiltro || this.prioridadFiltro || this.sinAsignar);
+  }
+  limpiar() {
+    this.busqueda = ''; this.estadoFiltro = ''; this.sucursalFiltro = ''; this.prioridadFiltro = ''; this.sinAsignar = false;
+  }
+
+  // Lista final: filtros aplicados + orden elegido.
+  get ordenesVista(): any[] {
+    const arr = this.base(null);
+    if (this.orden === 'antiguas') {
+      arr.sort((a, b) => +new Date(a.fecha_ingreso) - +new Date(b.fecha_ingreso));
+    } else if (this.orden === 'prioridad') {
+      arr.sort((a, b) => (this.prioridadRank[b.prioridad] || 0) - (this.prioridadRank[a.prioridad] || 0)
+        || +new Date(b.fecha_ingreso) - +new Date(a.fecha_ingreso));
+    } else {
+      arr.sort((a, b) => +new Date(b.fecha_ingreso) - +new Date(a.fecha_ingreso));
+    }
+    return arr;
   }
 
   cargar(ev?: any) {

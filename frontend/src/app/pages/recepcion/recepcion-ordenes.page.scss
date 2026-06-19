@@ -26,8 +26,33 @@
   &.on { background: var(--ion-color-primary); color: #fff; border-color: transparent;
     span { color: rgba(255, 255, 255, .85); } }
   &:active { transform: scale(.97); }
-  // Prioridad: acento ámbar cuando está activa (urgencia).
-  &.pri.on { background: var(--amber-700); }
+  // Prioridad / sin asignar: acento ámbar cuando está activa.
+  &.pri.on, &.warn.on { background: var(--amber-700); }
+}
+
+/* Orden de la lista + limpiar */
+.ord-tools {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.ord-sort {
+  display: inline-flex; align-items: center; gap: 4px;
+  ion-icon { font-size: 15px; color: var(--n-400); margin-right: 2px; }
+  button {
+    border: none; background: none; cursor: pointer;
+    font-family: inherit; font-size: 12px; font-weight: 700; color: var(--n-500);
+    padding: 5px 10px; border-radius: 999px;
+    &.on { background: var(--n-100); color: var(--ion-text-color); }
+    &:active { transform: scale(.97); }
+  }
+}
+.ord-clear {
+  display: inline-flex; align-items: center; gap: 4px;
+  border: none; background: none; cursor: pointer;
+  font-family: inherit; font-size: 12px; font-weight: 700; color: var(--text-accent);
+  padding: 5px 6px;
+  ion-icon { font-size: 15px; }
+  &:active { transform: scale(.97); }
 }
 
 .orden-list {

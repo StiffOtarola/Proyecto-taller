@@ -3,6 +3,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { RecepcionTabsPage } from './recepcion-tabs.page';
 import { RecepcionPage } from './recepcion.page';
 import { RecepcionAgendarPage } from './recepcion-agendar.page';
+import { RecepcionAgendaPage } from './recepcion-agenda.page';
 import { RecepcionOrdenesPage } from './recepcion-ordenes.page';
 import { RecepcionCotizPage } from './recepcion-cotiz.page';
 import { RecepcionMensajesPage } from './recepcion-mensajes.page';
@@ -16,6 +17,7 @@ const routes: Routes = [
     children: [
       { path: '', redirectTo: 'inicio', pathMatch: 'full' },
       { path: 'inicio', component: RecepcionPage },
+      { path: 'agenda', component: RecepcionAgendaPage },
       { path: 'recibir', component: RecepcionAgendarPage },
       { path: 'agendar', redirectTo: 'recibir', pathMatch: 'full' },
       { path: 'walkin', redirectTo: 'recibir', pathMatch: 'full' },

@@ -52,6 +52,9 @@ export class RecepcionAgendarPage implements OnInit {
     // El dashboard abre este flujo en modo "ahora" (?modo=ahora) para walk-ins.
     const m = this.route.snapshot.queryParamMap.get('modo');
     if (m === 'ahora' || m === 'agendar') this.modo = m;
+    // La agenda abre este flujo con un día ya elegido (?fecha=YYYY-MM-DD).
+    const f = this.route.snapshot.queryParamMap.get('fecha');
+    if (f && /^\d{4}-\d{2}-\d{2}$/.test(f)) this.form.fecha = f;
 
     this.rec.getServicios().subscribe({ next: r => this.servicios = r.data, error: () => {} });
     // Las sucursales definen qué mecánicos y qué cupos aplican: se cargan al resolverlas.

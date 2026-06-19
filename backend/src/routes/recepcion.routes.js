@@ -87,6 +87,37 @@ router.get('/citas-hoy', async (req, res) => {
   }
 });
 
+// Agenda: citas en un rango de fechas (alimenta el calendario mensual de recepción).
+// Mismas columnas que citas-hoy pero entre ?desde y ?hasta. Fecha y hora formateadas
+// para evitar líos de zona horaria al agrupar por día en el front.
+router.get('/agenda', async (req, res) => {
+  try {
+    const { desde, hasta } = req.query;
+    if (!desde || !hasta) return res.status(400).json({ error: 'desde y hasta son requeridos' });
+    const [rows] = await pool.query(
+      `SELECT ci.id, DATE_FORMAT(ci.fecha,'%Y-%m-%d') AS fecha, TIME_FORMAT(ci.hora,'%H:%i') AS hora,
+              ci.motivo, ci.tipo_servicio, ci.estado, ci.confirmada_cliente, ci.hora_llegada,
+              ci.orden_id, o.numero_orden,
+              c.id AS cliente_id, c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.telefono AS cliente_telefono,
+              m.marca, m.modelo, m.placa,
+              t.nombre AS tecnico_nombre,
+              ci.sucursal_id, s.nombre AS sucursal_nombre
+       FROM citas ci
+       JOIN clientes c ON ci.cliente_id = c.id
+       LEFT JOIN motos m ON ci.moto_id = m.id
+       LEFT JOIN usuarios t ON ci.tecnico_id = t.id
+       LEFT JOIN ordenes_trabajo o ON o.id = ci.orden_id
+       LEFT JOIN sucursales s ON s.id = ci.sucursal_id
+       WHERE ci.fecha BETWEEN ? AND ? AND ci.estado <> 'cancelado'
+       ORDER BY ci.fecha ASC, ci.hora ASC`,
+      [desde, hasta]
+    );
+    res.json({ data: rows });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
 // Crear (o recuperar) la orden de trabajo de una cita: activa el puente cita ↔ orden.
 router.post('/citas/:id/crear-orden', async (req, res) => {
   try {

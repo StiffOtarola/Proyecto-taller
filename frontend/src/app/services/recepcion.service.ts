@@ -23,6 +23,10 @@ export class RecepcionService {
   getCitasHoy(): Observable<{ data: any[] }> {
     return this.http.get<{ data: any[] }>(`${this.url}/citas-hoy`);
   }
+  // Agenda: citas entre dos fechas (YYYY-MM-DD) para el calendario mensual.
+  getAgenda(desde: string, hasta: string): Observable<{ data: any[] }> {
+    return this.http.get<{ data: any[] }>(`${this.url}/agenda`, { params: { desde, hasta } as any });
+  }
   getAlertas(): Observable<{ data: any[] }> {
     return this.http.get<{ data: any[] }>(`${this.url}/alertas`);
   }

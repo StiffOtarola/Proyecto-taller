@@ -91,6 +91,7 @@ export class DetalleOrdenPage implements OnInit {
     this.ordenSvc.getById(id).subscribe(res => {
       this.orden = res.data;
       this.cargando = false;
+      this.cargarTecnicos();
     });
     this.ordenSvc.getAvances(id).subscribe(res => this.avances = res.data);
     this.ordenSvc.getRepuestos(id).subscribe(res => this.repuestos = res.data);
@@ -108,14 +109,18 @@ export class DetalleOrdenPage implements OnInit {
         };
       }
     });
-    // Asignación de técnico: la hacen admin y recepción, cada uno por su endpoint
-    // permitido (/api/usuarios es admin; recepción tiene /api/recepcion/tecnicos).
+  }
+
+  // Asignación de técnico: la hacen admin y recepción, cada uno por su endpoint
+  // permitido (/api/usuarios es admin; recepción tiene /api/recepcion/tecnicos).
+  // Recepción ve solo los mecánicos de la sede de la orden (+ "ambas"); admin, todos.
+  private cargarTecnicos() {
     if (this.auth.tieneRol('admin')) {
       this.usuarioSvc.getAll().subscribe(res => {
         this.tecnicos = res.data.filter(u => u.rol === 'tecnico' && u.activo);
       });
     } else if (this.auth.tieneRol('recepcion')) {
-      this.rec.getTecnicos().subscribe(res => { this.tecnicos = res.data; });
+      this.rec.getTecnicos(this.orden?.sucursal_id).subscribe(res => { this.tecnicos = res.data; });
     }
   }
 

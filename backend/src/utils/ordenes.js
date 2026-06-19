@@ -116,4 +116,34 @@ async function cerrarOrden(ordenId, datos = {}, opciones = {}) {
   }
 }
 
-module.exports = { generarNumeroOrden, MAP_ORDEN_A_CITA, sincronizarCitaDesdeOrden, cerrarOrden };
+// Etapas que llevan registro de tiempo (orden_tiempos). Espejo de ordenes.routes.
+const ETAPAS_TIEMPO = ['recepcion', 'diagnostico', 'esperando_aprobacion', 'esperando_repuestos', 'en_reparacion', 'lista_entrega'];
+
+// Avance de estado dirigido por el sistema (no por el usuario): cierra el tiempo de
+// la etapa actual, abre el de la nueva, actualiza el estado y sincroniza la cita.
+// Se usa al aprobar/rechazar el presupuesto, para que la orden no quede "esperando
+// aprobación" después de que el cliente ya decidió. No-op si el estado no cambia.
+async function avanzarEstadoOrden(ordenId, nuevoEstado) {
+  const [[o]] = await pool.query('SELECT estado FROM ordenes_trabajo WHERE id = ?', [ordenId]);
+  if (!o || o.estado === nuevoEstado) return;
+  if (ETAPAS_TIEMPO.includes(o.estado)) {
+    await pool.query('UPDATE orden_tiempos SET fin = NOW() WHERE orden_id = ? AND etapa = ? AND fin IS NULL', [ordenId, o.estado]);
+  }
+  await pool.query('UPDATE ordenes_trabajo SET estado = ? WHERE id = ?', [nuevoEstado, ordenId]);
+  if (ETAPAS_TIEMPO.includes(nuevoEstado)) {
+    await pool.query('INSERT INTO orden_tiempos (orden_id, etapa) VALUES (?, ?)', [ordenId, nuevoEstado]);
+  }
+  await sincronizarCitaDesdeOrden(ordenId, nuevoEstado);
+}
+
+// Estado al que pasa una orden recién aprobada: si tiene repuestos por conseguir
+// (no "disponible") va a esperando_repuestos; si no, directo a en_reparacion.
+async function estadoTrasAprobacion(ordenId) {
+  const [[{ pendientes }]] = await pool.query(
+    "SELECT COUNT(*) AS pendientes FROM orden_repuestos WHERE orden_id = ? AND estado <> 'disponible'",
+    [ordenId]
+  );
+  return pendientes > 0 ? 'esperando_repuestos' : 'en_reparacion';
+}
+
+module.exports = { generarNumeroOrden, MAP_ORDEN_A_CITA, sincronizarCitaDesdeOrden, cerrarOrden, avanzarEstadoOrden, estadoTrasAprobacion };

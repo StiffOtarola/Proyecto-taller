@@ -4,7 +4,7 @@ const { pool } = require('../db/pool');
 const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
-const { generarNumeroOrden, sincronizarCitaDesdeOrden, cerrarOrden } = require('../utils/ordenes');
+const { generarNumeroOrden, sincronizarCitaDesdeOrden, cerrarOrden, avanzarEstadoOrden, estadoTrasAprobacion } = require('../utils/ordenes');
 const { getConfig, horasDisponibles } = require('../utils/configuracion');
 const { SERVICIOS } = require('../utils/servicios');
 const { getSucursales, tecnicoEnSucursal } = require('../utils/sucursales');
@@ -481,7 +481,7 @@ router.post('/cotizaciones/:id/armar', async (req, res) => {
 router.post('/cotizaciones/:id/enviar', async (req, res) => {
   try {
     const [result] = await pool.query(
-      "UPDATE ordenes_trabajo SET estado = 'esperando_aprobacion' WHERE id = ? AND estado IN ('diagnostico','recepcion')",
+      "UPDATE ordenes_trabajo SET estado = 'esperando_aprobacion', aprobacion_cliente = 'pendiente', motivo_rechazo = NULL WHERE id = ? AND estado IN ('diagnostico','recepcion')",
       [req.params.id]
     );
     if (!result.affectedRows) {
@@ -654,12 +654,17 @@ router.patch('/ordenes/:id/tecnico', async (req, res) => {
 // Marcar una cotización como aprobada por el cliente (atajo desde recepción)
 router.post('/cotizaciones/:id/aprobar', async (req, res) => {
   try {
-    const [[orden]] = await pool.query('SELECT id FROM ordenes_trabajo WHERE id = ?', [req.params.id]);
+    const [[orden]] = await pool.query('SELECT id, estado FROM ordenes_trabajo WHERE id = ?', [req.params.id]);
     if (!orden) return res.status(404).json({ error: 'Orden no encontrada' });
     await pool.query(
       "UPDATE ordenes_trabajo SET aprobacion_cliente = 'aprobado', aprobado_por_cliente = 1, fecha_aprobacion = NOW() WHERE id = ?",
       [req.params.id]
     );
+    // Igual que en el portal: aprobada deja de "esperar aprobación" y pasa a trabajar
+    // (o a esperar repuestos si hay pendientes).
+    if (orden.estado === 'esperando_aprobacion') {
+      await avanzarEstadoOrden(req.params.id, await estadoTrasAprobacion(req.params.id));
+    }
     res.json({ message: 'Cotización aprobada' });
   } catch (err) {
     fail(res, err);

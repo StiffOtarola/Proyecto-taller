@@ -10,6 +10,7 @@ const { enviarCodigoReset } = require('../services/mailer');
 const { SERVICIOS } = require('../utils/servicios');
 const { getConfig, horasDisponibles } = require('../utils/configuracion');
 const { getSucursales, sucursalValida, sucursalPorDefecto } = require('../utils/sucursales');
+const { avanzarEstadoOrden, estadoTrasAprobacion } = require('../utils/ordenes');
 const { recompensas } = require('../utils/recompensas');
 
 // Fecha de hoy en zona de Costa Rica (UTC-6, sin horario de verano).
@@ -1129,6 +1130,13 @@ async function actualizarAprobacion(ordenId, clienteId, decision, motivo) {
      WHERE id = ?`,
     [decision, motivo, decision === 'aprobado' ? 1 : 0, ordenId]
   );
+  // La orden no debe quedar "esperando aprobación" después de la decisión:
+  // aprobado → a trabajar (o esperar repuestos); rechazado → vuelve a diagnóstico.
+  if (decision === 'aprobado') {
+    await avanzarEstadoOrden(ordenId, await estadoTrasAprobacion(ordenId));
+  } else if (decision === 'rechazado') {
+    await avanzarEstadoOrden(ordenId, 'diagnostico');
+  }
   return true;
 }
 

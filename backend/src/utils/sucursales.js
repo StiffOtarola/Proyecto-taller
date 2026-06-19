@@ -43,4 +43,17 @@ async function sucursalPorDefecto() {
   return activas.length ? Number(activas[0].id) : null;
 }
 
-module.exports = { getSucursales, clearCache, sucursalValida, sucursalPorDefecto };
+// ¿El técnico puede atender en esta sucursal? Permisivo: verdadero si no hay técnico,
+// si la cita/orden no tiene sucursal, o si el técnico es de esa sede o de "ambas" (NULL).
+// Solo rechaza cuando el técnico pertenece a OTRA sede concreta.
+async function tecnicoEnSucursal(tecnicoId, sucursalId) {
+  if (!tecnicoId || !sucursalId) return true;
+  const [[t]] = await pool.query(
+    "SELECT sucursal_id FROM usuarios WHERE id = ? AND rol = 'tecnico' AND activo = 1",
+    [tecnicoId]
+  );
+  if (!t) return false;
+  return t.sucursal_id == null || Number(t.sucursal_id) === Number(sucursalId);
+}
+
+module.exports = { getSucursales, clearCache, sucursalValida, sucursalPorDefecto, tecnicoEnSucursal };

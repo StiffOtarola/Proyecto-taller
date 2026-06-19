@@ -71,16 +71,32 @@ export class RecepcionCotizPage implements OnInit {
     this.form = { cliente_id: null, orden_id: null, tecnico_id: null, piezas: [{ nombre: '', monto: null }], mano_obra: null };
     this.ordenesCliente = [];
     if (!this.clientes.length) this.rec.getClientes().subscribe({ next: r => this.clientes = r.data });
-    if (!this.tecnicos.length) this.rec.getTecnicos().subscribe({ next: r => this.tecnicos = r.data });
+    this.cargarTecnicos();
   }
   cerrarForm() { this.mostrarForm = false; }
 
   onClienteChange() {
     this.form.orden_id = null;
     this.ordenesCliente = [];
+    this.cargarTecnicos();
     if (this.form.cliente_id) {
       this.rec.getOrdenesCliente(this.form.cliente_id).subscribe({ next: r => this.ordenesCliente = r.data });
     }
+  }
+
+  // Al elegir la orden, los mecánicos se acotan a la sede de esa orden (+ "ambas").
+  onOrdenChange() {
+    const o = this.ordenesCliente.find(x => x.id === this.form.orden_id);
+    this.cargarTecnicos(o?.sucursal_id ?? null);
+  }
+
+  private cargarTecnicos(sucursalId?: number | null) {
+    this.rec.getTecnicos(sucursalId).subscribe({
+      next: r => {
+        this.tecnicos = r.data;
+        if (this.form.tecnico_id && !this.tecnicos.some((t: any) => t.id === this.form.tecnico_id)) this.form.tecnico_id = null;
+      },
+    });
   }
 
   agregarPieza() { this.form.piezas.push({ nombre: '', monto: null }); }

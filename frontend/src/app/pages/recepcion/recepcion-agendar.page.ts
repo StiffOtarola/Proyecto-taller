@@ -53,13 +53,30 @@ export class RecepcionAgendarPage implements OnInit {
     const m = this.route.snapshot.queryParamMap.get('modo');
     if (m === 'ahora' || m === 'agendar') this.modo = m;
 
-    this.rec.getTecnicos().subscribe({ next: r => this.tecnicos = r.data, error: () => {} });
     this.rec.getServicios().subscribe({ next: r => this.servicios = r.data, error: () => {} });
+    // Las sucursales definen qué mecánicos y qué cupos aplican: se cargan al resolverlas.
     this.rec.getSucursales().subscribe({
-      next: r => { this.sucursales = r.data || []; if (this.sucursales.length === 1) this.form.sucursal_id = this.sucursales[0].id; },
-      error: () => { this.sucursales = []; },
+      next: r => {
+        this.sucursales = r.data || [];
+        if (this.sucursales.length === 1) this.form.sucursal_id = this.sucursales[0].id;
+        this.cargarTecnicos();
+        if (this.modo === 'agendar') this.cargarDisponibilidad();
+      },
+      error: () => { this.sucursales = []; this.cargarTecnicos(); },
     });
-    if (this.modo === 'agendar') this.cargarDisponibilidad();
+  }
+
+  // Mecánicos de la sede elegida (+ los de "ambas"). Si el elegido ya no aplica, se limpia.
+  cargarTecnicos() {
+    this.rec.getTecnicos(this.form.sucursal_id).subscribe({
+      next: r => {
+        this.tecnicos = r.data || [];
+        if (this.form.tecnico_id && !this.tecnicos.some(t => t.id === this.form.tecnico_id)) {
+          this.form.tecnico_id = null;
+        }
+      },
+      error: () => { this.tecnicos = []; },
+    });
   }
 
   // Al volver de crear un cliente/moto, refresca las motos del cliente elegido.
@@ -103,8 +120,9 @@ export class RecepcionAgendarPage implements OnInit {
     if (this.cliente) this.router.navigate(['/moto-form'], { queryParams: { cliente_id: this.cliente.id } });
   }
 
-  // Al cambiar de sucursal, el cupo es otro: se recargan los horarios (en modo agendar).
+  // Al cambiar de sucursal cambian los mecánicos disponibles y, en agendar, el cupo.
   onSucursal() {
+    this.cargarTecnicos();
     if (this.modo === 'agendar') this.cargarDisponibilidad();
   }
 

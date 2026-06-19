@@ -88,8 +88,11 @@ export class RecepcionService {
   getOrdenesCliente(clienteId: number): Observable<{ data: any[] }> {
     return this.http.get<{ data: any[] }>(`${this.url}/clientes/${clienteId}/ordenes`);
   }
-  getTecnicos(): Observable<{ data: any[] }> {
-    return this.http.get<{ data: any[] }>(`${this.url}/tecnicos`);
+  // Sin sucursal → todos (p. ej. mensajería interna). Con sucursal → los de esa sede + "ambas".
+  getTecnicos(sucursalId?: number | null): Observable<{ data: any[] }> {
+    const params: any = {};
+    if (sucursalId) params.sucursal_id = sucursalId;
+    return this.http.get<{ data: any[] }>(`${this.url}/tecnicos`, { params });
   }
 
   // ── Agendar cita manual ──

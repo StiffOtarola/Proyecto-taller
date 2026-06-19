@@ -6,7 +6,7 @@ const requireRol = require('../middleware/roles');
 const { soloRoles } = require('../middleware/roles');
 const { notificarCambioEstado } = require('../utils/notificaciones');
 const { TRANSICIONES_CITA, transicionPermitida } = require('../utils/transiciones');
-const { sucursalValida } = require('../utils/sucursales');
+const { sucursalValida, tecnicoEnSucursal } = require('../utils/sucursales');
 
 const ESTADOS = ['agendado', 'en_revision', 'en_mantenimiento', 'listo', 'entregado', 'cancelado'];
 
@@ -58,6 +58,9 @@ router.post('/', soloRoles(...GESTIONA_AGENDA), async (req, res) => {
       return res.status(400).json({ error: 'cliente_id, fecha, hora y motivo son requeridos' });
     }
     const sucursal_id = (await sucursalValida(req.body.sucursal_id)) ? Number(req.body.sucursal_id) : null;
+    if (!(await tecnicoEnSucursal(tecnico_id, sucursal_id))) {
+      return res.status(400).json({ error: 'El mecánico no atiende en esa sucursal' });
+    }
     const [result] = await pool.query(
       'INSERT INTO citas (cliente_id, moto_id, usuario_id, tecnico_id, sucursal_id, fecha, hora, motivo, tipo_servicio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [cliente_id, moto_id || null, req.usuario.id, tecnico_id || null, sucursal_id, fecha, hora, motivo, tipo_servicio || null]

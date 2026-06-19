@@ -35,7 +35,7 @@
 
       <div class="field">
         <label>Orden</label>
-        <ion-select [(ngModel)]="form.orden_id" placeholder="Orden activa del cliente" interface="action-sheet" [disabled]="!form.cliente_id">
+        <ion-select [(ngModel)]="form.orden_id" (ionChange)="onOrdenChange()" placeholder="Orden activa del cliente" interface="action-sheet" [disabled]="!form.cliente_id">
           <ion-select-option *ngFor="let o of ordenesCliente" [value]="o.id">{{ o.numero_orden }} — {{ o.marca }} {{ o.modelo }}</ion-select-option>
         </ion-select>
         <p class="hint" *ngIf="form.cliente_id && !ordenesCliente.length">Este cliente no tiene órdenes activas.</p>

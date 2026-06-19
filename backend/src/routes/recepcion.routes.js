@@ -7,7 +7,7 @@ const requireRol = require('../middleware/roles');
 const { generarNumeroOrden, sincronizarCitaDesdeOrden, cerrarOrden } = require('../utils/ordenes');
 const { getConfig, horasDisponibles } = require('../utils/configuracion');
 const { SERVICIOS } = require('../utils/servicios');
-const { getSucursales } = require('../utils/sucursales');
+const { getSucursales, tecnicoEnSucursal } = require('../utils/sucursales');
 
 // Panel de recepción: intermediaria entre cliente y mecánico.
 // Accesible a recepción y superiores.
@@ -425,7 +425,7 @@ router.post('/cotizaciones/:id/armar', async (req, res) => {
   }
 
   try {
-    const [[orden]] = await pool.query('SELECT id FROM ordenes_trabajo WHERE id = ?', [ordenId]);
+    const [[orden]] = await pool.query('SELECT id, sucursal_id FROM ordenes_trabajo WHERE id = ?', [ordenId]);
     if (!orden) return res.status(404).json({ error: 'Orden no encontrada' });
 
     if (tecnico_id) {
@@ -434,6 +434,9 @@ router.post('/cotizaciones/:id/armar', async (req, res) => {
         [tecnico_id]
       );
       if (!tec) return res.status(400).json({ error: 'El técnico no existe o está inactivo' });
+      if (!(await tecnicoEnSucursal(tecnico_id, orden.sucursal_id))) {
+        return res.status(400).json({ error: 'El mecánico no atiende en la sucursal de la orden' });
+      }
     }
 
     const conn = await pool.getConnection();
@@ -512,7 +515,7 @@ router.post('/cotizaciones/:id/enviar', async (req, res) => {
 router.get('/clientes/:id/ordenes', async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT o.id, o.numero_orden, o.estado, o.problema_reportado,
+      `SELECT o.id, o.numero_orden, o.estado, o.problema_reportado, o.sucursal_id,
               m.marca, m.modelo, m.placa
        FROM ordenes_trabajo o
        JOIN motos m ON o.moto_id = m.id
@@ -526,12 +529,19 @@ router.get('/clientes/:id/ordenes', async (req, res) => {
   }
 });
 
-// Técnicos activos (recepción no puede usar /api/usuarios, que es solo admin)
+// Técnicos activos (recepción no puede usar /api/usuarios, que es solo admin).
+// Con ?sucursal_id devuelve los de esa sede + los de "ambas" (sucursal_id NULL);
+// sin parámetro, todos (lo usa la mensajería interna, que no es por sede).
 router.get('/tecnicos', async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      "SELECT id, nombre FROM usuarios WHERE rol = 'tecnico' AND activo = 1 ORDER BY nombre"
-    );
+    let sql = "SELECT id, nombre, sucursal_id FROM usuarios WHERE rol = 'tecnico' AND activo = 1";
+    const params = [];
+    if (req.query.sucursal_id) {
+      sql += ' AND (sucursal_id = ? OR sucursal_id IS NULL)';
+      params.push(req.query.sucursal_id);
+    }
+    sql += ' ORDER BY nombre';
+    const [rows] = await pool.query(sql, params);
     res.json({ data: rows });
   } catch (err) {
     fail(res, err);
@@ -625,11 +635,14 @@ router.get('/disponibilidad', async (req, res) => {
 router.patch('/ordenes/:id/tecnico', async (req, res) => {
   try {
     const { tecnico_id } = req.body;
-    const [[orden]] = await pool.query('SELECT id FROM ordenes_trabajo WHERE id = ?', [req.params.id]);
+    const [[orden]] = await pool.query('SELECT id, sucursal_id FROM ordenes_trabajo WHERE id = ?', [req.params.id]);
     if (!orden) return res.status(404).json({ error: 'Orden no encontrada' });
     if (tecnico_id) {
       const [[tec]] = await pool.query("SELECT id FROM usuarios WHERE id = ? AND rol = 'tecnico' AND activo = 1", [tecnico_id]);
       if (!tec) return res.status(400).json({ error: 'El técnico no existe o está inactivo' });
+      if (!(await tecnicoEnSucursal(tecnico_id, orden.sucursal_id))) {
+        return res.status(400).json({ error: 'El mecánico no atiende en la sucursal de la orden' });
+      }
     }
     await pool.query('UPDATE ordenes_trabajo SET tecnico_id = ? WHERE id = ?', [tecnico_id || null, req.params.id]);
     res.json({ message: 'Técnico asignado' });

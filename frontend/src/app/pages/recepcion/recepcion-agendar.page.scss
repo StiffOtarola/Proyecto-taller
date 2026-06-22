@@ -25,6 +25,10 @@
     outline: none; transition: border-color 0.2s;
     &:focus { border-color: var(--ion-color-primary); }
   }
+  // El desplegable nativo del <select> hereda color-scheme: sin esto Chrome lo dibuja
+  // en claro sobre el fondo oscuro forzado y los nombres quedan casi ilegibles.
+  select { color-scheme: light dark; }
+  select option { background: var(--ion-card-background); color: var(--ion-text-color); }
   textarea { resize: none; height: 60px; }
   input[type="date"] { color-scheme: light dark; }
 }

@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { AlertController, IonContent, ToastController } from '@ionic/angular';
-import { Subject } from 'rxjs';
+import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { RecepcionService } from '../../services/recepcion.service';
 import { abrirWhatsApp } from '../../shared/whatsapp.util';
@@ -21,20 +21,25 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
   internos: any[] = [];
   cargando = true;
 
-  // Envío rápido
   clientes: any[] = [];
   form: { cliente_id: number | null; titulo: string; mensaje: string } = { cliente_id: null, titulo: '', mensaje: '' };
   enviando = false;
 
-  // Chat del taller (conversación por mecánico, estilo mensajería)
   tecnicos: any[] = [];
   chatAbierto: { id: number; nombre: string } | null = null;
   borrador = '';
   enviandoChat = false;
+  fotoPreview: string | null = null;
+  broadcastTexto = '';
+  enviandoBroadcast = false;
 
   constructor(private rec: RecepcionService, private toast: ToastController, private alert: AlertController) {}
 
-  ngOnInit() { this.cargar(); }
+  ngOnInit() {
+    this.cargar();
+    interval(15000).pipe(takeUntil(this.destroy$)).subscribe(() => this.refrescarInternos());
+  }
+
   ionViewWillEnter() { this.cargar(); }
 
   cargar(ev?: any) {
@@ -48,9 +53,13 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
     if (!this.tecnicos.length) this.rec.getTecnicos().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.tecnicos = r.data, error: () => {} });
   }
 
-  // ——— Chat del taller (mensajería interna con mecánicos) ———
-  // El mecánico es la "otra parte" de un mensaje: si lo mandó recepción, es el destino;
-  // si lo mandó el mecánico, es el remitente.
+  private refrescarInternos() {
+    if (this.vista !== 'taller') return;
+    this.rec.getMensajesInternos().pipe(takeUntil(this.destroy$)).subscribe({
+      next: r => { this.internos = r.data; },
+    });
+  }
+
   private mecDe(m: any): { id: number; nombre: string } | null {
     const esRecep = m.remitente_rol === 'recepcion';
     const id = esRecep ? m.destino_id : m.remitente_id;
@@ -58,10 +67,10 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
     return id ? { id, nombre } : null;
   }
 
-  // Conversaciones agrupadas por mecánico, la más reciente primero (internos viene DESC).
   get conversaciones(): any[] {
     const map = new Map<number, any>();
     for (const m of this.internos) {
+      if (m.tipo === 'broadcast') continue;
       const mec = this.mecDe(m);
       if (!mec) continue;
       if (!map.has(mec.id)) map.set(mec.id, { id: mec.id, nombre: mec.nombre, ultimo: m, noLeidos: 0 });
@@ -70,7 +79,10 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
     return [...map.values()];
   }
 
-  // Mensajes del chat abierto en orden cronológico (viejo → nuevo).
+  get broadcasts(): any[] {
+    return this.internos.filter(m => m.tipo === 'broadcast').slice().reverse();
+  }
+
   get hilo(): any[] {
     if (!this.chatAbierto) return [];
     const id = this.chatAbierto.id;
@@ -80,9 +92,8 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
   esMio(m: any): boolean { return m.remitente_rol === 'recepcion'; }
 
   abrirChat(c: any) { this.chatAbierto = { id: c.id, nombre: c.nombre }; this.scrollHilo(); }
-  cerrarChat() { this.chatAbierto = null; this.borrador = ''; }
+  cerrarChat() { this.chatAbierto = null; this.borrador = ''; this.fotoPreview = null; }
 
-  // Iniciar un chat con cualquier mecánico (incluye los que aún no tienen mensajes).
   async nuevoChat() {
     if (!this.tecnicos.length) { this.aviso('No hay mecánicos disponibles', 'warning'); return; }
     const al = await this.alert.create({
@@ -98,18 +109,55 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
 
   enviarChat() {
     const txt = this.borrador.trim();
-    if (!txt || !this.chatAbierto || this.enviandoChat) return;
+    const foto = this.fotoPreview;
+    if ((!txt && !foto) || !this.chatAbierto || this.enviandoChat) return;
     this.enviandoChat = true;
-    this.rec.responderInterno(this.chatAbierto.id, txt).pipe(takeUntil(this.destroy$)).subscribe({
+    this.rec.responderInterno(this.chatAbierto.id, txt, foto).pipe(takeUntil(this.destroy$)).subscribe({
       next: (r: any) => {
-        if (r?.data) this.internos.unshift(r.data);   // internos es DESC → al frente
+        if (r?.data) this.internos.unshift(r.data);
         this.borrador = '';
+        this.fotoPreview = null;
         this.enviandoChat = false;
         this.scrollHilo();
       },
       error: () => { this.enviandoChat = false; this.aviso('No se pudo enviar', 'danger'); },
     });
   }
+
+  enviarBroadcast() {
+    const txt = this.broadcastTexto.trim();
+    if (!txt || this.enviandoBroadcast) return;
+    this.enviandoBroadcast = true;
+    this.rec.broadcastMecanicos(txt).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (r: any) => {
+        if (r?.data) this.internos.unshift(r.data);
+        this.broadcastTexto = '';
+        this.enviandoBroadcast = false;
+        this.aviso('Mensaje enviado a todos', 'success');
+      },
+      error: () => { this.enviandoBroadcast = false; this.aviso('No se pudo enviar', 'danger'); },
+    });
+  }
+
+  adjuntarFoto() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      if (file.size > 4 * 1024 * 1024) {
+        this.aviso('Imagen muy grande (máx 4 MB)', 'warning');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => { this.fotoPreview = reader.result as string; };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  }
+
+  quitarFoto() { this.fotoPreview = null; }
 
   private scrollHilo() { setTimeout(() => this.content?.scrollToBottom(150), 60); }
 

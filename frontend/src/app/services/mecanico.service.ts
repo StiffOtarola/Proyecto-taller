@@ -53,8 +53,11 @@ export class MecanicoService {
   getMensajes(): Observable<{ data: any[] }> {
     return this.http.get<{ data: any[] }>(`${this.url}/mensajes`);
   }
-  enviarMensaje(mensaje: string): Observable<{ data: any }> {
-    return this.http.post<{ data: any }>(`${this.url}/mensajes`, { mensaje });
+  getNoLeidos(): Observable<{ data: { count: number } }> {
+    return this.http.get<{ data: { count: number } }>(`${this.url}/mensajes/no-leidos`);
+  }
+  enviarMensaje(mensaje: string, foto?: string | null, orden_id?: number | null): Observable<{ data: any }> {
+    return this.http.post<{ data: any }>(`${this.url}/mensajes`, { mensaje, foto: foto || null, orden_id: orden_id || null });
   }
   getRecepcionContacto(): Observable<{ data: { nombre: string; telefono: string } | null }> {
     return this.http.get<{ data: any }>(`${this.url}/recepcion-contacto`);

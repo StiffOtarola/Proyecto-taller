@@ -369,6 +369,11 @@ async function ensureSchema() {
     // Índice por (sucursal, fecha, hora): hace preciso el bloqueo FOR UPDATE del cupo por local.
     await crearIndiceSiFalta('citas', 'idx_citas_sucursal_fecha_hora', '(sucursal_id, fecha, hora)');
 
+    // Mensajería interna v2: foto, vínculo a orden y soporte de broadcast.
+    await addColumnIfMissing('mensajes_internos', 'foto', 'MEDIUMTEXT NULL');
+    await addColumnIfMissing('mensajes_internos', 'orden_id', 'INT NULL');
+    await addColumnIfMissing('mensajes_internos', 'tipo', "VARCHAR(20) NOT NULL DEFAULT 'directo'");
+
     // FK constraints en columnas agregadas por addColumnIfMissing (integridad referencial).
     await tryStep('fk citas.tecnico_id', () => addFkIfMissing('citas', 'fk_citas_tecnico', 'tecnico_id', 'usuarios', 'id'));
     await tryStep('fk citas.orden_id', () => addFkIfMissing('citas', 'fk_citas_orden', 'orden_id', 'ordenes_trabajo', 'id'));

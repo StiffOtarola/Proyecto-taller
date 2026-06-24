@@ -41,9 +41,18 @@
     </div>
 
     <div class="chat" *ngIf="!cargando">
-      <div class="bubble" [class.mine]="esMio(m)" *ngFor="let m of mensajes">
-        <p>{{ m.mensaje }}</p>
-        <span class="meta">{{ esMio(m) ? 'Vos' : m.remitente_nombre }} · {{ hace(m.created_at) }}</span>
+      <div class="bubble" [class.mine]="esMio(m)" [class.broadcast]="m.tipo === 'broadcast'" *ngFor="let m of mensajes">
+        <div class="bubble-order" *ngIf="m.numero_orden">
+          <ion-icon name="document-text-outline"></ion-icon> {{ m.numero_orden }}
+        </div>
+        <img *ngIf="m.foto" [src]="m.foto" class="bubble-img" alt="Foto adjunta" />
+        <p *ngIf="m.mensaje">{{ m.mensaje }}</p>
+        <span class="meta">
+          {{ esMio(m) ? 'Vos' : m.remitente_nombre }}
+          <span *ngIf="m.tipo === 'broadcast'" class="broadcast-tag">· a todos</span>
+          · {{ hace(m.created_at) }}
+          <ion-icon *ngIf="esMio(m)" [name]="m.leido ? 'checkmark-done' : 'checkmark'" [class.read]="m.leido" class="read-icon"></ion-icon>
+        </span>
       </div>
       <div class="empty" *ngIf="!mensajes.length">
         <ion-icon class="ico" name="chatbubbles-outline"></ion-icon>
@@ -51,12 +60,19 @@
       </div>
     </div>
 
-    <div style="height:90px"></div>
+    <div style="height:110px"></div>
+  </div>
+
+  <!-- Preview de foto -->
+  <div class="foto-preview" *ngIf="fotoPreview">
+    <img [src]="fotoPreview" alt="Preview" />
+    <button class="foto-remove" (click)="quitarFoto()"><ion-icon name="close-circle"></ion-icon></button>
   </div>
 
   <!-- Barra de envío fija -->
   <div class="send-bar">
+    <button class="attach-btn" (click)="adjuntarFoto()" title="Adjuntar foto"><ion-icon name="camera-outline"></ion-icon></button>
     <input type="text" [(ngModel)]="texto" placeholder="Escribí a recepción…" (keyup.enter)="enviar()">
-    <button (click)="enviar()" [disabled]="enviando || !texto.trim()"><ion-icon name="send"></ion-icon></button>
+    <button (click)="enviar()" [disabled]="enviando || (!texto.trim() && !fotoPreview)"><ion-icon name="send"></ion-icon></button>
   </div>
 </ion-content>

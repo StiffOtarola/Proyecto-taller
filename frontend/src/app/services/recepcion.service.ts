@@ -168,7 +168,13 @@ export class RecepcionService {
   getMensajesInternos(): Observable<{ data: any[] }> {
     return this.http.get<{ data: any[] }>(`${this.url}/mensajes-internos`);
   }
-  responderInterno(destino_id: number, mensaje: string): Observable<{ data: any }> {
-    return this.http.post<{ data: any }>(`${this.url}/mensajes-internos`, { destino_id, mensaje });
+  getMensajesNoLeidos(): Observable<{ data: { count: number } }> {
+    return this.http.get<{ data: { count: number } }>(`${this.url}/mensajes-internos/no-leidos`);
+  }
+  responderInterno(destino_id: number, mensaje: string, foto?: string | null, orden_id?: number | null): Observable<{ data: any }> {
+    return this.http.post<{ data: any }>(`${this.url}/mensajes-internos`, { destino_id, mensaje, foto: foto || null, orden_id: orden_id || null });
+  }
+  broadcastMecanicos(mensaje: string, foto?: string | null): Observable<{ data: any }> {
+    return this.http.post<{ data: any }>(`${this.url}/mensajes-internos/broadcast`, { mensaje, foto: foto || null });
   }
 }

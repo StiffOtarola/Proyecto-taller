@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { RecepcionService } from '../../services/recepcion.service';
 import { comprimirImagen } from '../../shared/image.util';
 import { abrirWhatsApp } from '../../shared/whatsapp.util';
@@ -11,7 +13,8 @@ import { abrirWhatsApp } from '../../shared/whatsapp.util';
   templateUrl: './recepcion-ordenes.page.html',
   styleUrls: ['./recepcion-ordenes.page.scss'],
 })
-export class RecepcionOrdenesPage implements OnInit {
+export class RecepcionOrdenesPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   vista: 'activas' | 'completadas' = 'activas';
   ordenes: any[] = [];
   cargando = true;
@@ -157,7 +160,7 @@ export class RecepcionOrdenesPage implements OnInit {
 
   cargar(ev?: any) {
     this.cargando = true;
-    this.rec.getOrdenes(this.vista).subscribe({
+    this.rec.getOrdenes(this.vista).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         this.ordenes = r.data;
         this.fotos = {};
@@ -165,7 +168,7 @@ export class RecepcionOrdenesPage implements OnInit {
         if (ev) ev.target.complete();
         // Prefetch de evidencias para mostrar los thumbnails directamente.
         r.data.filter(o => o.total_fotos > 0).forEach(o => {
-          this.rec.getFotosOrden(o.id).subscribe({ next: f => this.fotos[o.id] = f.data });
+          this.rec.getFotosOrden(o.id).pipe(takeUntil(this.destroy$)).subscribe({ next: f => this.fotos[o.id] = f.data });
         });
       },
       error: () => { this.cargando = false; if (ev) ev.target.complete(); },
@@ -190,7 +193,7 @@ export class RecepcionOrdenesPage implements OnInit {
       this.subiendo.add(o.id);
       try {
         const url = await comprimirImagen(file);
-        this.rec.subirFoto(o.id, { url, tipo: 'avance' }).subscribe({
+        this.rec.subirFoto(o.id, { url, tipo: 'avance' }).pipe(takeUntil(this.destroy$)).subscribe({
           next: r => {
             this.fotos[o.id] = [...(this.fotos[o.id] || []), r.data];
             o.total_fotos = (o.total_fotos || 0) + 1;
@@ -215,6 +218,8 @@ export class RecepcionOrdenesPage implements OnInit {
     const msg = `${base}${cuerpo} Revisalas en el portal: ${link}`;
     abrirWhatsApp(o.cliente_telefono, msg);
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   private async aviso(message: string, color: string) {
     const t = await this.toast.create({ message, duration: 1600, color });

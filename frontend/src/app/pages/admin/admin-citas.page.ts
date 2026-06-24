@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AdminService } from '../../services/admin.service';
 import { ESTADO_CITA_LABEL } from '../../utils/servicios';
 import { descargarCSV, fechaCorta } from '../../shared/csv.util';
@@ -9,7 +11,8 @@ import { descargarCSV, fechaCorta } from '../../shared/csv.util';
   selector: 'app-admin-citas',
   templateUrl: './admin-citas.page.html',
 })
-export class AdminCitasPage implements OnInit {
+export class AdminCitasPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   citas: any[] = [];
   sucursales: any[] = [];
   cargando = true;
@@ -36,18 +39,20 @@ export class AdminCitasPage implements OnInit {
 
   cargar(ev?: any) {
     this.cargando = true;
-    this.admin.getCitas({ estado: this.estado, q: this.q.trim(), fecha: this.fecha, sucursal_id: this.sucursalId || undefined }).subscribe({
+    this.admin.getCitas({ estado: this.estado, q: this.q.trim(), fecha: this.fecha, sucursal_id: this.sucursalId || undefined }).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.citas = r.data; this.cargando = false; if (ev) ev.target.complete(); },
       error: () => { this.cargando = false; if (ev) ev.target.complete(); },
     });
   }
 
   cargarSucursales() {
-    this.admin.getSucursales().subscribe({ next: r => this.sucursales = r.data || [] });
+    this.admin.getSucursales().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.sucursales = r.data || [] });
   }
 
   setFiltro(v: string) { this.estado = v; this.cargar(); }
   setSucursal(v: number | '') { this.sucursalId = v; this.cargar(); }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
+
   abrir(c: any) { if (c.orden_id) this.router.navigate(['/detalle-orden', c.orden_id]); }
 
   exportar() {

@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { RecepcionService } from '../../services/recepcion.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -10,7 +12,8 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './recepcion-perfil.page.html',
   styleUrls: ['./recepcion-perfil.page.scss'],
 })
-export class RecepcionPerfilPage implements OnInit {
+export class RecepcionPerfilPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   perfil: any = null;
   cuenta = { nombre: '', email: '', telefono: '' };
   pass = { actual: '', nueva: '' };
@@ -26,11 +29,12 @@ export class RecepcionPerfilPage implements OnInit {
   ) {}
 
   ngOnInit() { this.cargar(); }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
   ionViewWillEnter() { this.cargar(); }
 
   cargar() {
     this.cargando = true;
-    this.rec.getMiPerfil().subscribe({
+    this.rec.getMiPerfil().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         this.perfil = r.data;
         this.cuenta = { nombre: r.data.nombre || '', email: r.data.email || '', telefono: r.data.telefono || '' };
@@ -48,7 +52,7 @@ export class RecepcionPerfilPage implements OnInit {
   guardarCuenta() {
     if (!this.cuenta.nombre.trim() || !this.cuenta.email.trim()) { this.aviso('Nombre y correo son requeridos', 'warning'); return; }
     this.guardando = true;
-    this.rec.updateMiPerfil({ nombre: this.cuenta.nombre.trim(), email: this.cuenta.email.trim(), telefono: this.cuenta.telefono.trim() }).subscribe({
+    this.rec.updateMiPerfil({ nombre: this.cuenta.nombre.trim(), email: this.cuenta.email.trim(), telefono: this.cuenta.telefono.trim() }).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         this.perfil = r.data;
         // Refleja nombre/correo en la sesión guardada (header, saludo).
@@ -66,7 +70,7 @@ export class RecepcionPerfilPage implements OnInit {
     if (!this.pass.actual || !this.pass.nueva) { this.aviso('Completá ambas contraseñas', 'warning'); return; }
     if (this.pass.nueva.length < 8) { this.aviso('La nueva debe tener al menos 8 caracteres', 'warning'); return; }
     this.guardandoPass = true;
-    this.rec.updateMiPassword({ actual: this.pass.actual, nueva: this.pass.nueva }).subscribe({
+    this.rec.updateMiPassword({ actual: this.pass.actual, nueva: this.pass.nueva }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => { this.guardandoPass = false; this.pass = { actual: '', nueva: '' }; this.aviso('Contraseña actualizada'); },
       error: (e) => { this.guardandoPass = false; this.aviso(e.error?.error || 'No se pudo cambiar', 'danger'); },
     });

@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 import { DashboardService } from '../../services/dashboard.service';
 import { OrdenesService } from '../../services/ordenes.service';
@@ -12,7 +14,8 @@ import { descargarCSV, fechaCorta } from '../../shared/csv.util';
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss'],
 })
-export class DashboardPage implements OnInit {
+export class DashboardPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   resumen: any = null;
   tecnicos: any[] = [];
   atrasos: any[] = [];
@@ -58,20 +61,20 @@ export class DashboardPage implements OnInit {
 
   cargar() {
     this.cargando = true;
-    this.dashSvc.getResumen().subscribe({
+    this.dashSvc.getResumen().pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         this.resumen = res.data;
         this.cargando = false;
       },
       error: () => { this.cargando = false; },
     });
-    this.dashSvc.getTecnicos().subscribe({
+    this.dashSvc.getTecnicos().pipe(takeUntil(this.destroy$)).subscribe({
       next: res => { this.tecnicos = res.data; },
     });
-    this.dashSvc.getAtrasos().subscribe({
+    this.dashSvc.getAtrasos().pipe(takeUntil(this.destroy$)).subscribe({
       next: res => { this.atrasos = res.data; },
     });
-    this.dashSvc.getTiempos().subscribe({
+    this.dashSvc.getTiempos().pipe(takeUntil(this.destroy$)).subscribe({
       next: res => { this.tiempos = res.data; },
     });
   }
@@ -111,7 +114,7 @@ export class DashboardPage implements OnInit {
 
   exportarOrdenes() {
     this.exportando = true;
-    this.ordenSvc.getAll().subscribe({
+    this.ordenSvc.getAll().pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         const filas = res.data.map(o => ({
           numero_orden: o.numero_orden,
@@ -150,7 +153,7 @@ export class DashboardPage implements OnInit {
 
   exportarFacturacion() {
     this.exportando = true;
-    this.ordenSvc.getAll({ estado: 'entregada' }).subscribe({
+    this.ordenSvc.getAll({ estado: 'entregada' }).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         const filas = res.data.map(o => ({
           numero_orden: o.numero_orden,
@@ -204,6 +207,8 @@ export class DashboardPage implements OnInit {
     this.auth.logout();
     this.router.navigate(['/portal/login'], { replaceUrl: true });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   irNuevaOrden() {
     this.router.navigate(['/nueva-orden']);

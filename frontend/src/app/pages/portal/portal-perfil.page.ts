@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { PortalService } from '../../services/portal.service';
 import { AccesibilidadService } from '../../services/accesibilidad.service';
 import { BiometriaService } from '../../services/biometria.service';
@@ -12,7 +14,8 @@ import { comprimirImagen } from '../../utils/imagen';
   templateUrl: './portal-perfil.page.html',
   styleUrls: ['./portal-perfil.page.scss'],
 })
-export class PortalPerfilPage implements OnInit {
+export class PortalPerfilPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   perfil: any = null;
   cuenta = { nombre: '', apellido: '', telefono: '', email: '' };
   cargando = true;
@@ -74,7 +77,7 @@ export class PortalPerfilPage implements OnInit {
     if (this.bioProcesando) return;
     this.bioProcesando = true;
     // 1) Verificar credenciales con el backend (no guardamos una contraseña inválida).
-    this.portal.login(email, password).subscribe({
+    this.portal.login(email, password).pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         try {
           // 2) Confirmar identidad biométrica y cifrar las credenciales en el dispositivo.
@@ -123,7 +126,7 @@ export class PortalPerfilPage implements OnInit {
     this.portal.updatePreferenciasNotif({
       notif_avances: this.notif.avances,
       notif_recordatorios: this.notif.recordatorios,
-    }).subscribe({
+    }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => { this.guardandoNotif = false; },
       error: () => {
         this.guardandoNotif = false;
@@ -145,7 +148,7 @@ export class PortalPerfilPage implements OnInit {
 
   cargar() {
     this.cargando = true;
-    this.portal.getMiPerfil().subscribe({
+    this.portal.getMiPerfil().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         this.perfil = r.data;
         this.cuenta = {
@@ -179,7 +182,7 @@ export class PortalPerfilPage implements OnInit {
       apellido: this.cuenta.apellido.trim(),
       telefono: this.cuenta.telefono.trim(),
       email: this.cuenta.email.trim(),
-    }).subscribe({
+    }).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         this.perfil = r.data;
         // Refleja el nombre en el saludo del inicio.
@@ -210,7 +213,7 @@ export class PortalPerfilPage implements OnInit {
     this.subiendoFoto = true;
     try {
       const dataUrl = await comprimirImagen(file, { maxLado: 400, calidad: 0.8 });
-      this.portal.actualizarFotoPerfil(dataUrl).subscribe({
+      this.portal.actualizarFotoPerfil(dataUrl).pipe(takeUntil(this.destroy$)).subscribe({
         next: r => {
           this.perfil = { ...this.perfil, foto: r.data.foto };
           this.portal.actualizarClienteLocal({ foto: r.data.foto }); // refresca el avatar del header
@@ -227,7 +230,7 @@ export class PortalPerfilPage implements OnInit {
 
   quitarFoto() {
     this.subiendoFoto = true;
-    this.portal.actualizarFotoPerfil(null).subscribe({
+    this.portal.actualizarFotoPerfil(null).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.perfil = { ...this.perfil, foto: null };
         this.portal.actualizarClienteLocal({ foto: null });
@@ -254,7 +257,7 @@ export class PortalPerfilPage implements OnInit {
   private confirmarEliminar() {
     if (this.eliminando) return;
     this.eliminando = true;
-    this.portal.eliminarCuenta().subscribe({
+    this.portal.eliminarCuenta().pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         await this.aviso('Tu cuenta fue eliminada');
         this.portal.logout();
@@ -263,6 +266,8 @@ export class PortalPerfilPage implements OnInit {
       error: (e) => { this.eliminando = false; this.aviso(e.error?.error || 'No se pudo eliminar la cuenta', 'danger'); },
     });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   logout() {
     this.portal.logout();

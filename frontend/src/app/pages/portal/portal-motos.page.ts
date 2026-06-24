@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { PortalService } from '../../services/portal.service';
 import { MARCAS_MOTO, modelosDeMarca } from '../../utils/motos-catalogo';
 import { comprimirImagen } from '../../utils/imagen';
@@ -12,7 +14,8 @@ import { mesesDesde } from '../../utils/mantenimiento';
   templateUrl: './portal-motos.page.html',
   styleUrls: ['./portal-motos.page.scss'],
 })
-export class PortalMotosPage implements OnInit {
+export class PortalMotosPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   motos: any[] = [];
   cargando = true;
 
@@ -45,7 +48,7 @@ export class PortalMotosPage implements OnInit {
 
   cargar() {
     this.cargando = true;
-    this.portal.getMotos().subscribe({
+    this.portal.getMotos().pipe(takeUntil(this.destroy$)).subscribe({
       next: res => { this.motos = res.data; this.cargando = false; },
       error: () => { this.cargando = false; },
     });
@@ -137,7 +140,7 @@ export class PortalMotosPage implements OnInit {
     const op = this.editandoId
       ? this.portal.editarMoto(this.editandoId, datos)
       : this.portal.crearMoto(datos);
-    op.subscribe({
+    op.pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         if (this.editandoId) {
           const i = this.motos.findIndex(m => m.id === this.editandoId);
@@ -171,7 +174,7 @@ export class PortalMotosPage implements OnInit {
   }
 
   private confirmarEliminar(m: any) {
-    this.portal.eliminarMoto(m.id).subscribe({
+    this.portal.eliminarMoto(m.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.motos = this.motos.filter(x => x.id !== m.id);
         if (this.editandoId === m.id) this.cerrarForm();
@@ -180,6 +183,8 @@ export class PortalMotosPage implements OnInit {
       error: err => this.mostrarToast(err.error?.error || 'No se pudo eliminar la moto', 'danger'),
     });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   private async mostrarToast(message: string, color = 'success') {
     const t = await this.toast.create({ message, duration: 2400, color });

@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { PortalService } from '../../services/portal.service';
 import { proximoServicio, ProximoServicio } from '../../utils/mantenimiento';
 
@@ -9,7 +11,8 @@ import { proximoServicio, ProximoServicio } from '../../utils/mantenimiento';
   templateUrl: './portal-moto-historial.page.html',
   styleUrls: ['./portal-moto-historial.page.scss'],
 })
-export class PortalMotoHistorialPage implements OnInit {
+export class PortalMotoHistorialPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   moto: any = null;
   servicios: any[] = [];
   cargando = true;
@@ -25,7 +28,7 @@ export class PortalMotoHistorialPage implements OnInit {
 
   cargar(id: number) {
     this.cargando = true;
-    this.portal.getMotoHistorial(id).subscribe({
+    this.portal.getMotoHistorial(id).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         this.moto = r.data.moto;
         this.servicios = r.data.servicios || [];
@@ -60,4 +63,6 @@ export class PortalMotoHistorialPage implements OnInit {
   }
   verCita(s: any) { this.router.navigate(['/portal/cita', s.id]); }
   estrellas(n: number): string { return '★'.repeat(n) + '☆'.repeat(5 - n); }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 }

@@ -7,7 +7,8 @@ export class PortalGuard implements CanActivate {
   constructor(private portal: PortalService, private router: Router) {}
 
   canActivate(): boolean {
-    if (this.portal.isLoggedIn()) return true;
+    if (this.portal.isLoggedIn() && !this.portal.isTokenExpired()) return true;
+    this.portal.logout();
     this.router.navigate(['/portal/login']);
     return false;
   }

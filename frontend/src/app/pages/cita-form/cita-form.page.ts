@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LoadingController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { CitasService } from '../../services/citas.service';
 import { ClientesService } from '../../services/clientes.service';
 import { MotosService } from '../../services/motos.service';
@@ -20,7 +22,8 @@ const TIPOS_SERVICIO = [
   templateUrl: './cita-form.page.html',
   styleUrls: ['./cita-form.page.scss'],
 })
-export class CitaFormPage implements OnInit {
+export class CitaFormPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   esEdicion = false;
   citaId: number | null = null;
 
@@ -49,32 +52,33 @@ export class CitaFormPage implements OnInit {
   ngOnInit() {
     // Lista de técnicos para asignar (solo admin puede).
     if (this.auth.tieneRol('admin')) {
-      this.dashSvc.getTecnicos().subscribe({ next: res => this.tecnicos = res.data });
+      this.dashSvc.getTecnicos().pipe(takeUntil(this.destroy$)).subscribe({ next: res => this.tecnicos = res.data });
     }
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.esEdicion = true;
       this.citaId = +id;
-      this.citaSvc.getById(+id).subscribe(res => {
+      this.citaSvc.getById(+id).pipe(takeUntil(this.destroy$)).subscribe(res => {
         this.form = res.data;
         this.busquedaCliente = `${res.data.cliente_nombre} ${res.data.cliente_apellido}`;
         if (res.data.cliente_id) {
-          this.motoSvc.getAll({ cliente_id: res.data.cliente_id }).subscribe(r => this.motos = r.data);
+          this.motoSvc.getAll({ cliente_id: res.data.cliente_id }).pipe(takeUntil(this.destroy$)).subscribe(r => this.motos = r.data);
         }
       });
     }
   }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   buscarClientes() {
     if (!this.busquedaCliente.trim()) { this.clientes = []; return; }
-    this.clienteSvc.getAll(this.busquedaCliente).subscribe(res => this.clientes = res.data);
+    this.clienteSvc.getAll(this.busquedaCliente).pipe(takeUntil(this.destroy$)).subscribe(res => this.clientes = res.data);
   }
 
   seleccionarCliente(c: Cliente) {
     this.form.cliente_id = c.id!;
     this.busquedaCliente = `${c.nombre} ${c.apellido}`;
     this.clientes = [];
-    this.motoSvc.getAll({ cliente_id: c.id }).subscribe(res => this.motos = res.data);
+    this.motoSvc.getAll({ cliente_id: c.id }).pipe(takeUntil(this.destroy$)).subscribe(res => this.motos = res.data);
   }
 
   async guardar() {
@@ -83,7 +87,7 @@ export class CitaFormPage implements OnInit {
     const op = this.esEdicion
       ? this.citaSvc.update(this.citaId!, this.form)
       : this.citaSvc.create(this.form);
-    op.subscribe({
+    op.pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         await l.dismiss();
         const t = await this.toast.create({ message: 'Cita guardada', duration: 2000, color: 'success' });

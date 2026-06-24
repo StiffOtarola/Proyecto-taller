@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AdminService } from '../../services/admin.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -11,7 +13,8 @@ interface HorarioVista { dia: number; label: string; abre: string; cierra: strin
   selector: 'app-admin-config',
   templateUrl: './admin-config.page.html',
 })
-export class AdminConfigPage implements OnInit {
+export class AdminConfigPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   config: any = null;
   cargando = true;
   guardando = false;
@@ -47,14 +50,14 @@ export class AdminConfigPage implements OnInit {
 
   cargar() {
     this.cargando = true;
-    this.admin.getConfig().subscribe({
+    this.admin.getConfig().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.config = r.data; this.normalizarHorarios(); this.cargando = false; },
       error: () => { this.cargando = false; this.aviso('No se pudo cargar la configuración', 'danger'); },
     });
   }
 
   cargarSucursales() {
-    this.admin.getSucursales().subscribe({ next: r => this.sucursales = r.data || [] });
+    this.admin.getSucursales().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.sucursales = r.data || [] });
   }
 
   agregarSucursal() {
@@ -65,7 +68,7 @@ export class AdminConfigPage implements OnInit {
       nombre,
       direccion: this.nuevaSucursal.direccion.trim() || undefined,
       telefono: this.nuevaSucursal.telefono.trim() || undefined,
-    }).subscribe({
+    }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.guardandoSucursal = false;
         this.nuevaSucursal = { nombre: '', direccion: '', telefono: '' };
@@ -78,7 +81,7 @@ export class AdminConfigPage implements OnInit {
 
   guardarSucursal(s: any) {
     if (!s.nombre?.trim()) { this.aviso('La sucursal necesita un nombre', 'warning'); return; }
-    this.admin.updateSucursal(s.id, { nombre: s.nombre.trim(), direccion: s.direccion?.trim() || undefined, telefono: s.telefono?.trim() || undefined }).subscribe({
+    this.admin.updateSucursal(s.id, { nombre: s.nombre.trim(), direccion: s.direccion?.trim() || undefined, telefono: s.telefono?.trim() || undefined }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => this.aviso('Sucursal actualizada'),
       error: (e) => this.aviso(e.error?.error || 'No se pudo guardar', 'danger'),
     });
@@ -86,7 +89,7 @@ export class AdminConfigPage implements OnInit {
 
   toggleSucursal(s: any) {
     const activa = !Number(s.activa);
-    this.admin.toggleSucursal(s.id, activa).subscribe({
+    this.admin.toggleSucursal(s.id, activa).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => { s.activa = activa ? 1 : 0; },
       error: (e) => this.aviso(e.error?.error || 'No se pudo cambiar', 'danger'),
     });
@@ -120,7 +123,7 @@ export class AdminConfigPage implements OnInit {
       ...this.config,
       horarios: this.horariosVista.map(h => ({ dia: h.dia, abre: h.abre, cierra: h.cierra, activo: h.activo ? 1 : 0 })),
     };
-    this.admin.updateConfig(payload).subscribe({
+    this.admin.updateConfig(payload).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.config = r.data; this.normalizarHorarios(); this.guardando = false; this.aviso('Configuración guardada'); },
       error: (e) => { this.guardando = false; this.aviso(e.error?.error || 'No se pudo guardar', 'danger'); },
     });
@@ -129,7 +132,7 @@ export class AdminConfigPage implements OnInit {
   guardarCuenta() {
     if (!this.cuenta.nombre.trim() || !this.cuenta.email.trim()) { this.aviso('Nombre y correo son requeridos', 'warning'); return; }
     this.guardandoCuenta = true;
-    this.admin.updateCuenta({ nombre: this.cuenta.nombre.trim(), email: this.cuenta.email.trim() }).subscribe({
+    this.admin.updateCuenta({ nombre: this.cuenta.nombre.trim(), email: this.cuenta.email.trim() }).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         // Refleja el nombre/correo nuevo en la sesión guardada (sidebar, etc.).
         const u = this.auth.getUsuario();
@@ -146,11 +149,13 @@ export class AdminConfigPage implements OnInit {
     if (!this.pass.actual || !this.pass.nueva) { this.aviso('Completá ambas contraseñas', 'warning'); return; }
     if (this.pass.nueva.length < 8) { this.aviso('La nueva debe tener al menos 8 caracteres', 'warning'); return; }
     this.guardandoPass = true;
-    this.admin.updatePassword({ actual: this.pass.actual, nueva: this.pass.nueva }).subscribe({
+    this.admin.updatePassword({ actual: this.pass.actual, nueva: this.pass.nueva }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => { this.guardandoPass = false; this.pass = { actual: '', nueva: '' }; this.aviso('Contraseña actualizada'); },
       error: (e) => { this.guardandoPass = false; this.aviso(e.error?.error || 'No se pudo cambiar', 'danger'); },
     });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   logout() {
     this.auth.logout();

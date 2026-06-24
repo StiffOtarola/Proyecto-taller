@@ -53,6 +53,20 @@ router.post('/', async (req, res) => {
     if (!moto_id || !cliente_id || !problema_reportado) {
       return res.status(400).json({ error: 'moto_id, cliente_id y problema_reportado son requeridos' });
     }
+
+    const PRIORIDADES_VALIDAS = ['baja', 'normal', 'alta', 'urgente'];
+    const CATEGORIAS_VALIDAS = ['diagnostico', 'mantenimiento', 'reparacion', 'electrica', 'carroceria'];
+    const COMBUSTIBLE_VALIDO = ['vacio', 'cuarto', 'medio', 'tres_cuartos', 'lleno'];
+    if (prioridad && !PRIORIDADES_VALIDAS.includes(prioridad)) {
+      return res.status(400).json({ error: 'Prioridad no válida' });
+    }
+    if (categoria && !CATEGORIAS_VALIDAS.includes(categoria)) {
+      return res.status(400).json({ error: 'Categoría no válida' });
+    }
+    if (nivel_combustible && !COMBUSTIBLE_VALIDO.includes(nivel_combustible)) {
+      return res.status(400).json({ error: 'Nivel de combustible no válido' });
+    }
+
     const sucursal_id = (await sucursalValida(req.body.sucursal_id)) ? Number(req.body.sucursal_id) : null;
 
     const numero_orden = await generarNumeroOrden();

@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { LoadingController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { ClientesService } from '../../services/clientes.service';
 import { Cliente } from '../../models/cliente.model';
 
@@ -10,7 +12,8 @@ import { Cliente } from '../../models/cliente.model';
   templateUrl: './cliente-form.page.html',
   styleUrls: ['./cliente-form.page.scss'],
 })
-export class ClienteFormPage implements OnInit {
+export class ClienteFormPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   esEdicion = false;
   clienteId: number | null = null;
   guardando = false;
@@ -39,7 +42,7 @@ export class ClienteFormPage implements OnInit {
     if (id) {
       this.esEdicion = true;
       this.clienteId = +id;
-      this.clienteSvc.getById(+id).subscribe(res => { this.form = res.data; });
+      this.clienteSvc.getById(+id).pipe(takeUntil(this.destroy$)).subscribe(res => { this.form = res.data; });
     }
   }
 
@@ -51,7 +54,7 @@ export class ClienteFormPage implements OnInit {
     const op = this.esEdicion
       ? this.clienteSvc.update(this.clienteId!, this.form)
       : this.clienteSvc.create(this.form);
-    op.subscribe({
+    op.pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         await l.dismiss(); this.guardando = false;
         const t = await this.toast.create({ message: 'Cliente guardado', duration: 2000, color: 'success' });
@@ -65,4 +68,6 @@ export class ClienteFormPage implements OnInit {
       },
     });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 }

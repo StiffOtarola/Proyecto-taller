@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController, AlertController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { PortalService } from '../../services/portal.service';
 import { FLUJO_CITA, ESTADO_CITA_LABEL } from '../../utils/servicios';
 import { badgeProximidad, BadgeProximidad, diasHastaCita } from '../../utils/fecha-cita';
@@ -11,7 +13,8 @@ import { badgeProximidad, BadgeProximidad, diasHastaCita } from '../../utils/fec
   templateUrl: './portal-citas.page.html',
   styleUrls: ['./portal-citas.page.scss'],
 })
-export class PortalCitasPage implements OnInit {
+export class PortalCitasPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   citas: any[] = [];
   cargando = true;
   vista: 'pendientes' | 'historial' = 'pendientes';
@@ -34,7 +37,7 @@ export class PortalCitasPage implements OnInit {
 
   cargar() {
     this.cargando = true;
-    this.portal.getCitas().subscribe({
+    this.portal.getCitas().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.citas = r.data; this.cargando = false; },
       error: () => { this.cargando = false; },
     });
@@ -91,7 +94,7 @@ export class PortalCitasPage implements OnInit {
     ev?.stopPropagation();
     if (this.confirmando.has(c.id)) return;
     this.confirmando.add(c.id);
-    this.portal.confirmarCita(c.id).subscribe({
+    this.portal.confirmarCita(c.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         c.confirmada_cliente = 1;
         this.confirmando.delete(c.id);
@@ -141,7 +144,7 @@ export class PortalCitasPage implements OnInit {
 
   private enviarCalif(cita: any, n: number) {
     if (!n) return;
-    this.portal.calificarCita(cita.id, n).subscribe({
+    this.portal.calificarCita(cita.id, n).pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         cita.calificacion = n;
         const t = await this.toast.create({ message: '¡Gracias por tu opinión!', duration: 2000, color: 'success' });
@@ -153,6 +156,8 @@ export class PortalCitasPage implements OnInit {
       },
     });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   estrellas(n: number): string { return '★'.repeat(n) + '☆'.repeat(5 - n); }
 

@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, LoadingController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { ClientesService } from '../../services/clientes.service';
 import { MotosService } from '../../services/motos.service';
 import { OrdenesService } from '../../services/ordenes.service';
@@ -12,7 +14,8 @@ import { Moto } from '../../models/moto.model';
   templateUrl: './nueva-orden.page.html',
   styleUrls: ['./nueva-orden.page.scss'],
 })
-export class NuevaOrdenPage implements OnInit {
+export class NuevaOrdenPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   paso = 1; // 1=cliente, 2=moto, 3=recepcion
 
   // Paso 1
@@ -47,17 +50,18 @@ export class NuevaOrdenPage implements OnInit {
   ) {}
 
   ngOnInit() {}
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   buscarClientes() {
     if (!this.busquedaCliente.trim()) { this.clientes = []; return; }
-    this.clienteSvc.getAll(this.busquedaCliente).subscribe(res => this.clientes = res.data);
+    this.clienteSvc.getAll(this.busquedaCliente).pipe(takeUntil(this.destroy$)).subscribe(res => this.clientes = res.data);
   }
 
   seleccionarCliente(c: Cliente) {
     this.clienteSeleccionado = c;
     this.clientes = [];
     this.busquedaCliente = `${c.nombre} ${c.apellido}`;
-    this.motoSvc.getAll({ cliente_id: c.id }).subscribe(res => this.motos = res.data);
+    this.motoSvc.getAll({ cliente_id: c.id }).pipe(takeUntil(this.destroy$)).subscribe(res => this.motos = res.data);
     this.paso = 2;
   }
 
@@ -77,7 +81,7 @@ export class NuevaOrdenPage implements OnInit {
       moto_id: this.motoSeleccionada!.id!,
       cliente_id: this.clienteSeleccionado!.id!,
       ...this.form,
-    }).subscribe({
+    }).pipe(takeUntil(this.destroy$)).subscribe({
       next: async (res) => {
         await l.dismiss();
         const t = await this.toast.create({ message: `Orden ${res.data.numero_orden} creada`, duration: 2500, color: 'success' });

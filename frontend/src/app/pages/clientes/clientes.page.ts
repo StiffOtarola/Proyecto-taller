@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { debounceTime, takeUntil } from 'rxjs/operators';
 import { ClientesService } from '../../services/clientes.service';
 import { Cliente } from '../../models/cliente.model';
 
@@ -8,27 +10,41 @@ import { Cliente } from '../../models/cliente.model';
   templateUrl: './clientes.page.html',
   styleUrls: ['./clientes.page.scss'],
 })
-export class ClientesPage implements OnInit {
+export class ClientesPage implements OnInit, OnDestroy {
   clientes: Cliente[] = [];
   busqueda = '';
   cargando = true;
 
+  private destroy$ = new Subject<void>();
+  private buscar$ = new Subject<string>();
+
   constructor(private clienteSvc: ClientesService, private router: Router) {}
 
-  ngOnInit() { this.cargar(); }
+  ngOnInit() {
+    this.buscar$.pipe(debounceTime(400), takeUntil(this.destroy$)).subscribe(q => {
+      this.busqueda = q;
+      this.cargar();
+    });
+    this.cargar();
+  }
+
   ionViewWillEnter() { this.cargar(); }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   cargar() {
     this.cargando = true;
-    this.clienteSvc.getAll(this.busqueda || undefined).subscribe({
+    this.clienteSvc.getAll(this.busqueda || undefined).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => { this.clientes = res.data; this.cargando = false; },
       error: () => { this.cargando = false; },
     });
   }
 
   buscar(ev: any) {
-    this.busqueda = ev.detail.value;
-    this.cargar();
+    this.buscar$.next(ev.detail.value);
   }
 
   abrirDetalle(id: number) { this.router.navigate(['/cliente-detalle', id]); }

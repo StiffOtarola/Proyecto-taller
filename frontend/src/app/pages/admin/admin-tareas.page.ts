@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AlertController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AdminService } from '../../services/admin.service';
 import { UsuariosService } from '../../services/usuarios.service';
 import { Usuario } from '../../models/usuario.model';
@@ -9,7 +11,8 @@ import { Usuario } from '../../models/usuario.model';
   selector: 'app-admin-tareas',
   templateUrl: './admin-tareas.page.html',
 })
-export class AdminTareasPage implements OnInit {
+export class AdminTareasPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   tareas: any[] = [];
   tecnicos: Usuario[] = [];
   cargando = true;
@@ -29,16 +32,17 @@ export class AdminTareasPage implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.usuarios.getAll().subscribe({
+    this.usuarios.getAll().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.tecnicos = (r.data || []).filter(u => u.rol === 'tecnico' && u.activo); },
     });
     this.cargar();
   }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
   ionViewWillEnter() { this.cargar(); }
 
   cargar(ev?: any) {
     this.cargando = true;
-    this.admin.getTareas(this.empleado).subscribe({
+    this.admin.getTareas(this.empleado).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.tareas = r.data; this.cargando = false; if (ev) ev.target.complete(); },
       error: () => { this.cargando = false; if (ev) ev.target.complete(); },
     });
@@ -57,7 +61,7 @@ export class AdminTareasPage implements OnInit {
       detalle: this.form.detalle.trim() || undefined,
       prioridad: this.form.prioridad,
       vence: this.form.vence || null,
-    }).subscribe({
+    }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.guardando = false;
         // Conserva el mecánico para asignar varias tareas seguidas.
@@ -76,7 +80,7 @@ export class AdminTareasPage implements OnInit {
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         { text: 'Eliminar', role: 'destructive', handler: () => {
-            this.admin.borrarTarea(t.id).subscribe({
+            this.admin.borrarTarea(t.id).pipe(takeUntil(this.destroy$)).subscribe({
               next: () => { this.tareas = this.tareas.filter(x => x.id !== t.id); this.aviso('Tarea eliminada'); },
               error: () => this.aviso('No se pudo eliminar', 'danger'),
             });

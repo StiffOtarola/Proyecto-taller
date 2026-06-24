@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AdminService } from '../../services/admin.service';
 import { UsuariosService } from '../../services/usuarios.service';
 import { Usuario } from '../../models/usuario.model';
@@ -9,7 +11,8 @@ import { descargarCSV } from '../../shared/csv.util';
   selector: 'app-admin-reportes',
   templateUrl: './admin-reportes.page.html',
 })
-export class AdminReportesPage implements OnInit {
+export class AdminReportesPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   data: any = null;
   cargando = true;
   periodo = 'mes';
@@ -23,16 +26,17 @@ export class AdminReportesPage implements OnInit {
   constructor(private admin: AdminService, private usuarios: UsuariosService) {}
 
   ngOnInit() {
-    this.usuarios.getAll().subscribe({
+    this.usuarios.getAll().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.tecnicos = (r.data || []).filter(u => u.rol === 'tecnico'); },
     });
     this.cargar();
   }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
   ionViewWillEnter() { this.cargar(); }
 
   cargar(ev?: any) {
     this.cargando = true;
-    this.admin.getReportes({ periodo: this.periodo, empleado: this.empleado }).subscribe({
+    this.admin.getReportes({ periodo: this.periodo, empleado: this.empleado }).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.data = r.data; this.cargando = false; if (ev) ev.target.complete(); },
       error: () => { this.cargando = false; if (ev) ev.target.complete(); },
     });

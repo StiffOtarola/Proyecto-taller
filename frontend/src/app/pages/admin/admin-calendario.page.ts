@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AdminService } from '../../services/admin.service';
 
 interface Color { bg: string; fg: string; }
@@ -16,7 +18,8 @@ interface DiaCal {
   selector: 'app-admin-calendario',
   templateUrl: './admin-calendario.page.html',
 })
-export class AdminCalendarioPage implements OnInit {
+export class AdminCalendarioPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   // Paleta de colores asignada por mecánico (cicla si hay más que colores).
   private readonly PALETA: Color[] = [
     { bg: '#2C0A12', fg: '#FB7185' },
@@ -45,6 +48,7 @@ export class AdminCalendarioPage implements OnInit {
   constructor(private admin: AdminService) {}
 
   ngOnInit() { this.cargar(); }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
   ionViewWillEnter() { this.cargar(); }
 
   get tituloMes(): string { return `${this.meses[this.mes - 1]} ${this.anio}`; }
@@ -63,7 +67,7 @@ export class AdminCalendarioPage implements OnInit {
 
   cargar() {
     this.cargando = true;
-    this.admin.getCalendario(this.anio, this.mes).subscribe({
+    this.admin.getCalendario(this.anio, this.mes).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.procesar(r.data.celdas || [], r.data.tecnicos || []); this.cargando = false; },
       error: () => { this.cargando = false; this.semanas = []; this.leyenda = []; this.resumenMes = []; },
     });

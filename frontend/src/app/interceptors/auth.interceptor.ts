@@ -29,7 +29,7 @@ export class AuthInterceptor implements HttpInterceptor {
             this.router.navigate(['/portal/login']);
           } else {
             this.auth.logout();
-            this.router.navigate(['/portal/login']);
+            this.router.navigate(['/login']);
           }
         }
         return throwError(() => err);

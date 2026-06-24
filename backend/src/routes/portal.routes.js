@@ -13,10 +13,12 @@ const { getSucursales, sucursalValida, sucursalPorDefecto } = require('../utils/
 const { avanzarEstadoOrden, estadoTrasAprobacion } = require('../utils/ordenes');
 const { recompensas } = require('../utils/recompensas');
 
-// Fecha de hoy en zona de Costa Rica (UTC-6, sin horario de verano).
+// Fecha de hoy en zona del taller (offset configurable, por defecto UTC-6).
 // Evita rechazar/permitir un día de más cuando el server corre en UTC.
-function hoyCR() {
-  return new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
+async function hoyCR() {
+  const config = await getConfig();
+  const offset = Number(config.zona_horaria_offset) || -6;
+  return new Date(Date.now() + offset * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
 // Valida una foto subida por el cliente (avatar o moto). Acepta:
@@ -84,7 +86,7 @@ router.post('/registro', async (req, res) => {
       return res.status(400).json({ error: 'Nombre, apellido, teléfono, correo y contraseña son requeridos' });
     }
     if (!emailValido(email)) return res.status(400).json({ error: 'El correo no tiene un formato válido' });
-    if (password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    if (password.length < 8) return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
 
     // Rate-limit por correo: frena el sondeo de cuentas existentes vía el 409 de abajo.
     const limite = consumir(`registro:${String(email).trim().toLowerCase()}`, { porMinuto: 3, porHora: 20 });
@@ -165,7 +167,7 @@ router.post('/recuperar/confirmar', async (req, res) => {
     const { email, codigo, password } = req.body;
     if (!emailValido(email)) return res.status(400).json({ error: 'El correo no tiene un formato válido' });
     if (!codigo || !password) return res.status(400).json({ error: 'Código y nueva contraseña son requeridos' });
-    if (password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    if (password.length < 8) return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
 
     const [[cliente]] = await pool.query(
       'SELECT id, nombre, apellido FROM clientes WHERE email = ? AND activo = 1 AND password_hash IS NOT NULL',
@@ -243,7 +245,7 @@ router.get('/resumen', async (req, res) => {
     //   1) en_curso  → la moto ya está en el taller (estado != 'agendado').
     //   2) proxima   → agendada para hoy o más adelante.
     //   3) vencida   → agendada pero la fecha ya pasó y nunca se inició.
-    const hoy = hoyCR();
+    const hoy = await hoyCR();
     const [citasAbiertas] = await pool.query(
       `SELECT ci.id, DATE_FORMAT(ci.fecha,'%Y-%m-%d') AS fecha, TIME_FORMAT(ci.hora,'%H:%i') AS hora,
               ci.tipo_servicio, ci.estado,
@@ -431,7 +433,7 @@ router.put('/perfil/password', async (req, res) => {
   try {
     const { actual, nueva } = req.body;
     if (!actual || !nueva) return res.status(400).json({ error: 'Contraseña actual y nueva son requeridas' });
-    if (String(nueva).length < 6) return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
+    if (String(nueva).length < 8) return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 8 caracteres' });
     const [[c]] = await pool.query('SELECT password_hash FROM clientes WHERE id = ? AND activo = 1', [req.cliente.id]);
     if (!c || !c.password_hash) return res.status(404).json({ error: 'Cuenta no encontrada' });
     const ok = await bcrypt.compare(String(actual), c.password_hash);
@@ -518,7 +520,7 @@ router.get('/proximo-libre', async (req, res) => {
     const config = await getConfig();
     const max = Number(config.max_citas_hora) || 1;
     const dias = Number(config.dias_anticipacion) || 30;
-    const hoy = hoyCR();
+    const hoy = await hoyCR();
     const fin = new Date(`${hoy}T00:00:00Z`);
     fin.setUTCDate(fin.getUTCDate() + dias);
     const finStr = fin.toISOString().slice(0, 10);
@@ -915,7 +917,7 @@ router.put('/citas/:id', async (req, res) => {
     if (!horas.includes(hora)) {
       return res.status(400).json({ error: 'Ese día/hora no está disponible para agendar' });
     }
-    const hoy = hoyCR();
+    const hoy = await hoyCR();
     if (fecha < hoy) return res.status(400).json({ error: 'La fecha no puede ser en el pasado' });
     if (fecha === hoy && horasHastaCita(fecha, hora) <= 0) {
       return res.status(400).json({ error: 'Esa hora ya pasó. Elegí un horario más tarde.' });
@@ -985,7 +987,7 @@ router.post('/citas', async (req, res) => {
     if (!horas.includes(hora)) {
       return res.status(400).json({ error: 'Ese día/hora no está disponible para agendar' });
     }
-    const hoy = hoyCR();
+    const hoy = await hoyCR();
     if (fecha < hoy) {
       return res.status(400).json({ error: 'La fecha no puede ser en el pasado' });
     }

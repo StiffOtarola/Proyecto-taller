@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { LoadingController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { MotosService } from '../../services/motos.service';
 import { Moto } from '../../models/moto.model';
 
@@ -10,7 +12,8 @@ import { Moto } from '../../models/moto.model';
   templateUrl: './moto-form.page.html',
   styleUrls: ['./moto-form.page.scss'],
 })
-export class MotoFormPage implements OnInit {
+export class MotoFormPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   esEdicion = false;
   motoId: number | null = null;
   guardando = false;
@@ -42,7 +45,7 @@ export class MotoFormPage implements OnInit {
     if (id) {
       this.esEdicion = true;
       this.motoId = +id;
-      this.motoSvc.getById(+id).subscribe(res => this.form = res.data);
+      this.motoSvc.getById(+id).pipe(takeUntil(this.destroy$)).subscribe(res => this.form = res.data);
     } else if (clienteId) {
       this.form.cliente_id = +clienteId;
     }
@@ -56,7 +59,7 @@ export class MotoFormPage implements OnInit {
     const op = this.esEdicion
       ? this.motoSvc.update(this.motoId!, this.form)
       : this.motoSvc.create(this.form);
-    op.subscribe({
+    op.pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         await l.dismiss(); this.guardando = false;
         const t = await this.toast.create({ message: 'Moto guardada', duration: 2000, color: 'success' });
@@ -70,4 +73,6 @@ export class MotoFormPage implements OnInit {
       },
     });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 }

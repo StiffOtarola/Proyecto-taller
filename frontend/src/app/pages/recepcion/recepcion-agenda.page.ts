@@ -1,8 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { RecepcionService } from '../../services/recepcion.service';
 import { abrirWhatsApp, mensajeCita } from '../../shared/whatsapp.util';
+import { hoyCR } from '../../utils/fecha-cita';
 
 // Celda del calendario mensual. `fecha` vacía = celda de relleno (fuera del mes).
 interface DiaCal {
@@ -22,7 +25,8 @@ interface DiaCal {
   templateUrl: './recepcion-agenda.page.html',
   styleUrls: ['./recepcion-agenda.page.scss'],
 })
-export class RecepcionAgendaPage implements OnInit {
+export class RecepcionAgendaPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   readonly dows = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   readonly diasLargos = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   readonly meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -66,15 +70,14 @@ export class RecepcionAgendaPage implements OnInit {
   }
 
   private pad(n: number): string { return String(n).padStart(2, '0'); }
-  // Hoy en zona Costa Rica (UTC-6) como YYYY-MM-DD.
-  private hoyStr(): string { return new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().slice(0, 10); }
+  private hoyStr(): string { return hoyCR(); }
 
   cargar(ev?: any) {
     this.cargando = true;
     const finDia = new Date(Date.UTC(this.anio, this.mes, 0)).getUTCDate();
     const desde = `${this.anio}-${this.pad(this.mes)}-01`;
     const hasta = `${this.anio}-${this.pad(this.mes)}-${this.pad(finDia)}`;
-    this.rec.getAgenda(desde, hasta).subscribe({
+    this.rec.getAgenda(desde, hasta).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         this.citasMes = r.data || [];
         this.sucursales = this.sucursalesDe(this.citasMes);
@@ -163,6 +166,8 @@ export class RecepcionAgendaPage implements OnInit {
     if (!this.diaSel?.fecha) return;
     this.router.navigate(['/recepcion/recibir'], { queryParams: { modo: 'agendar', fecha: this.diaSel.fecha } });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   async whatsapp(c: any) {
     if (!abrirWhatsApp(c.cliente_telefono, mensajeCita(c))) {

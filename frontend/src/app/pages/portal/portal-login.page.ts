@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoadingController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { PortalService } from '../../services/portal.service';
 import { AuthService } from '../../services/auth.service';
 import { BiometriaService } from '../../services/biometria.service';
@@ -12,7 +14,8 @@ import { emailValido } from '../../utils/validar';
   templateUrl: './portal-login.page.html',
   styleUrls: ['./portal-login.page.scss'],
 })
-export class PortalLoginPage implements OnInit {
+export class PortalLoginPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   email = '';
   password = '';
   verPass = false;
@@ -80,7 +83,7 @@ export class PortalLoginPage implements OnInit {
     }
     const l = await this.loading.create({ message: 'Ingresando...', cssClass: 'portal-loading', spinner: 'crescent' });
     await l.present();
-    this.auth.loginUnificado(this.email.trim(), this.password).subscribe({
+    this.auth.loginUnificado(this.email.trim(), this.password).pipe(takeUntil(this.destroy$)).subscribe({
       next: async (res) => {
         await l.dismiss();
         const cred = { email: this.email.trim(), password: this.password };
@@ -105,4 +108,6 @@ export class PortalLoginPage implements OnInit {
       },
     });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 }

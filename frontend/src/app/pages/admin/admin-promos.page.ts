@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AlertController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { PromosService, Promo } from '../../services/promos.service';
 
 @Component({
@@ -7,7 +9,8 @@ import { PromosService, Promo } from '../../services/promos.service';
   selector: 'app-admin-promos',
   templateUrl: './admin-promos.page.html',
 })
-export class AdminPromosPage implements OnInit {
+export class AdminPromosPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   promos: Promo[] = [];
   cargando = true;
   guardando = false;
@@ -22,7 +25,7 @@ export class AdminPromosPage implements OnInit {
 
   cargar() {
     this.cargando = true;
-    this.svc.getAll().subscribe({
+    this.svc.getAll().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.promos = r.data; this.cargando = false; },
       error: () => { this.cargando = false; },
     });
@@ -51,7 +54,7 @@ export class AdminPromosPage implements OnInit {
       activa: this.form.activa ? 1 : 0,
     };
     const op = editando ? this.svc.update(this.editId!, payload) : this.svc.create(payload);
-    op.subscribe({
+    op.pipe(takeUntil(this.destroy$)).subscribe({
       next: () => { this.guardando = false; this.cancelar(); this.cargar(); this.aviso(editando ? 'Promoción actualizada' : 'Promoción creada'); },
       error: (err) => { this.guardando = false; this.aviso(err.error?.error || 'No se pudo guardar', 'danger'); },
     });
@@ -72,7 +75,7 @@ export class AdminPromosPage implements OnInit {
   }
 
   toggle(p: Promo) {
-    this.svc.toggle(p.id!).subscribe({ next: r => { p.activa = r.data.activa; } });
+    this.svc.toggle(p.id!).pipe(takeUntil(this.destroy$)).subscribe({ next: r => { p.activa = r.data.activa; } });
   }
 
   async borrar(p: Promo) {
@@ -82,7 +85,7 @@ export class AdminPromosPage implements OnInit {
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         { text: 'Eliminar', role: 'destructive', handler: () => {
-            this.svc.delete(p.id!).subscribe({
+            this.svc.delete(p.id!).pipe(takeUntil(this.destroy$)).subscribe({
               next: () => { this.promos = this.promos.filter(x => x.id !== p.id); this.aviso('Promoción eliminada'); },
               error: () => this.aviso('No se pudo eliminar', 'danger'),
             });
@@ -91,6 +94,8 @@ export class AdminPromosPage implements OnInit {
     });
     await al.present();
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   private async aviso(message: string, color = 'success') {
     const t = await this.toast.create({ message, duration: 1800, color });

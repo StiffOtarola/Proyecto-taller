@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { MecanicoService } from '../../services/mecanico.service';
 
 @Component({
@@ -8,7 +10,8 @@ import { MecanicoService } from '../../services/mecanico.service';
   templateUrl: './mecanico-tareas.page.html',
   styleUrls: ['./mecanico-tareas.page.scss'],
 })
-export class MecanicoTareasPage implements OnInit {
+export class MecanicoTareasPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   tareas: any[] = [];
   cargando = true;
   mostrarForm = false;
@@ -19,10 +22,11 @@ export class MecanicoTareasPage implements OnInit {
 
   ngOnInit() { this.cargar(); }
   ionViewWillEnter() { this.cargar(); }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   cargar(ev?: any) {
     this.cargando = true;
-    this.mecanico.getTareas().subscribe({
+    this.mecanico.getTareas().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.tareas = r.data; this.cargando = false; if (ev) ev.target.complete(); },
       error: () => { this.cargando = false; if (ev) ev.target.complete(); },
     });
@@ -33,7 +37,7 @@ export class MecanicoTareasPage implements OnInit {
   toggle(t: any) {
     const previo = t.hecha;
     t.hecha = t.hecha ? 0 : 1; // optimista
-    this.mecanico.toggleTarea(t.id, !!t.hecha).subscribe({
+    this.mecanico.toggleTarea(t.id, !!t.hecha).pipe(takeUntil(this.destroy$)).subscribe({
       error: () => { t.hecha = previo; this.aviso('No se pudo actualizar', 'danger'); },
     });
   }
@@ -41,7 +45,7 @@ export class MecanicoTareasPage implements OnInit {
   agregar() {
     if (!this.nueva.titulo.trim()) { this.aviso('Escribí un título', 'warning'); return; }
     this.guardando = true;
-    this.mecanico.addTarea({ titulo: this.nueva.titulo, detalle: this.nueva.detalle, prioridad: this.nueva.prioridad }).subscribe({
+    this.mecanico.addTarea({ titulo: this.nueva.titulo, detalle: this.nueva.detalle, prioridad: this.nueva.prioridad }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.guardando = false;
         this.nueva = { titulo: '', detalle: '', prioridad: 'normal' };
@@ -53,7 +57,7 @@ export class MecanicoTareasPage implements OnInit {
   }
 
   eliminar(t: any) {
-    this.mecanico.deleteTarea(t.id).subscribe({
+    this.mecanico.deleteTarea(t.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => { this.tareas = this.tareas.filter(x => x.id !== t.id); },
       error: () => this.aviso('No se pudo eliminar', 'danger'),
     });

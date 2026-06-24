@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { RecepcionService } from '../../services/recepcion.service';
 
 // "Recibir cliente": flujo único de mostrador. Se busca el cliente una sola vez y
@@ -13,7 +15,8 @@ import { RecepcionService } from '../../services/recepcion.service';
   templateUrl: './recepcion-agendar.page.html',
   styleUrls: ['./recepcion-agendar.page.scss'],
 })
-export class RecepcionAgendarPage implements OnInit {
+export class RecepcionAgendarPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   modo: 'ahora' | 'agendar' = 'ahora';
 
   qCliente = '';
@@ -56,9 +59,9 @@ export class RecepcionAgendarPage implements OnInit {
     const f = this.route.snapshot.queryParamMap.get('fecha');
     if (f && /^\d{4}-\d{2}-\d{2}$/.test(f)) this.form.fecha = f;
 
-    this.rec.getServicios().subscribe({ next: r => this.servicios = r.data, error: () => {} });
+    this.rec.getServicios().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.servicios = r.data, error: () => {} });
     // Las sucursales definen qué mecánicos y qué cupos aplican: se cargan al resolverlas.
-    this.rec.getSucursales().subscribe({
+    this.rec.getSucursales().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         this.sucursales = r.data || [];
         if (this.sucursales.length === 1) this.form.sucursal_id = this.sucursales[0].id;
@@ -71,7 +74,7 @@ export class RecepcionAgendarPage implements OnInit {
 
   // Mecánicos de la sede elegida (+ los de "ambas"). Si el elegido ya no aplica, se limpia.
   cargarTecnicos() {
-    this.rec.getTecnicos(this.form.sucursal_id).subscribe({
+    this.rec.getTecnicos(this.form.sucursal_id).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         this.tecnicos = r.data || [];
         if (this.form.tecnico_id && !this.tecnicos.some(t => t.id === this.form.tecnico_id)) {
@@ -94,7 +97,7 @@ export class RecepcionAgendarPage implements OnInit {
   buscarClientes() {
     const q = this.qCliente.trim();
     if (!q || this.cliente) { this.clientes = []; return; }
-    this.rec.getClientes(q).subscribe({ next: r => this.clientes = r.data, error: () => {} });
+    this.rec.getClientes(q).pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.clientes = r.data, error: () => {} });
   }
 
   seleccionarCliente(c: any) {
@@ -106,7 +109,7 @@ export class RecepcionAgendarPage implements OnInit {
   }
 
   private cargarMotos(clienteId: number) {
-    this.rec.getMotos(clienteId).subscribe({
+    this.rec.getMotos(clienteId).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.motos = r.data; if (r.data.length === 1) this.form.moto_id = r.data[0].id; },
       error: () => { this.motos = []; },
     });
@@ -134,7 +137,7 @@ export class RecepcionAgendarPage implements OnInit {
     if (!this.form.fecha) { this.disp = null; return; }
     // Con más de una sucursal, el cupo es por local: hay que elegirla primero.
     if (this.sucursales.length > 1 && !this.form.sucursal_id) { this.disp = null; return; }
-    this.rec.getDisponibilidad(this.form.fecha, this.form.sucursal_id).subscribe({
+    this.rec.getDisponibilidad(this.form.fecha, this.form.sucursal_id).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => this.disp = r.data,
       error: () => this.disp = null,
     });
@@ -175,7 +178,7 @@ export class RecepcionAgendarPage implements OnInit {
       tipo_servicio: this.form.tipo_servicio || null,
       tecnico_id: this.form.tecnico_id,
       sucursal_id: this.form.sucursal_id,
-    }).subscribe({
+    }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => { this.guardando = false; this.aviso('Cita agendada'); this.reset(); },
       error: (e) => { this.guardando = false; this.aviso(e.error?.error || 'No se pudo agendar', 'danger'); },
     });
@@ -189,7 +192,7 @@ export class RecepcionAgendarPage implements OnInit {
       sucursal_id: this.form.sucursal_id,
       kilometraje_ingreso: this.form.kilometraje_ingreso || null,
       prioridad: this.form.prioridad || 'normal',
-    }).subscribe({
+    }).pipe(takeUntil(this.destroy$)).subscribe({
       next: (r) => { this.guardando = false; this.aviso(`Orden ${r.data.numero_orden} creada`); this.router.navigate(['/detalle-orden', r.data.id]); },
       error: (e) => { this.guardando = false; this.aviso(e.error?.error || 'No se pudo crear la orden', 'danger'); },
     });
@@ -205,6 +208,8 @@ export class RecepcionAgendarPage implements OnInit {
     };
     this.cargarDisponibilidad();
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   private async aviso(message: string, color = 'success') {
     const t = await this.toast.create({ message, duration: 1800, color });

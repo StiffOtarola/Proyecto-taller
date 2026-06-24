@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { OrdenesService } from '../../services/ordenes.service';
 import { Orden, EstadoOrden } from '../../models/orden.model';
 
@@ -8,7 +10,8 @@ import { Orden, EstadoOrden } from '../../models/orden.model';
   templateUrl: './ordenes.page.html',
   styleUrls: ['./ordenes.page.scss'],
 })
-export class OrdenesPage implements OnInit {
+export class OrdenesPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   ordenes: Orden[] = [];
   cargando = true;
   filtroEstado = '';
@@ -31,6 +34,8 @@ export class OrdenesPage implements OnInit {
     this.cargar();
   }
 
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
+
   ionViewWillEnter() {
     this.cargar();
   }
@@ -39,7 +44,7 @@ export class OrdenesPage implements OnInit {
     this.cargando = true;
     const params: any = {};
     if (this.filtroEstado) params.estado = this.filtroEstado;
-    this.ordenSvc.getAll(params).subscribe({
+    this.ordenSvc.getAll(params).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => { this.ordenes = res.data; this.cargando = false; },
       error: () => { this.cargando = false; },
     });

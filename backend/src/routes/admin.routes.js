@@ -78,8 +78,9 @@ router.get('/reportes', async (req, res) => {
     const empRaw = Number(req.query.empleado);
     const empleado = Number.isInteger(empRaw) && empRaw > 0 ? empRaw : null;
 
-    // Condición de rango para una columna de fecha, según el período (sin params).
+    const COLUMNAS_RANGO = ['c.fecha', 'c.fecha_fin', 'o.fecha_entrega_real', 'o.fecha_ingreso'];
     const rango = (col) => {
+      if (!COLUMNAS_RANGO.includes(col)) throw new Error(`Columna no permitida en rango: ${col}`);
       if (periodo === 'mes_pasado')
         return `${col} >= DATE_FORMAT(CURDATE() - INTERVAL 1 MONTH, '%Y-%m-01') AND ${col} < DATE_FORMAT(CURDATE(), '%Y-%m-01')`;
       if (periodo === 'anio') return `YEAR(${col}) = YEAR(CURDATE())`;

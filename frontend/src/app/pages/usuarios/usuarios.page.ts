@@ -1,14 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { AlertController, ToastController } from '@ionic/angular';
 import { UsuariosService } from '../../services/usuarios.service';
 import { Usuario } from '../../models/usuario.model';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({ standalone: false,
   selector: 'app-usuarios',
   templateUrl: './usuarios.page.html',
   styleUrls: ['./usuarios.page.scss'],
 })
-export class UsuariosPage implements OnInit {
+export class UsuariosPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   usuarios: Usuario[] = [];
   cargando = true;
   mostrarForm = false;
@@ -22,16 +25,18 @@ export class UsuariosPage implements OnInit {
 
   ngOnInit() { this.cargar(); }
 
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
+
   cargar() {
     this.cargando = true;
-    this.usuarioSvc.getAll().subscribe({
+    this.usuarioSvc.getAll().pipe(takeUntil(this.destroy$)).subscribe({
       next: res => { this.usuarios = res.data; this.cargando = false; },
       error: () => { this.cargando = false; },
     });
   }
 
   async crear() {
-    this.usuarioSvc.create(this.nuevoUsuario).subscribe({
+    this.usuarioSvc.create(this.nuevoUsuario).pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         this.mostrarForm = false;
         this.nuevoUsuario = { nombre: '', email: '', password: '', rol: 'tecnico', telefono: '' };
@@ -62,7 +67,7 @@ export class UsuariosPage implements OnInit {
           handler: (d) => {
             const nombre = (d?.nombre || '').trim();
             if (!nombre) return false;
-            this.usuarioSvc.update(u.id!, { nombre, email: u.email, rol: u.rol, telefono: (d?.telefono || '').trim() }).subscribe({
+            this.usuarioSvc.update(u.id!, { nombre, email: u.email, rol: u.rol, telefono: (d?.telefono || '').trim() }).pipe(takeUntil(this.destroy$)).subscribe({
               next: async () => {
                 this.cargar();
                 const t = await this.toast.create({ message: 'Usuario actualizado', duration: 1800, color: 'success' });
@@ -82,7 +87,7 @@ export class UsuariosPage implements OnInit {
   }
 
   async toggleActivo(u: Usuario) {
-    this.usuarioSvc.toggleActivo(u.id!, !u.activo).subscribe({
+    this.usuarioSvc.toggleActivo(u.id!, !u.activo).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => { u.activo = u.activo ? 0 : 1; },
     });
   }

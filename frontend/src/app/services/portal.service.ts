@@ -77,6 +77,17 @@ export class PortalService {
   getCliente(): ClientePortal | null { return this.clienteSubject.value; }
   isLoggedIn(): boolean { return !!this.getToken(); }
 
+  isTokenExpired(): boolean {
+    const token = this.getToken();
+    if (!token) return true;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp * 1000 < Date.now();
+    } catch {
+      return true;
+    }
+  }
+
   // Presupuestos del cliente: aprobar/rechazar una orden enviada por recepción.
   // Los endpoints existen en el backend; la pantalla del portal está pendiente (auditoría #2).
   getOrdenes(): Observable<{ data: any[] }> {

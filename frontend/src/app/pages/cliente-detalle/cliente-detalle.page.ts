@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { ClientesService } from '../../services/clientes.service';
 import { Cliente } from '../../models/cliente.model';
 import { Moto } from '../../models/moto.model';
@@ -12,7 +14,8 @@ import { abrirWhatsApp } from '../../shared/whatsapp.util';
   templateUrl: './cliente-detalle.page.html',
   styleUrls: ['./cliente-detalle.page.scss'],
 })
-export class ClienteDetallePage implements OnInit {
+export class ClienteDetallePage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   cliente: Cliente | null = null;
   motos: Moto[] = [];
   ordenes: Orden[] = [];
@@ -32,9 +35,9 @@ export class ClienteDetallePage implements OnInit {
   }
 
   recargar(id: number) {
-    this.clienteSvc.getById(id).subscribe(res => { this.cliente = res.data; this.cargando = false; });
-    this.clienteSvc.getMotos(id).subscribe(res => this.motos = res.data);
-    this.clienteSvc.getOrdenes(id).subscribe(res => this.ordenes = res.data);
+    this.clienteSvc.getById(id).pipe(takeUntil(this.destroy$)).subscribe(res => { this.cliente = res.data; this.cargando = false; });
+    this.clienteSvc.getMotos(id).pipe(takeUntil(this.destroy$)).subscribe(res => this.motos = res.data);
+    this.clienteSvc.getOrdenes(id).pipe(takeUntil(this.destroy$)).subscribe(res => this.ordenes = res.data);
   }
 
   editarCliente() { this.router.navigate(['/cliente-form', this.cliente!.id]); }
@@ -51,7 +54,7 @@ export class ClienteDetallePage implements OnInit {
         {
           text: 'Canjear',
           handler: () => {
-            this.clienteSvc.canjearCortesia(this.cliente!.id!).subscribe({
+            this.clienteSvc.canjearCortesia(this.cliente!.id!).pipe(takeUntil(this.destroy$)).subscribe({
               next: () => { this.cliente!.cortesia_disponible = 0; this.mostrarToast('Cortesía canjeada'); },
               error: err => this.mostrarToast(err.error?.error || 'Error', 'danger'),
             });
@@ -81,7 +84,7 @@ export class ClienteDetallePage implements OnInit {
               this.mostrarToast('La contraseña debe tener al menos 6 caracteres', 'danger');
               return false;
             }
-            this.clienteSvc.setPortal(this.cliente!.id!, { password: data.password }).subscribe({
+            this.clienteSvc.setPortal(this.cliente!.id!, { password: data.password }).pipe(takeUntil(this.destroy$)).subscribe({
               next: () => {
                 this.cliente!.tiene_portal = 1;
                 this.compartirCredenciales(data.password);
@@ -105,7 +108,7 @@ export class ClienteDetallePage implements OnInit {
         {
           text: 'Desactivar', role: 'destructive',
           handler: () => {
-            this.clienteSvc.setPortal(this.cliente!.id!, { activar: false }).subscribe({
+            this.clienteSvc.setPortal(this.cliente!.id!, { activar: false }).pipe(takeUntil(this.destroy$)).subscribe({
               next: () => { this.cliente!.tiene_portal = 0; this.mostrarToast('Acceso desactivado'); },
             });
           },
@@ -137,6 +140,8 @@ export class ClienteDetallePage implements OnInit {
     const t = await this.toast.create({ message, duration: 2200, color });
     await t.present();
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   private async mostrarAlert(header: string, message: string) {
     const a = await this.alert.create({ header, message, buttons: ['OK'] });

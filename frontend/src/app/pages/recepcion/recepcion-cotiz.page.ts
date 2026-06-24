@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ToastController, AlertController } from '@ionic/angular';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { RecepcionService } from '../../services/recepcion.service';
 import { abrirWhatsApp } from '../../shared/whatsapp.util';
 
@@ -12,7 +13,8 @@ interface PiezaNueva { nombre: string; monto: number | null; }
   templateUrl: './recepcion-cotiz.page.html',
   styleUrls: ['./recepcion-cotiz.page.scss'],
 })
-export class RecepcionCotizPage implements OnInit {
+export class RecepcionCotizPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   vista: 'pendiente' | 'enviada' = 'pendiente';
   cotizaciones: any[] = [];
   repuestos: Record<number, any[]> = {};
@@ -43,13 +45,13 @@ export class RecepcionCotizPage implements OnInit {
   cargar(ev?: any) {
     this.cargando = true;
     this.editandoCostos = null;
-    this.rec.getCotizaciones(this.vista).subscribe({
+    this.rec.getCotizaciones(this.vista).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         this.cotizaciones = r.data;
         this.repuestos = {};
         if (r.data.length) {
           const calls = r.data.map(o => this.rec.getRepuestos(o.id));
-          forkJoin(calls).subscribe({
+          forkJoin(calls).pipe(takeUntil(this.destroy$)).subscribe({
             next: results => { r.data.forEach((o, i) => this.repuestos[o.id] = results[i].data); this.cargando = false; if (ev) ev.target.complete(); },
             error: () => { this.cargando = false; if (ev) ev.target.complete(); },
           });
@@ -70,7 +72,7 @@ export class RecepcionCotizPage implements OnInit {
     this.mostrarForm = true;
     this.form = { cliente_id: null, orden_id: null, tecnico_id: null, piezas: [{ nombre: '', monto: null }], mano_obra: null };
     this.ordenesCliente = [];
-    if (!this.clientes.length) this.rec.getClientes().subscribe({ next: r => this.clientes = r.data });
+    if (!this.clientes.length) this.rec.getClientes().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.clientes = r.data });
     this.cargarTecnicos();
   }
   cerrarForm() { this.mostrarForm = false; }
@@ -80,7 +82,7 @@ export class RecepcionCotizPage implements OnInit {
     this.ordenesCliente = [];
     this.cargarTecnicos();
     if (this.form.cliente_id) {
-      this.rec.getOrdenesCliente(this.form.cliente_id).subscribe({ next: r => this.ordenesCliente = r.data });
+      this.rec.getOrdenesCliente(this.form.cliente_id).pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.ordenesCliente = r.data });
     }
   }
 
@@ -91,7 +93,7 @@ export class RecepcionCotizPage implements OnInit {
   }
 
   private cargarTecnicos(sucursalId?: number | null) {
-    this.rec.getTecnicos(sucursalId).subscribe({
+    this.rec.getTecnicos(sucursalId).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         this.tecnicos = r.data;
         if (this.form.tecnico_id && !this.tecnicos.some((t: any) => t.id === this.form.tecnico_id)) this.form.tecnico_id = null;
@@ -123,7 +125,7 @@ export class RecepcionCotizPage implements OnInit {
       piezas,
       costo_mano_obra: Number(this.form.mano_obra) || 0,
       descuento: 0,
-    }).subscribe({
+    }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.guardando = false;
         this.mostrarForm = false;
@@ -156,11 +158,11 @@ export class RecepcionCotizPage implements OnInit {
 
   private guardarPieza(o: any, pieza: any, d: any) {
     this.rec.updateRepuesto(o.id, pieza.id, { nombre: d.nombre, cantidad: pieza.cantidad || 1, costo_unitario: Number(d.costo_unitario) || 0 })
-      .subscribe({ next: () => { this.aviso('Pieza actualizada', 'success'); this.cargar(); }, error: () => this.aviso('No se pudo actualizar', 'danger') });
+      .pipe(takeUntil(this.destroy$)).subscribe({ next: () => { this.aviso('Pieza actualizada', 'success'); this.cargar(); }, error: () => this.aviso('No se pudo actualizar', 'danger') });
   }
 
   private eliminarPieza(o: any, pieza: any) {
-    this.rec.deleteRepuesto(o.id, pieza.id).subscribe({ next: () => { this.aviso('Pieza eliminada', 'success'); this.cargar(); }, error: () => this.aviso('No se pudo eliminar', 'danger') });
+    this.rec.deleteRepuesto(o.id, pieza.id).pipe(takeUntil(this.destroy$)).subscribe({ next: () => { this.aviso('Pieza eliminada', 'success'); this.cargar(); }, error: () => this.aviso('No se pudo eliminar', 'danger') });
   }
 
   // ───── Edición de costos (mano de obra + descuento) ─────
@@ -171,12 +173,12 @@ export class RecepcionCotizPage implements OnInit {
   }
   guardarCostos(o: any) {
     this.rec.updateCostos(o.id, { costo_mano_obra: Number(this.costosEdit.costo_mano_obra) || 0, descuento: Number(this.costosEdit.descuento) || 0 })
-      .subscribe({ next: () => { this.editandoCostos = null; this.aviso('Costos actualizados', 'success'); this.cargar(); }, error: () => this.aviso('No se pudo actualizar', 'danger') });
+      .pipe(takeUntil(this.destroy$)).subscribe({ next: () => { this.editandoCostos = null; this.aviso('Costos actualizados', 'success'); this.cargar(); }, error: () => this.aviso('No se pudo actualizar', 'danger') });
   }
 
   // ───── Acciones de la cotización ─────
   enviar(o: any) {
-    this.rec.enviarCotizacion(o.id).subscribe({
+    this.rec.enviarCotizacion(o.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         const total = this.totalCotiz(o);
         const link = `${window.location.origin}/portal`;
@@ -190,11 +192,13 @@ export class RecepcionCotizPage implements OnInit {
   }
 
   aprobar(o: any) {
-    this.rec.aprobarCotizacion(o.id).subscribe({
+    this.rec.aprobarCotizacion(o.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => { this.aviso('Marcada como aprobada', 'success'); this.cargar(); },
       error: () => this.aviso('No se pudo aprobar', 'danger'),
     });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   private async aviso(message: string, color: string) {
     const t = await this.toast.create({ message, duration: 1800, color });

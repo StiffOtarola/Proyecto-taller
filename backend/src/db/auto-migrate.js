@@ -312,6 +312,8 @@ async function ensureSchema() {
     `);
     // Ventana mínima (horas) para que el cliente cancele/reprograme su cita.
     await addColumnIfMissing('configuracion', 'cancelacion_horas_min', 'INT DEFAULT 2');
+    await addColumnIfMissing('configuracion', 'visitas_para_cortesia', 'INT DEFAULT 7');
+    await addColumnIfMissing('configuracion', 'zona_horaria_offset', 'INT DEFAULT -6');
     // Siembra la fila única con valores por defecto (idempotente: INSERT IGNORE).
     // Horarios: 0=Dom … 6=Sáb. L-V 08-17, Sáb 08-13, Dom cerrado.
     await tryStep('seed configuracion', () =>
@@ -366,6 +368,13 @@ async function ensureSchema() {
     );
     // Índice por (sucursal, fecha, hora): hace preciso el bloqueo FOR UPDATE del cupo por local.
     await crearIndiceSiFalta('citas', 'idx_citas_sucursal_fecha_hora', '(sucursal_id, fecha, hora)');
+
+    // FK constraints en columnas agregadas por addColumnIfMissing (integridad referencial).
+    await tryStep('fk citas.tecnico_id', () => addFkIfMissing('citas', 'fk_citas_tecnico', 'tecnico_id', 'usuarios', 'id'));
+    await tryStep('fk citas.orden_id', () => addFkIfMissing('citas', 'fk_citas_orden', 'orden_id', 'ordenes_trabajo', 'id'));
+    await tryStep('fk citas.sucursal_id', () => addFkIfMissing('citas', 'fk_citas_sucursal', 'sucursal_id', 'sucursales', 'id'));
+    await tryStep('fk ordenes.sucursal_id', () => addFkIfMissing('ordenes_trabajo', 'fk_ordenes_sucursal', 'sucursal_id', 'sucursales', 'id'));
+    await tryStep('fk usuarios.sucursal_id', () => addFkIfMissing('usuarios', 'fk_usuarios_sucursal', 'sucursal_id', 'sucursales', 'id'));
   } catch (err) {
     console.error('⚠️  Auto-migración falló:', err.code || err.message);
   }
@@ -403,6 +412,18 @@ async function addColumnIfMissing(tabla, columna, definicion) {
   if (!existe.n) {
     await pool.query(`ALTER TABLE ${tabla} ADD COLUMN ${columna} ${definicion}`);
     console.log(`🔧 Migración: ${tabla}.${columna} agregada`);
+  }
+}
+
+async function addFkIfMissing(tabla, fkName, columna, refTabla, refColumna) {
+  const [[existe]] = await pool.query(
+    `SELECT COUNT(*) AS n FROM information_schema.TABLE_CONSTRAINTS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = ? AND CONSTRAINT_TYPE = 'FOREIGN KEY'`,
+    [tabla, fkName]
+  );
+  if (!existe.n) {
+    await pool.query(`ALTER TABLE ${tabla} ADD CONSTRAINT ${fkName} FOREIGN KEY (${columna}) REFERENCES ${refTabla}(${refColumna})`);
+    console.log(`🔧 Migración: FK ${fkName} en ${tabla} creada`);
   }
 }
 

@@ -1,6 +1,8 @@
 import { Component, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoadingController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { PortalService } from '../../services/portal.service';
 import { emailValido } from '../../utils/validar';
 
@@ -11,6 +13,7 @@ import { emailValido } from '../../utils/validar';
   styleUrls: ['./portal-login.page.scss'],
 })
 export class PortalRecuperarPage implements OnDestroy {
+  private destroy$ = new Subject<void>();
   paso: 1 | 2 = 1;
   email = '';
   codigo = '';
@@ -31,6 +34,8 @@ export class PortalRecuperarPage implements OnDestroy {
   ) {}
 
   ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
     if (this.timer) clearInterval(this.timer);
   }
 
@@ -47,7 +52,7 @@ export class PortalRecuperarPage implements OnDestroy {
     if (!this.emailOk) return this.mostrar('Ingresá un correo válido', 'warning');
     const l = await this.loading.create({ message: 'Enviando código...', cssClass: 'portal-loading', spinner: 'crescent' });
     await l.present();
-    this.portal.solicitarCodigo(this.email.trim()).subscribe({
+    this.portal.solicitarCodigo(this.email.trim()).pipe(takeUntil(this.destroy$)).subscribe({
       next: async (res) => {
         await l.dismiss();
         this.paso = 2;
@@ -75,7 +80,7 @@ export class PortalRecuperarPage implements OnDestroy {
     }
     const l = await this.loading.create({ message: 'Verificando...', cssClass: 'portal-loading', spinner: 'crescent' });
     await l.present();
-    this.portal.confirmarRecuperacion({ email: this.email.trim(), codigo: this.codigo.trim(), password: this.password }).subscribe({
+    this.portal.confirmarRecuperacion({ email: this.email.trim(), codigo: this.codigo.trim(), password: this.password }).pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         await l.dismiss();
         this.mostrar('Contraseña actualizada');

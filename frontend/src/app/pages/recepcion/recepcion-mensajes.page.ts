@@ -1,5 +1,7 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { AlertController, IonContent, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { RecepcionService } from '../../services/recepcion.service';
 import { abrirWhatsApp } from '../../shared/whatsapp.util';
 
@@ -9,7 +11,8 @@ import { abrirWhatsApp } from '../../shared/whatsapp.util';
   templateUrl: './recepcion-mensajes.page.html',
   styleUrls: ['./recepcion-mensajes.page.scss'],
 })
-export class RecepcionMensajesPage implements OnInit {
+export class RecepcionMensajesPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   @ViewChild(IonContent) content?: IonContent;
 
   vista: 'mecanicos' | 'clientes' | 'taller' = 'mecanicos';
@@ -38,11 +41,11 @@ export class RecepcionMensajesPage implements OnInit {
     this.cargando = true;
     let pendientes = 3;
     const listo = () => { if (--pendientes <= 0) this.cargando = false; if (ev) ev.target.complete(); };
-    this.rec.getAvances().subscribe({ next: r => { this.avances = r.data; listo(); }, error: listo });
-    this.rec.getNotificaciones().subscribe({ next: r => { this.notificaciones = r.data; listo(); }, error: listo });
-    this.rec.getMensajesInternos().subscribe({ next: r => { this.internos = r.data; listo(); }, error: listo });
-    if (!this.clientes.length) this.rec.getClientes().subscribe({ next: r => this.clientes = r.data });
-    if (!this.tecnicos.length) this.rec.getTecnicos().subscribe({ next: r => this.tecnicos = r.data, error: () => {} });
+    this.rec.getAvances().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.avances = r.data; listo(); }, error: listo });
+    this.rec.getNotificaciones().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.notificaciones = r.data; listo(); }, error: listo });
+    this.rec.getMensajesInternos().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.internos = r.data; listo(); }, error: listo });
+    if (!this.clientes.length) this.rec.getClientes().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.clientes = r.data });
+    if (!this.tecnicos.length) this.rec.getTecnicos().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.tecnicos = r.data, error: () => {} });
   }
 
   // ——— Chat del taller (mensajería interna con mecánicos) ———
@@ -97,7 +100,7 @@ export class RecepcionMensajesPage implements OnInit {
     const txt = this.borrador.trim();
     if (!txt || !this.chatAbierto || this.enviandoChat) return;
     this.enviandoChat = true;
-    this.rec.responderInterno(this.chatAbierto.id, txt).subscribe({
+    this.rec.responderInterno(this.chatAbierto.id, txt).pipe(takeUntil(this.destroy$)).subscribe({
       next: (r: any) => {
         if (r?.data) this.internos.unshift(r.data);   // internos es DESC → al frente
         this.borrador = '';
@@ -141,7 +144,7 @@ export class RecepcionMensajesPage implements OnInit {
     if (!this.formValido) { this.aviso('Completá cliente, título y mensaje', 'warning'); return; }
     this.enviando = true;
     this.rec.notificar({ cliente_id: this.form.cliente_id!, titulo: this.form.titulo.trim(), mensaje: this.form.mensaje.trim() })
-      .subscribe({
+      .pipe(takeUntil(this.destroy$)).subscribe({
         next: () => {
           this.enviando = false;
           this.form = { cliente_id: null, titulo: '', mensaje: '' };
@@ -152,6 +155,8 @@ export class RecepcionMensajesPage implements OnInit {
         error: () => { this.enviando = false; this.aviso('No se pudo enviar', 'danger'); },
       });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   private async aviso(message: string, color: string) {
     const t = await this.toast.create({ message, duration: 1700, color });

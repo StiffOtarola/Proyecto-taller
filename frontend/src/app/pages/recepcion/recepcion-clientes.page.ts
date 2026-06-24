@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { RecepcionService } from '../../services/recepcion.service';
 import { abrirWhatsApp } from '../../shared/whatsapp.util';
 
@@ -12,6 +12,7 @@ import { abrirWhatsApp } from '../../shared/whatsapp.util';
   styleUrls: ['./recepcion-clientes.page.scss'],
 })
 export class RecepcionClientesPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   clientes: any[] = [];
   cargando = true;
   private busqueda$ = new Subject<string>();
@@ -19,15 +20,15 @@ export class RecepcionClientesPage implements OnInit, OnDestroy {
   constructor(private rec: RecepcionService, private router: Router) {}
 
   ngOnInit() {
-    this.busqueda$.pipe(debounceTime(400), distinctUntilChanged()).subscribe(q => this.cargar(q));
+    this.busqueda$.pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$)).subscribe(q => this.cargar(q));
     this.cargar();
   }
   ionViewWillEnter() { this.cargar(); }
-  ngOnDestroy() { this.busqueda$.complete(); }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); this.busqueda$.complete(); }
 
   cargar(q?: string, ev?: any) {
     this.cargando = true;
-    this.rec.getClientes(q).subscribe({
+    this.rec.getClientes(q).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.clientes = r.data; this.cargando = false; if (ev) ev.target.complete(); },
       error: () => { this.cargando = false; if (ev) ev.target.complete(); },
     });

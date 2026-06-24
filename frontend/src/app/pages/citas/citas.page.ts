@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { CitasService } from '../../services/citas.service';
 import { DashboardService } from '../../services/dashboard.service';
 import { AuthService } from '../../services/auth.service';
@@ -11,7 +13,8 @@ import { Cita } from '../../models/cita.model';
   templateUrl: './citas.page.html',
   styleUrls: ['./citas.page.scss'],
 })
-export class CitasPage implements OnInit {
+export class CitasPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   citas: Cita[] = [];
   tecnicos: any[] = [];
   cargando = true;
@@ -45,19 +48,20 @@ export class CitasPage implements OnInit {
   ) {}
 
   ngOnInit() { this.cargar(); }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
   ionViewWillEnter() { this.cargar(); }
 
   cargar() {
     this.cargando = true;
     const params: any = {};
     if (this.filtroEstado) params.estado = this.filtroEstado;
-    this.citaSvc.getAll(params).subscribe({
+    this.citaSvc.getAll(params).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => { this.citas = res.data; this.cargando = false; },
       error: () => { this.cargando = false; },
     });
     // Lista de técnicos para asignar (solo admin puede).
     if (this.auth.tieneRol('admin') && !this.tecnicos.length) {
-      this.dashSvc.getTecnicos().subscribe({ next: res => this.tecnicos = res.data });
+      this.dashSvc.getTecnicos().pipe(takeUntil(this.destroy$)).subscribe({ next: res => this.tecnicos = res.data });
     }
   }
 
@@ -65,7 +69,7 @@ export class CitasPage implements OnInit {
   editarCita(id: number) { this.router.navigate(['/cita-form', id]); }
 
   async cambiarEstado(cita: Cita, estado: string) {
-    this.citaSvc.cambiarEstado(cita.id!, estado).subscribe({
+    this.citaSvc.cambiarEstado(cita.id!, estado).pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         cita.estado = estado as any;
         const t = await this.toast.create({ message: 'Estado actualizado', duration: 1500, color: 'success' });
@@ -95,7 +99,7 @@ export class CitasPage implements OnInit {
 
   private guardarAsignacion(cita: Cita, tecnicoId: number) {
     if (!tecnicoId) return;
-    this.citaSvc.asignar(cita.id!, tecnicoId).subscribe({
+    this.citaSvc.asignar(cita.id!, tecnicoId).pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         cita.tecnico_id = tecnicoId;
         cita.tecnico_nombre = this.tecnicos.find(t => t.id === tecnicoId)?.nombre;

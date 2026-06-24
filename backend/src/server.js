@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const { testConnection } = require('./db/pool');
 const { ensureSchema } = require('./db/auto-migrate');
-const { apiLimiter, authLimiter } = require('./middleware/rate-limit');
+const { apiLimiter, authLimiter, adminLimiter } = require('./middleware/rate-limit');
 
 const app = express();
 const frontendDist = path.join(__dirname, '../../frontend/www');
@@ -23,6 +23,15 @@ if (!process.env.JWT_SECRET) {
   }
   process.env.JWT_SECRET = 'dev-inseguro-no-usar-en-produccion';
   console.warn('⚠️  JWT_SECRET no definido: usando secreto de desarrollo (NO usar en producción).');
+}
+
+if (esProduccion) {
+  if (!process.env.CORS_ORIGIN && !hasFrontend) {
+    console.warn('⚠️  CORS_ORIGIN no definido en producción. Usando default restrictivo.');
+  }
+  if (!process.env.DB_HOST || !process.env.DB_NAME) {
+    console.warn('⚠️  Variables de DB incompletas (DB_HOST, DB_NAME). Verificá la configuración.');
+  }
 }
 
 // En producción la app va detrás del proxy de Railway: confiar en el primer hop
@@ -58,6 +67,7 @@ app.get('/api/health', (req, res) => res.json({ ok: true, ts: new Date().toISOSt
 // Rate limiting: estricto en autenticación (fuerza bruta + bcrypt), general en el resto.
 app.use(['/api/auth/login', '/api/portal/login', '/api/portal/registro', '/api/portal/recuperar'], authLimiter);
 app.use('/api', apiLimiter);
+app.use('/api/admin', adminLimiter);
 
 app.use('/api/auth',      require('./routes/auth.routes'));
 app.use('/api/clientes',  require('./routes/clientes.routes'));

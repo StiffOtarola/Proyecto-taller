@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastController, AlertController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { PortalService } from '../../services/portal.service';
 import { FLUJO_CITA, ESTADO_CITA_LABEL } from '../../utils/servicios';
 
@@ -10,7 +12,8 @@ import { FLUJO_CITA, ESTADO_CITA_LABEL } from '../../utils/servicios';
   templateUrl: './portal-cita-detalle.page.html',
   styleUrls: ['./portal-cita-detalle.page.scss'],
 })
-export class PortalCitaDetallePage implements OnInit {
+export class PortalCitaDetallePage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   cita: any = null;
   orden: any = null;        // detalle de la orden vinculada (si hay)
   cargando = true;
@@ -65,12 +68,12 @@ export class PortalCitaDetallePage implements OnInit {
 
   cargar(id: number) {
     this.cargando = true;
-    this.portal.getCita(id).subscribe({
+    this.portal.getCita(id).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         this.cita = r.data;
         this.cargando = false;
         if (this.cita?.orden_id) {
-          this.portal.getOrden(this.cita.orden_id).subscribe({ next: o => this.orden = o.data, error: () => {} });
+          this.portal.getOrden(this.cita.orden_id).pipe(takeUntil(this.destroy$)).subscribe({ next: o => this.orden = o.data, error: () => {} });
         }
       },
       error: () => { this.cargando = false; },
@@ -111,7 +114,7 @@ export class PortalCitaDetallePage implements OnInit {
     if (this.procesando || !ordenId) return;
     this.procesando = true;
     const req = decision === 'aprobar' ? this.portal.aprobar(ordenId) : this.portal.rechazar(ordenId, motivo || '');
-    req.subscribe({
+    req.pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         this.procesando = false;
         const t = await this.toast.create({
@@ -234,7 +237,7 @@ export class PortalCitaDetallePage implements OnInit {
   }
 
   private confirmarCancelar() {
-    this.portal.cancelarCita(this.cita.id).subscribe({
+    this.portal.cancelarCita(this.cita.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         this.cita.estado = 'cancelado';
         const t = await this.toast.create({ message: 'Cita cancelada', duration: 2000, color: 'medium' });
@@ -262,7 +265,7 @@ export class PortalCitaDetallePage implements OnInit {
 
   private enviarCalif(n: number) {
     if (!n) return;
-    this.portal.calificarCita(this.cita.id, n).subscribe({
+    this.portal.calificarCita(this.cita.id, n).pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         this.cita.calificacion = n;
         const t = await this.toast.create({ message: '¡Gracias por tu opinión!', duration: 2000, color: 'success' });
@@ -274,4 +277,6 @@ export class PortalCitaDetallePage implements OnInit {
       },
     });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 }

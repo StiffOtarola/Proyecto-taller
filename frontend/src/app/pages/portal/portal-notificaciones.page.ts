@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { PortalService } from '../../services/portal.service';
 
 // Apariencia (icono + color) según el evento que generó la notificación.
@@ -23,7 +25,8 @@ const META_TIPO: Record<string, { icon: string; tono: string }> = {
   templateUrl: './portal-notificaciones.page.html',
   styleUrls: ['./portal-notificaciones.page.scss'],
 })
-export class PortalNotificacionesPage {
+export class PortalNotificacionesPage implements OnDestroy {
+  private destroy$ = new Subject<void>();
   notificaciones: any[] = [];
   cargando = true;
 
@@ -37,7 +40,7 @@ export class PortalNotificacionesPage {
 
   cargar(ev?: any) {
     this.cargando = true;
-    this.portal.getNotificaciones().subscribe({
+    this.portal.getNotificaciones().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         this.notificaciones = r.data;
         this.cargando = false;
@@ -75,7 +78,7 @@ export class PortalNotificacionesPage {
     if (!n.leida) {
       n.leida = 1;
       this.sincronizarContador();
-      this.portal.leerNotificacion(n.id).subscribe();
+      this.portal.leerNotificacion(n.id).pipe(takeUntil(this.destroy$)).subscribe();
     }
     if (n?.cita_id) this.router.navigate(['/portal/cita', n.cita_id]);
     else this.router.navigate(['/portal/mis-citas']);
@@ -84,7 +87,7 @@ export class PortalNotificacionesPage {
   // Marca todas como leídas (sin salir del feed).
   leerTodas() {
     this.notificaciones.forEach(n => (n.leida = 1));
-    this.portal.leerNotificaciones().subscribe();
+    this.portal.leerNotificaciones().pipe(takeUntil(this.destroy$)).subscribe();
   }
 
   // Deslizar para eliminar una notificación.
@@ -93,13 +96,13 @@ export class PortalNotificacionesPage {
     const idx = this.notificaciones.indexOf(n);
     if (idx > -1) this.notificaciones.splice(idx, 1);
     this.sincronizarContador();
-    this.portal.eliminarNotificacion(n.id).subscribe({ error: () => this.cargar() });
+    this.portal.eliminarNotificacion(n.id).pipe(takeUntil(this.destroy$)).subscribe({ error: () => this.cargar() });
   }
 
   // Borra todas las leídas (limpia el feed; deja las pendientes).
   async limpiarLeidas() {
     this.notificaciones = this.notificaciones.filter(n => !n.leida);
-    this.portal.limpiarNotificacionesLeidas().subscribe({
+    this.portal.limpiarNotificacionesLeidas().pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         const t = await this.toast.create({ message: 'Notificaciones leídas eliminadas', duration: 1500, color: 'medium' });
         await t.present();
@@ -107,4 +110,6 @@ export class PortalNotificacionesPage {
       error: () => this.cargar(),
     });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 }

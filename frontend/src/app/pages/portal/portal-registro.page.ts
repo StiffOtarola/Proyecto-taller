@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoadingController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { PortalService } from '../../services/portal.service';
 import { emailValido } from '../../utils/validar';
 
@@ -10,7 +12,8 @@ import { emailValido } from '../../utils/validar';
   templateUrl: './portal-registro.page.html',
   styleUrls: ['./portal-login.page.scss'],
 })
-export class PortalRegistroPage {
+export class PortalRegistroPage implements OnDestroy {
+  private destroy$ = new Subject<void>();
   nombre = '';
   apellido = '';
   telefono = '';
@@ -45,7 +48,7 @@ export class PortalRegistroPage {
     this.portal.registro({
       nombre: this.nombre.trim(), apellido: this.apellido.trim(), telefono: this.telefono.trim(),
       email: this.email.trim(), cedula: this.cedula.trim() || undefined, password: this.password,
-    }).subscribe({
+    }).pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         await l.dismiss();
         this.mostrar('¡Cuenta creada!');
@@ -57,6 +60,8 @@ export class PortalRegistroPage {
       },
     });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   irLogin() {
     this.router.navigate(['/portal/login']);

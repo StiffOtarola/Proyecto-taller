@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AlertController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { GarantiasService } from '../../services/garantias.service';
 import { AuthService } from '../../services/auth.service';
 import { Garantia, EstadoGarantia, ESTADO_GARANTIA_CONFIG } from '../../models/garantia.model';
@@ -11,7 +13,8 @@ import { comprimirImagen } from '../../shared/image.util';
   templateUrl: './garantias.page.html',
   styleUrls: ['./garantias.page.scss'],
 })
-export class GarantiasPage implements OnInit {
+export class GarantiasPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   garantias: Garantia[] = [];
   cargando = true;
   filtroEstado = '';
@@ -42,12 +45,13 @@ export class GarantiasPage implements OnInit {
   ) {}
 
   ngOnInit() { this.cargar(); }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
   ionViewWillEnter() { this.cargar(); }
 
   cargar() {
     this.cargando = true;
     const params = this.filtroEstado ? { estado: this.filtroEstado } : undefined;
-    this.garantiaSvc.getAll(params).subscribe({
+    this.garantiaSvc.getAll(params).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => { this.garantias = res.data; this.cargando = false; },
       error: () => { this.cargando = false; },
     });
@@ -59,7 +63,7 @@ export class GarantiasPage implements OnInit {
   estadoColor(e: EstadoGarantia) { return ESTADO_GARANTIA_CONFIG[e]?.color ?? 'medium'; }
 
   abrir(g: Garantia) {
-    this.garantiaSvc.getById(g.id!).subscribe(res => {
+    this.garantiaSvc.getById(g.id!).pipe(takeUntil(this.destroy$)).subscribe(res => {
       this.seleccionada = res.data;
       this.edicion = {
         estado: res.data.estado || 'abierto',
@@ -78,7 +82,7 @@ export class GarantiasPage implements OnInit {
   }
 
   guardarTramite() {
-    this.garantiaSvc.cambiarEstado(this.seleccionada!.id!, this.edicion).subscribe({
+    this.garantiaSvc.cambiarEstado(this.seleccionada!.id!, this.edicion).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         // refrescar en la lista y en el modal
         const i = this.garantias.findIndex(x => x.id === res.data.id);
@@ -103,7 +107,7 @@ export class GarantiasPage implements OnInit {
     this.subiendoFoto = true;
     try {
       const dataUrl = await comprimirImagen(file);
-      this.garantiaSvc.addFoto(this.seleccionada!.id!, { url: dataUrl }).subscribe({
+      this.garantiaSvc.addFoto(this.seleccionada!.id!, { url: dataUrl }).pipe(takeUntil(this.destroy$)).subscribe({
         next: res => {
           this.seleccionada!.fotos = [...(this.seleccionada!.fotos || []), res.data];
           this.subiendoFoto = false;
@@ -135,7 +139,7 @@ export class GarantiasPage implements OnInit {
         {
           text: 'Eliminar', role: 'destructive',
           handler: () => {
-            this.garantiaSvc.deleteFoto(this.seleccionada!.id!, fid).subscribe(() => {
+            this.garantiaSvc.deleteFoto(this.seleccionada!.id!, fid).pipe(takeUntil(this.destroy$)).subscribe(() => {
               this.seleccionada!.fotos = (this.seleccionada!.fotos || []).filter(f => f.id !== fid);
             });
           },

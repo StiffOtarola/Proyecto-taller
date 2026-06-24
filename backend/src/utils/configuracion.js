@@ -30,6 +30,8 @@ const DEFAULTS = {
   notif_recordatorio: 1,
   notif_cotizacion: 1,
   notif_email_entrega: 0,
+  visitas_para_cortesia: 7,
+  zona_horaria_offset: -6,
 };
 
 // Caché en memoria: /disponibilidad del portal pega seguido; evita leer la BD

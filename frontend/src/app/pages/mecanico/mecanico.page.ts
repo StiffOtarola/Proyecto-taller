@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { MecanicoService, ResumenMecanico } from '../../services/mecanico.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -10,7 +12,8 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './mecanico.page.html',
   styleUrls: ['./mecanico.page.scss'],
 })
-export class MecanicoPage implements OnInit {
+export class MecanicoPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   resumen?: ResumenMecanico;
   citas: any[] = [];
   cargando = true;
@@ -51,14 +54,15 @@ export class MecanicoPage implements OnInit {
   ) {}
 
   ngOnInit() { this.cargar(); }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
   ionViewWillEnter() { this.cargar(); }
 
   get nombre(): string { return (this.auth.getUsuario()?.nombre || 'Mecánico').split(' ')[0]; }
 
   cargar(ev?: any) {
     this.cargando = true;
-    this.mecanico.getResumen().subscribe({ next: r => this.resumen = r.data });
-    this.mecanico.getCitas().subscribe({
+    this.mecanico.getResumen().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.resumen = r.data });
+    this.mecanico.getCitas().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.citas = r.data; this.cargando = false; if (ev) ev.target.complete(); },
       error: () => { this.cargando = false; if (ev) ev.target.complete(); },
     });
@@ -119,11 +123,11 @@ export class MecanicoPage implements OnInit {
   }
 
   private aplicarEstado(cita: any, estado: string, monto?: any) {
-    this.mecanico.cambiarEstado(cita.id, estado, monto !== undefined ? Number(monto) || 0 : undefined).subscribe({
+    this.mecanico.cambiarEstado(cita.id, estado, monto !== undefined ? Number(monto) || 0 : undefined).pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         cita.estado = estado;
         if (monto !== undefined) cita.monto = Number(monto) || 0;
-        this.mecanico.getResumen().subscribe({ next: r => this.resumen = r.data });
+        this.mecanico.getResumen().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.resumen = r.data });
         const t = await this.toast.create({ message: 'Estado actualizado', duration: 1400, color: 'success' });
         await t.present();
       },

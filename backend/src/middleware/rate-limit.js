@@ -23,4 +23,12 @@ const authLimiter = rateLimit({
   message: { error: 'Demasiados intentos. Esperá unos minutos e intentá de nuevo.' },
 });
 
-module.exports = { apiLimiter, authLimiter };
+const adminLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas solicitudes al panel admin. Esperá un momento.' },
+});
+
+module.exports = { apiLimiter, authLimiter, adminLimiter };

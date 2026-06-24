@@ -2,10 +2,11 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController, ActionSheetController, AlertController } from '@ionic/angular';
 import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { RecepcionService, ResumenRecepcion } from '../../services/recepcion.service';
 import { AuthService } from '../../services/auth.service';
 import { abrirWhatsApp, mensajeCita } from '../../shared/whatsapp.util';
+import { ahoraTaller } from '../../utils/fecha-cita';
 
 @Component({
   standalone: false,
@@ -14,6 +15,7 @@ import { abrirWhatsApp, mensajeCita } from '../../shared/whatsapp.util';
   styleUrls: ['./recepcion.page.scss'],
 })
 export class RecepcionPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   resumen?: ResumenRecepcion;
   citas: any[] = [];
   alertas: any[] = [];
@@ -65,16 +67,16 @@ export class RecepcionPage implements OnInit, OnDestroy {
   ngOnInit() {
     this.cargar();
     // Buscador con debounce: ≥2 caracteres consulta clientes; vacío limpia resultados.
-    this.busqueda$.pipe(debounceTime(300), distinctUntilChanged()).subscribe(q => {
+    this.busqueda$.pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$)).subscribe(q => {
       if (q.length < 2) { this.resultados = []; this.buscando = false; return; }
-      this.rec.getClientes(q).subscribe({
+      this.rec.getClientes(q).pipe(takeUntil(this.destroy$)).subscribe({
         next: r => { this.resultados = r.data.slice(0, 6); this.buscando = false; },
         error: () => { this.resultados = []; this.buscando = false; },
       });
     });
   }
   ionViewWillEnter() { this.cargar(); }
-  ngOnDestroy() { this.busqueda$.complete(); }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); this.busqueda$.complete(); }
 
   // —— Buscador rápido ——
   onBuscar(v: string) {
@@ -87,9 +89,8 @@ export class RecepcionPage implements OnInit, OnDestroy {
   abrirResultado(c: any) { this.limpiarBusqueda(); this.router.navigate(['/cliente-detalle', c.id]); }
 
   // —— Priorización de citas de hoy ——
-  // Hora actual en zona Costa Rica (UTC-6) como "HH:mm" para comparar con la cita.
   private get ahoraCR(): string {
-    return new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().slice(11, 16);
+    return ahoraTaller().toISOString().slice(11, 16);
   }
   // Cita agendada cuya hora ya pasó y que aún no ingresó al taller (sin orden) y
   // sin registrar la llegada del cliente (si ya llegó, no es "atrasada", está esperando).
@@ -155,7 +156,7 @@ export class RecepcionPage implements OnInit, OnDestroy {
   marcarLlegada(c: any) {
     if (this.marcando) return;
     this.marcando = c.id;
-    this.rec.marcarLlegada(c.id).subscribe({
+    this.rec.marcarLlegada(c.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: async (r) => {
         this.marcando = null;
         c.hora_llegada = r.data.hora_llegada;
@@ -170,7 +171,7 @@ export class RecepcionPage implements OnInit, OnDestroy {
     });
   }
   deshacerLlegada(c: any) {
-    this.rec.deshacerLlegada(c.id).subscribe({
+    this.rec.deshacerLlegada(c.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => { c.hora_llegada = null; },
       error: async () => {
         const t = await this.toast.create({ message: 'No se pudo deshacer', duration: 1800, color: 'danger' });
@@ -219,10 +220,10 @@ export class RecepcionPage implements OnInit, OnDestroy {
     this.cargando = true;
     let pendientes = 4;
     const listo = () => { if (--pendientes <= 0) this.cargando = false; if (ev) ev.target.complete(); };
-    this.rec.getResumen().subscribe({ next: r => { this.resumen = r.data; listo(); }, error: listo });
-    this.rec.getCitasHoy().subscribe({ next: r => { this.citas = r.data; listo(); }, error: listo });
-    this.rec.getAlertas().subscribe({ next: r => { this.alertas = r.data; listo(); }, error: listo });
-    this.rec.getListasEntrega().subscribe({ next: r => { this.listas = r.data; listo(); }, error: listo });
+    this.rec.getResumen().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.resumen = r.data; listo(); }, error: listo });
+    this.rec.getCitasHoy().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.citas = r.data; listo(); }, error: listo });
+    this.rec.getAlertas().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.alertas = r.data; listo(); }, error: listo });
+    this.rec.getListasEntrega().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.listas = r.data; listo(); }, error: listo });
   }
 
   // —— Entrega + cobro desde el mostrador ——
@@ -252,7 +253,7 @@ export class RecepcionPage implements OnInit, OnDestroy {
   // Paso 2: confirmar el cierre y registrar la entrega.
   private async confirmarEntrega(o: any, metodo_pago: string) {
     this.entregando = o.id;
-    this.rec.entregarOrden(o.id, { metodo_pago, garantia_dias: 30 }).subscribe({
+    this.rec.entregarOrden(o.id, { metodo_pago, garantia_dias: 30 }).pipe(takeUntil(this.destroy$)).subscribe({
       next: async (r) => {
         this.entregando = null;
         this.listas = this.listas.filter(x => x.id !== o.id);
@@ -315,7 +316,7 @@ export class RecepcionPage implements OnInit, OnDestroy {
   crearOrden(c: any) {
     if (this.creandoOrden) return;
     this.creandoOrden = c.id;
-    this.rec.crearOrdenDesdeCita(c.id).subscribe({
+    this.rec.crearOrdenDesdeCita(c.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: async (r) => {
         this.creandoOrden = null;
         c.orden_id = r.data.orden_id;

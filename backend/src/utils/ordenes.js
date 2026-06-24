@@ -1,6 +1,7 @@
 // Utilidades compartidas de órdenes de trabajo y su puente con las citas.
 const { pool } = require('../db/pool');
 const { notificarCambioEstado } = require('./notificaciones');
+const { getConfig } = require('./configuracion');
 
 // Mapeo del flujo rico de la orden → flujo simple de la cita (lo que ve el cliente).
 const MAP_ORDEN_A_CITA = {
@@ -64,8 +65,7 @@ async function sincronizarCitaDesdeOrden(ordenId, ordenEstado) {
   }
 }
 
-// Fidelización: cada cuántas entregas el cliente gana una cortesía.
-const VISITAS_PARA_CORTESIA = 7;
+// Fidelización: cada cuántas entregas el cliente gana una cortesía (configurable desde admin).
 
 // Cierra (entrega) una orden en una transacción: la marca entregada, registra pago,
 // garantía y observaciones, cuenta la visita una sola vez y otorga cortesía cada N
@@ -99,7 +99,9 @@ async function cerrarOrden(ordenId, datos = {}, opciones = {}) {
       await conn.query('UPDATE ordenes_trabajo SET visita_contada = 1 WHERE id = ?', [ordenId]);
       await conn.query('UPDATE clientes SET visitas = visitas + 1 WHERE id = ?', [orden.cliente_id]);
       const [[cli]] = await conn.query('SELECT visitas FROM clientes WHERE id = ?', [orden.cliente_id]);
-      if (cli && cli.visitas > 0 && cli.visitas % VISITAS_PARA_CORTESIA === 0) {
+      const config = await getConfig();
+      const visitasParaCortesia = Number(config.visitas_para_cortesia) || 7;
+      if (cli && cli.visitas > 0 && cli.visitas % visitasParaCortesia === 0) {
         await conn.query('UPDATE clientes SET cortesia_disponible = 1 WHERE id = ?', [orden.cliente_id]);
         cortesiaGanada = true;
       }

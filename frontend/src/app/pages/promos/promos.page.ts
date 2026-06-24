@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { AlertController, ToastController } from '@ionic/angular';
 import { PromosService, Promo } from '../../services/promos.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   standalone: false,
@@ -8,7 +10,8 @@ import { PromosService, Promo } from '../../services/promos.service';
   templateUrl: './promos.page.html',
   styleUrls: ['./promos.page.scss'],
 })
-export class PromosPage implements OnInit {
+export class PromosPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   promos: Promo[] = [];
   cargando = true;
 
@@ -23,10 +26,11 @@ export class PromosPage implements OnInit {
 
   ngOnInit() { this.cargar(); }
   ionViewWillEnter() { this.cargar(); }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   cargar() {
     this.cargando = true;
-    this.promosSvc.getAll().subscribe({
+    this.promosSvc.getAll().pipe(takeUntil(this.destroy$)).subscribe({
       next: res => { this.promos = res.data; this.cargando = false; },
       error: () => { this.cargando = false; },
     });
@@ -52,7 +56,7 @@ export class PromosPage implements OnInit {
 
   crear() {
     if (!this.valido) return;
-    this.promosSvc.create(this.nueva).subscribe({
+    this.promosSvc.create(this.nueva).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         this.promos.unshift(res.data);
         this.mostrarForm = false;
@@ -63,7 +67,7 @@ export class PromosPage implements OnInit {
   }
 
   toggle(p: Promo) {
-    this.promosSvc.toggle(p.id!).subscribe({
+    this.promosSvc.toggle(p.id!).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => { p.activa = res.data.activa; },
       error: err => this.mostrarToast(err.error?.error || 'Error', 'danger'),
     });
@@ -78,7 +82,7 @@ export class PromosPage implements OnInit {
         {
           text: 'Eliminar', role: 'destructive',
           handler: () => {
-            this.promosSvc.delete(p.id!).subscribe({
+            this.promosSvc.delete(p.id!).pipe(takeUntil(this.destroy$)).subscribe({
               next: () => { this.promos = this.promos.filter(x => x.id !== p.id); this.mostrarToast('Eliminada'); },
             });
           },

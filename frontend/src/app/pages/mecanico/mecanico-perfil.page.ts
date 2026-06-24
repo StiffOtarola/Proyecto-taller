@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ToastController } from '@ionic/angular';
 import { MecanicoService } from '../../services/mecanico.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   standalone: false,
@@ -8,7 +10,8 @@ import { MecanicoService } from '../../services/mecanico.service';
   templateUrl: './mecanico-perfil.page.html',
   styleUrls: ['./mecanico.page.scss', './mecanico-perfil.page.scss'],
 })
-export class MecanicoPerfilPage implements OnInit {
+export class MecanicoPerfilPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   perfil: any = null;
   cargando = true;
   editando = false;
@@ -19,10 +22,11 @@ export class MecanicoPerfilPage implements OnInit {
 
   ngOnInit() { this.cargar(); }
   ionViewWillEnter() { this.cargar(); }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   cargar(ev?: any) {
     this.cargando = true;
-    this.mecanico.getPerfil().subscribe({
+    this.mecanico.getPerfil().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.perfil = r.data; this.cargando = false; if (ev) ev.target.complete(); },
       error: () => { this.cargando = false; if (ev) ev.target.complete(); },
     });
@@ -52,7 +56,7 @@ export class MecanicoPerfilPage implements OnInit {
 
   guardar() {
     this.guardando = true;
-    this.mecanico.actualizarPerfil(this.form).subscribe({
+    this.mecanico.actualizarPerfil(this.form).pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         this.guardando = false;
         this.editando = false;

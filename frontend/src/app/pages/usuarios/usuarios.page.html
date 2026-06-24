@@ -75,5 +75,11 @@
       </ion-button>
       <ion-toggle slot="end" [checked]="!!u.activo" (ionChange)="toggleActivo(u)"></ion-toggle>
     </ion-item>
+
+    <div class="empty-state" *ngIf="usuarios.length === 0">
+      <ion-icon name="people-outline"></ion-icon>
+      <p>No hay usuarios registrados</p>
+      <ion-button fill="outline" size="small" (click)="mostrarForm = true">Crear usuario</ion-button>
+    </div>
   </ion-list>
 </ion-content>

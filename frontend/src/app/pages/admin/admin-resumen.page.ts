@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AdminService } from '../../services/admin.service';
 import { DashboardService } from '../../services/dashboard.service';
 import { OrdenesService } from '../../services/ordenes.service';
@@ -14,7 +16,8 @@ type Sem = 'rojo' | 'amarillo' | 'verde' | 'gris';
   selector: 'app-admin-resumen',
   templateUrl: './admin-resumen.page.html',
 })
-export class AdminResumenPage implements OnInit {
+export class AdminResumenPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   data: any = null;        // /api/admin/resumen (citas)
   op: any = null;          // /api/dashboard/resumen (órdenes/operativo)
   tiempos: any[] = [];     // tiempo por etapa
@@ -48,18 +51,19 @@ export class AdminResumenPage implements OnInit {
   ) {}
 
   ngOnInit() { this.cargar(); }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
   ionViewWillEnter() { this.cargar(); }
 
   cargar(ev?: any) {
     this.cargando = true;
-    this.admin.getResumen().subscribe({
+    this.admin.getResumen().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.data = r.data; this.cargando = false; if (ev) ev.target.complete(); },
       error: () => { this.cargando = false; if (ev) ev.target.complete(); },
     });
-    this.dash.getResumen().subscribe({ next: r => this.op = r.data, error: () => {} });
-    this.dash.getTiempos().subscribe({ next: r => this.tiempos = r.data, error: () => {} });
-    this.dash.getTecnicos().subscribe({ next: r => this.tecnicos = r.data, error: () => {} });
-    this.dash.getAtrasos().subscribe({ next: r => this.atrasos = r.data, error: () => {} });
+    this.dash.getResumen().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.op = r.data, error: () => {} });
+    this.dash.getTiempos().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.tiempos = r.data, error: () => {} });
+    this.dash.getTecnicos().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.tecnicos = r.data, error: () => {} });
+    this.dash.getAtrasos().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.atrasos = r.data, error: () => {} });
   }
 
   // ── Citas (mes) ──
@@ -108,7 +112,7 @@ export class AdminResumenPage implements OnInit {
 
   exportarOrdenes() {
     this.exportando = true;
-    this.ordenes.getAll().subscribe({
+    this.ordenes.getAll().pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         const filas = res.data.map((o: any) => ({
           numero_orden: o.numero_orden, estado: this.estadoTexto(o.estado),
@@ -130,7 +134,7 @@ export class AdminResumenPage implements OnInit {
 
   exportarFacturacion() {
     this.exportando = true;
-    this.ordenes.getAll({ estado: 'entregada' }).subscribe({
+    this.ordenes.getAll({ estado: 'entregada' }).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         const filas = res.data.map((o: any) => ({
           numero_orden: o.numero_orden, cliente: `${o.cliente_nombre || ''} ${o.cliente_apellido || ''}`.trim(),

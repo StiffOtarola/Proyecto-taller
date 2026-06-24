@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ToastController } from '@ionic/angular';
 import { MecanicoService } from '../../services/mecanico.service';
 import { AuthService } from '../../services/auth.service';
 import { abrirWhatsApp } from '../../shared/whatsapp.util';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   standalone: false,
@@ -10,7 +12,8 @@ import { abrirWhatsApp } from '../../shared/whatsapp.util';
   templateUrl: './mecanico-contacto.page.html',
   styleUrls: ['./mecanico-contacto.page.scss'],
 })
-export class MecanicoContactoPage implements OnInit {
+export class MecanicoContactoPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   contacto: { nombre: string; telefono: string } | null = null;
   mensajes: any[] = [];
   cargando = true;
@@ -22,11 +25,12 @@ export class MecanicoContactoPage implements OnInit {
 
   ngOnInit() { this.cargar(); }
   ionViewWillEnter() { this.cargar(); }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   cargar(ev?: any) {
     this.cargando = true;
-    this.mecanico.getRecepcionContacto().subscribe({ next: r => this.contacto = r.data });
-    this.mecanico.getMensajes().subscribe({
+    this.mecanico.getRecepcionContacto().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.contacto = r.data });
+    this.mecanico.getMensajes().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.mensajes = r.data; this.cargando = false; if (ev) ev.target.complete(); },
       error: () => { this.cargando = false; if (ev) ev.target.complete(); },
     });
@@ -38,7 +42,7 @@ export class MecanicoContactoPage implements OnInit {
     const txt = this.texto.trim();
     if (!txt) return;
     this.enviando = true;
-    this.mecanico.enviarMensaje(txt).subscribe({
+    this.mecanico.enviarMensaje(txt).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.mensajes.push(r.data); this.texto = ''; this.enviando = false; },
       error: async () => { this.enviando = false; const t = await this.toast.create({ message: 'No se pudo enviar', duration: 1800, color: 'danger' }); await t.present(); },
     });

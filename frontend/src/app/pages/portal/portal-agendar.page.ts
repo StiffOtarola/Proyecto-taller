@@ -1,8 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LoadingController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { PortalService } from '../../services/portal.service';
 import { SERVICIOS, HORAS } from '../../utils/servicios';
+import { ahoraTaller } from '../../utils/fecha-cita';
 
 @Component({
   standalone: false,
@@ -10,7 +13,8 @@ import { SERVICIOS, HORAS } from '../../utils/servicios';
   templateUrl: './portal-agendar.page.html',
   styleUrls: ['./portal-agendar.page.scss'],
 })
-export class PortalAgendarPage implements OnInit {
+export class PortalAgendarPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   readonly servicios = SERVICIOS;
   readonly horas = HORAS;
   motos: any[] = [];
@@ -49,7 +53,7 @@ export class PortalAgendarPage implements OnInit {
   ionViewWillEnter() { this.cargarMotos(); }
 
   cargarMotos() {
-    this.portal.getMotos().subscribe(r => { this.motos = r.data; this.aplicarPrefill(); });
+    this.portal.getMotos().pipe(takeUntil(this.destroy$)).subscribe(r => { this.motos = r.data; this.aplicarPrefill(); });
   }
 
   // Precarga moto + servicio sugeridos (validados contra los datos reales), una sola vez.
@@ -62,7 +66,7 @@ export class PortalAgendarPage implements OnInit {
 
   // Carga las sucursales activas. Si solo hay una, la preselecciona (no hay que elegir).
   cargarSucursales() {
-    this.portal.getSucursales().subscribe(r => {
+    this.portal.getSucursales().pipe(takeUntil(this.destroy$)).subscribe(r => {
       this.sucursales = r.data || [];
       if (!this.form.sucursal_id && this.sucursales.length === 1) {
         this.form.sucursal_id = this.sucursales[0].id;
@@ -79,7 +83,7 @@ export class PortalAgendarPage implements OnInit {
 
   // Modo edición: precarga la cita y la disponibilidad de su fecha (sin borrar la hora).
   private cargarParaEditar(id: number) {
-    this.portal.getCita(id).subscribe({
+    this.portal.getCita(id).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         const c = r.data;
         if (c.estado !== 'agendado' || c.orden_id) {
@@ -97,7 +101,7 @@ export class PortalAgendarPage implements OnInit {
           descripcion: (c.motivo && c.motivo !== c.tipo_servicio) ? c.motivo : '',
         };
         if (this.form.fecha && this.form.sucursal_id) {
-          this.portal.getDisponibilidad(this.form.fecha, this.form.sucursal_id).subscribe(d => {
+          this.portal.getDisponibilidad(this.form.fecha, this.form.sucursal_id).pipe(takeUntil(this.destroy$)).subscribe(d => {
             this.ocupacion = d.data.ocupacion || {};
             this.maxPorHora = d.data.max || 2;
           });
@@ -111,7 +115,7 @@ export class PortalAgendarPage implements OnInit {
   onFecha() {
     this.form.hora = '';
     if (!this.form.fecha || !this.form.sucursal_id) return;
-    this.portal.getDisponibilidad(this.form.fecha, this.form.sucursal_id).subscribe(r => {
+    this.portal.getDisponibilidad(this.form.fecha, this.form.sucursal_id).pipe(takeUntil(this.destroy$)).subscribe(r => {
       this.ocupacion = r.data.ocupacion || {};
       this.maxPorHora = r.data.max || 2;
     });
@@ -121,13 +125,11 @@ export class PortalAgendarPage implements OnInit {
     return (this.ocupacion[h] || 0) >= this.maxPorHora;
   }
 
-  // Si la fecha elegida es HOY (zona CR), una hora ya pasada no se puede agendar.
-  // CR es UTC-6 sin horario de verano; comparamos "HH:mm" (orden lexicográfico válido).
   horaPasada(h: string): boolean {
-    const ahoraCR = new Date(Date.now() - 6 * 60 * 60 * 1000);
-    const hoyCR = ahoraCR.toISOString().slice(0, 10);
-    if (this.form.fecha !== hoyCR) return false;
-    return h <= ahoraCR.toISOString().slice(11, 16);
+    const ahora = ahoraTaller();
+    const hoy = ahora.toISOString().slice(0, 10);
+    if (this.form.fecha !== hoy) return false;
+    return h <= ahora.toISOString().slice(11, 16);
   }
 
   // Sugiere el próximo horario libre (en la sucursal elegida): precarga fecha + hora.
@@ -135,7 +137,7 @@ export class PortalAgendarPage implements OnInit {
     if (this.sugiriendo) return;
     if (!this.form.sucursal_id) { this.toastMsg('Elegí primero una sucursal', 'warning'); return; }
     this.sugiriendo = true;
-    this.portal.getProximoLibre(this.form.sucursal_id).subscribe({
+    this.portal.getProximoLibre(this.form.sucursal_id).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         if (!r.data) {
           this.sugiriendo = false;
@@ -145,7 +147,7 @@ export class PortalAgendarPage implements OnInit {
         const { fecha, hora } = r.data;
         this.form.fecha = fecha;
         // Carga la disponibilidad de ese día y deja la hora seleccionada.
-        this.portal.getDisponibilidad(fecha, this.form.sucursal_id!).subscribe({
+        this.portal.getDisponibilidad(fecha, this.form.sucursal_id!).pipe(takeUntil(this.destroy$)).subscribe({
           next: d => {
             this.ocupacion = d.data.ocupacion || {};
             this.maxPorHora = d.data.max || 2;
@@ -234,7 +236,7 @@ export class PortalAgendarPage implements OnInit {
       descripcion: this.form.descripcion.trim() || undefined,
     };
     const op = editando ? this.portal.editarCita(editando, datos) : this.portal.crearCita(datos);
-    op.subscribe({
+    op.pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         await l.dismiss(); this.enviando = false;
         this.toastMsg(editando ? 'Cita actualizada' : '¡Cita agendada!');
@@ -249,6 +251,8 @@ export class PortalAgendarPage implements OnInit {
       },
     });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   private async toastMsg(message: string, color = 'success') {
     const t = await this.toast.create({ message, duration: 2600, color });

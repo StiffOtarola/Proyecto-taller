@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { UsuariosService } from '../../services/usuarios.service';
 import { AdminService } from '../../services/admin.service';
 import { Usuario } from '../../models/usuario.model';
@@ -9,7 +11,8 @@ import { Usuario } from '../../models/usuario.model';
   selector: 'app-admin-empleados',
   templateUrl: './admin-empleados.page.html',
 })
-export class AdminEmpleadosPage implements OnInit {
+export class AdminEmpleadosPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   usuarios: Usuario[] = [];
   sucursales: any[] = [];
   cargando = true;
@@ -27,20 +30,20 @@ export class AdminEmpleadosPage implements OnInit {
 
   cargar() {
     this.cargando = true;
-    this.svc.getAll().subscribe({
+    this.svc.getAll().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.usuarios = r.data; this.cargando = false; },
       error: () => { this.cargando = false; },
     });
   }
 
   cargarSucursales() {
-    this.admin.getSucursales().subscribe({ next: r => this.sucursales = (r.data || []).filter((s: any) => s.activa) });
+    this.admin.getSucursales().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.sucursales = (r.data || []).filter((s: any) => s.activa) });
   }
 
   // Cambia el local de un empleado desde la lista (null = atiende ambas).
   cambiarSucursal(u: Usuario, valor: any) {
     const sucursal_id = valor === '' || valor == null ? null : Number(valor);
-    this.svc.setSucursal(u.id!, sucursal_id).subscribe({
+    this.svc.setSucursal(u.id!, sucursal_id).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         u.sucursal_id = sucursal_id;
         u.sucursal_nombre = this.sucursales.find(s => s.id === sucursal_id)?.nombre || null;
@@ -64,7 +67,7 @@ export class AdminEmpleadosPage implements OnInit {
       rol: this.nuevo.rol,
       telefono: this.nuevo.telefono.trim() || undefined,
       sucursal_id: this.nuevo.sucursal_id,
-    }).subscribe({
+    }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.creando = false;
         this.nuevo = { nombre: '', email: '', password: '', rol: 'tecnico', telefono: '', sucursal_id: null };
@@ -76,8 +79,10 @@ export class AdminEmpleadosPage implements OnInit {
   }
 
   toggle(u: Usuario) {
-    this.svc.toggleActivo(u.id!, !u.activo).subscribe({ next: () => { u.activo = u.activo ? 0 : 1; } });
+    this.svc.toggleActivo(u.id!, !u.activo).pipe(takeUntil(this.destroy$)).subscribe({ next: () => { u.activo = u.activo ? 0 : 1; } });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   iniciales(n?: string): string {
     const p = (n || '?').trim().split(/\s+/);

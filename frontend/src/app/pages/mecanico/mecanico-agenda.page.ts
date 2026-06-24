@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MecanicoService } from '../../services/mecanico.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   standalone: false,
@@ -7,7 +9,8 @@ import { MecanicoService } from '../../services/mecanico.service';
   templateUrl: './mecanico-agenda.page.html',
   styleUrls: ['./mecanico.page.scss'],
 })
-export class MecanicoAgendaPage implements OnInit {
+export class MecanicoAgendaPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   cargando = true;
   offsetSemana = 0; // 0 = esta semana, -1 anterior, +1 siguiente
   dias: { fecha: string; etiqueta: string; citas: any[] }[] = [];
@@ -28,6 +31,7 @@ export class MecanicoAgendaPage implements OnInit {
 
   ngOnInit() { this.cargar(); }
   ionViewWillEnter() { this.cargar(); }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   // Lunes de la semana objetivo.
   private lunesDe(offset: number): Date {
@@ -58,7 +62,7 @@ export class MecanicoAgendaPage implements OnInit {
 
     this.citasSemana = 0;
     this.ingresosSemana = 0;
-    this.mecanico.getAgenda(desde, hasta).subscribe({
+    this.mecanico.getAgenda(desde, hasta).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         for (const c of r.data) {
           const dia = this.dias.find(d => d.fecha === c.fecha?.slice(0, 10));

@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { PortalService } from '../../services/portal.service';
 import { ESTADO_CITA_LABEL } from '../../utils/servicios';
 import { badgeProximidad, BadgeProximidad } from '../../utils/fecha-cita';
@@ -11,7 +13,8 @@ import { badgeProximidad, BadgeProximidad } from '../../utils/fecha-cita';
   templateUrl: './portal-inicio.page.html',
   styleUrls: ['./portal-inicio.page.scss'],
 })
-export class PortalInicioPage implements OnInit {
+export class PortalInicioPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   resumen: any = null;
   presupuestos: any[] = [];      // órdenes esperando la aprobación del cliente
   detalle: Record<number, any> = {};
@@ -33,7 +36,7 @@ export class PortalInicioPage implements OnInit {
 
   cargar() {
     this.cargando = true;
-    this.portal.getResumen().subscribe({
+    this.portal.getResumen().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.resumen = r.data; this.cargando = false; },
       error: () => { this.cargando = false; },
     });
@@ -42,7 +45,7 @@ export class PortalInicioPage implements OnInit {
 
   // Solo los presupuestos que esperan una decisión del cliente.
   cargarPresupuestos() {
-    this.portal.getOrdenes().subscribe({
+    this.portal.getOrdenes().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         this.presupuestos = r.data.filter(
           (o: any) => o.estado === 'esperando_aprobacion' && o.aprobacion_cliente === 'pendiente'
@@ -63,7 +66,7 @@ export class PortalInicioPage implements OnInit {
     if (this.expandido === o.id) { this.expandido = null; return; }
     this.expandido = o.id;
     if (!this.detalle[o.id]) {
-      this.portal.getOrden(o.id).subscribe({ next: r => this.detalle[o.id] = r.data });
+      this.portal.getOrden(o.id).pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.detalle[o.id] = r.data });
     }
   }
 
@@ -98,7 +101,7 @@ export class PortalInicioPage implements OnInit {
     if (this.procesando) return;
     this.procesando = true;
     const req = decision === 'aprobar' ? this.portal.aprobar(o.id) : this.portal.rechazar(o.id, motivo || '');
-    req.subscribe({
+    req.pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         this.procesando = false;
         this.expandido = null;
@@ -117,6 +120,8 @@ export class PortalInicioPage implements OnInit {
       },
     });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   irAgendar() { this.router.navigate(['/portal/agendar']); }
   irCitas() { this.router.navigate(['/portal/mis-citas']); }

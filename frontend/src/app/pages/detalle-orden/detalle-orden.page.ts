@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ActionSheetController, AlertController, LoadingController, ToastController } from '@ionic/angular';
 import { OrdenesService } from '../../services/ordenes.service';
@@ -11,13 +11,16 @@ import { Garantia, EstadoGarantia, ESTADO_GARANTIA_CONFIG } from '../../models/g
 import { Usuario } from '../../models/usuario.model';
 import { comprimirImagen } from '../../shared/image.util';
 import { WA_MENSAJES, mensajeSugerido, abrirWhatsApp, WaContexto } from '../../shared/whatsapp.util';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({ standalone: false,
   selector: 'app-detalle-orden',
   templateUrl: './detalle-orden.page.html',
   styleUrls: ['./detalle-orden.page.scss'],
 })
-export class DetalleOrdenPage implements OnInit {
+export class DetalleOrdenPage implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   orden: Orden | null = null;
   avances: OrdenAvance[] = [];
   repuestos: OrdenRepuesto[] = [];
@@ -88,16 +91,16 @@ export class DetalleOrdenPage implements OnInit {
 
   cargar(id: number) {
     this.cargando = true;
-    this.ordenSvc.getById(id).subscribe(res => {
+    this.ordenSvc.getById(id).pipe(takeUntil(this.destroy$)).subscribe(res => {
       this.orden = res.data;
       this.cargando = false;
       this.cargarTecnicos();
     });
-    this.ordenSvc.getAvances(id).subscribe(res => this.avances = res.data);
-    this.ordenSvc.getRepuestos(id).subscribe(res => this.repuestos = res.data);
-    this.ordenSvc.getFotos(id).subscribe(res => this.fotos = res.data);
-    this.garantiaSvc.getAll({ orden_id: id }).subscribe(res => this.garantias = res.data);
-    this.ordenSvc.getChecklist(id).subscribe(res => {
+    this.ordenSvc.getAvances(id).pipe(takeUntil(this.destroy$)).subscribe(res => this.avances = res.data);
+    this.ordenSvc.getRepuestos(id).pipe(takeUntil(this.destroy$)).subscribe(res => this.repuestos = res.data);
+    this.ordenSvc.getFotos(id).pipe(takeUntil(this.destroy$)).subscribe(res => this.fotos = res.data);
+    this.garantiaSvc.getAll({ orden_id: id }).pipe(takeUntil(this.destroy$)).subscribe(res => this.garantias = res.data);
+    this.ordenSvc.getChecklist(id).pipe(takeUntil(this.destroy$)).subscribe(res => {
       if (res.data) {
         this.checklist = {
           prueba_realizada: !!res.data.prueba_realizada,
@@ -116,11 +119,11 @@ export class DetalleOrdenPage implements OnInit {
   // Recepción ve solo los mecánicos de la sede de la orden (+ "ambas"); admin, todos.
   private cargarTecnicos() {
     if (this.auth.tieneRol('admin')) {
-      this.usuarioSvc.getAll().subscribe(res => {
+      this.usuarioSvc.getAll().pipe(takeUntil(this.destroy$)).subscribe(res => {
         this.tecnicos = res.data.filter(u => u.rol === 'tecnico' && u.activo);
       });
     } else if (this.auth.tieneRol('recepcion')) {
-      this.rec.getTecnicos(this.orden?.sucursal_id).subscribe(res => { this.tecnicos = res.data; });
+      this.rec.getTecnicos(this.orden?.sucursal_id).pipe(takeUntil(this.destroy$)).subscribe(res => { this.tecnicos = res.data; });
     }
   }
 
@@ -151,7 +154,7 @@ export class DetalleOrdenPage implements OnInit {
   private async ejecutarCambioEstado(estado: EstadoOrden) {
     const l = await this.loading.create({ message: 'Cambiando estado...' });
     await l.present();
-    this.ordenSvc.cambiarEstado(this.orden!.id!, estado).subscribe({
+    this.ordenSvc.cambiarEstado(this.orden!.id!, estado).pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         await l.dismiss();
         this.cargar(this.orden!.id!);
@@ -169,7 +172,7 @@ export class DetalleOrdenPage implements OnInit {
     const op = this.auth.tieneRol('admin')
       ? this.ordenSvc.asignarTecnico(this.orden!.id!, tecnico_id)
       : this.rec.asignarTecnico(this.orden!.id!, tecnico_id);
-    op.subscribe({
+    op.pipe(takeUntil(this.destroy$)).subscribe({
       next: () => { this.cargar(this.orden!.id!); this.mostrarToast('Mecánico asignado'); },
       error: () => this.mostrarToast('No se pudo asignar el mecánico'),
     });
@@ -177,7 +180,7 @@ export class DetalleOrdenPage implements OnInit {
 
   agregarAvance() {
     if (!this.nuevoAvance.trim()) return;
-    this.ordenSvc.addAvance(this.orden!.id!, this.nuevoAvance).subscribe({
+    this.ordenSvc.addAvance(this.orden!.id!, this.nuevoAvance).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         this.avances.push(res.data);
         this.nuevoAvance = '';
@@ -188,7 +191,7 @@ export class DetalleOrdenPage implements OnInit {
 
   agregarRepuesto() {
     if (!this.nuevoRepuesto.nombre.trim()) return;
-    this.ordenSvc.addRepuesto(this.orden!.id!, this.nuevoRepuesto).subscribe({
+    this.ordenSvc.addRepuesto(this.orden!.id!, this.nuevoRepuesto).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         this.repuestos.push(res.data);
         this.nuevoRepuesto = { nombre: '', cantidad: 1, costo_unitario: 0 };
@@ -208,7 +211,7 @@ export class DetalleOrdenPage implements OnInit {
         {
           text: 'Eliminar',
           handler: () => {
-            this.ordenSvc.deleteRepuesto(this.orden!.id!, r.id!).subscribe({
+            this.ordenSvc.deleteRepuesto(this.orden!.id!, r.id!).pipe(takeUntil(this.destroy$)).subscribe({
               next: () => {
                 this.repuestos = this.repuestos.filter(x => x.id !== r.id);
                 this.cargar(this.orden!.id!);
@@ -231,7 +234,7 @@ export class DetalleOrdenPage implements OnInit {
   }
 
   guardarChecklist() {
-    this.ordenSvc.saveChecklist(this.orden!.id!, this.checklist).subscribe({
+    this.ordenSvc.saveChecklist(this.orden!.id!, this.checklist).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => this.mostrarToast('Checklist guardado'),
       error: (err) => this.mostrarAlertError(err.error?.error),
     });
@@ -272,8 +275,8 @@ export class DetalleOrdenPage implements OnInit {
     const l = await this.loading.create({ message: 'Cerrando orden...' });
     await l.present();
     // Persistir checklist primero, luego cerrar
-    this.ordenSvc.saveChecklist(this.orden!.id!, this.checklist).subscribe(() => {
-      this.ordenSvc.cerrar(this.orden!.id!, this.cierre).subscribe({
+    this.ordenSvc.saveChecklist(this.orden!.id!, this.checklist).pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.ordenSvc.cerrar(this.orden!.id!, this.cierre).pipe(takeUntil(this.destroy$)).subscribe({
         next: async () => {
           await l.dismiss();
           this.cargar(this.orden!.id!);
@@ -307,7 +310,7 @@ export class DetalleOrdenPage implements OnInit {
     this.subiendoFoto = true;
     try {
       const dataUrl = await comprimirImagen(file);
-      this.ordenSvc.addFoto(this.orden!.id!, { url: dataUrl, tipo: this.tipoFoto }).subscribe({
+      this.ordenSvc.addFoto(this.orden!.id!, { url: dataUrl, tipo: this.tipoFoto }).pipe(takeUntil(this.destroy$)).subscribe({
         next: res => {
           this.fotos.push(res.data);
           this.subiendoFoto = false;
@@ -344,7 +347,7 @@ export class DetalleOrdenPage implements OnInit {
           text: 'Eliminar',
           role: 'destructive',
           handler: () => {
-            this.ordenSvc.deleteFoto(this.orden!.id!, foto.id!).subscribe({
+            this.ordenSvc.deleteFoto(this.orden!.id!, foto.id!).pipe(takeUntil(this.destroy$)).subscribe({
               next: () => {
                 this.fotos = this.fotos.filter(f => f.id !== foto.id);
                 this.mostrarToast('Foto eliminada');
@@ -386,7 +389,7 @@ export class DetalleOrdenPage implements OnInit {
 
   registrarReclamo() {
     if (!this.nuevoReclamo.descripcion_problema.trim()) return;
-    this.garantiaSvc.create({ orden_id: this.orden!.id!, ...this.nuevoReclamo }).subscribe({
+    this.garantiaSvc.create({ orden_id: this.orden!.id!, ...this.nuevoReclamo }).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         this.garantias.unshift(res.data);
         this.nuevoReclamo = { descripcion_problema: '', cubre_repuestos: false, cubre_mano_obra: false };
@@ -427,6 +430,8 @@ export class DetalleOrdenPage implements OnInit {
   irAGarantias() { this.router.navigate(['/garantias']); }
 
   verFactura() { this.router.navigate(['/factura', this.orden!.id]); }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   volver() { this.router.navigate(['/tabs/ordenes']); }
 }

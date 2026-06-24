@@ -1,13 +1,18 @@
 // Etiqueta de proximidad de una cita a partir de su fecha 'YYYY-MM-DD'.
 // Se usa para el badge "Hoy" / "Mañana" / "En N días" del inicio y de Mis Citas.
-// Ancla en zona de Costa Rica (UTC-6) para que "hoy" no se corra por zona horaria.
 
 export type TonoProximidad = 'hoy' | 'pronto' | 'futuro';
 export interface BadgeProximidad { texto: string; tono: TonoProximidad; }
 
-// Fecha de hoy (YYYY-MM-DD) en zona de Costa Rica.
-function hoyCR(): string {
-  return new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
+// Offset UTC del taller (en horas). Centralizado para cambiar en un solo lugar.
+export const TZ_OFFSET_HORAS = -6;
+
+export function ahoraTaller(): Date {
+  return new Date(Date.now() + TZ_OFFSET_HORAS * 60 * 60 * 1000);
+}
+
+export function hoyCR(): string {
+  return ahoraTaller().toISOString().slice(0, 10);
 }
 
 // Días enteros entre hoy (CR) y la fecha de la cita. Negativo si ya pasó. null si inválida.

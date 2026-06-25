@@ -119,23 +119,6 @@
           <button class="btn btn-cr config-btn-full" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar</button>
         </div>
 
-        <!-- Cuenta admin -->
-        <div class="cd">
-          <span class="cd-title">👤 Cuenta del administrador</span>
-          <div class="fg"><label>Nombre</label><input [(ngModel)]="cuenta.nombre"></div>
-          <div class="fg"><label>Correo</label><input type="email" [(ngModel)]="cuenta.email"></div>
-          <button class="btn btn-cr config-btn-full" [disabled]="guardandoCuenta" (click)="guardarCuenta()">💾 Actualizar cuenta</button>
-
-          <div class="config-divider"></div>
-
-          <div class="fg"><label>Contraseña actual</label><input type="password" [(ngModel)]="pass.actual" placeholder="••••••••"></div>
-          <div class="fg"><label>Nueva contraseña</label><input type="password" [(ngModel)]="pass.nueva" placeholder="Mín. 8 caracteres"></div>
-          <button class="btn btn-ou config-btn-full" [disabled]="guardandoPass" (click)="cambiarPassword()">🔑 Cambiar contraseña</button>
-
-          <div class="config-divider"></div>
-
-          <button class="btn btn-rd config-btn-full" (click)="logout()">⏻ Cerrar sesión</button>
-        </div>
       </div>
     </div>
   </div>

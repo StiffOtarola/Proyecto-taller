@@ -1,10 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AdminService } from '../../services/admin.service';
-import { AuthService } from '../../services/auth.service';
 
 interface HorarioVista { dia: number; label: string; abre: string; cierra: string; activo: boolean; }
 
@@ -19,12 +17,7 @@ export class AdminConfigPage implements OnInit, OnDestroy {
   config: any = null;
   cargando = true;
   guardando = false;
-  guardandoCuenta = false;
-  guardandoPass = false;
-
   horariosVista: HorarioVista[] = [];
-  cuenta = { nombre: '', email: '' };
-  pass = { actual: '', nueva: '' };
 
   // Sucursales (locales del taller).
   sucursales: any[] = [];
@@ -38,13 +31,10 @@ export class AdminConfigPage implements OnInit, OnDestroy {
   ];
 
   constructor(
-    private admin: AdminService, private auth: AuthService,
-    private router: Router, private toast: ToastController,
+    private admin: AdminService, private toast: ToastController,
   ) {}
 
   ngOnInit() {
-    const u = this.auth.getUsuario();
-    this.cuenta = { nombre: u?.nombre || '', email: u?.email || '' };
     this.cargar();
     this.cargarSucursales();
   }
@@ -130,38 +120,7 @@ export class AdminConfigPage implements OnInit, OnDestroy {
     });
   }
 
-  guardarCuenta() {
-    if (!this.cuenta.nombre.trim() || !this.cuenta.email.trim()) { this.aviso('Nombre y correo son requeridos', 'warning'); return; }
-    this.guardandoCuenta = true;
-    this.admin.updateCuenta({ nombre: this.cuenta.nombre.trim(), email: this.cuenta.email.trim() }).pipe(takeUntil(this.destroy$)).subscribe({
-      next: r => {
-        // Refleja el nombre/correo nuevo en la sesión guardada (sidebar, etc.).
-        const u = this.auth.getUsuario();
-        const token = this.auth.getToken();
-        if (u && token) this.auth.aplicarSesionStaff(token, { ...u, ...r.data });
-        this.guardandoCuenta = false;
-        this.aviso('Cuenta actualizada');
-      },
-      error: (e) => { this.guardandoCuenta = false; this.aviso(e.error?.error || 'No se pudo actualizar', 'danger'); },
-    });
-  }
-
-  cambiarPassword() {
-    if (!this.pass.actual || !this.pass.nueva) { this.aviso('Completá ambas contraseñas', 'warning'); return; }
-    if (this.pass.nueva.length < 8) { this.aviso('La nueva debe tener al menos 8 caracteres', 'warning'); return; }
-    this.guardandoPass = true;
-    this.admin.updatePassword({ actual: this.pass.actual, nueva: this.pass.nueva }).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => { this.guardandoPass = false; this.pass = { actual: '', nueva: '' }; this.aviso('Contraseña actualizada'); },
-      error: (e) => { this.guardandoPass = false; this.aviso(e.error?.error || 'No se pudo cambiar', 'danger'); },
-    });
-  }
-
   ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
-
-  logout() {
-    this.auth.logout();
-    this.router.navigate(['/portal/login'], { replaceUrl: true });
-  }
 
   private async aviso(message: string, color = 'success') {
     const t = await this.toast.create({ message, duration: 1800, color });

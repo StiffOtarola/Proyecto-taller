@@ -151,6 +151,29 @@ router.patch('/citas/:id/estado', async (req, res) => {
 });
 
 // ───────────────────────────────────────────────────────────
+// Solicitar repuestos (el mecánico pide, recepción pone precio)
+// ───────────────────────────────────────────────────────────
+router.post('/ordenes/:id/repuestos', async (req, res) => {
+  try {
+    const { nombre, cantidad } = req.body;
+    if (!nombre || !nombre.trim()) return res.status(400).json({ error: 'Nombre del repuesto requerido' });
+    const [[orden]] = await pool.query(
+      'SELECT id FROM ordenes_trabajo WHERE id = ? AND tecnico_id = ?',
+      [req.params.id, req.usuario.id]
+    );
+    if (!orden) return res.status(404).json({ error: 'Orden no encontrada o no asignada a vos' });
+    const [result] = await pool.query(
+      "INSERT INTO orden_repuestos (orden_id, nombre, cantidad, costo_unitario, estado) VALUES (?, ?, ?, 0, 'solicitado')",
+      [req.params.id, nombre.trim(), cantidad || 1]
+    );
+    const [[nuevo]] = await pool.query('SELECT * FROM orden_repuestos WHERE id = ?', [result.insertId]);
+    res.status(201).json({ data: nuevo, message: 'Repuesto solicitado' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// ───────────────────────────────────────────────────────────
 // Tareas pendientes del mecánico (checklist propio)
 // ───────────────────────────────────────────────────────────
 router.get('/tareas', async (req, res) => {

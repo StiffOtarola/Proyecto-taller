@@ -6,6 +6,7 @@ import { UsuariosService } from '../../services/usuarios.service';
 import { RecepcionService } from '../../services/recepcion.service';
 import { GarantiasService } from '../../services/garantias.service';
 import { AuthService } from '../../services/auth.service';
+import { MecanicoService } from '../../services/mecanico.service';
 import { Orden, OrdenAvance, OrdenRepuesto, OrdenChecklist, OrdenFoto, EstadoOrden, ESTADO_CONFIG } from '../../models/orden.model';
 import { Garantia, EstadoGarantia, ESTADO_GARANTIA_CONFIG } from '../../models/garantia.model';
 import { Usuario } from '../../models/usuario.model';
@@ -79,6 +80,7 @@ export class DetalleOrdenPage implements OnInit, OnDestroy {
     private rec: RecepcionService,
     private garantiaSvc: GarantiasService,
     public auth: AuthService,
+    private mecSvc: MecanicoService,
     private alert: AlertController,
     private loading: LoadingController,
     private toast: ToastController,
@@ -205,12 +207,11 @@ export class DetalleOrdenPage implements OnInit, OnDestroy {
 
   solicitarRepuesto() {
     if (!this.nuevoRepuesto.nombre.trim()) return;
-    this.ordenSvc.addRepuesto(this.orden!.id!, {
-      nombre: this.nuevoRepuesto.nombre,
-      cantidad: this.nuevoRepuesto.cantidad || 1,
-      costo_unitario: 0,
-      estado: 'solicitado',
-    }).pipe(takeUntil(this.destroy$)).subscribe({
+    this.mecSvc.solicitarRepuesto(
+      this.orden!.id!,
+      this.nuevoRepuesto.nombre.trim(),
+      this.nuevoRepuesto.cantidad || 1,
+    ).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         this.repuestos.push(res.data);
         this.nuevoRepuesto = { nombre: '', cantidad: 1, costo_unitario: 0 };

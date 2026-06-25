@@ -32,14 +32,15 @@ export class PortalRegistroPage implements OnDestroy {
   ) {}
 
   get valido(): boolean {
-    return !!(this.nombre.trim() && this.apellido.trim() && this.telefono.trim() &&
-      emailValido(this.email) && this.password.length >= 6 && this.password === this.confirmar);
+    return !!(this.nombre.trim() && this.apellido.trim() && this.telefono.trim() && this.cedula.trim() &&
+      emailValido(this.email) && this.password.length >= 8 && this.password === this.confirmar);
   }
 
   async registrar() {
     if (!this.valido) {
       if (this.email.trim() && !emailValido(this.email)) return this.mostrar('Ingresá un correo válido', 'warning');
-      if (this.password && this.password.length < 6) return this.mostrar('La contraseña debe tener al menos 6 caracteres', 'warning');
+      if (!this.cedula.trim()) return this.mostrar('La cédula es requerida', 'warning');
+      if (this.password && this.password.length < 8) return this.mostrar('La contraseña debe tener al menos 8 caracteres', 'warning');
       if (this.password !== this.confirmar) return this.mostrar('Las contraseñas no coinciden', 'warning');
       return;
     }
@@ -47,7 +48,7 @@ export class PortalRegistroPage implements OnDestroy {
     await l.present();
     this.portal.registro({
       nombre: this.nombre.trim(), apellido: this.apellido.trim(), telefono: this.telefono.trim(),
-      email: this.email.trim(), cedula: this.cedula.trim() || undefined, password: this.password,
+      email: this.email.trim(), cedula: this.cedula.trim(), password: this.password,
     }).pipe(takeUntil(this.destroy$)).subscribe({
       next: async () => {
         await l.dismiss();

@@ -27,12 +27,12 @@
           <ion-input type="email" [(ngModel)]="email" autocomplete="email" placeholder="tu@correo.com"></ion-input>
         </ion-item>
         <ion-item lines="full">
-          <ion-label position="stacked">Cédula (opcional)</ion-label>
+          <ion-label position="stacked">Cédula *</ion-label>
           <ion-input [(ngModel)]="cedula" placeholder="1-2345-6789"></ion-input>
         </ion-item>
         <ion-item lines="full">
           <ion-label position="stacked">Contraseña</ion-label>
-          <ion-input [type]="verPass ? 'text' : 'password'" [(ngModel)]="password" placeholder="Mínimo 6 caracteres">
+          <ion-input [type]="verPass ? 'text' : 'password'" [(ngModel)]="password" placeholder="Mínimo 8 caracteres">
             <ion-button fill="clear" slot="end" (click)="verPass = !verPass" aria-label="Mostrar contraseña">
               <ion-icon slot="icon-only" [name]="verPass ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
             </ion-button>

@@ -23,9 +23,11 @@ export class ClienteFormPage implements OnInit, OnDestroy {
     email: '', cedula: '', direccion: '',
   };
 
-  // Requeridos: nombre, apellido y teléfono.
   get valido(): boolean {
-    return !!(this.form.nombre?.trim() && this.form.apellido?.trim() && this.form.telefono?.trim());
+    if (this.esEdicion) {
+      return !!(this.form.nombre?.trim() && this.form.apellido?.trim() && this.form.telefono?.trim());
+    }
+    return !!(this.form.nombre?.trim() && this.form.apellido?.trim() && this.form.telefono?.trim() && this.form.cedula?.trim());
   }
 
   constructor(

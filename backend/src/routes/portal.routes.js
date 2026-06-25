@@ -82,8 +82,8 @@ router.post('/login', async (req, res) => {
 router.post('/registro', async (req, res) => {
   try {
     const { nombre, apellido, telefono, email, cedula, password } = req.body;
-    if (!nombre || !apellido || !telefono || !email || !password) {
-      return res.status(400).json({ error: 'Nombre, apellido, teléfono, correo y contraseña son requeridos' });
+    if (!nombre || !apellido || !telefono || !email || !cedula || !password) {
+      return res.status(400).json({ error: 'Nombre, apellido, teléfono, correo, cédula y contraseña son requeridos' });
     }
     if (!emailValido(email)) return res.status(400).json({ error: 'El correo no tiene un formato válido' });
     if (password.length < 8) return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });

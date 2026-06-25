@@ -37,8 +37,8 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { nombre, apellido, telefono, email, cedula, direccion } = req.body;
-    if (!nombre || !apellido || !telefono) {
-      return res.status(400).json({ error: 'Nombre, apellido y teléfono son requeridos' });
+    if (!nombre || !apellido || !telefono || !cedula) {
+      return res.status(400).json({ error: 'Nombre, apellido, teléfono y cédula son requeridos' });
     }
     const [result] = await pool.query(
       'INSERT INTO clientes (nombre, apellido, telefono, email, cedula, direccion) VALUES (?, ?, ?, ?, ?, ?)',

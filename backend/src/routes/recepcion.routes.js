@@ -779,11 +779,11 @@ router.get('/clientes', async (req, res) => {
       WHERE c.activo = 1`;
     const params = [];
     if (q) {
-      sql += ` AND (c.nombre LIKE ? OR c.apellido LIKE ? OR c.telefono LIKE ? OR c.email LIKE ?
+      sql += ` AND (c.nombre LIKE ? OR c.apellido LIKE ? OR c.telefono LIKE ? OR c.email LIKE ? OR c.cedula LIKE ?
                OR CONCAT(c.nombre, " ", c.apellido) LIKE ?
                OR EXISTS (SELECT 1 FROM motos mm WHERE mm.cliente_id = c.id AND mm.activa = 1 AND mm.placa LIKE ?))`;
       const like = `%${q}%`;
-      params.push(like, like, like, like, like, like);
+      params.push(like, like, like, like, like, like, like);
     }
     sql += ' ORDER BY c.nombre, c.apellido';
     const [rows] = await pool.query(sql, params);

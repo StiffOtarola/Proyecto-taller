@@ -4,14 +4,6 @@
   padding: 14px 16px 0;
 }
 
-/* Badge en el header */
-.hdr-badge {
-  font-size: 10px; font-weight: 700;
-  background: var(--ion-color-primary); color: #fff;
-  padding: 3px 9px; border-radius: 999px; margin-right: 4px;
-  align-self: center;
-}
-
 .greet {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   margin: 2px 2px 16px;

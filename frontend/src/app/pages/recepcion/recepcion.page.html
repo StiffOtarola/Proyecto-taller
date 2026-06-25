@@ -2,9 +2,7 @@
   <ion-toolbar>
     <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
     <ion-title>Recepción</ion-title>
-    <ion-buttons slot="end">
-      <span class="hdr-badge" *ngIf="!cargando && alertas.length">{{ alertas.length }} recientes</span>
-    </ion-buttons>
+    <app-recepcion-actions slot="end"></app-recepcion-actions>
   </ion-toolbar>
 </ion-header>
 

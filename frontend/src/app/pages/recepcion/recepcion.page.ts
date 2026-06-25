@@ -6,6 +6,7 @@ import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { RecepcionService, ResumenRecepcion } from '../../services/recepcion.service';
 import { AuthService } from '../../services/auth.service';
 import { abrirWhatsApp, mensajeCita } from '../../shared/whatsapp.util';
+import { alertaIcono, alertaColor, alertaTexto, haceTexto } from '../../shared/recepcion-alertas';
 import { ahoraTaller } from '../../utils/fecha-cita';
 
 @Component({
@@ -281,55 +282,11 @@ export class RecepcionPage implements OnInit, OnDestroy {
     await al.present();
   }
 
-  // Ícono / color / texto de cada evento del taller (no del buzón del cliente).
-  private moto(a: any): string { return [a.marca, a.modelo].filter(Boolean).join(' ') || 'la moto'; }
-
-  alertaIcono(a: any): string {
-    switch (a.tipo) {
-      case 'foto': return 'camera-outline';
-      case 'lista': return 'checkmark-done-outline';
-      case 'aprobacion': return a.decision === 'rechazado' ? 'close-circle-outline' : 'thumbs-up-outline';
-      case 'cita_nueva': return 'calendar-outline';
-      default: return 'notifications-outline';
-    }
-  }
-  alertaColor(a: any): string {
-    switch (a.tipo) {
-      case 'foto': return 'rose';
-      case 'lista': return 'green';
-      case 'aprobacion': return a.decision === 'rechazado' ? 'amber' : 'green';
-      case 'cita_nueva': return 'indigo';
-      default: return 'amber';
-    }
-  }
-  alertaTexto(a: any): string {
-    const cliente = `${a.cliente_nombre || ''} ${a.cliente_apellido || ''}`.trim();
-    switch (a.tipo) {
-      case 'foto':
-        return `${a.tecnico_nombre || 'El mecánico'} subió evidencia · ${this.moto(a)}`;
-      case 'lista':
-        return `${a.numero_orden} lista para entrega · ${cliente}`;
-      case 'aprobacion':
-        return `${cliente} ${a.decision === 'rechazado' ? 'rechazó' : 'aprobó'} el presupuesto`;
-      case 'cita_nueva':
-        return `Cita nueva: ${cliente} — ${a.fecha_corta || ''} ${a.hora || ''}`.trim();
-      default:
-        return a.mensaje || '';
-    }
-  }
-
-  // Timestamp relativo: "Hace 10 min", "Hace 2 h", etc.
-  hace(fecha: string): string {
-    if (!fecha) return '';
-    const diff = Date.now() - new Date(fecha).getTime();
-    const min = Math.round(diff / 60000);
-    if (min < 1) return 'Recién';
-    if (min < 60) return `Hace ${min} min`;
-    const h = Math.round(min / 60);
-    if (h < 24) return `Hace ${h} h`;
-    const d = Math.round(h / 24);
-    return `Hace ${d} d`;
-  }
+  // Ícono / color / texto de cada evento del taller (compartido con la campana del header).
+  alertaIcono = alertaIcono;
+  alertaColor = alertaColor;
+  alertaTexto = alertaTexto;
+  hace = haceTexto;
 
   // Crea la orden de trabajo de una cita y abre su pantalla.
   crearOrden(c: any) {

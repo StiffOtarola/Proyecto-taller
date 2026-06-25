@@ -41,29 +41,6 @@
         </div>
       </div>
 
-      <!-- Mi jornada (resumen del día) -->
-      <section class="card" *ngIf="resumen">
-        <span class="section-label">Mi jornada</span>
-        <div class="stats">
-          <div class="stat">
-            <span class="s-num">{{ resumen.citas_hoy }}</span>
-            <span class="s-lbl">Citas hoy</span>
-          </div>
-          <div class="stat">
-            <span class="s-num">{{ resumen.ordenes_activas }}</span>
-            <span class="s-lbl">Órdenes activas</span>
-          </div>
-          <div class="stat">
-            <span class="s-num" [class.alerta]="resumen.cotizaciones_pendientes > 0">{{ resumen.cotizaciones_pendientes }}</span>
-            <span class="s-lbl">Cotiz. pendientes</span>
-          </div>
-          <div class="stat">
-            <span class="s-num">{{ resumen.mecanicos_ocupados }}/{{ resumen.mecanicos_totales }}</span>
-            <span class="s-lbl">Mecánicos</span>
-          </div>
-        </div>
-      </section>
-
       <!-- Mi cuenta -->
       <section class="card">
         <span class="section-label">Mi cuenta</span>

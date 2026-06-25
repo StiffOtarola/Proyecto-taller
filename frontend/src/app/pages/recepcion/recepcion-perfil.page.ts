@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { RecepcionService, ResumenRecepcion } from '../../services/recepcion.service';
+import { RecepcionService } from '../../services/recepcion.service';
 import { AuthService } from '../../services/auth.service';
 import { AccesibilidadService } from '../../services/accesibilidad.service';
 import { comprimirImagen } from '../../shared/image.util';
@@ -19,7 +19,6 @@ export class RecepcionPerfilPage implements OnInit, OnDestroy {
   perfil: any = null;
   cuenta = { nombre: '', email: '', telefono: '' };
   pass = { actual: '', nueva: '' };
-  resumen?: ResumenRecepcion;
   cargando = true;
   guardando = false;
   guardandoPass = false;
@@ -55,11 +54,6 @@ export class RecepcionPerfilPage implements OnInit, OnDestroy {
         this.cargando = false;
       },
       error: () => { this.cargando = false; this.aviso('No se pudo cargar el perfil', 'danger'); },
-    });
-    // Resumen de la jornada (mismas cifras del inicio): contexto rápido en el perfil.
-    this.rec.getResumen().pipe(takeUntil(this.destroy$)).subscribe({
-      next: r => this.resumen = r.data,
-      error: () => {},
     });
   }
 

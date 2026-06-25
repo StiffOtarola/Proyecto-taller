@@ -197,12 +197,19 @@ router.delete('/citas/:id/llegada', async (req, res) => {
 });
 
 // ───────────────────────────────────────────────────────────
-// 1.3 Alertas recientes (fotos nuevas + cambios de estado)
+// 1.3 Alertas recientes — EVENTOS DEL TALLER (no el buzón del cliente)
+// Lo que la recepción necesita atender, redactado desde la óptica del mostrador:
+//   foto       → el mecánico subió evidencia en una orden activa
+//   lista      → una orden quedó lista para entrega (llamar / cobrar)
+//   aprobacion → el cliente aprobó o rechazó el presupuesto
+//   cita_nueva → un cliente agendó una cita desde el portal (usuario_id NULL)
+// Antes esto espejaba la tabla `notificaciones` (texto en 2ª persona del cliente
+// + mensajes manuales sueltos), que no le sirve a la recepción.
 // ───────────────────────────────────────────────────────────
 router.get('/alertas', async (req, res) => {
   try {
     const [fotos] = await pool.query(
-      `SELECT 'foto' AS tipo, f.created_at, f.tipo AS foto_tipo,
+      `SELECT 'foto' AS tipo, f.created_at,
               o.numero_orden, o.id AS orden_id,
               m.marca, m.modelo,
               u.nombre AS tecnico_nombre
@@ -214,16 +221,50 @@ router.get('/alertas', async (req, res) => {
          AND f.created_at >= NOW() - INTERVAL 24 HOUR
        ORDER BY f.created_at DESC LIMIT 10`
     );
-    const [estados] = await pool.query(
-      `SELECT 'estado' AS tipo, n.created_at, n.titulo, n.mensaje, n.cita_id,
-              ci.orden_id, o.numero_orden
-       FROM notificaciones n
-       LEFT JOIN citas ci ON ci.id = n.cita_id
-       LEFT JOIN ordenes_trabajo o ON o.id = ci.orden_id
-       WHERE n.created_at >= NOW() - INTERVAL 24 HOUR
-       ORDER BY n.created_at DESC LIMIT 10`
+    // Órdenes que entraron a "lista_entrega" en las últimas 24 h y siguen ahí
+    // (la etapa abierta del registro de tiempos marca el momento exacto).
+    const [listas] = await pool.query(
+      `SELECT 'lista' AS tipo, t.inicio AS created_at,
+              o.numero_orden, o.id AS orden_id,
+              c.nombre AS cliente_nombre, c.apellido AS cliente_apellido,
+              m.marca, m.modelo
+       FROM orden_tiempos t
+       JOIN ordenes_trabajo o ON o.id = t.orden_id
+       JOIN clientes c ON c.id = o.cliente_id
+       JOIN motos m ON m.id = o.moto_id
+       WHERE t.etapa = 'lista_entrega' AND t.fin IS NULL
+         AND o.estado = 'lista_entrega'
+         AND t.inicio >= NOW() - INTERVAL 24 HOUR
+       ORDER BY t.inicio DESC LIMIT 10`
     );
-    const todas = [...fotos, ...estados]
+    // Decisión del cliente sobre el presupuesto (fecha_aprobacion se setea en ambas).
+    const [aprob] = await pool.query(
+      `SELECT 'aprobacion' AS tipo, o.fecha_aprobacion AS created_at,
+              o.numero_orden, o.id AS orden_id, o.aprobacion_cliente AS decision,
+              c.nombre AS cliente_nombre, c.apellido AS cliente_apellido,
+              m.marca, m.modelo
+       FROM ordenes_trabajo o
+       JOIN clientes c ON c.id = o.cliente_id
+       JOIN motos m ON m.id = o.moto_id
+       WHERE o.aprobacion_cliente IN ('aprobado','rechazado')
+         AND o.fecha_aprobacion >= NOW() - INTERVAL 24 HOUR
+       ORDER BY o.fecha_aprobacion DESC LIMIT 10`
+    );
+    // Citas que el cliente agendó solo desde el portal (sin usuario de mostrador).
+    const [citasNuevas] = await pool.query(
+      `SELECT 'cita_nueva' AS tipo, ci.created_at,
+              ci.id AS cita_id, DATE_FORMAT(ci.fecha, '%d/%m') AS fecha_corta,
+              TIME_FORMAT(ci.hora, '%H:%i') AS hora,
+              c.nombre AS cliente_nombre, c.apellido AS cliente_apellido,
+              m.marca, m.modelo
+       FROM citas ci
+       JOIN clientes c ON c.id = ci.cliente_id
+       LEFT JOIN motos m ON m.id = ci.moto_id
+       WHERE ci.usuario_id IS NULL AND ci.estado <> 'cancelado'
+         AND ci.created_at >= NOW() - INTERVAL 24 HOUR
+       ORDER BY ci.created_at DESC LIMIT 10`
+    );
+    const todas = [...fotos, ...listas, ...aprob, ...citasNuevas]
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 20);
     res.json({ data: todas });

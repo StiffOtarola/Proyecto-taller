@@ -281,22 +281,41 @@ export class RecepcionPage implements OnInit, OnDestroy {
     await al.present();
   }
 
-  // Ícono y color de cada alerta según su tipo.
+  // Ícono / color / texto de cada evento del taller (no del buzón del cliente).
+  private moto(a: any): string { return [a.marca, a.modelo].filter(Boolean).join(' ') || 'la moto'; }
+
   alertaIcono(a: any): string {
-    if (a.tipo === 'foto') return 'camera-outline';
-    if (a.titulo?.toLowerCase().includes('listo') || a.titulo?.toLowerCase().includes('entrega')) return 'checkmark-circle-outline';
-    return 'notifications-outline';
+    switch (a.tipo) {
+      case 'foto': return 'camera-outline';
+      case 'lista': return 'checkmark-done-outline';
+      case 'aprobacion': return a.decision === 'rechazado' ? 'close-circle-outline' : 'thumbs-up-outline';
+      case 'cita_nueva': return 'calendar-outline';
+      default: return 'notifications-outline';
+    }
   }
   alertaColor(a: any): string {
-    if (a.tipo === 'foto') return 'rose';
-    if (a.titulo?.toLowerCase().includes('listo') || a.titulo?.toLowerCase().includes('entrega')) return 'green';
-    return 'amber';
+    switch (a.tipo) {
+      case 'foto': return 'rose';
+      case 'lista': return 'green';
+      case 'aprobacion': return a.decision === 'rechazado' ? 'amber' : 'green';
+      case 'cita_nueva': return 'indigo';
+      default: return 'amber';
+    }
   }
   alertaTexto(a: any): string {
-    if (a.tipo === 'foto') {
-      return `Nueva foto de ${a.tecnico_nombre || 'el mecánico'} · ${a.marca || ''} ${a.modelo || ''} (${a.numero_orden})`;
+    const cliente = `${a.cliente_nombre || ''} ${a.cliente_apellido || ''}`.trim();
+    switch (a.tipo) {
+      case 'foto':
+        return `${a.tecnico_nombre || 'El mecánico'} subió evidencia · ${this.moto(a)}`;
+      case 'lista':
+        return `${a.numero_orden} lista para entrega · ${cliente}`;
+      case 'aprobacion':
+        return `${cliente} ${a.decision === 'rechazado' ? 'rechazó' : 'aprobó'} el presupuesto`;
+      case 'cita_nueva':
+        return `Cita nueva: ${cliente} — ${a.fecha_corta || ''} ${a.hora || ''}`.trim();
+      default:
+        return a.mensaje || '';
     }
-    return a.titulo ? `${a.titulo} — ${a.mensaje}` : a.mensaje;
   }
 
   // Timestamp relativo: "Hace 10 min", "Hace 2 h", etc.

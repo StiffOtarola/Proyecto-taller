@@ -31,7 +31,6 @@
   padding: 16px; text-align: center;
   position: relative; overflow: hidden;
   animation: cardRise .4s var(--ease, cubic-bezier(0.32, 0.72, 0, 1)) both;
-  font-family: inherit; width: 100%; appearance: none; -webkit-appearance: none;
 
   &::after {
     content: ''; position: absolute; top: 0; right: 0;
@@ -136,6 +135,7 @@
   &.rose ion-icon { color: var(--ion-color-primary); }
   &.green ion-icon { color: var(--emerald-700); }
   &.amber ion-icon { color: var(--amber-700); }
+  &.indigo ion-icon { color: var(--indigo-600); }
 }
 .alert-body { flex: 1; min-width: 0;
   .alert-txt { font-size: 13px; color: var(--ion-text-color); line-height: 1.4; display: block; }

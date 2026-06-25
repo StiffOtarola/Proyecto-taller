@@ -3,7 +3,7 @@
     <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
     <ion-title>Recepción</ion-title>
     <ion-buttons slot="end">
-      <span class="hdr-badge" *ngIf="!cargando && alertas.length">{{ alertas.length }} nuevas</span>
+      <span class="hdr-badge" *ngIf="!cargando && alertas.length">{{ alertas.length }} recientes</span>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
@@ -193,9 +193,12 @@
         </div>
       </section>
 
-      <!-- Alertas -->
+      <!-- Alertas: eventos del taller (foto, lista, aprobación, cita nueva) -->
       <section class="card">
-        <span class="section-label" style="margin-bottom:12px">Alertas recientes</span>
+        <div class="card-head">
+          <span class="section-label">Alertas recientes</span>
+          <span style="font-size:11px;color:var(--n-400);font-weight:600">Últimas 24 h</span>
+        </div>
         <div class="alert-list">
           <div class="alert-row" *ngFor="let a of alertas" [class.tappable]="alertaClickable(a)" (click)="abrirAlerta(a)">
             <span class="alert-ico" [ngClass]="alertaColor(a)"><ion-icon [name]="alertaIcono(a)"></ion-icon></span>

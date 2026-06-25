@@ -43,6 +43,8 @@ export class DetalleOrdenPage implements OnInit, OnDestroy {
   nuevoRepuesto: OrdenRepuesto = { nombre: '', cantidad: 1, costo_unitario: 0 };
   mostrarFormRepuesto = false;
   mostrarFormSolicitud = false;
+  listaSolicitud: { nombre: string; cantidad: number }[] = [];
+  enviandoSolicitud = false;
 
   checklist: OrdenChecklist = {
     prueba_realizada: false,
@@ -205,19 +207,34 @@ export class DetalleOrdenPage implements OnInit, OnDestroy {
     });
   }
 
-  solicitarRepuesto() {
+  agregarALista() {
     if (!this.nuevoRepuesto.nombre.trim()) return;
-    this.mecSvc.solicitarRepuesto(
-      this.orden!.id!,
-      this.nuevoRepuesto.nombre.trim(),
-      this.nuevoRepuesto.cantidad || 1,
-    ).pipe(takeUntil(this.destroy$)).subscribe({
-      next: res => {
-        this.repuestos.push(res.data);
-        this.nuevoRepuesto = { nombre: '', cantidad: 1, costo_unitario: 0 };
-        this.mostrarToast('Repuesto solicitado');
-      },
-    });
+    this.listaSolicitud.push({ nombre: this.nuevoRepuesto.nombre.trim(), cantidad: this.nuevoRepuesto.cantidad || 1 });
+    this.nuevoRepuesto = { nombre: '', cantidad: 1, costo_unitario: 0 };
+  }
+
+  quitarDeLista(i: number) { this.listaSolicitud.splice(i, 1); }
+
+  enviarSolicitudes() {
+    if (!this.listaSolicitud.length || this.enviandoSolicitud) return;
+    this.enviandoSolicitud = true;
+    let pendientes = this.listaSolicitud.length;
+    const items = [...this.listaSolicitud];
+    for (const p of items) {
+      this.mecSvc.solicitarRepuesto(this.orden!.id!, p.nombre, p.cantidad)
+        .pipe(takeUntil(this.destroy$)).subscribe({
+          next: res => {
+            this.repuestos.push(res.data);
+            if (--pendientes <= 0) {
+              this.listaSolicitud = [];
+              this.enviandoSolicitud = false;
+              this.mostrarFormSolicitud = false;
+              this.mostrarToast(`${items.length} repuesto${items.length > 1 ? 's' : ''} solicitado${items.length > 1 ? 's' : ''}`);
+            }
+          },
+          error: () => { this.enviandoSolicitud = false; },
+        });
+    }
   }
 
   async eliminarRepuesto(r: OrdenRepuesto) {

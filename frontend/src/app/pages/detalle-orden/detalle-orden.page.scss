@@ -154,6 +154,22 @@
   ion-item { --background: transparent; --padding-start: 0; }
 }
 
+// Solicitud de repuestos (mecánico)
+.solicitud-row { display: flex; align-items: flex-end; gap: 4px;
+  .sol-input { flex: 1; min-width: 0; }
+  .sol-cant { width: 70px; flex-shrink: 0; }
+  ion-button { flex-shrink: 0; --padding-start: 4px; --padding-end: 4px; margin-bottom: 8px;
+    ion-icon { font-size: 28px; color: var(--ion-color-primary); } }
+}
+.sol-lista { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
+.sol-item { display: flex; align-items: center; gap: 8px;
+  background: var(--ion-card-background); border: 1px solid var(--hairline); border-radius: 10px; padding: 8px 12px;
+  .sol-nombre { flex: 1; font-size: 13.5px; font-weight: 600; }
+  .sol-qty { font-size: 12px; color: var(--n-500); }
+  .sol-del { background: none; border: none; cursor: pointer; padding: 2px; color: var(--n-400);
+    ion-icon { font-size: 20px; } &:hover { color: var(--ion-color-danger); } }
+}
+
 // Repuestos / listas
 .rep-list .rep-item {
   --background: transparent;

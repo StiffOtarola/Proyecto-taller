@@ -118,16 +118,32 @@
 
       <!-- Formulario simplificado para mecánico (sin precio) -->
       <div *ngIf="mostrarFormSolicitud && auth.tieneRol('tecnico')" class="inline-form">
-        <ion-item>
-          <ion-label position="floating">¿Qué repuesto necesitás?</ion-label>
-          <ion-input [(ngModel)]="nuevoRepuesto.nombre"></ion-input>
-        </ion-item>
-        <ion-item>
-          <ion-label position="floating">Cantidad</ion-label>
-          <ion-input type="number" [(ngModel)]="nuevoRepuesto.cantidad"></ion-input>
-        </ion-item>
-        <ion-button expand="block" class="ion-margin-top" (click)="solicitarRepuesto()">
-          <ion-icon name="send-outline" slot="start"></ion-icon> Solicitar a recepción
+        <div class="solicitud-row">
+          <ion-item class="sol-input">
+            <ion-label position="floating">Repuesto</ion-label>
+            <ion-input [(ngModel)]="nuevoRepuesto.nombre" (keyup.enter)="agregarALista()"></ion-input>
+          </ion-item>
+          <ion-item class="sol-cant">
+            <ion-label position="floating">Cant.</ion-label>
+            <ion-input type="number" [(ngModel)]="nuevoRepuesto.cantidad"></ion-input>
+          </ion-item>
+          <ion-button fill="clear" (click)="agregarALista()" [disabled]="!nuevoRepuesto.nombre.trim()">
+            <ion-icon slot="icon-only" name="add-circle"></ion-icon>
+          </ion-button>
+        </div>
+
+        <!-- Lista pendiente de envío -->
+        <div class="sol-lista" *ngIf="listaSolicitud.length">
+          <div class="sol-item" *ngFor="let p of listaSolicitud; let i = index">
+            <span class="sol-nombre">{{ p.nombre }}</span>
+            <span class="sol-qty mono">×{{ p.cantidad }}</span>
+            <button class="sol-del" (click)="quitarDeLista(i)"><ion-icon name="close-circle-outline"></ion-icon></button>
+          </div>
+        </div>
+
+        <ion-button expand="block" class="ion-margin-top" (click)="enviarSolicitudes()" [disabled]="!listaSolicitud.length || enviandoSolicitud">
+          <ion-icon name="send-outline" slot="start"></ion-icon>
+          Enviar {{ listaSolicitud.length }} pieza{{ listaSolicitud.length !== 1 ? 's' : '' }} a recepción
         </ion-button>
       </div>
 

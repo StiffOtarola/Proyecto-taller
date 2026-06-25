@@ -57,6 +57,10 @@ export class OrdenesService {
     return this.http.delete(`${this.url}/${ordenId}/repuestos/${repuestoId}`);
   }
 
+  getTiempos(id: number): Observable<{ data: { etapa: string; inicio: string; fin: string | null }[] }> {
+    return this.http.get<{ data: any[] }>(`${this.url}/${id}/tiempos`);
+  }
+
   getChecklist(id: number): Observable<{ data: any }> {
     return this.http.get<{ data: any }>(`${this.url}/${id}/checklist`);
   }

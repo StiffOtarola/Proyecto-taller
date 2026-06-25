@@ -169,6 +169,32 @@
       </div>
     </section>
 
+    <!-- Línea de tiempo (solo admin/recepción) -->
+    <section class="card timeline-card" *ngIf="tiempos.length && !auth.tieneRol('tecnico')">
+      <div class="card-head">
+        <span class="section-label">
+          <ion-icon name="git-branch-outline" style="vertical-align:-2px;margin-right:4px"></ion-icon>
+          Línea de tiempo
+        </span>
+        <span class="tiny mono">Total: {{ duracionTotal }}</span>
+      </div>
+      <div class="tl-phases">
+        <div class="tl-phase" *ngFor="let t of tiempos; let last = last" [class.active]="!t.fin" [class.done]="!!t.fin">
+          <div class="tl-dot"><ion-icon [name]="etapaIcono[t.etapa] || 'ellipse'"></ion-icon></div>
+          <div class="tl-body">
+            <strong>{{ etapaLabel[t.etapa] || t.etapa }}</strong>
+            <div class="tl-dates">
+              <span><ion-icon name="play-outline"></ion-icon> {{ formatFecha(t.inicio) }}</span>
+              <span *ngIf="t.fin"><ion-icon name="stop-outline"></ion-icon> {{ formatFecha(t.fin) }}</span>
+              <span *ngIf="!t.fin" class="tl-en-curso"><ion-icon name="time-outline"></ion-icon> En curso</span>
+            </div>
+            <span class="tl-dur mono">{{ duracion(t.inicio, t.fin) }}</span>
+          </div>
+          <div class="tl-line" *ngIf="!last"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- Avances / Timeline -->
     <section class="card">
       <div class="card-head">

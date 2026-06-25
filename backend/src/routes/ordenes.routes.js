@@ -278,6 +278,19 @@ router.post('/:id/repuestos', async (req, res) => {
   }
 });
 
+// GET /api/ordenes/:id/tiempos — línea de tiempo de la orden (fecha/hora de cada fase)
+router.get('/:id/tiempos', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT etapa, inicio, fin FROM orden_tiempos WHERE orden_id = ? ORDER BY inicio ASC',
+      [req.params.id]
+    );
+    res.json({ data: rows });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
 // GET /api/ordenes/:id/repuestos
 router.get('/:id/repuestos', async (req, res) => {
   try {

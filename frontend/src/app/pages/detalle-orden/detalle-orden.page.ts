@@ -46,6 +46,16 @@ export class DetalleOrdenPage implements OnInit, OnDestroy {
   listaSolicitud: { nombre: string; cantidad: number }[] = [];
   enviandoSolicitud = false;
 
+  tiempos: { etapa: string; inicio: string; fin: string | null }[] = [];
+  readonly etapaLabel: Record<string, string> = {
+    recepcion: 'Recepción', diagnostico: 'Diagnóstico', esperando_aprobacion: 'Esperando aprobación',
+    esperando_repuestos: 'Esperando repuestos', en_reparacion: 'En reparación', lista_entrega: 'Lista para entrega',
+  };
+  readonly etapaIcono: Record<string, string> = {
+    recepcion: 'log-in-outline', diagnostico: 'search-outline', esperando_aprobacion: 'time-outline',
+    esperando_repuestos: 'cube-outline', en_reparacion: 'construct-outline', lista_entrega: 'checkmark-circle-outline',
+  };
+
   checklist: OrdenChecklist = {
     prueba_realizada: false,
     lavado: false,
@@ -104,6 +114,9 @@ export class DetalleOrdenPage implements OnInit, OnDestroy {
     this.ordenSvc.getAvances(id).pipe(takeUntil(this.destroy$)).subscribe(res => this.avances = res.data);
     this.ordenSvc.getRepuestos(id).pipe(takeUntil(this.destroy$)).subscribe(res => this.repuestos = res.data);
     this.ordenSvc.getFotos(id).pipe(takeUntil(this.destroy$)).subscribe(res => this.fotos = res.data);
+    if (!this.auth.tieneRol('tecnico')) {
+      this.ordenSvc.getTiempos(id).pipe(takeUntil(this.destroy$)).subscribe(res => this.tiempos = res.data || []);
+    }
     this.garantiaSvc.getAll({ orden_id: id }).pipe(takeUntil(this.destroy$)).subscribe(res => this.garantias = res.data);
     this.ordenSvc.getChecklist(id).pipe(takeUntil(this.destroy$)).subscribe(res => {
       if (res.data) {
@@ -393,6 +406,32 @@ export class DetalleOrdenPage implements OnInit, OnDestroy {
       ],
     });
     await conf.present();
+  }
+
+  formatFecha(f: string): string {
+    if (!f) return '—';
+    return new Date(f).toLocaleString('es-CR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true });
+  }
+
+  duracion(inicio: string, fin: string | null): string {
+    if (!inicio) return '';
+    const end = fin ? new Date(fin).getTime() : Date.now();
+    const min = Math.round((end - new Date(inicio).getTime()) / 60000);
+    if (min < 1) return '< 1 min';
+    if (min < 60) return `${min} min`;
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    if (h < 24) return m ? `${h}h ${m}min` : `${h}h`;
+    const d = Math.floor(h / 24);
+    const rh = h % 24;
+    return rh ? `${d}d ${rh}h` : `${d}d`;
+  }
+
+  get duracionTotal(): string {
+    if (!this.tiempos.length) return '—';
+    const inicio = this.tiempos[0].inicio;
+    const ultimo = this.tiempos[this.tiempos.length - 1];
+    return this.duracion(inicio, ultimo.fin);
   }
 
   private async mostrarToast(msg: string) {

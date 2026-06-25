@@ -184,6 +184,14 @@
 
     <!-- Exportar -->
     <div class="cd mb">
+      <span class="cd-title">📄 Generar reporte PDF</span>
+      <div class="export-row">
+        <button class="btn btn-cr" (click)="exportarPDF()" [disabled]="cargando">
+          <ion-icon name="document-text-outline"></ion-icon> Resumen ejecutivo PDF
+        </button>
+      </div>
+    </div>
+    <div class="cd mb">
       <span class="cd-title">📤 Exportar a Excel (CSV)</span>
       <div class="export-row">
         <button class="btn btn-ou" (click)="exportarOrdenes()" [disabled]="exportando">Órdenes</button>

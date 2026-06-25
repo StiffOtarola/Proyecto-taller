@@ -8,6 +8,7 @@ import { DashboardService } from '../../services/dashboard.service';
 import { OrdenesService } from '../../services/ordenes.service';
 import { ESTADO_CONFIG, EstadoOrden } from '../../models/orden.model';
 import { descargarCSV, fechaCorta } from '../../shared/csv.util';
+import { generarPDF, formatMoneda, formatPct } from '../../shared/pdf.util';
 
 type Sem = 'rojo' | 'amarillo' | 'verde' | 'gris';
 
@@ -159,6 +160,89 @@ export class AdminResumenPage implements OnInit, OnDestroy {
       { key: 'nombre', label: 'Técnico' }, { key: 'ordenes_completadas', label: 'Órdenes completadas' }, { key: 'horas_promedio', label: 'Horas promedio' },
     ], this.tecnicos.map(t => ({ nombre: t.nombre, ordenes_completadas: t.ordenes_completadas || 0, horas_promedio: t.horas_promedio || 0 })));
     this.aviso('Productividad exportada');
+  }
+
+  exportarPDF() {
+    const d = this.data;
+    const o = this.op;
+    if (!d) { this.aviso('Esperá a que carguen los datos', 'warning'); return; }
+
+    const ec = d.estado_citas || {};
+    const kpis = `
+      <div class="kpi-grid">
+        <div class="kpi"><div class="num">${d.total_citas || 0}</div><div class="label">Citas del mes</div></div>
+        <div class="kpi green"><div class="num">${formatMoneda(d.ingresos_mes || 0)}</div><div class="label">Ingresos del mes</div></div>
+        <div class="kpi amber"><div class="num">${d.citas_pendientes || 0}</div><div class="label">Pendientes</div></div>
+        <div class="kpi green"><div class="num">${d.tasa_exito || 0}%</div><div class="label">Tasa de éxito</div></div>
+      </div>`;
+
+    const estadoCitas = `
+      <div class="section">
+        <div class="section-title">Estado de citas del mes</div>
+        <table>
+          <tr><th>Estado</th><th class="right">Cantidad</th><th class="right">%</th></tr>
+          <tr><td>Agendadas</td><td class="right mono">${ec.agendadas || 0}</td><td class="right">${formatPct(ec.agendadas, ec.total)}</td></tr>
+          <tr><td>En proceso</td><td class="right mono">${ec.en_proceso || 0}</td><td class="right">${formatPct(ec.en_proceso, ec.total)}</td></tr>
+          <tr><td>Completadas</td><td class="right mono">${ec.completadas || 0}</td><td class="right">${formatPct(ec.completadas, ec.total)}</td></tr>
+          <tr><td>Canceladas</td><td class="right mono">${ec.canceladas || 0}</td><td class="right">${formatPct(ec.canceladas, ec.total)}</td></tr>
+          <tr class="bold"><td>Total</td><td class="right mono">${ec.total || 0}</td><td class="right">100%</td></tr>
+        </table>
+      </div>`;
+
+    const topServicios = (d.top_servicios || []).length ? `
+      <div class="section">
+        <div class="section-title">Top servicios del mes</div>
+        ${(d.top_servicios || []).map((s: any) => `
+          <div class="bar-wrap">
+            <span class="bar-label">${s.servicio}</span>
+            <div class="bar-track"><div class="bar-fill" style="width:${this.pct(s.total, this.maxServicio)}%"></div></div>
+            <span class="bar-val">${s.total}</span>
+          </div>`).join('')}
+      </div>` : '';
+
+    const ingresosPorServicio = (d.ingresos_por_servicio || []).length ? `
+      <div class="section">
+        <div class="section-title">Ingresos por servicio</div>
+        <table>
+          <tr><th>Servicio</th><th class="right">Citas</th><th class="right">Ingreso</th><th class="right">Promedio</th></tr>
+          ${(d.ingresos_por_servicio || []).map((r: any) => `
+            <tr>
+              <td>${r.servicio}</td>
+              <td class="right mono">${r.citas}</td>
+              <td class="right mono">${formatMoneda(r.ingreso)}</td>
+              <td class="right mono">${formatMoneda(r.promedio)}</td>
+            </tr>`).join('')}
+          <tr class="bold"><td>Total</td><td></td><td class="right mono">${formatMoneda(this.totalIngreso)}</td><td></td></tr>
+        </table>
+      </div>` : '';
+
+    const tecnicosHTML = this.tecnicos.length ? `
+      <div class="section">
+        <div class="section-title">Productividad por mecánico</div>
+        <table>
+          <tr><th>Mecánico</th><th class="right">Órdenes</th><th class="right">Horas prom.</th></tr>
+          ${this.tecnicos.map(t => `
+            <tr>
+              <td>${t.nombre}</td>
+              <td class="right mono">${t.ordenes_completadas || 0}</td>
+              <td class="right mono">${t.horas_promedio || '—'}</td>
+            </tr>`).join('')}
+        </table>
+      </div>` : '';
+
+    const operativo = o ? `
+      <div class="section">
+        <div class="section-title">Operativo</div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="num">${formatMoneda(o.facturacion_hoy || 0)}</div><div class="label">Facturado hoy</div></div>
+          <div class="kpi"><div class="num">${formatMoneda(o.facturacion_mes || 0)}</div><div class="label">Facturado mes</div></div>
+          <div class="kpi"><div class="num">${formatMoneda(o.ticket_promedio || 0)}</div><div class="label">Ticket promedio</div></div>
+          <div class="kpi amber"><div class="num">${o.tiempo_promedio_horas || '—'}h</div><div class="label">Tiempo prom. reparación</div></div>
+        </div>
+      </div>` : '';
+
+    generarPDF('Resumen Ejecutivo', kpis + operativo + estadoCitas + topServicios + ingresosPorServicio + tecnicosHTML);
+    this.aviso('PDF generado');
   }
 
   private async aviso(message: string, color = 'success') {

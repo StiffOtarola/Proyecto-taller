@@ -84,4 +84,16 @@ async function notificarCortesia(clienteId) {
   }
 }
 
-module.exports = { notificarCambioEstado, crearNotificacion, ESTADO_LEGIBLE };
+async function notificarMecanico(tecnicoId, mensaje, remitenteId) {
+  try {
+    if (!tecnicoId) return;
+    await pool.query(
+      "INSERT INTO mensajes_internos (remitente_id, destino_id, mensaje, tipo) VALUES (?, ?, ?, 'sistema')",
+      [remitenteId || tecnicoId, tecnicoId, mensaje]
+    );
+  } catch (err) {
+    console.error('⚠️  No se pudo notificar al mecánico:', err.message);
+  }
+}
+
+module.exports = { notificarCambioEstado, crearNotificacion, notificarMecanico, ESTADO_LEGIBLE };

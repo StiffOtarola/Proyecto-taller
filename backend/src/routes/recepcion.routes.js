@@ -8,6 +8,7 @@ const { generarNumeroOrden, sincronizarCitaDesdeOrden, cerrarOrden, avanzarEstad
 const { getConfig, horasDisponibles } = require('../utils/configuracion');
 const { SERVICIOS } = require('../utils/servicios');
 const { getSucursales, tecnicoEnSucursal } = require('../utils/sucursales');
+const { notificarMecanico } = require('../utils/notificaciones');
 
 // Panel de recepción: intermediaria entre cliente y mecánico.
 // Accesible a recepción y superiores.
@@ -739,6 +740,10 @@ router.patch('/ordenes/:id/tecnico', async (req, res) => {
       }
     }
     await pool.query('UPDATE ordenes_trabajo SET tecnico_id = ? WHERE id = ?', [tecnico_id || null, req.params.id]);
+    if (tecnico_id) {
+      const [[o]] = await pool.query('SELECT numero_orden, problema_reportado FROM ordenes_trabajo WHERE id = ?', [req.params.id]);
+      if (o) await notificarMecanico(tecnico_id, `Te asignaron la orden ${o.numero_orden}: ${(o.problema_reportado || '').slice(0, 80)}`, req.usuario.id);
+    }
     res.json({ message: 'Técnico asignado' });
   } catch (err) {
     fail(res, err);

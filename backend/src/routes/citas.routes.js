@@ -4,7 +4,7 @@ const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
 const requireRol = require('../middleware/roles');
 const { soloRoles } = require('../middleware/roles');
-const { notificarCambioEstado } = require('../utils/notificaciones');
+const { notificarCambioEstado, notificarMecanico } = require('../utils/notificaciones');
 const { TRANSICIONES_CITA, transicionPermitida } = require('../utils/transiciones');
 const { sucursalValida, tecnicoEnSucursal } = require('../utils/sucursales');
 
@@ -66,6 +66,9 @@ router.post('/', soloRoles(...GESTIONA_AGENDA), async (req, res) => {
       [cliente_id, moto_id || null, req.usuario.id, tecnico_id || null, sucursal_id, fecha, hora, motivo, tipo_servicio || null]
     );
     const [[nueva]] = await pool.query('SELECT * FROM citas WHERE id = ?', [result.insertId]);
+    if (tecnico_id) {
+      await notificarMecanico(tecnico_id, `Nueva cita asignada: ${tipo_servicio || motivo} el ${fecha} a las ${hora}`, req.usuario.id);
+    }
     res.status(201).json({ data: nueva, message: 'Cita creada' });
   } catch (err) {
     fail(res, err);
@@ -138,6 +141,10 @@ router.patch('/:id/asignar', requireRol('admin'), async (req, res) => {
   try {
     const { tecnico_id } = req.body;
     await pool.query('UPDATE citas SET tecnico_id = ? WHERE id = ?', [tecnico_id || null, req.params.id]);
+    if (tecnico_id) {
+      const [[cita]] = await pool.query("SELECT DATE_FORMAT(fecha,'%Y-%m-%d') AS fecha, TIME_FORMAT(hora,'%H:%i') AS hora, tipo_servicio, motivo FROM citas WHERE id = ?", [req.params.id]);
+      if (cita) await notificarMecanico(tecnico_id, `Te asignaron una cita: ${cita.tipo_servicio || cita.motivo} el ${cita.fecha} a las ${cita.hora}`, req.usuario.id);
+    }
     res.json({ message: tecnico_id ? 'Técnico asignado' : 'Asignación quitada' });
   } catch (err) {
     fail(res, err);

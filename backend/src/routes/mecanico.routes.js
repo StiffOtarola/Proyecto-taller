@@ -14,7 +14,8 @@ const EN_PROCESO = ['en_revision', 'en_mantenimiento'];
 
 // Campos que devuelve cada cita del mecánico (con datos de moto y cliente).
 const SELECT_CITA = `
-  SELECT ci.id, ci.fecha, ci.hora, ci.motivo, ci.tipo_servicio, ci.estado,
+  SELECT ci.id, DATE_FORMAT(ci.fecha, '%Y-%m-%d') AS fecha, TIME_FORMAT(ci.hora, '%H:%i') AS hora,
+         ci.motivo, ci.tipo_servicio, ci.estado,
          ci.monto, ci.calificacion, ci.comentario_satisfaccion, ci.fecha_inicio, ci.fecha_fin,
          ci.confirmada_cliente,
          ci.orden_id, o.numero_orden, o.estado AS orden_estado,

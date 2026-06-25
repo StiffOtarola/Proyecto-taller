@@ -7,15 +7,19 @@
 // Hero y WhatsApp van centrados angostos; las tarjetas fluyen en columnas
 .ot-hero, .wa-wrap { max-width: 680px; margin-left: auto; margin-right: auto; }
 
+// Info duo also centered
+.info-duo { max-width: 680px; margin-left: auto; margin-right: auto; }
+
 @media (min-width: 860px) {
   .ot-grid {
     column-count: 2;
     column-gap: 16px;
   }
-  .ot-grid > .card { break-inside: avoid; }
+  .ot-grid > .card,
+  .ot-grid > .info-duo { break-inside: avoid; }
 }
 
-// Tarjeta base de sección
+// Tarjeta base de seccion
 .card {
   background: var(--ion-card-background);
   border: 1px solid var(--hairline);
@@ -31,14 +35,24 @@
   .tiny { font-size: 10px; color: var(--n-400); }
 }
 
-// Hero
+// === Accent border-left for sections (Improvement #5) ===
+.accent-rose   { border-left: 4px solid var(--rose-600); }
+.accent-indigo { border-left: 4px solid var(--indigo-600, #4f46e5); }
+.accent-amber  { border-left: 4px solid var(--amber-700, #b45309); }
+.accent-emerald{ border-left: 4px solid var(--emerald-600, #059669); }
+
+// === Hero with gradient (Improvement #1) ===
 .ot-hero {
   text-align: center;
-  padding: 14px 8px 8px;
+  padding: 20px 16px 16px;
+  background: linear-gradient(135deg, var(--rose-50), var(--emerald-50));
+  border: 1px solid var(--hairline);
+  border-radius: 24px;
+  margin-bottom: 16px;
 
   .status-pill {
     display: inline-block;
-    background: var(--rose-50);
+    background: rgba(255,255,255,0.8);
     border: 1px solid var(--rose-200);
     color: var(--rose-700);
     font-size: 11px; font-weight: 800;
@@ -57,13 +71,177 @@
   .placa-pill {
     display: inline-block;
     font-size: 12px; font-weight: 600;
-    background: var(--n-100); color: var(--n-600);
+    background: rgba(255,255,255,0.6); color: var(--n-600);
     padding: 3px 12px; border-radius: var(--radius-pill);
   }
   .ot-cliente {
     font-size: 12px; color: var(--n-500);
     margin: 8px 0 0; font-weight: 500;
   }
+}
+
+// Dark mode: replace gradient with solid card bg
+@media (prefers-color-scheme: dark) {
+  .ot-hero {
+    background: var(--ion-card-background);
+    .status-pill { background: rgba(255,255,255,0.08); }
+    .placa-pill  { background: rgba(255,255,255,0.08); }
+  }
+}
+
+// === Progress Stepper (Improvement #1) ===
+.progress-stepper {
+  margin-top: 18px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+.stepper-track {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: max-content;
+  gap: 0;
+}
+.stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  width: 64px;
+}
+.stepper-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--n-100);
+  border: 2px solid var(--n-200, #e5e5e5);
+  color: var(--n-400);
+  font-size: 14px;
+  transition: all .2s ease;
+
+  .dot-inner {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--n-300, #d4d4d4);
+  }
+}
+.stepper-step.completed .stepper-dot {
+  background: var(--emerald-600, #059669);
+  border-color: var(--emerald-600, #059669);
+  color: #fff;
+  ion-icon { font-size: 15px; }
+}
+.stepper-step.active .stepper-dot {
+  background: var(--rose-600);
+  border-color: var(--rose-600);
+  box-shadow: 0 0 0 4px rgba(225,29,72,0.18);
+  .dot-inner { background: #fff; }
+}
+.stepper-step.future .stepper-dot {
+  background: var(--n-100);
+}
+.stepper-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--n-400);
+  text-align: center;
+  line-height: 1.2;
+  max-width: 60px;
+  word-break: break-word;
+}
+.stepper-step.active .stepper-label { color: var(--rose-700); font-weight: 800; }
+.stepper-step.completed .stepper-label { color: var(--emerald-700); }
+
+.stepper-line {
+  flex-shrink: 0;
+  width: 20px;
+  height: 2px;
+  background: var(--n-200, #e5e5e5);
+  margin-top: 13px; // center with dot
+  &.filled { background: var(--emerald-600, #059669); }
+}
+
+// === Progress bar (Improvement #4) ===
+.progress-bar-wrap {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--n-100);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--rose-600), var(--emerald-600, #059669));
+  transition: width .4s ease;
+}
+.progress-pct {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--n-500);
+  min-width: 36px;
+  text-align: right;
+}
+
+// === Mini cards (Improvement #2) ===
+.info-duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+@media (max-width: 520px) {
+  .info-duo { grid-template-columns: 1fr; }
+}
+.mini-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--ion-card-background);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
+  padding: 14px;
+}
+.mini-icon {
+  flex-shrink: 0;
+  width: 38px; height: 38px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  ion-icon { font-size: 20px; }
+}
+.mini-icon.moto-icon {
+  background: var(--amber-50, #fffbeb);
+  color: var(--amber-700, #b45309);
+}
+.mini-icon.client-icon {
+  background: var(--indigo-50, #eef2ff);
+  color: var(--indigo-600, #4f46e5);
+}
+.mini-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.mini-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ion-text-color);
+  line-height: 1.3;
+}
+.mini-sub {
+  font-size: 12px;
+  color: var(--n-500);
+  font-weight: 500;
 }
 
 // Info
@@ -78,7 +256,7 @@
 }
 .obs { margin: 12px 0 0; font-size: 14px; .k { display:block; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--n-400); margin-bottom:2px; } }
 
-// Banners (aprobación / garantía)
+// Banners (aprobacion / garantia)
 .banner {
   display: flex; align-items: center; gap: 12px;
   ion-icon { font-size: 28px; flex-shrink: 0; }
@@ -91,11 +269,38 @@
   &.inner { box-shadow: none; padding: 14px; border-radius: 16px; margin-bottom: 0; }
 }
 
-// Cambiar estado
+// === State change pills (Improvement #3) ===
 .state-grid {
   display: flex; flex-wrap: wrap; gap: 8px;
-  ion-button { margin: 0; --border-radius: 12px; }
 }
+.state-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: 999px;
+  padding: 9px 18px;
+  font-family: var(--ion-font-family);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s var(--ease-out), box-shadow .15s ease;
+  color: #fff;
+
+  ion-icon { font-size: 16px; }
+  &:active { transform: scale(0.96); }
+
+  // Per-state colors
+  &[data-state="recepcion"]            { background: var(--rose-600); }
+  &[data-state="diagnostico"]          { background: #d97706; } // amber-600
+  &[data-state="esperando_aprobacion"] { background: var(--indigo-600, #4f46e5); }
+  &[data-state="esperando_repuestos"]  { background: #6b7280; color: #fff; } // gray-500
+  &[data-state="en_reparacion"]        { background: #2563eb; } // blue-600
+  &[data-state="lista_entrega"]        { background: var(--emerald-600, #059669); }
+  &[data-state="entregada"]            { background: #047857; } // emerald-700
+  &[data-state="cancelada"]            { background: #dc2626; } // red-600
+}
+
 .sel-line {
   background: var(--n-50);
   border: 1px solid var(--hairline);
@@ -144,7 +349,7 @@
   ion-icon { font-size: 16px; }
 }
 
-// Línea de tiempo
+// Linea de tiempo
 .timeline-card .tl-phases { display: flex; flex-direction: column; }
 .tl-phase {
   position: relative; display: flex; align-items: flex-start; gap: 12px; padding-bottom: 16px;
@@ -180,7 +385,7 @@
   ion-item { --background: transparent; --padding-start: 0; }
 }
 
-// Solicitud de repuestos (mecánico)
+// Solicitud de repuestos (mecanico)
 .solicitud-row { display: flex; align-items: flex-end; gap: 4px;
   .sol-input { flex: 1; min-width: 0; }
   .sol-cant { width: 70px; flex-shrink: 0; }
@@ -234,7 +439,7 @@
   ion-icon { font-size: 16px; flex-shrink: 0; }
 }
 
-// Galería de evidencia
+// Galeria de evidencia
 .foto-grupo { margin-top: 16px; }
 .foto-grupo-titulo {
   font-size: 11px; font-weight: 800; color: var(--n-400);

@@ -15,22 +15,65 @@
 <ion-content *ngIf="!cargando && orden">
   <div class="ot">
 
-    <!-- Hero: estado + moto -->
+    <!-- Hero: estado + moto + stepper -->
     <div class="ot-hero">
       <span class="status-pill">{{ estadoLabel(orden.estado!) }}</span>
       <h2 class="ot-model">{{ orden.marca }} {{ orden.modelo }} {{ orden.anio }}</h2>
       <span class="placa-pill mono" *ngIf="orden.placa">Placa: {{ orden.placa }}</span>
       <p class="ot-cliente">{{ orden.cliente_nombre }} {{ orden.cliente_apellido }} · {{ orden.cliente_telefono }}</p>
+
+      <!-- Progress stepper -->
+      <div class="progress-stepper">
+        <div class="stepper-track">
+          <ng-container *ngFor="let paso of flujoOrden; let i = index; let last = last">
+            <div class="stepper-step" [class.completed]="i < pasoActual" [class.active]="i === pasoActual" [class.future]="i > pasoActual">
+              <div class="stepper-dot">
+                <ion-icon name="checkmark" *ngIf="i < pasoActual"></ion-icon>
+                <span *ngIf="i >= pasoActual" class="dot-inner"></span>
+              </div>
+              <span class="stepper-label">{{ flujoLabel[paso] }}</span>
+            </div>
+            <div class="stepper-line" *ngIf="!last" [class.filled]="i < pasoActual"></div>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="progress-bar-wrap">
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="porcentajeProgreso"></div>
+        </div>
+        <span class="progress-pct mono">{{ porcentajeProgreso }}%</span>
+      </div>
     </div>
 
     <div class="ot-grid">
 
-    <!-- Info -->
+    <!-- Mini cards: moto + client -->
+    <div class="info-duo">
+      <div class="mini-card">
+        <div class="mini-icon moto-icon"><ion-icon name="bicycle-outline"></ion-icon></div>
+        <div class="mini-body">
+          <span class="mini-title">{{ orden.marca }} {{ orden.modelo }}</span>
+          <span class="mini-sub" *ngIf="orden.placa">Placa: {{ orden.placa }}</span>
+          <span class="mini-sub" *ngIf="orden.anio">Ano: {{ orden.anio }}</span>
+        </div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-icon client-icon"><ion-icon name="person-outline"></ion-icon></div>
+        <div class="mini-body">
+          <span class="mini-title">{{ orden.cliente_nombre }} {{ orden.cliente_apellido }}</span>
+          <span class="mini-sub" *ngIf="orden.cliente_telefono">{{ orden.cliente_telefono }}</span>
+          <span class="mini-sub" *ngIf="orden.sucursal_nombre">{{ orden.sucursal_nombre }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info details -->
     <section class="card ot-info">
       <p><span class="k">Problema</span>{{ orden.problema_reportado }}</p>
-      <p *ngIf="orden.diagnostico"><span class="k">Diagnóstico</span>{{ orden.diagnostico }}</p>
-      <p *ngIf="orden.tecnico_nombre"><span class="k">Técnico</span>{{ orden.tecnico_nombre }}</p>
-      <p *ngIf="orden.sucursal_nombre"><span class="k">Sucursal</span>{{ orden.sucursal_nombre }}</p>
+      <p *ngIf="orden.diagnostico"><span class="k">Diagnostico</span>{{ orden.diagnostico }}</p>
+      <p *ngIf="orden.tecnico_nombre"><span class="k">Tecnico</span>{{ orden.tecnico_nombre }}</p>
       <p *ngIf="orden.fecha_estimada_entrega"><span class="k">Entrega estimada</span>{{ orden.fecha_estimada_entrega | date:'dd/MM/yyyy' }}</p>
     </section>
 
@@ -56,10 +99,11 @@
     <section class="card" *ngIf="siguientes.length > 0">
       <span class="section-label">Cambiar estado</span>
       <div class="state-grid">
-        <ion-button *ngFor="let s of siguientes" (click)="cambiarEstado(s)"
-          [color]="estadoColor(s)" fill="outline" size="small">
+        <button *ngFor="let s of siguientes" (click)="cambiarEstado(s)"
+          class="state-pill" [attr.data-state]="s">
+          <ion-icon [name]="s === 'diagnostico' ? 'search-outline' : s === 'esperando_aprobacion' ? 'time-outline' : s === 'esperando_repuestos' ? 'cube-outline' : s === 'en_reparacion' ? 'construct-outline' : s === 'lista_entrega' ? 'checkmark-circle-outline' : s === 'entregada' ? 'checkmark-done-outline' : s === 'cancelada' ? 'close-circle-outline' : 'ellipse-outline'"></ion-icon>
           {{ estadoLabel(s) }}
-        </ion-button>
+        </button>
       </div>
     </section>
 
@@ -73,7 +117,7 @@
     </section>
 
     <!-- Costos (solo recepción/admin) -->
-    <section class="card costos" *ngIf="!auth.tieneRol('tecnico')">
+    <section class="card costos accent-rose" *ngIf="!auth.tieneRol('tecnico')">
       <div class="card-head">
         <span class="section-label">Costos</span>
         <span class="tiny mono">Simulación de factura</span>
@@ -88,7 +132,7 @@
     </section>
 
     <!-- Repuestos -->
-    <section class="card">
+    <section class="card accent-amber">
       <div class="card-head">
         <span class="section-label">Repuestos</span>
         <button class="link-add" (click)="mostrarFormRepuesto = !mostrarFormRepuesto" *ngIf="!auth.tieneRol('tecnico')">
@@ -196,7 +240,7 @@
     </section>
 
     <!-- Avances / Timeline -->
-    <section class="card">
+    <section class="card accent-indigo">
       <div class="card-head">
         <span class="section-label">Avances</span>
       </div>
@@ -364,7 +408,7 @@
     </section>
 
     <!-- Evidencia fotográfica -->
-    <section class="card">
+    <section class="card accent-emerald">
       <span class="section-label">
         <ion-icon name="camera-outline" style="vertical-align:-2px;margin-right:4px"></ion-icon>
         Evidencia fotográfica

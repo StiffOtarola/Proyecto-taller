@@ -47,6 +47,25 @@ export class DetalleOrdenPage implements OnInit, OnDestroy {
   enviandoSolicitud = false;
 
   tiempos: { etapa: string; inicio: string; fin: string | null }[] = [];
+  // === Stepper de progreso ===
+  readonly flujoOrden = ['recepcion', 'diagnostico', 'esperando_aprobacion', 'esperando_repuestos', 'en_reparacion', 'lista_entrega', 'entregada'];
+  readonly flujoLabel: Record<string, string> = {
+    recepcion: 'Recepcion', diagnostico: 'Diagnostico', esperando_aprobacion: 'Aprobacion',
+    esperando_repuestos: 'Repuestos', en_reparacion: 'Reparacion', lista_entrega: 'Lista', entregada: 'Entregada'
+  };
+  readonly flujoPorcentaje: Record<string, number> = {
+    recepcion: 10, diagnostico: 25, esperando_aprobacion: 40,
+    esperando_repuestos: 55, en_reparacion: 70, lista_entrega: 85, entregada: 100
+  };
+
+  get pasoActual(): number {
+    return this.flujoOrden.indexOf(this.orden?.estado || 'recepcion');
+  }
+
+  get porcentajeProgreso(): number {
+    return this.flujoPorcentaje[this.orden?.estado || 'recepcion'] || 0;
+  }
+
   readonly etapaLabel: Record<string, string> = {
     recepcion: 'Recepción', diagnostico: 'Diagnóstico', esperando_aprobacion: 'Esperando aprobación',
     esperando_repuestos: 'Esperando repuestos', en_reparacion: 'En reparación', lista_entrega: 'Lista para entrega',

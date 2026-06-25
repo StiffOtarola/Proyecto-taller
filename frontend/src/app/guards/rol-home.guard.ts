@@ -13,12 +13,7 @@ export class RolHomeGuard implements CanActivate {
     const rol = this.auth.getUsuario()?.rol;
     if (rol === 'tecnico') return this.router.parseUrl('/mecanico');
     if (rol === 'recepcion') return this.router.parseUrl('/recepcion');
-    // El admin aterriza en /admin solo al entrar al índice de /tabs; los deep-links
-    // operativos (p. ej. /tabs/ordenes desde el panel admin) se respetan.
-    if (rol === 'admin') {
-      const enIndice = state.url === '/tabs' || state.url === '/tabs/dashboard';
-      return enIndice ? this.router.parseUrl('/admin') : true;
-    }
+    if (rol === 'admin') return this.router.parseUrl('/admin');
     return true;
   }
 }

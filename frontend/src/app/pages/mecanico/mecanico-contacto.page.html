@@ -1,6 +1,7 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
       <span class="avatar rose header-av" *ngIf="contacto">{{ (contacto.nombre || 'R').charAt(0) }}</span>
     </ion-buttons>
     <ion-title>
@@ -15,9 +16,6 @@
       </ion-button>
       <ion-button (click)="whatsapp()" *ngIf="contacto?.telefono" title="WhatsApp">
         <ion-icon slot="icon-only" name="logo-whatsapp" color="success"></ion-icon>
-      </ion-button>
-      <ion-button [routerLink]="['/mecanico/perfil']" title="Perfil">
-        <ion-icon slot="icon-only" name="person-circle-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>

@@ -1,25 +1,47 @@
-<ion-tabs>
-  <ion-tab-bar slot="bottom">
-    <ion-tab-button tab="inicio">
-      <ion-icon name="home-outline"></ion-icon>
-      <ion-label>Inicio</ion-label>
-    </ion-tab-button>
-    <ion-tab-button tab="historial">
-      <ion-icon name="time-outline"></ion-icon>
-      <ion-label>Historial</ion-label>
-    </ion-tab-button>
-    <ion-tab-button tab="tareas">
-      <ion-icon name="checkbox-outline"></ion-icon>
-      <ion-label>Tareas</ion-label>
-    </ion-tab-button>
-    <ion-tab-button tab="contacto">
-      <ion-icon name="chatbubbles-outline"></ion-icon>
-      <ion-label>Contacto</ion-label>
-      <ion-badge color="danger" *ngIf="noLeidos > 0">{{ noLeidos }}</ion-badge>
-    </ion-tab-button>
-    <ion-tab-button tab="agenda">
-      <ion-icon name="calendar-outline"></ion-icon>
-      <ion-label>Agenda</ion-label>
-    </ion-tab-button>
-  </ion-tab-bar>
-</ion-tabs>
+<ion-split-pane contentId="mecanico-content" when="lg">
+  <ion-menu contentId="mecanico-content" type="overlay" class="admin-sidebar">
+    <ion-content class="admin-dark sidebar-content">
+      <div class="sb-logo">
+        <img class="sb-brand" src="assets/logo/ms-logo-white.png" alt="MS Motos" />
+        <span>Mecánico</span>
+      </div>
+
+      <ion-menu-toggle auto-hide="false">
+        <nav class="sb-nav">
+          <div class="sb-section">Principal</div>
+          <a class="nav-item" routerLink="/mecanico/inicio" routerLinkActive="on">
+            <ion-icon name="home-outline"></ion-icon> Inicio
+          </a>
+          <a class="nav-item" routerLink="/mecanico/agenda" routerLinkActive="on">
+            <ion-icon name="calendar-outline"></ion-icon> Agenda
+          </a>
+          <a class="nav-item" routerLink="/mecanico/historial" routerLinkActive="on">
+            <ion-icon name="time-outline"></ion-icon> Historial
+          </a>
+          <a class="nav-item" routerLink="/mecanico/tareas" routerLinkActive="on">
+            <ion-icon name="checkbox-outline"></ion-icon> Tareas
+          </a>
+          <a class="nav-item" routerLink="/mecanico/contacto" routerLinkActive="on">
+            <ion-icon name="chatbubbles-outline"></ion-icon> Contacto
+            <span class="nav-badge" *ngIf="noLeidos > 0">{{ noLeidos }}</span>
+          </a>
+
+          <div class="sb-section">Cuenta</div>
+          <a class="nav-item" routerLink="/mecanico/perfil" routerLinkActive="on">
+            <ion-icon name="person-circle-outline"></ion-icon> Mi perfil
+          </a>
+        </nav>
+      </ion-menu-toggle>
+    </ion-content>
+
+    <ion-footer class="admin-dark">
+      <div class="sb-user">
+        <div class="sb-av">{{ iniciales }}</div>
+        <div class="sb-info"><strong>{{ nombre }}</strong><span>Mecánico</span></div>
+        <button class="sb-logout" (click)="logout()" title="Cerrar sesión"><ion-icon name="log-out-outline"></ion-icon></button>
+      </div>
+    </ion-footer>
+  </ion-menu>
+
+  <ion-router-outlet id="mecanico-content"></ion-router-outlet>
+</ion-split-pane>

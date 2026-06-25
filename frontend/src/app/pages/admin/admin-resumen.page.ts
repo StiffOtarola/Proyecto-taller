@@ -241,8 +241,8 @@ export class AdminResumenPage implements OnInit, OnDestroy {
         </div>
       </div>` : '';
 
-    generarPDF('Resumen Ejecutivo', kpis + operativo + estadoCitas + topServicios + ingresosPorServicio + tecnicosHTML);
-    this.aviso('PDF generado');
+    generarPDF('Resumen Ejecutivo', kpis + operativo + estadoCitas + topServicios + ingresosPorServicio + tecnicosHTML)
+      .then(() => this.aviso('PDF generado'));
   }
 
   private async aviso(message: string, color = 'success') {

@@ -1,4 +1,15 @@
-export function generarPDF(titulo: string, contenido: string) {
+export async function generarPDF(titulo: string, contenido: string, logoUrl = 'assets/logo/ms-iso.png') {
+  let logoBase64 = '';
+  try {
+    const resp = await fetch(logoUrl);
+    const blob = await resp.blob();
+    logoBase64 = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+  } catch { /* sin logo si falla */ }
+
   const ventana = window.open('', '_blank');
   if (!ventana) return;
 
@@ -13,7 +24,8 @@ export function generarPDF(titulo: string, contenido: string) {
     .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #e11d48; padding-bottom: 16px; margin-bottom: 24px; }
     .header h1 { font-size: 22px; font-weight: 800; color: #e11d48; }
     .header .fecha { font-size: 12px; color: #737373; }
-    .header .logo { font-size: 18px; font-weight: 800; color: #e11d48; }
+    .header .logo { font-size: 18px; font-weight: 800; color: #e11d48; display: flex; align-items: center; gap: 10px; }
+    .header .logo img { height: 48px; width: auto; }
     .section { margin-bottom: 20px; }
     .section-title { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #e11d48; margin-bottom: 10px; border-bottom: 1px solid #e5e5e5; padding-bottom: 6px; }
     .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
@@ -41,7 +53,7 @@ export function generarPDF(titulo: string, contenido: string) {
 <body>
   <div class="header">
     <div>
-      <span class="logo">MS Motos</span>
+      <span class="logo">${logoBase64 ? `<img src="${logoBase64}" alt="Logo" />` : ''}MS Motos</span>
       <h1>${titulo}</h1>
     </div>
     <div class="fecha">${new Date().toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>

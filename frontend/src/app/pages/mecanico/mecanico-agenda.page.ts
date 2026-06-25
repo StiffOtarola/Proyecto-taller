@@ -9,7 +9,10 @@ interface DiaCal {
   dia: number | null;
   hoy: boolean;
   total: number;
-  flujo: '' | 'bajo' | 'medio' | 'alto';
+  agendadas: number;
+  enProceso: number;
+  completadas: number;
+  flujo: '' | 'agendado' | 'proceso' | 'completo';
 }
 
 @Component({
@@ -49,6 +52,16 @@ export class MecanicoAgendaPage implements OnInit, OnDestroy {
 
   get tituloMes(): string { return `${this.meses[this.mes - 1]} ${this.anio}`; }
 
+  get resumenMes(): { agendadas: number; enProceso: number; completadas: number } {
+    let agendadas = 0, enProceso = 0, completadas = 0;
+    for (const c of this.citasMes) {
+      if (c.estado === 'agendado') agendadas++;
+      else if (c.estado === 'entregado') completadas++;
+      else if (c.estado !== 'cancelado') enProceso++;
+    }
+    return { agendadas, enProceso, completadas };
+  }
+
   cambiarMes(dir: number) {
     if (dir === 0) {
       this.anio = new Date().getFullYear();
@@ -80,15 +93,23 @@ export class MecanicoAgendaPage implements OnInit, OnDestroy {
   }
 
   private construir() {
-    const porDia = new Map<string, number>();
-    for (const c of this.citasMes) porDia.set(c.fecha, (porDia.get(c.fecha) || 0) + 1);
+    const porDia = new Map<string, { total: number; agendadas: number; enProceso: number; completadas: number }>();
+    for (const c of this.citasMes) {
+      const f = c.fecha;
+      if (!porDia.has(f)) porDia.set(f, { total: 0, agendadas: 0, enProceso: 0, completadas: 0 });
+      const d = porDia.get(f)!;
+      d.total++;
+      if (c.estado === 'agendado') d.agendadas++;
+      else if (c.estado === 'entregado') d.completadas++;
+      else if (c.estado !== 'cancelado') d.enProceso++;
+    }
 
     const hoyStr = hoyCR();
     const primerDow = new Date(Date.UTC(this.anio, this.mes - 1, 1)).getUTCDay();
     const offset = primerDow === 0 ? 6 : primerDow - 1;
     const diasMes = new Date(Date.UTC(this.anio, this.mes, 0)).getUTCDate();
 
-    const vacio = (): DiaCal => ({ fecha: '', dia: null, hoy: false, total: 0, flujo: '' });
+    const vacio = (): DiaCal => ({ fecha: '', dia: null, hoy: false, total: 0, agendadas: 0, enProceso: 0, completadas: 0, flujo: '' });
     const dias: DiaCal[] = [];
     for (let i = 0; i < offset; i++) dias.push(vacio());
 
@@ -96,11 +117,16 @@ export class MecanicoAgendaPage implements OnInit, OnDestroy {
     let primerConCitas: DiaCal | null = null;
     for (let d = 1; d <= diasMes; d++) {
       const fecha = `${this.anio}-${this.pad(this.mes)}-${this.pad(d)}`;
-      const total = porDia.get(fecha) || 0;
-      const flujo = total === 0 ? '' : total <= 2 ? 'bajo' : total <= 5 ? 'medio' : 'alto';
-      const cel: DiaCal = { fecha, dia: d, hoy: fecha === hoyStr, total, flujo };
+      const info = porDia.get(fecha) || { total: 0, agendadas: 0, enProceso: 0, completadas: 0 };
+      let flujo: DiaCal['flujo'] = '';
+      if (info.total > 0) {
+        if (info.enProceso > 0) flujo = 'proceso';
+        else if (info.agendadas > 0) flujo = 'agendado';
+        else flujo = 'completo';
+      }
+      const cel: DiaCal = { fecha, dia: d, hoy: fecha === hoyStr, ...info, flujo };
       if (cel.hoy) diaHoy = cel;
-      if (total > 0 && !primerConCitas) primerConCitas = cel;
+      if (info.total > 0 && !primerConCitas) primerConCitas = cel;
       dias.push(cel);
     }
     while (dias.length % 7 !== 0) dias.push(vacio());
@@ -117,6 +143,11 @@ export class MecanicoAgendaPage implements OnInit, OnDestroy {
   get citasDia(): any[] {
     if (!this.diaSel) return [];
     return this.citasMes.filter(c => c.fecha === this.diaSel!.fecha);
+  }
+
+  get esPasado(): boolean {
+    if (!this.diaSel?.fecha) return false;
+    return this.diaSel.fecha < hoyCR();
   }
 
   detalleTitulo(): string {

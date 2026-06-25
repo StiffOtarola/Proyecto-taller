@@ -23,6 +23,26 @@
   }
 }
 
+/* Resumen del mes */
+.mes-resumen {
+  display: flex; gap: 8px; margin-bottom: 14px;
+  .mr-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 10px 8px; border-radius: 14px; border: 1px solid var(--hairline);
+    background: var(--ion-card-background); box-shadow: var(--shadow-xs);
+    .mr-num { font-family: var(--font-display, inherit); font-size: 22px; font-weight: 900; line-height: 1; }
+    .mr-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--n-500); }
+    &.agendado .mr-num { color: var(--indigo-600, #4f46e5); }
+    &.proceso .mr-num { color: var(--amber-700); }
+    &.completo .mr-num { color: var(--emerald-700); }
+  }
+}
+
+.historial-tag { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px;
+  font-size: 11px; font-weight: 700; color: var(--n-400);
+  ion-icon { font-size: 13px; } }
+
+.placa { color: var(--n-400); font-weight: 500; }
+
 .cal-layout { display: grid; gap: 14px; grid-template-columns: 1fr; align-items: start; }
 @media (min-width: 920px) {
   .cal-layout { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
@@ -48,9 +68,9 @@
     font-size: 10px; font-weight: 800; line-height: 1;
     padding: 1px 5px; border-radius: 999px; background: var(--n-100); color: var(--n-500);
   }
-  &.flujo-bajo  { background: rgba(16, 185, 129, .10); .d-cnt { background: rgba(16, 185, 129, .18); color: var(--emerald-700); } }
-  &.flujo-medio { background: rgba(245, 158, 11, .12); .d-cnt { background: rgba(245, 158, 11, .20); color: var(--amber-700); } }
-  &.flujo-alto  { background: rgba(225, 29, 72, .12);  .d-cnt { background: rgba(225, 29, 72, .18);  color: var(--text-accent); } }
+  &.flujo-agendado { background: rgba(99, 102, 241, .10); .d-cnt { background: rgba(99, 102, 241, .18); color: var(--indigo-600, #4f46e5); } }
+  &.flujo-proceso  { background: rgba(245, 158, 11, .12); .d-cnt { background: rgba(245, 158, 11, .20); color: var(--amber-700); } }
+  &.flujo-completo { background: rgba(16, 185, 129, .10); .d-cnt { background: rgba(16, 185, 129, .18); color: var(--emerald-700); } }
   &.today { border-color: var(--ion-color-primary); .d-num { color: var(--text-accent); } }
   &.sel { border-color: var(--ion-color-primary); box-shadow: 0 0 0 2px rgba(225, 29, 72, .25); }
 }
@@ -59,9 +79,9 @@
   display: flex; gap: 14px; justify-content: center; margin-top: 12px;
   span { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--n-400); font-weight: 600; }
   i.lg { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
-  i.bajo { background: rgba(16, 185, 129, .5); }
-  i.medio { background: rgba(245, 158, 11, .55); }
-  i.alto { background: rgba(225, 29, 72, .5); }
+  i.agendado { background: rgba(99, 102, 241, .6); }
+  i.proceso { background: rgba(245, 158, 11, .6); }
+  i.completo { background: rgba(16, 185, 129, .6); }
 }
 
 .day-head {

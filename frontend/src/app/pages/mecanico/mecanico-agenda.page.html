@@ -21,6 +21,13 @@
       </div>
     </div>
 
+    <!-- Resumen del mes -->
+    <div class="mes-resumen" *ngIf="!cargando && citasMes.length">
+      <div class="mr-item agendado"><span class="mr-num">{{ resumenMes.agendadas }}</span><span class="mr-lbl">Agendadas</span></div>
+      <div class="mr-item proceso"><span class="mr-num">{{ resumenMes.enProceso }}</span><span class="mr-lbl">En proceso</span></div>
+      <div class="mr-item completo"><span class="mr-num">{{ resumenMes.completadas }}</span><span class="mr-lbl">Completadas</span></div>
+    </div>
+
     <div class="cal-layout">
       <!-- Calendario -->
       <div class="cal-card card">
@@ -44,9 +51,9 @@
         </div>
 
         <div class="cal-legend">
-          <span><i class="lg bajo"></i> ≤2</span>
-          <span><i class="lg medio"></i> 3–5</span>
-          <span><i class="lg alto"></i> 6+</span>
+          <span><i class="lg agendado"></i> Agendadas</span>
+          <span><i class="lg proceso"></i> En proceso</span>
+          <span><i class="lg completo"></i> Completadas</span>
         </div>
       </div>
 
@@ -55,7 +62,10 @@
         <div class="day-head">
           <div>
             <h3>{{ detalleTitulo() }}</h3>
-            <p class="day-sub">{{ citasDia.length }} {{ citasDia.length === 1 ? 'cita' : 'citas' }}</p>
+            <p class="day-sub">
+              {{ citasDia.length }} {{ citasDia.length === 1 ? 'cita' : 'citas' }}
+              <span *ngIf="esPasado" class="historial-tag"><ion-icon name="time-outline"></ion-icon> Historial</span>
+            </p>
           </div>
         </div>
 
@@ -63,20 +73,24 @@
           <div class="cita-row" *ngFor="let c of citasDia">
             <div class="ci-hora mono">{{ c.hora || '—' }}</div>
             <div class="ci-info">
-              <strong>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}</strong>
+              <strong>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}<span class="placa" *ngIf="c.placa"> · {{ c.placa }}</span></strong>
               <span class="ci-moto" *ngIf="c.tipo_servicio">{{ c.tipo_servicio }}</span>
               <span class="ci-moto" *ngIf="c.cliente_nombre">
                 <ion-icon name="person-outline"></ion-icon> {{ c.cliente_nombre }} {{ c.cliente_apellido }}
               </span>
+              <span class="ci-moto mono" *ngIf="c.monto > 0">
+                <ion-icon name="cash-outline"></ion-icon> {{ c.monto | currency:'CRC':'symbol-narrow':'1.0-0' }}
+              </span>
               <div class="ci-badges">
                 <span class="pill" [ngClass]="estadoPill[c.estado]">{{ estadoLabel[c.estado] || c.estado }}</span>
+                <span class="pill green" *ngIf="c.calificacion">{{ c.calificacion }}★</span>
               </div>
             </div>
           </div>
 
           <div class="cita-empty" *ngIf="!citasDia.length">
             <ion-icon name="calendar-clear-outline"></ion-icon>
-            <p>Sin citas este día.</p>
+            <p>{{ esPasado ? 'No tuviste citas este día.' : 'Sin citas este día.' }}</p>
           </div>
         </div>
       </div>

@@ -1,10 +1,42 @@
 .mec { max-width: 920px; margin: 0 auto; padding: 14px 16px 0; }
 
-/* Header con info de recepción */
-.header-av { width: 34px; height: 34px; font-size: 13px; margin-left: 4px; }
+/* Header */
 .header-info { display: flex; flex-direction: column; line-height: 1.2;
   strong { font-size: 15px; }
-  span { font-size: 11px; color: var(--n-500); font-weight: 400; } }
+  .equipo-line { font-size: 11px; color: var(--n-400); font-weight: 400; }
+}
+.dot-online { display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--emerald-700, #047857); margin-right: 3px; vertical-align: middle; }
+
+/* Equipo de recepción */
+.equipo-card {
+  display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;
+}
+.eq-member {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--ion-card-background); border: 1px solid var(--hairline);
+  border-radius: 16px; box-shadow: var(--shadow-xs); padding: 12px 14px;
+}
+.eq-avatar {
+  position: relative; width: 42px; height: 42px; flex-shrink: 0;
+  border-radius: 50%; background: var(--rose-50); color: var(--rose-700);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 800; overflow: hidden;
+  img { width: 100%; height: 100%; object-fit: cover; }
+  .eq-dot { position: absolute; bottom: 1px; right: 1px; width: 10px; height: 10px;
+    border-radius: 50%; background: var(--emerald-700, #047857);
+    border: 2px solid var(--ion-card-background, #fff); }
+}
+.eq-info { flex: 1; min-width: 0;
+  strong { display: block; font-size: 14px; font-weight: 700; }
+  span { font-size: 11px; color: var(--n-500); } }
+.eq-btns { display: flex; gap: 6px;
+  button { width: 36px; height: 36px; border-radius: 10px; border: none; cursor: pointer;
+    background: var(--ion-color-primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    ion-icon { font-size: 17px; }
+    &.wa { background: var(--emerald-700, #047857); }
+    &:active { transform: scale(.95); } } }
 
 .avatar {
   width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;

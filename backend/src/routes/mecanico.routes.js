@@ -295,13 +295,12 @@ router.post('/mensajes', async (req, res) => {
   }
 });
 
-// Contacto directo (llamar/WhatsApp) con recepción: primer recepcionista con teléfono.
 router.get('/recepcion-contacto', async (req, res) => {
   try {
-    const [[r]] = await pool.query(
-      "SELECT nombre, telefono FROM usuarios WHERE rol = 'recepcion' AND activo = 1 AND telefono IS NOT NULL AND telefono <> '' ORDER BY id LIMIT 1"
+    const [rows] = await pool.query(
+      "SELECT id, nombre, telefono, foto FROM usuarios WHERE rol = 'recepcion' AND activo = 1 ORDER BY nombre"
     );
-    res.json({ data: r || null });
+    res.json({ data: rows.length ? rows[0] : null, equipo: rows });
   } catch (err) {
     fail(res, err);
   }

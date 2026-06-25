@@ -17,6 +17,7 @@ export class MecanicoContactoPage implements OnInit, OnDestroy {
   @ViewChild(IonContent) content?: IonContent;
 
   contacto: { nombre: string; telefono: string } | null = null;
+  equipo: { id: number; nombre: string; telefono: string; foto: string | null }[] = [];
   mensajes: any[] = [];
   cargando = true;
   texto = '';
@@ -45,7 +46,7 @@ export class MecanicoContactoPage implements OnInit, OnDestroy {
 
   cargar(ev?: any) {
     this.cargando = true;
-    this.mecanico.getRecepcionContacto().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.contacto = r.data });
+    this.mecanico.getRecepcionContacto().pipe(takeUntil(this.destroy$)).subscribe({ next: (r: any) => { this.contacto = r.data; this.equipo = r.equipo || []; } });
     this.mecanico.getMensajes().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         this.mensajes = r.data;
@@ -117,6 +118,8 @@ export class MecanicoContactoPage implements OnInit, OnDestroy {
 
   llamar() { if (this.contacto?.telefono) window.open(`tel:${this.contacto.telefono}`, '_self'); }
   whatsapp() { if (this.contacto?.telefono) abrirWhatsApp(this.contacto.telefono, ''); }
+  llamarA(tel: string) { window.open(`tel:${tel}`, '_self'); }
+  whatsappA(tel: string) { abrirWhatsApp(tel, ''); }
 
   private scrollAbajo() { setTimeout(() => this.content?.scrollToBottom(150), 80); }
 

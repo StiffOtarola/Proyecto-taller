@@ -1,22 +1,18 @@
 <ion-header>
   <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
-      <span class="avatar rose header-av" *ngIf="contacto">{{ (contacto.nombre || 'R').charAt(0) }}</span>
-    </ion-buttons>
+    <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
     <ion-title>
       <div class="header-info">
         <strong>Recepción</strong>
-        <span *ngIf="contacto">{{ contacto.nombre }}</span>
+        <span class="equipo-line" *ngIf="equipo.length">
+          <ng-container *ngFor="let r of equipo; let last = last">
+            <span class="dot-online"></span>{{ r.nombre.split(' ')[0] }}{{ last ? '' : ' · ' }}
+          </ng-container>
+        </span>
       </div>
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="llamar()" *ngIf="contacto?.telefono" title="Llamar">
-        <ion-icon slot="icon-only" name="call-outline"></ion-icon>
-      </ion-button>
-      <ion-button (click)="whatsapp()" *ngIf="contacto?.telefono" title="WhatsApp">
-        <ion-icon slot="icon-only" name="logo-whatsapp" color="success"></ion-icon>
-      </ion-button>
+      <app-mecanico-actions></app-mecanico-actions>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
@@ -27,9 +23,28 @@
   </ion-refresher>
 
   <div class="mec">
-    <div class="contact-empty" *ngIf="!cargando && !contacto">
+    <!-- Equipo de recepción -->
+    <div class="equipo-card" *ngIf="equipo.length">
+      <div class="eq-member" *ngFor="let r of equipo">
+        <div class="eq-avatar">
+          <img *ngIf="r.foto" [src]="r.foto" alt="" />
+          <span *ngIf="!r.foto">{{ r.nombre.charAt(0) }}</span>
+          <span class="eq-dot"></span>
+        </div>
+        <div class="eq-info">
+          <strong>{{ r.nombre }}</strong>
+          <span>Recepción</span>
+        </div>
+        <div class="eq-btns" *ngIf="r.telefono">
+          <button (click)="llamarA(r.telefono)" title="Llamar"><ion-icon name="call"></ion-icon></button>
+          <button class="wa" (click)="whatsappA(r.telefono)" title="WhatsApp"><ion-icon name="logo-whatsapp"></ion-icon></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="contact-empty" *ngIf="!cargando && !equipo.length">
       <ion-icon name="information-circle-outline"></ion-icon>
-      Recepción no tiene teléfono cargado. Igual podés escribir abajo.
+      No hay recepcionistas registradas. Igual podés escribir abajo.
     </div>
 
     <!-- Conversación -->

@@ -1,54 +1,110 @@
 <ion-header>
   <ion-toolbar class="admin-topbar">
     <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
-    <ion-title>Gestión de Citas</ion-title>
+    <ion-title>Gestión de Citas y Órdenes</ion-title>
     <app-admin-actions slot="end"></app-admin-actions>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="admin-dark">
+  <ion-refresher slot="fixed" (ionRefresh)="cargar($event)"><ion-refresher-content></ion-refresher-content></ion-refresher>
+
   <div class="admin">
-    <div class="filter-bar">
-      <button class="filter-btn" *ngFor="let f of filtros" [class.on]="estado === f.v" (click)="setFiltro(f.v)">{{ f.l }}</button>
+    <!-- Toggle vista -->
+    <div class="vista-toggle">
+      <button [class.on]="vista==='ordenes'" (click)="setVista('ordenes')"><ion-icon name="clipboard-outline"></ion-icon> Órdenes</button>
+      <button [class.on]="vista==='citas'" (click)="setVista('citas')"><ion-icon name="calendar-outline"></ion-icon> Citas</button>
     </div>
 
+    <!-- Buscador -->
     <div class="search-row">
-      <input class="grow" type="text" [(ngModel)]="q" (keyup.enter)="cargar()" placeholder="🔍 Buscar cliente o placa...">
-      <select *ngIf="sucursales.length > 1" [(ngModel)]="sucursalId" (ngModelChange)="cargar()"
-              style="padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--sur2);color:var(--tx);font-size:13px">
-        <option [ngValue]="''">📍 Todas las sucursales</option>
-        <option *ngFor="let s of sucursales" [ngValue]="s.id">📍 {{ s.nombre }}</option>
-      </select>
-      <input type="date" [(ngModel)]="fecha">
-      <button class="btn btn-cr" (click)="cargar()">Buscar</button>
-      <button class="btn btn-ou" (click)="exportar()" [disabled]="!citas.length">Exportar</button>
+      <input class="grow" type="text" [(ngModel)]="q" (keyup.enter)="cargar()" placeholder="Buscar cliente, placa u orden...">
+      <button class="btn btn-cr" (click)="cargar()"><ion-icon name="search-outline"></ion-icon> Buscar</button>
     </div>
 
-    <div class="cd">
-      <div class="tbl-wrap">
-        <table class="tbl">
-          <thead>
-            <tr><th>#</th><th>Moto / Placa</th><th>Cliente</th><th>Servicio</th><th>Fecha y hora</th><th>Mecánico</th><th>Sucursal</th><th>Estado</th><th>Acción</th></tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let c of citas">
-              <td class="mono" style="color:var(--tx3)">#{{ c.id }}</td>
-              <td><strong>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}</strong><br><span class="mono" style="font-size:11px;color:var(--tx3)">{{ c.placa || '—' }}</span></td>
-              <td>{{ c.cliente_nombre }} {{ c.cliente_apellido }}</td>
-              <td style="font-size:12px">{{ c.tipo_servicio || c.motivo }}</td>
-              <td class="mono" style="font-size:11px">{{ c.fecha | date:'dd/MM/yy' }} · {{ c.hora?.slice(0,5) }}</td>
-              <td>{{ c.tecnico_nombre || '—' }}</td>
-              <td style="font-size:12px">{{ c.sucursal_nombre || '—' }}</td>
-              <td><span class="bg" [ngClass]="estadoBadge[c.estado]">{{ estadoLabel[c.estado] }}</span></td>
-              <td>
-                <button class="btn btn-ou btn-sm" *ngIf="c.orden_id" (click)="abrir(c)">Ver orden</button>
-                <span *ngIf="!c.orden_id" style="color:var(--tx3)">—</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <!-- ═══ ÓRDENES ═══ -->
+    <ng-container *ngIf="vista === 'ordenes'">
+      <div class="filter-bar">
+        <button class="filter-btn" *ngFor="let f of filtrosOrdenes" [class.on]="estadoOrden === f.v" (click)="setFiltroOrden(f.v)">{{ f.l }}</button>
       </div>
-      <div class="empty" *ngIf="!cargando && !citas.length"><ion-icon name="calendar-clear-outline"></ion-icon><p>No hay citas con esos filtros.</p></div>
-    </div>
+
+      <!-- Skeleton -->
+      <div *ngIf="cargando" class="orden-grid">
+        <div class="sk-dark" style="height:140px" *ngFor="let i of [1,2,3,4,5,6]"></div>
+      </div>
+
+      <!-- Tarjetas -->
+      <div class="orden-count" *ngIf="!cargando">{{ ordenes.length }} orden{{ ordenes.length !== 1 ? 'es' : '' }}</div>
+      <div class="orden-grid" *ngIf="!cargando">
+        <div class="orden-card" *ngFor="let o of ordenes" (click)="abrirOrden(o)">
+          <div class="oc-top">
+            <span class="oc-num mono">{{ o.numero_orden }}</span>
+            <span class="bg" [ngClass]="ordenBadge[o.estado]">{{ ordenLabel(o.estado) }}</span>
+          </div>
+          <div class="oc-moto">
+            <ion-icon name="bicycle-outline"></ion-icon>
+            <strong>{{ o.marca }} {{ o.modelo }}</strong>
+            <span class="mono" *ngIf="o.placa">· {{ o.placa }}</span>
+          </div>
+          <div class="oc-cliente">
+            <ion-icon name="person-outline"></ion-icon>
+            {{ o.cliente_nombre }} {{ o.cliente_apellido }}
+          </div>
+          <p class="oc-problema" *ngIf="o.problema_reportado">{{ o.problema_reportado.length > 80 ? o.problema_reportado.slice(0, 80) + '…' : o.problema_reportado }}</p>
+          <div class="oc-footer">
+            <span *ngIf="o.tecnico_nombre"><ion-icon name="construct-outline"></ion-icon> {{ o.tecnico_nombre }}</span>
+            <span *ngIf="!o.tecnico_nombre" class="sin-tec"><ion-icon name="alert-circle-outline"></ion-icon> Sin técnico</span>
+            <span class="oc-fecha"><ion-icon name="time-outline"></ion-icon> {{ o.fecha_ingreso | date:'dd/MM' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty" *ngIf="!cargando && !ordenes.length"><ion-icon name="clipboard-outline"></ion-icon><p>No hay órdenes con esos filtros.</p></div>
+    </ng-container>
+
+    <!-- ═══ CITAS ═══ -->
+    <ng-container *ngIf="vista === 'citas'">
+      <div class="filter-bar">
+        <button class="filter-btn" *ngFor="let f of filtrosCitas" [class.on]="estado === f.v" (click)="setFiltro(f.v)">{{ f.l }}</button>
+      </div>
+
+      <div class="search-row">
+        <select *ngIf="sucursales.length > 1" [(ngModel)]="sucursalId" (ngModelChange)="cargar()">
+          <option [ngValue]="''">Todas las sucursales</option>
+          <option *ngFor="let s of sucursales" [ngValue]="s.id">{{ s.nombre }}</option>
+        </select>
+        <input type="date" [(ngModel)]="fecha" (change)="cargar()">
+        <button class="btn btn-ou" (click)="exportar()" [disabled]="!citas.length"><ion-icon name="download-outline"></ion-icon> Exportar</button>
+      </div>
+
+      <!-- Skeleton -->
+      <div *ngIf="cargando" class="sk-dark" style="height:300px"></div>
+
+      <div class="cd" *ngIf="!cargando">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr><th>#</th><th>Moto / Placa</th><th>Cliente</th><th>Servicio</th><th>Fecha y hora</th><th>Mecánico</th><th>Estado</th><th>Acción</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of citas">
+                <td class="mono clr-tx3">#{{ c.id }}</td>
+                <td><strong>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}</strong><br><span class="mono clr-tx3" style="font-size:11px">{{ c.placa || '—' }}</span></td>
+                <td>{{ c.cliente_nombre }} {{ c.cliente_apellido }}</td>
+                <td style="font-size:12px">{{ c.tipo_servicio || c.motivo }}</td>
+                <td class="mono" style="font-size:11px">{{ c.fecha | date:'dd/MM/yy' }} · {{ c.hora?.slice(0,5) }}</td>
+                <td>{{ c.tecnico_nombre || '—' }}</td>
+                <td><span class="bg" [ngClass]="estadoBadge[c.estado]">{{ estadoLabel[c.estado] }}</span></td>
+                <td>
+                  <button class="btn btn-ou btn-sm" *ngIf="c.orden_id" (click)="abrir(c)">Ver orden</button>
+                  <span *ngIf="!c.orden_id" class="clr-tx3">—</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="empty" *ngIf="!citas.length"><ion-icon name="calendar-clear-outline"></ion-icon><p>No hay citas con esos filtros.</p></div>
+      </div>
+    </ng-container>
   </div>
 </ion-content>

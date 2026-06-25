@@ -61,7 +61,7 @@
         <div class="ig"><label>Horario</label><input type="text" [(ngModel)]="cuenta.horario" placeholder="Lun a Vie 08:00–17:00"></div>
 
         <div class="ro-row">
-          <div class="ro"><ion-icon name="location-outline"></ion-icon><div><span class="ro-lbl">Sede asignada</span><strong>{{ sedeLabel }}</strong></div></div>
+          <div class="ro"><ion-icon name="location-outline"></ion-icon><div><span class="ro-lbl">Sede asignada</span><strong>{{ sedeLabel }}</strong><span class="ro-dir" *ngIf="perfil.sucursal_direccion">{{ perfil.sucursal_direccion }}</span></div></div>
           <div class="ro"><ion-icon name="calendar-outline"></ion-icon><div><span class="ro-lbl">Miembro desde</span><strong>{{ miembroDesde }}</strong></div></div>
         </div>
 
@@ -95,8 +95,24 @@
       <!-- Seguridad -->
       <section class="card">
         <span class="section-label">Seguridad</span>
-        <div class="ig"><label>Contraseña actual</label><input type="password" [(ngModel)]="pass.actual" placeholder="••••••••"></div>
-        <div class="ig"><label>Nueva contraseña</label><input type="password" [(ngModel)]="pass.nueva" placeholder="Mín. 8 caracteres"></div>
+        <div class="ig pass-field">
+          <label>Contraseña actual</label>
+          <div class="pass-wrap">
+            <input [type]="verActual ? 'text' : 'password'" [(ngModel)]="pass.actual" placeholder="••••••••">
+            <button type="button" class="pass-eye" (click)="verActual = !verActual">
+              <ion-icon [name]="verActual ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </button>
+          </div>
+        </div>
+        <div class="ig pass-field">
+          <label>Nueva contraseña</label>
+          <div class="pass-wrap">
+            <input [type]="verNueva ? 'text' : 'password'" [(ngModel)]="pass.nueva" placeholder="Mín. 8 caracteres">
+            <button type="button" class="pass-eye" (click)="verNueva = !verNueva">
+              <ion-icon [name]="verNueva ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </button>
+          </div>
+        </div>
         <button class="cta outline" [disabled]="guardandoPass" (click)="cambiarPassword()">Cambiar contraseña</button>
       </section>
 

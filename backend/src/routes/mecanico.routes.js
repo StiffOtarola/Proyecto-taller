@@ -312,7 +312,10 @@ router.get('/recepcion-contacto', async (req, res) => {
 router.get('/perfil', async (req, res) => {
   try {
     const yo = req.usuario.id;
-    const [[u]] = await pool.query('SELECT id, nombre, email, rol, telefono, especialidades, horario FROM usuarios WHERE id = ?', [yo]);
+    const [[u]] = await pool.query(
+      `SELECT u.id, u.nombre, u.email, u.rol, u.telefono, u.especialidades, u.horario, u.created_at,
+              s.nombre AS sucursal_nombre, s.direccion AS sucursal_direccion
+       FROM usuarios u LEFT JOIN sucursales s ON s.id = u.sucursal_id WHERE u.id = ?`, [yo]);
     const [[g]] = await pool.query(
       `SELECT COUNT(*) AS completadas, COALESCE(SUM(monto), 0) AS ingresos_generados,
               ROUND(AVG(TIMESTAMPDIFF(MINUTE, fecha_inicio, fecha_fin))) AS tiempo_promedio_min

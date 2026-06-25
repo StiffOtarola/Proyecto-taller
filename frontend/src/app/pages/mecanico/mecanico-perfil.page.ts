@@ -23,6 +23,8 @@ export class MecanicoPerfilPage implements OnInit, OnDestroy {
   guardando = false;
   guardandoPass = false;
   subiendoFoto = false;
+  verActual = false;
+  verNueva = false;
 
   readonly nivelesTexto = [
     { i: 0, etiqueta: 'A', nombre: 'Normal' },

@@ -54,8 +54,8 @@ router.get('/resumen', async (req, res) => {
       [yo]
     );
     const [[{ tiempo_promedio_min }]] = await pool.query(
-      `SELECT ROUND(AVG(TIMESTAMPDIFF(MINUTE, fecha_inicio, fecha_fin))) AS tiempo_promedio_min
-       FROM citas WHERE tecnico_id = ? AND estado = 'entregado' AND fecha_inicio IS NOT NULL AND fecha_fin IS NOT NULL`,
+      `SELECT ROUND(AVG(TIMESTAMPDIFF(MINUTE, fecha_inicio, COALESCE(fecha_listo, fecha_fin)))) AS tiempo_promedio_min
+       FROM citas WHERE tecnico_id = ? AND estado = 'entregado' AND fecha_inicio IS NOT NULL AND (fecha_listo IS NOT NULL OR fecha_fin IS NOT NULL)`,
       [yo]
     );
     const [[calif]] = await pool.query(
@@ -136,6 +136,7 @@ router.patch('/citas/:id/estado', async (req, res) => {
     const sets = ['estado = ?'];
     const params = [estado];
     if (arrancaTrabajo) sets.push('fecha_inicio = COALESCE(fecha_inicio, NOW())');
+    if (estado === 'listo') sets.push('fecha_listo = COALESCE(fecha_listo, NOW())');
     if (estado === 'entregado') sets.push('fecha_fin = NOW()');
     if (monto !== undefined && monto !== null && monto !== '') {
       sets.push('monto = ?');
@@ -318,7 +319,7 @@ router.get('/perfil', async (req, res) => {
        FROM usuarios u LEFT JOIN sucursales s ON s.id = u.sucursal_id WHERE u.id = ?`, [yo]);
     const [[g]] = await pool.query(
       `SELECT COUNT(*) AS completadas, COALESCE(SUM(monto), 0) AS ingresos_generados,
-              ROUND(AVG(TIMESTAMPDIFF(MINUTE, fecha_inicio, fecha_fin))) AS tiempo_promedio_min
+              ROUND(AVG(TIMESTAMPDIFF(MINUTE, fecha_inicio, COALESCE(fecha_listo, fecha_fin)))) AS tiempo_promedio_min
        FROM citas WHERE tecnico_id = ? AND estado = 'entregado'`,
       [yo]
     );

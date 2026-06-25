@@ -85,15 +85,16 @@
       <span class="cd-title">🔧 Rendimiento por mecánico · {{ data?.periodo?.label }}</span>
       <div class="tbl-wrap">
         <table class="tbl">
-          <thead><tr><th>Mecánico</th><th>Citas</th><th>Entreg.</th><th>Tasa</th><th>Ingresos</th><th>Tiempo prom.</th><th>Calif.</th></tr></thead>
+          <thead><tr><th>Mecánico</th><th>Citas</th><th>Entreg.</th><th>Tasa</th><th>Ingresos</th><th>T. trabajo</th><th>T. entrega</th><th>Calif.</th></tr></thead>
           <tbody>
             <tr *ngFor="let r of data?.rendimiento">
               <td class="fw-bold">{{ r.nombre }}</td>
               <td class="mono">{{ r.citas }}</td>
               <td class="mono">{{ r.entregadas }}</td>
               <td><span class="bg" [ngClass]="tasa(r) >= 70 ? 'bg-em' : (tasa(r) >= 40 ? 'bg-am' : 'bg-rd')">{{ tasa(r) }}%</span></td>
-              <td class="mono" class="clr-em">{{ (r.ingresos || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</td>
+              <td class="mono clr-em">{{ (r.ingresos || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</td>
               <td class="mono">{{ tiempoFmt(r.tiempo_prom_min) }}</td>
+              <td class="mono">{{ tiempoFmt(r.tiempo_entrega_min) }}</td>
               <td class="mono">{{ calFmt(r.calificacion) }}</td>
             </tr>
           </tbody>

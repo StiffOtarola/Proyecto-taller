@@ -163,8 +163,10 @@ router.get('/reportes', async (req, res) => {
               COALESCE(SUM(c.estado='entregado'),0) AS entregadas,
               COALESCE(SUM(c.estado='cancelado'),0) AS canceladas,
               COALESCE(SUM(CASE WHEN c.estado='entregado' THEN c.monto ELSE 0 END),0) AS ingresos,
-              AVG(CASE WHEN c.estado='entregado' AND c.fecha_inicio IS NOT NULL AND c.fecha_fin IS NOT NULL
-                       THEN TIMESTAMPDIFF(MINUTE, c.fecha_inicio, c.fecha_fin) END) AS tiempo_prom_min,
+              AVG(CASE WHEN c.estado='entregado' AND c.fecha_inicio IS NOT NULL AND (c.fecha_listo IS NOT NULL OR c.fecha_fin IS NOT NULL)
+                       THEN TIMESTAMPDIFF(MINUTE, c.fecha_inicio, COALESCE(c.fecha_listo, c.fecha_fin)) END) AS tiempo_prom_min,
+              AVG(CASE WHEN c.estado='entregado' AND c.fecha_listo IS NOT NULL AND c.fecha_fin IS NOT NULL
+                       THEN TIMESTAMPDIFF(MINUTE, c.fecha_listo, c.fecha_fin) END) AS tiempo_entrega_min,
               AVG(NULLIF(c.calificacion,0)) AS calificacion
        FROM citas c JOIN usuarios u ON u.id = c.tecnico_id
        WHERE ${rango('c.fecha')}${empCita}

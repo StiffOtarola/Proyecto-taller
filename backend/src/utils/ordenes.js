@@ -48,7 +48,9 @@ async function sincronizarCitaDesdeOrden(ordenId, ordenEstado) {
     if (cita.estado === 'agendado' && estadoCita !== 'agendado' && estadoCita !== 'cancelado') {
       sets.push('fecha_inicio = COALESCE(fecha_inicio, NOW())');
     }
-    // Al entregar: cierra la cita y copia el total de la orden como monto (única cifra coherente).
+    if (estadoCita === 'listo') {
+      sets.push('fecha_listo = COALESCE(fecha_listo, NOW())');
+    }
     if (estadoCita === 'entregado') {
       sets.push('fecha_fin = NOW()');
       const [[o]] = await pool.query(

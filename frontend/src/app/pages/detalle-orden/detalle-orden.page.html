@@ -94,9 +94,13 @@
         <button class="link-add" (click)="mostrarFormRepuesto = !mostrarFormRepuesto" *ngIf="!auth.tieneRol('tecnico')">
           <ion-icon name="add"></ion-icon> Agregar
         </button>
+        <button class="link-add" (click)="mostrarFormSolicitud = !mostrarFormSolicitud" *ngIf="auth.tieneRol('tecnico')">
+          <ion-icon name="add"></ion-icon> Solicitar
+        </button>
       </div>
 
-      <div *ngIf="mostrarFormRepuesto" class="inline-form">
+      <!-- Formulario completo para recepción/admin -->
+      <div *ngIf="mostrarFormRepuesto && !auth.tieneRol('tecnico')" class="inline-form">
         <ion-item>
           <ion-label position="floating">Nombre</ion-label>
           <ion-input [(ngModel)]="nuevoRepuesto.nombre"></ion-input>
@@ -112,12 +116,28 @@
         <ion-button expand="block" class="ion-margin-top" (click)="agregarRepuesto()">Agregar</ion-button>
       </div>
 
+      <!-- Formulario simplificado para mecánico (sin precio) -->
+      <div *ngIf="mostrarFormSolicitud && auth.tieneRol('tecnico')" class="inline-form">
+        <ion-item>
+          <ion-label position="floating">¿Qué repuesto necesitás?</ion-label>
+          <ion-input [(ngModel)]="nuevoRepuesto.nombre"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="floating">Cantidad</ion-label>
+          <ion-input type="number" [(ngModel)]="nuevoRepuesto.cantidad"></ion-input>
+        </ion-item>
+        <ion-button expand="block" class="ion-margin-top" (click)="solicitarRepuesto()">
+          <ion-icon name="send-outline" slot="start"></ion-icon> Solicitar a recepción
+        </ion-button>
+      </div>
+
       <div class="rep-list">
         <ion-item-sliding *ngFor="let r of repuestos">
           <ion-item lines="none" class="rep-item">
             <ion-label>
               <h3>{{ r.nombre }}</h3>
-              <p class="mono">{{ r.cantidad }} × ₡{{ r.costo_unitario | number:'1.0-0' }} = ₡{{ r.cantidad * r.costo_unitario | number:'1.0-0' }}</p>
+              <p class="mono" *ngIf="!auth.tieneRol('tecnico')">{{ r.cantidad }} × ₡{{ r.costo_unitario | number:'1.0-0' }} = ₡{{ r.cantidad * r.costo_unitario | number:'1.0-0' }}</p>
+              <p *ngIf="auth.tieneRol('tecnico')">Cantidad: {{ r.cantidad }}</p>
             </ion-label>
             <span slot="end" class="pill" [ngClass]="r.estado === 'disponible' ? 'solid' : r.estado === 'pedido_especial' ? 'amber' : 'gris'">
               {{ r.estado }}

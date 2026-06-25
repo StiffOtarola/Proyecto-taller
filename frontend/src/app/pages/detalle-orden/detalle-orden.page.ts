@@ -41,6 +41,7 @@ export class DetalleOrdenPage implements OnInit, OnDestroy {
   nuevoAvance = '';
   nuevoRepuesto: OrdenRepuesto = { nombre: '', cantidad: 1, costo_unitario: 0 };
   mostrarFormRepuesto = false;
+  mostrarFormSolicitud = false;
 
   checklist: OrdenChecklist = {
     prueba_realizada: false,
@@ -198,6 +199,23 @@ export class DetalleOrdenPage implements OnInit, OnDestroy {
         this.mostrarFormRepuesto = false;
         this.cargar(this.orden!.id!);
         this.mostrarToast('Repuesto agregado');
+      },
+    });
+  }
+
+  solicitarRepuesto() {
+    if (!this.nuevoRepuesto.nombre.trim()) return;
+    this.ordenSvc.addRepuesto(this.orden!.id!, {
+      nombre: this.nuevoRepuesto.nombre,
+      cantidad: this.nuevoRepuesto.cantidad || 1,
+      costo_unitario: 0,
+      estado: 'solicitado',
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: res => {
+        this.repuestos.push(res.data);
+        this.nuevoRepuesto = { nombre: '', cantidad: 1, costo_unitario: 0 };
+        this.mostrarFormSolicitud = false;
+        this.mostrarToast('Repuesto solicitado a recepción');
       },
     });
   }

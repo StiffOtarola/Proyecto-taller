@@ -117,12 +117,15 @@ router.patch('/citas/:id/estado', async (req, res) => {
     if (!ESTADOS.includes(estado)) return res.status(400).json({ error: 'Estado inválido' });
 
     const [[cita]] = await pool.query(
-      'SELECT id, estado FROM citas WHERE id = ? AND tecnico_id = ?',
+      'SELECT id, estado, orden_id FROM citas WHERE id = ? AND tecnico_id = ?',
       [req.params.id, req.usuario.id]
     );
     if (!cita) return res.status(404).json({ error: 'Cita no encontrada o no asignada a vos' });
 
-    // Solo transiciones válidas del flujo de la cita.
+    if (cita.orden_id) {
+      return res.status(400).json({ error: 'Esta cita tiene una orden vinculada. Cambiá el estado desde la orden.' });
+    }
+
     if (!transicionPermitida(TRANSICIONES_CITA, cita.estado, estado)) {
       return res.status(400).json({ error: `Transición no permitida: ${cita.estado} → ${estado}` });
     }

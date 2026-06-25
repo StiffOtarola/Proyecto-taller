@@ -740,6 +740,7 @@ router.patch('/ordenes/:id/tecnico', async (req, res) => {
       }
     }
     await pool.query('UPDATE ordenes_trabajo SET tecnico_id = ? WHERE id = ?', [tecnico_id || null, req.params.id]);
+    await pool.query('UPDATE citas SET tecnico_id = ? WHERE orden_id = ?', [tecnico_id || null, req.params.id]);
     if (tecnico_id) {
       const [[o]] = await pool.query('SELECT numero_orden, problema_reportado FROM ordenes_trabajo WHERE id = ?', [req.params.id]);
       if (o) await notificarMecanico(tecnico_id, `Te asignaron la orden ${o.numero_orden}: ${(o.problema_reportado || '').slice(0, 80)}`, req.usuario.id);

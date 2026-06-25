@@ -371,6 +371,18 @@ async function ensureSchema() {
     // Índice por (sucursal, fecha, hora): hace preciso el bloqueo FOR UPDATE del cupo por local.
     await crearIndiceSiFalta('citas', 'idx_citas_sucursal_fecha_hora', '(sucursal_id, fecha, hora)');
 
+    // Repuestos: agregar estado 'solicitado' para que el mecánico pida piezas sin precio.
+    const [[repEstado]] = await pool.query(
+      `SELECT COLUMN_TYPE FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'orden_repuestos' AND COLUMN_NAME = 'estado'`
+    );
+    if (repEstado && !repEstado.COLUMN_TYPE.includes('solicitado')) {
+      await pool.query(
+        "ALTER TABLE orden_repuestos MODIFY COLUMN estado ENUM('disponible','pendiente','pedido_especial','solicitado') DEFAULT 'pendiente'"
+      );
+      console.log('🔧 Migración: orden_repuestos.estado → +solicitado');
+    }
+
     // Mensajería interna v2: foto, vínculo a orden y soporte de broadcast.
     await addColumnIfMissing('mensajes_internos', 'foto', 'MEDIUMTEXT NULL');
     await addColumnIfMissing('mensajes_internos', 'orden_id', 'INT NULL');

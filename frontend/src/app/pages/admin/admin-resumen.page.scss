@@ -1,0 +1,209 @@
+// ——————————————————————————————————————
+// Admin Resumen — component styles
+// ——————————————————————————————————————
+
+// Card border-radius override
+.cd {
+  border-radius: 24px;
+}
+
+// Button overrides — larger touch targets
+.btn {
+  min-height: 44px;
+  padding: 12px 20px;
+  border-radius: 14px;
+}
+
+// ——— Facturacion card ———
+.fact-today {
+  margin-bottom: 14px;
+}
+
+.fact-val {
+  color: var(--em);
+  font-size: 28px;
+}
+
+.fact-sub {
+  font-size: 12px;
+  color: var(--tx3);
+  margin-top: 2px;
+}
+
+// ——— Stat box (small card inside cards) ———
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.stat-box {
+  background: var(--sur2);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--tx3);
+}
+
+.stat-val {
+  font-size: 14px;
+}
+
+// ——— KPI detail card ———
+.kpi-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.kpi-detail-box {
+  background: var(--sur2);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.kpi-detail-label {
+  font-size: 11px;
+  color: var(--tx3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 6px;
+}
+
+.kpi-detail-val {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--cr);
+}
+
+// ——— Estado del taller rows ———
+.estado-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--bd2);
+}
+
+.estado-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.estado-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+// ——— Semaforo rows ———
+.sem-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  background: var(--sur2);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.sem-detail {
+  min-width: 0;
+}
+
+.sem-orden {
+  font-size: 11px;
+  color: var(--tx3);
+}
+
+.sem-moto {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+// ——— Bar fills by status ———
+.bar-fill-indigo  { background: var(--indigo-600); }
+.bar-fill-amber   { background: var(--amber-500); }
+.bar-fill-emerald { background: var(--emerald-500); }
+.bar-fill-danger  { background: var(--ion-color-danger); }
+
+// ——— Table inline overrides ———
+.tbl-bold {
+  font-weight: 600;
+}
+
+.tbl-em {
+  color: var(--em);
+}
+
+.tbl-total {
+  border-top: 1.5px solid var(--bd);
+}
+
+.tbl-total-label {
+  font-weight: 800;
+}
+
+.tbl-total-val {
+  font-weight: 800;
+  color: var(--em);
+}
+
+// ——— Export button row ———
+.export-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+// ——— Skeleton loader for admin resumen ———
+.admin-skeleton {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 18px 16px 60px;
+}
+
+.sk-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.sk-kpi {
+  height: 86px;
+  border-radius: 24px;
+}
+
+.sk-card {
+  height: 220px;
+  border-radius: 24px;
+  margin-bottom: 18px;
+}
+
+.sk-g2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+@media (min-width: 768px) {
+  .sk-kpi-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .sk-g2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}

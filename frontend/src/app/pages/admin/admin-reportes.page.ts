@@ -10,6 +10,7 @@ import { descargarCSV } from '../../shared/csv.util';
   standalone: false,
   selector: 'app-admin-reportes',
   templateUrl: './admin-reportes.page.html',
+  styleUrls: ['./admin-reportes.page.scss'],
 })
 export class AdminReportesPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

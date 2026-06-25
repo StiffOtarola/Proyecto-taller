@@ -20,70 +20,65 @@
           <div class="fg"><label>Dirección</label><input [(ngModel)]="config.direccion" placeholder="San José, Costa Rica"></div>
           <div class="fg">
             <label>Logo del taller</label>
-            <div *ngIf="config.logo" style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-              <img [src]="config.logo" alt="logo" style="width:64px;height:64px;object-fit:contain;background:var(--sur2);border-radius:10px;border:1px solid var(--bd)">
+            <div *ngIf="config.logo" class="config-logo-preview">
+              <img [src]="config.logo" alt="logo" class="config-logo">
               <button class="btn btn-rd btn-sm" (click)="quitarLogo()">Quitar</button>
             </div>
-            <label style="border:2px dashed var(--bd2);border-radius:12px;padding:20px;text-align:center;cursor:pointer;display:block;text-transform:none;letter-spacing:0">
-              <div style="font-size:24px;margin-bottom:4px">🖼️</div>
-              <div style="font-size:12px;color:var(--tx3)">Clic para subir logo</div>
+            <label class="config-upload">
+              <div class="config-upload-icon">🖼️</div>
+              <div class="config-upload-hint">Clic para subir logo</div>
               <input type="file" accept="image/*" (change)="onLogoFile($event)" hidden>
             </label>
           </div>
-          <button class="btn btn-cr" style="width:100%;justify-content:center;padding:12px" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar información</button>
+          <button class="btn btn-cr config-btn-full" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar información</button>
         </div>
 
         <!-- Horarios -->
         <div class="cd mb">
           <span class="cd-title">🕒 Horario de atención</span>
           <div *ngFor="let h of horariosVista"
-               style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--sur2);border-radius:10px;margin-bottom:8px"
+               class="config-schedule-day"
                [style.opacity]="h.activo ? 1 : 0.5">
-            <span style="width:84px;font-weight:700;font-size:12px">{{ h.label }}</span>
-            <input type="time" [(ngModel)]="h.abre" [disabled]="!h.activo"
-                   style="padding:4px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx);font-size:11px">
-            <span style="color:var(--tx3)">a</span>
-            <input type="time" [(ngModel)]="h.cierra" [disabled]="!h.activo"
-                   style="padding:4px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx);font-size:11px">
-            <label style="margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2);text-transform:none;letter-spacing:0">
+            <span class="config-day-label">{{ h.label }}</span>
+            <input type="time" [(ngModel)]="h.abre" [disabled]="!h.activo" class="config-time-input">
+            <span class="config-time-sep">a</span>
+            <input type="time" [(ngModel)]="h.cierra" [disabled]="!h.activo" class="config-time-input">
+            <label class="config-toggle-label">
               <input type="checkbox" [(ngModel)]="h.activo"> Abierto
             </label>
           </div>
-          <button class="btn btn-cr" style="width:100%;justify-content:center;padding:12px;margin-top:6px" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar horarios</button>
+          <button class="btn btn-cr config-btn-full" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar horarios</button>
         </div>
 
         <!-- Sucursales (locales del taller) -->
         <div class="cd">
           <span class="cd-title">📍 Sucursales</span>
-          <div class="hint" style="margin:-4px 0 12px">Locales donde el cliente puede agendar. El horario es compartido; el cupo se cuenta por sucursal.</div>
+          <div class="hint config-hint">Locales donde el cliente puede agendar. El horario es compartido; el cupo se cuenta por sucursal.</div>
 
           <div *ngFor="let s of sucursales"
-               style="padding:10px;background:var(--sur2);border-radius:10px;margin-bottom:8px"
+               class="config-branch-card"
                [style.opacity]="s.activa ? 1 : 0.55">
-            <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+            <div class="config-branch-header">
               <input [(ngModel)]="s.nombre" placeholder="Nombre"
-                     style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx);font-size:12px;font-weight:700">
+                     class="config-branch-input config-branch-input--name">
               <button class="btn btn-sm" [ngClass]="s.activa ? 'btn-rd' : 'btn-cr'" (click)="toggleSucursal(s)">{{ s.activa ? 'Desactivar' : 'Activar' }}</button>
             </div>
             <input [(ngModel)]="s.direccion" placeholder="Dirección"
-                   style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx);font-size:11px;margin-bottom:6px">
-            <div style="display:flex;gap:8px;align-items:center">
+                   class="config-branch-input config-branch-input--full">
+            <div class="config-branch-fields">
               <input [(ngModel)]="s.telefono" placeholder="Teléfono"
-                     style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx);font-size:11px">
+                     class="config-branch-input">
               <button class="btn btn-ou btn-sm" (click)="guardarSucursal(s)">💾 Guardar</button>
             </div>
           </div>
 
           <!-- Agregar nueva sucursal -->
-          <div style="border:2px dashed var(--bd2);border-radius:10px;padding:12px;margin-top:4px">
-            <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Agregar sucursal</div>
-            <input [(ngModel)]="nuevaSucursal.nombre" placeholder="Nombre (ej. Liberia)"
-                   style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx);font-size:12px;margin-bottom:6px">
-            <input [(ngModel)]="nuevaSucursal.direccion" placeholder="Dirección (opcional)"
-                   style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx);font-size:12px;margin-bottom:6px">
-            <input [(ngModel)]="nuevaSucursal.telefono" placeholder="Teléfono (opcional)"
-                   style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:6px;background:var(--sur3);color:var(--tx);font-size:12px;margin-bottom:8px">
-            <button class="btn btn-cr" style="width:100%;justify-content:center;padding:10px" [disabled]="guardandoSucursal" (click)="agregarSucursal()">➕ Agregar sucursal</button>
+          <div class="config-add-box">
+            <div class="config-add-title">Agregar sucursal</div>
+            <input [(ngModel)]="nuevaSucursal.nombre" placeholder="Nombre (ej. Liberia)" class="config-add-input">
+            <input [(ngModel)]="nuevaSucursal.direccion" placeholder="Dirección (opcional)" class="config-add-input">
+            <input [(ngModel)]="nuevaSucursal.telefono" placeholder="Teléfono (opcional)" class="config-add-input">
+            <button class="btn btn-cr config-btn-full" [disabled]="guardandoSucursal" (click)="agregarSucursal()">➕ Agregar sucursal</button>
           </div>
         </div>
       </div>
@@ -97,31 +92,31 @@
           <div class="fg"><label>Días de anticipación para agendar</label><input type="number" min="1" max="365" [(ngModel)]="config.dias_anticipacion"><div class="hint">Hasta cuántos días adelante puede reservar un cliente desde el portal.</div></div>
           <div class="fg"><label>Duración promedio por cita (minutos)</label><input type="number" min="15" max="480" [(ngModel)]="config.duracion_cita_min"><div class="hint">Informativo (los cupos del portal son por hora).</div></div>
           <div class="fg"><label>Horas mínimas para cancelar/editar</label><input type="number" min="0" max="168" [(ngModel)]="config.cancelacion_horas_min"><div class="hint">El cliente no puede cancelar ni reprogramar si faltan menos de estas horas para la cita (0 = sin límite).</div></div>
-          <button class="btn btn-cr" style="width:100%;justify-content:center;padding:12px" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar capacidad</button>
+          <button class="btn btn-cr config-btn-full" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar capacidad</button>
         </div>
 
         <!-- Notificaciones -->
         <div class="cd mb">
           <span class="cd-title">🔔 Notificaciones</span>
-          <div style="display:flex;flex-direction:column;gap:4px;font-size:13px">
-            <label style="display:flex;justify-content:space-between;align-items:center;text-transform:none;letter-spacing:0">
+          <div class="config-notif-list">
+            <label class="config-notif-row">
               <span>Notificar al cliente al cambiar estado</span>
               <ion-toggle [(ngModel)]="config.notif_estado"></ion-toggle>
             </label>
-            <label style="display:flex;justify-content:space-between;align-items:center;text-transform:none;letter-spacing:0">
+            <label class="config-notif-row">
               <span>Notificar cuando la cotización está lista</span>
               <ion-toggle [(ngModel)]="config.notif_cotizacion"></ion-toggle>
             </label>
-            <label style="display:flex;justify-content:space-between;align-items:center;text-transform:none;letter-spacing:0;opacity:.55">
-              <span>Recordatorio 24h antes de la cita <em style="color:var(--tx3);font-style:normal">(aún no activo)</em></span>
+            <label class="config-notif-row config-notif-row--disabled">
+              <span>Recordatorio 24h antes de la cita <em class="config-notif-note">(aún no activo)</em></span>
               <ion-toggle [(ngModel)]="config.notif_recordatorio" disabled></ion-toggle>
             </label>
-            <label style="display:flex;justify-content:space-between;align-items:center;text-transform:none;letter-spacing:0;opacity:.55">
-              <span>Enviar reporte por email al entregar <em style="color:var(--tx3);font-style:normal">(aún no activo)</em></span>
+            <label class="config-notif-row config-notif-row--disabled">
+              <span>Enviar reporte por email al entregar <em class="config-notif-note">(aún no activo)</em></span>
               <ion-toggle [(ngModel)]="config.notif_email_entrega" disabled></ion-toggle>
             </label>
           </div>
-          <button class="btn btn-cr" style="width:100%;justify-content:center;padding:12px;margin-top:12px" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar</button>
+          <button class="btn btn-cr config-btn-full" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar</button>
         </div>
 
         <!-- Cuenta admin -->
@@ -129,17 +124,17 @@
           <span class="cd-title">👤 Cuenta del administrador</span>
           <div class="fg"><label>Nombre</label><input [(ngModel)]="cuenta.nombre"></div>
           <div class="fg"><label>Correo</label><input type="email" [(ngModel)]="cuenta.email"></div>
-          <button class="btn btn-cr" style="width:100%;justify-content:center;padding:12px" [disabled]="guardandoCuenta" (click)="guardarCuenta()">💾 Actualizar cuenta</button>
+          <button class="btn btn-cr config-btn-full" [disabled]="guardandoCuenta" (click)="guardarCuenta()">💾 Actualizar cuenta</button>
 
-          <div style="height:1px;background:var(--bd);margin:16px 0"></div>
+          <div class="config-divider"></div>
 
           <div class="fg"><label>Contraseña actual</label><input type="password" [(ngModel)]="pass.actual" placeholder="••••••••"></div>
           <div class="fg"><label>Nueva contraseña</label><input type="password" [(ngModel)]="pass.nueva" placeholder="Mín. 8 caracteres"></div>
-          <button class="btn btn-ou" style="width:100%;justify-content:center;padding:12px" [disabled]="guardandoPass" (click)="cambiarPassword()">🔑 Cambiar contraseña</button>
+          <button class="btn btn-ou config-btn-full" [disabled]="guardandoPass" (click)="cambiarPassword()">🔑 Cambiar contraseña</button>
 
-          <div style="height:1px;background:var(--bd);margin:16px 0"></div>
+          <div class="config-divider"></div>
 
-          <button class="btn btn-rd" style="width:100%;justify-content:center;padding:12px" (click)="logout()">⏻ Cerrar sesión</button>
+          <button class="btn btn-rd config-btn-full" (click)="logout()">⏻ Cerrar sesión</button>
         </div>
       </div>
     </div>

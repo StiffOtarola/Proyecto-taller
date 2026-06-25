@@ -12,6 +12,7 @@ interface HorarioVista { dia: number; label: string; abre: string; cierra: strin
   standalone: false,
   selector: 'app-admin-config',
   templateUrl: './admin-config.page.html',
+  styleUrls: ['./admin-config.page.scss'],
 })
 export class AdminConfigPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

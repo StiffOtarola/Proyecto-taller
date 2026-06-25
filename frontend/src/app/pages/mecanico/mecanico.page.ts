@@ -59,6 +59,10 @@ export class MecanicoPage implements OnInit, OnDestroy {
 
   get nombre(): string { return (this.auth.getUsuario()?.nombre || 'Mecánico').split(' ')[0]; }
 
+  get fechaHoy(): string {
+    return new Date().toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
   cargar(ev?: any) {
     this.cargando = true;
     this.mecanico.getResumen().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.resumen = r.data });

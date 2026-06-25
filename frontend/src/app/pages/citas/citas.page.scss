@@ -1,7 +1,63 @@
-.chip-cliente {
-  height: 22px;
-  font-size: 11px;
-  margin: 4px 0 0;
+.citas-search {
+  padding: 8px 16px 0;
+  max-width: 1240px; margin: 0 auto;
+  ion-searchbar { --border-radius: 14px; --background: var(--ion-card-background); }
+}
 
-  ion-icon { font-size: 13px; }
+.citas-count {
+  font-size: 11px; font-weight: 800; color: var(--n-400);
+  text-transform: uppercase; letter-spacing: .1em;
+  padding: 8px 22px 6px;
+  max-width: 1240px; margin: 0 auto;
+}
+
+.citas-grid {
+  padding: 0 14px;
+  max-width: 1240px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr; gap: 12px;
+}
+@media (min-width: 640px) { .citas-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .citas-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.cita-card {
+  display: flex; align-items: stretch;
+  background: var(--ion-card-background); border: 1px solid var(--hairline);
+  border-radius: 20px; overflow: hidden;
+  box-shadow: var(--shadow-sm); cursor: pointer;
+  transition: transform .15s var(--ease-out), box-shadow .15s;
+  &:active { transform: scale(.985); }
+}
+
+.cc-estado-bar { width: 5px; flex-shrink: 0; }
+
+.cc-body { flex: 1; padding: 14px; min-width: 0; }
+
+.cc-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.cc-cliente { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cc-badge { font-size: 10px; flex-shrink: 0; }
+
+.cc-fecha, .cc-moto {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 13px; color: var(--n-500); margin-bottom: 3px;
+  ion-icon { font-size: 14px; color: var(--ion-color-primary); flex-shrink: 0; }
+}
+.cc-placa { font-size: 12px; color: var(--n-400); }
+
+.cc-servicio { font-size: 12px; font-weight: 600; color: var(--ion-text-color); margin: 4px 0; }
+
+.cc-motivo { font-size: 12px; color: var(--n-500); margin: 0 0 6px; line-height: 1.4; }
+
+.cc-footer { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600;
+  .cc-tec { display: inline-flex; align-items: center; gap: 4px; color: var(--n-400);
+    ion-icon { font-size: 12px; } }
+  .cc-sin { display: inline-flex; align-items: center; gap: 4px; color: var(--amber-700);
+    ion-icon { font-size: 12px; } }
+}
+
+.cc-chevron { font-size: 18px; color: var(--n-300); align-self: center; padding-right: 10px; flex-shrink: 0; }
+
+.empty-state {
+  text-align: center; padding: 60px 24px; color: var(--n-400);
+  ion-icon { font-size: 54px; margin-bottom: 12px; opacity: .4; display: block; margin-left: auto; margin-right: auto; }
+  p { font-size: 15px; margin-bottom: 20px; }
 }

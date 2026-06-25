@@ -1,5 +1,8 @@
 <ion-header>
   <ion-toolbar color="primary">
+    <ion-buttons slot="start" *ngIf="esAdmin">
+      <ion-back-button defaultHref="/admin" text="Panel"></ion-back-button>
+    </ion-buttons>
     <ion-title>Agenda</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="nuevaCita()">
@@ -23,53 +26,61 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <div class="skeleton-wrap sk-clientes" *ngIf="cargando">
-    <div class="sk-row" *ngFor="let i of [1,2,3,4,5]">
-      <div class="skeleton sk-av" style="border-radius:12px"></div>
-      <div class="sk-col">
-        <div class="skeleton skeleton-line sk-50"></div>
-        <div class="skeleton skeleton-line sk-35"></div>
-      </div>
-    </div>
+  <!-- Buscador -->
+  <div class="citas-search">
+    <ion-searchbar [(ngModel)]="busqueda" placeholder="Buscar cliente, placa o moto…" debounce="300"></ion-searchbar>
   </div>
 
-  <ion-list *ngIf="!cargando">
-    <ion-item-sliding *ngFor="let c of citas">
-      <ion-item>
-        <ion-icon name="calendar-outline" slot="start" [color]="estadoColor[c.estado!]"></ion-icon>
-        <ion-label>
-          <h2>{{ c.cliente_nombre }} {{ c.cliente_apellido }}</h2>
-          <p>{{ c.fecha | date:'dd/MM/yyyy' }} a las {{ c.hora }}</p>
-          <p *ngIf="c.marca">{{ c.marca }} {{ c.modelo }}<span *ngIf="c.tipo_servicio"> · {{ c.tipo_servicio }}</span></p>
-          <p>{{ c.motivo | slice:0:60 }}</p>
-          <ion-chip *ngIf="c.tecnico_nombre" color="tertiary" class="chip-cliente">
-            <ion-icon name="construct-outline"></ion-icon>
-            <ion-label>{{ c.tecnico_nombre }}</ion-label>
-          </ion-chip>
-          <ion-chip *ngIf="!c.tecnico_nombre" color="medium" class="chip-cliente">
-            <ion-icon name="person-outline"></ion-icon>
-            <ion-label>Sin asignar</ion-label>
-          </ion-chip>
-        </ion-label>
-        <ion-badge slot="end" [color]="estadoColor[c.estado!]">{{ estadoLabel[c.estado!] }}</ion-badge>
-      </ion-item>
-      <ion-item-options side="end">
-        <ion-item-option (click)="editarCita(c.id!)">
-          <ion-icon name="create-outline"></ion-icon>
-        </ion-item-option>
-        <ion-item-option color="tertiary" (click)="asignarTecnico(c)" *ngIf="auth.tieneRol('admin')">
-          <ion-icon name="construct-outline"></ion-icon>
-        </ion-item-option>
-        <ion-item-option color="danger" (click)="cambiarEstado(c, 'cancelado')" *ngIf="c.estado !== 'entregado' && c.estado !== 'cancelado'">
-          <ion-icon name="close-outline"></ion-icon>
-        </ion-item-option>
-      </ion-item-options>
-    </ion-item-sliding>
+  <!-- Skeleton -->
+  <div class="citas-grid skeleton-wrap" *ngIf="cargando">
+    <div class="skeleton" style="height:140px;border-radius:20px" *ngFor="let i of [1,2,3,4,5,6]"></div>
+  </div>
 
-    <ion-item *ngIf="citas.length === 0 && !cargando">
-      <ion-label class="ion-text-center" color="medium"><p>No hay citas</p></ion-label>
-    </ion-item>
-  </ion-list>
+  <div *ngIf="!cargando">
+    <div class="citas-count" *ngIf="citasFiltradas.length">
+      {{ citasFiltradas.length }} cita{{ citasFiltradas.length !== 1 ? 's' : '' }}
+    </div>
+
+    <div class="citas-grid">
+      <div class="cita-card" *ngFor="let c of citasFiltradas" (click)="editarCita(c.id!)">
+        <div class="cc-estado-bar" [style.background]="'var(--ion-color-' + estadoColor[c.estado!] + ')'"></div>
+        <div class="cc-body">
+          <div class="cc-top">
+            <strong class="cc-cliente">{{ c.cliente_nombre }} {{ c.cliente_apellido }}</strong>
+            <ion-badge [color]="estadoColor[c.estado!]" class="cc-badge">{{ estadoLabel[c.estado!] }}</ion-badge>
+          </div>
+          <div class="cc-fecha">
+            <ion-icon name="calendar-outline"></ion-icon>
+            {{ c.fecha | date:'dd/MM/yyyy' }} · {{ formatHora(c.hora!) }}
+          </div>
+          <div class="cc-moto" *ngIf="c.marca">
+            <ion-icon name="bicycle-outline"></ion-icon>
+            {{ c.marca }} {{ c.modelo }}
+            <span *ngIf="c.placa" class="cc-placa mono">· {{ c.placa }}</span>
+          </div>
+          <div class="cc-servicio" *ngIf="c.tipo_servicio">{{ c.tipo_servicio }}</div>
+          <p class="cc-motivo" *ngIf="c.motivo">{{ c.motivo.length > 60 ? c.motivo.slice(0, 60) + '…' : c.motivo }}</p>
+          <div class="cc-footer">
+            <span *ngIf="c.tecnico_nombre" class="cc-tec">
+              <ion-icon name="construct-outline"></ion-icon> {{ c.tecnico_nombre }}
+            </span>
+            <span *ngIf="!c.tecnico_nombre" class="cc-sin">
+              <ion-icon name="person-outline"></ion-icon> Sin asignar
+            </span>
+          </div>
+        </div>
+        <ion-icon name="chevron-forward-outline" class="cc-chevron"></ion-icon>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="citasFiltradas.length === 0">
+      <ion-icon name="calendar-clear-outline"></ion-icon>
+      <p>{{ busqueda.trim() ? 'Sin resultados para "' + busqueda + '"' : 'No hay citas' + (filtroEstado ? ' con ese estado' : '') }}</p>
+      <ion-button fill="outline" size="small" (click)="nuevaCita()">Nueva cita</ion-button>
+    </div>
+
+    <div style="height:80px"></div>
+  </div>
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button color="primary" (click)="nuevaCita()">

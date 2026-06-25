@@ -38,6 +38,8 @@ export class CitasPage implements OnInit, OnDestroy {
     cancelado: 'danger',
   };
 
+  busqueda = '';
+
   constructor(
     private citaSvc: CitasService,
     private dashSvc: DashboardService,
@@ -46,6 +48,20 @@ export class CitasPage implements OnInit, OnDestroy {
     private alert: AlertController,
     private toast: ToastController
   ) {}
+
+  get esAdmin(): boolean { return this.auth.tieneRol('admin'); }
+
+  get citasFiltradas(): Cita[] {
+    if (!this.busqueda.trim()) return this.citas;
+    const q = this.busqueda.trim().toLowerCase();
+    return this.citas.filter(c =>
+      `${c.cliente_nombre} ${c.cliente_apellido} ${c.placa} ${c.marca} ${c.modelo}`.toLowerCase().includes(q)
+    );
+  }
+
+  formatHora(h: string): string {
+    return h ? h.slice(0, 5) : '';
+  }
 
   ngOnInit() { this.cargar(); }
   ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }

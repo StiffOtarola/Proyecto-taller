@@ -1,24 +1,40 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
-import { MecanicoService } from '../../services/mecanico.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { MecanicoService } from '../../services/mecanico.service';
+import { AuthService } from '../../services/auth.service';
+import { AccesibilidadService } from '../../services/accesibilidad.service';
 
 @Component({
   standalone: false,
   selector: 'app-mecanico-perfil',
   templateUrl: './mecanico-perfil.page.html',
-  styleUrls: ['./mecanico.page.scss', './mecanico-perfil.page.scss'],
+  styleUrls: ['./mecanico-perfil.page.scss'],
 })
 export class MecanicoPerfilPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   perfil: any = null;
+  cuenta = { telefono: '', especialidades: '', horario: '' };
+  pass = { actual: '', nueva: '' };
   cargando = true;
-  editando = false;
   guardando = false;
-  form = { telefono: '', especialidades: '', horario: '' };
+  guardandoPass = false;
 
-  constructor(private mecanico: MecanicoService, private toast: ToastController) {}
+  readonly nivelesTexto = [
+    { i: 0, etiqueta: 'A', nombre: 'Normal' },
+    { i: 1, etiqueta: 'A', nombre: 'Grande' },
+    { i: 2, etiqueta: 'A', nombre: 'Muy grande' },
+  ];
+
+  constructor(
+    private mecanico: MecanicoService,
+    private auth: AuthService,
+    public a11y: AccesibilidadService,
+    private router: Router,
+    private toast: ToastController,
+  ) {}
 
   ngOnInit() { this.cargar(); }
   ionViewWillEnter() { this.cargar(); }
@@ -27,9 +43,30 @@ export class MecanicoPerfilPage implements OnInit, OnDestroy {
   cargar(ev?: any) {
     this.cargando = true;
     this.mecanico.getPerfil().pipe(takeUntil(this.destroy$)).subscribe({
-      next: r => { this.perfil = r.data; this.cargando = false; if (ev) ev.target.complete(); },
+      next: r => {
+        this.perfil = r.data;
+        this.cuenta = {
+          telefono: r.data.telefono || '',
+          especialidades: r.data.especialidades || '',
+          horario: r.data.horario || '',
+        };
+        this.cargando = false;
+        if (ev) ev.target.complete();
+      },
       error: () => { this.cargando = false; if (ev) ev.target.complete(); },
     });
+  }
+
+  get iniciales(): string {
+    const p = (this.perfil?.nombre || 'M').trim().split(/\s+/);
+    return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || 'M';
+  }
+
+  get sedeLabel(): string { return this.perfil?.sucursal_nombre || 'Todas las sedes'; }
+
+  get miembroDesde(): string {
+    if (!this.perfil?.created_at) return '—';
+    return new Date(this.perfil.created_at).toLocaleDateString('es-CR', { month: 'long', year: 'numeric' });
   }
 
   estrellas(prom: number | null): string {
@@ -42,33 +79,36 @@ export class MecanicoPerfilPage implements OnInit, OnDestroy {
     if (!min) return '—';
     const h = Math.floor(min / 60);
     const m = Math.round(min % 60);
-    return h ? `${h}h ${m}m` : `${m}m`;
+    return h ? `${h}h ${m}min` : `${m} min`;
   }
 
-  abrirEditar() {
-    this.form = {
-      telefono: this.perfil?.telefono || '',
-      especialidades: this.perfil?.especialidades || '',
-      horario: this.perfil?.horario || '',
-    };
-    this.editando = true;
-  }
+  setTexto(i: number) { this.a11y.setNivel(i); }
 
-  guardar() {
+  guardarCuenta() {
     this.guardando = true;
-    this.mecanico.actualizarPerfil(this.form).pipe(takeUntil(this.destroy$)).subscribe({
-      next: async () => {
-        this.guardando = false;
-        this.editando = false;
-        const t = await this.toast.create({ message: 'Perfil actualizado', duration: 1500, color: 'success' });
-        await t.present();
-        this.cargar();
-      },
-      error: async () => {
-        this.guardando = false;
-        const t = await this.toast.create({ message: 'No se pudo guardar', duration: 2000, color: 'danger' });
-        await t.present();
-      },
+    this.mecanico.actualizarPerfil(this.cuenta).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => { this.guardando = false; this.aviso('Perfil actualizado'); this.cargar(); },
+      error: (e) => { this.guardando = false; this.aviso(e.error?.error || 'No se pudo guardar', 'danger'); },
     });
+  }
+
+  cambiarPassword() {
+    if (!this.pass.actual || !this.pass.nueva) { this.aviso('Completá ambas contraseñas', 'warning'); return; }
+    if (this.pass.nueva.length < 8) { this.aviso('La nueva debe tener al menos 8 caracteres', 'warning'); return; }
+    this.guardandoPass = true;
+    this.mecanico.cambiarPassword(this.pass).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => { this.guardandoPass = false; this.pass = { actual: '', nueva: '' }; this.aviso('Contraseña actualizada'); },
+      error: (e) => { this.guardandoPass = false; this.aviso(e.error?.error || 'No se pudo cambiar', 'danger'); },
+    });
+  }
+
+  logout() {
+    this.auth.logout();
+    this.router.navigate(['/login'], { replaceUrl: true });
+  }
+
+  private async aviso(message: string, color = 'success') {
+    const t = await this.toast.create({ message, duration: 1800, color });
+    await t.present();
   }
 }

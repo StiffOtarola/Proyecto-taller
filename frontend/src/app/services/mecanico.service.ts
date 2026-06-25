@@ -75,4 +75,7 @@ export class MecanicoService {
   actualizarPerfil(data: { telefono?: string; especialidades?: string; horario?: string }): Observable<any> {
     return this.http.patch(`${this.url}/perfil`, data);
   }
+  cambiarPassword(data: { actual: string; nueva: string }): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(`${this.url}/perfil/password`, data);
+  }
 }

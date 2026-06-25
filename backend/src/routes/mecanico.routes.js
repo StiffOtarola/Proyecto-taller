@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const bcrypt = require('bcrypt');
 const { pool } = require('../db/pool');
 const { fail } = require('../utils/responder');
 const auth = require('../middleware/auth');
@@ -371,6 +372,23 @@ router.patch('/perfil', async (req, res) => {
       [telefono || null, especialidades || null, horario || null, req.usuario.id]
     );
     res.json({ message: 'Perfil actualizado' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+router.put('/perfil/password', async (req, res) => {
+  try {
+    const { actual, nueva } = req.body;
+    if (!actual || !nueva) return res.status(400).json({ error: 'Contraseña actual y nueva son requeridas' });
+    if (String(nueva).length < 8) return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 8 caracteres' });
+    const [[u]] = await pool.query('SELECT password_hash FROM usuarios WHERE id = ?', [req.usuario.id]);
+    if (!u) return res.status(404).json({ error: 'Usuario no encontrado' });
+    const ok = await bcrypt.compare(String(actual), u.password_hash);
+    if (!ok) return res.status(400).json({ error: 'La contraseña actual no es correcta' });
+    const hash = await bcrypt.hash(String(nueva), 10);
+    await pool.query('UPDATE usuarios SET password_hash = ? WHERE id = ?', [hash, req.usuario.id]);
+    res.json({ message: 'Contraseña actualizada' });
   } catch (err) {
     fail(res, err);
   }

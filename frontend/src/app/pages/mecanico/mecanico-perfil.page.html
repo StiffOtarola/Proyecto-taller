@@ -1,12 +1,7 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
-    <ion-title>Perfil</ion-title>
-    <ion-buttons slot="end" *ngIf="!cargando && !editando">
-      <ion-button (click)="abrirEditar()" title="Editar perfil">
-        <ion-icon slot="icon-only" name="create-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons>
+    <ion-title>Mi perfil</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -15,23 +10,21 @@
     <ion-refresher-content pullingIcon="chevron-down" refreshingSpinner="crescent"></ion-refresher-content>
   </ion-refresher>
 
-  <div class="mec">
-    <div *ngIf="cargando">
-      <div class="skeleton" style="height:120px;border-radius:24px;margin-bottom:16px"></div>
-      <div class="skeleton" style="height:100px;border-radius:24px"></div>
+  <div class="mec-perfil">
+    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:14px">
+      <div class="skeleton" style="height:108px;border-radius:24px"></div>
+      <div class="skeleton" style="height:96px;border-radius:24px"></div>
+      <div class="skeleton" style="height:240px;border-radius:24px"></div>
     </div>
 
-    <div *ngIf="!cargando && perfil">
-      <!-- Header -->
+    <ng-container *ngIf="!cargando && perfil">
+      <!-- Cabecera -->
       <div class="profile-header">
-        <div class="profile-avatar"><ion-icon name="construct"></ion-icon></div>
-        <div class="profile-info">
+        <div class="avatar">{{ iniciales }}</div>
+        <div class="info">
           <h2>{{ perfil.nombre }}</h2>
-          <p class="rol">Mecánico</p>
-          <p class="contact">
-            <span *ngIf="perfil.telefono"><ion-icon name="call-outline"></ion-icon> {{ perfil.telefono }}</span>
-            <span><ion-icon name="mail-outline"></ion-icon> {{ perfil.email }}</span>
-          </p>
+          <span class="role-chip">Mecánico</span>
+          <p class="contact">{{ perfil.email || '—' }}<ng-container *ngIf="perfil.telefono"> · {{ perfil.telefono }}</ng-container></p>
           <div class="profile-rating" *ngIf="perfil.calificacion_promedio">
             <span class="stars">{{ estrellas(perfil.calificacion_promedio) }}</span>
             <span class="val">{{ perfil.calificacion_promedio }}/5</span>
@@ -40,25 +33,28 @@
         </div>
       </div>
 
-      <!-- Editar perfil -->
-      <section class="card" *ngIf="editando">
-        <span class="section-label">Editar perfil</span>
-        <div class="fld"><label>Teléfono</label><input type="tel" [(ngModel)]="form.telefono" placeholder="8888-1234"></div>
-        <div class="fld"><label>Especialidades (separadas por coma)</label><input type="text" [(ngModel)]="form.especialidades" placeholder="Frenos, Diagnóstico, Transmisión"></div>
-        <div class="fld"><label>Horario</label><input type="text" [(ngModel)]="form.horario" placeholder="Lun a Vie 08:00–17:00"></div>
-        <div class="edit-acc">
-          <button class="btn-ghost" (click)="editando = false">Cancelar</button>
-          <button class="btn-solid" (click)="guardar()" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
-        </div>
-      </section>
-
       <!-- Stats -->
-      <div class="stat-grid" style="margin-bottom:16px">
-        <div class="stat"><div class="st-n">{{ perfil.completadas }}</div><div class="st-l">Citas completadas</div></div>
-        <div class="stat"><div class="st-n">{{ perfil.citas_mes }}</div><div class="st-l">Citas este mes</div></div>
-        <div class="stat"><div class="st-n">{{ perfil.satisfechos_pct != null ? perfil.satisfechos_pct + '%' : '—' }}</div><div class="st-l">Clientes satisfechos</div></div>
-        <div class="stat"><div class="st-n" style="font-size:24px">{{ formatMin(perfil.tiempo_promedio_min) }}</div><div class="st-l">Tiempo promedio</div></div>
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-num">{{ perfil.completadas }}</div><div class="stat-lbl">Completadas</div></div>
+        <div class="stat"><div class="stat-num">{{ perfil.citas_mes }}</div><div class="stat-lbl">Este mes</div></div>
+        <div class="stat"><div class="stat-num">{{ perfil.satisfechos_pct != null ? perfil.satisfechos_pct + '%' : '—' }}</div><div class="stat-lbl">Satisfechos</div></div>
+        <div class="stat"><div class="stat-num" style="font-size:22px">{{ formatMin(perfil.tiempo_promedio_min) }}</div><div class="stat-lbl">Tiempo prom.</div></div>
       </div>
+
+      <!-- Mi cuenta -->
+      <section class="card">
+        <span class="section-label">Mi cuenta</span>
+        <div class="ig"><label>Teléfono</label><input type="tel" [(ngModel)]="cuenta.telefono" placeholder="8888-1234"></div>
+        <div class="ig"><label>Especialidades (separadas por coma)</label><input type="text" [(ngModel)]="cuenta.especialidades" placeholder="Frenos, Diagnóstico, Transmisión"></div>
+        <div class="ig"><label>Horario</label><input type="text" [(ngModel)]="cuenta.horario" placeholder="Lun a Vie 08:00–17:00"></div>
+
+        <div class="ro-row">
+          <div class="ro"><ion-icon name="location-outline"></ion-icon><div><span class="ro-lbl">Sede asignada</span><strong>{{ sedeLabel }}</strong></div></div>
+          <div class="ro"><ion-icon name="calendar-outline"></ion-icon><div><span class="ro-lbl">Miembro desde</span><strong>{{ miembroDesde }}</strong></div></div>
+        </div>
+
+        <button class="cta" [disabled]="guardando" (click)="guardarCuenta()">Guardar cambios</button>
+      </section>
 
       <!-- Especialidades -->
       <section class="card" *ngIf="perfil.especialidades_list?.length">
@@ -68,18 +64,28 @@
         </div>
       </section>
 
-      <!-- Horario -->
-      <section class="card" *ngIf="perfil.horario">
-        <span class="section-label">Horario de trabajo</span>
-        <p class="horario">{{ perfil.horario }}</p>
+      <!-- Accesibilidad -->
+      <section class="card">
+        <span class="section-label">Accesibilidad</span>
+        <div class="a11y-row">
+          <div class="a11y-info">
+            <strong>Tamaño de texto</strong>
+            <span>{{ nivelesTexto[a11y.nivel].nombre }}</span>
+          </div>
+          <div class="a11y-opts" role="group" aria-label="Tamaño de texto">
+            <button *ngFor="let n of nivelesTexto" class="a11y-opt" [class.on]="a11y.nivel === n.i"
+                    (click)="setTexto(n.i)" [attr.aria-pressed]="a11y.nivel === n.i" [attr.aria-label]="n.nombre"
+                    [style.font-size.px]="13 + n.i * 5">{{ n.etiqueta }}</button>
+          </div>
+        </div>
       </section>
 
-      <!-- Stats del mes -->
+      <!-- Seguridad -->
       <section class="card">
-        <span class="section-label">Este mes</span>
-        <div class="avg-row"><span class="lbl">Citas del mes</span><span class="val mono">{{ perfil.citas_mes }}</span></div>
-        <div class="avg-row"><span class="lbl">Tiempo promedio</span><span class="val mono">{{ formatMin(perfil.tiempo_promedio_min) }}</span></div>
-        <div class="avg-row"><span class="lbl">Calificación promedio</span><span class="val stars">{{ estrellas(perfil.calificacion_promedio) }}</span></div>
+        <span class="section-label">Seguridad</span>
+        <div class="ig"><label>Contraseña actual</label><input type="password" [(ngModel)]="pass.actual" placeholder="••••••••"></div>
+        <div class="ig"><label>Nueva contraseña</label><input type="password" [(ngModel)]="pass.nueva" placeholder="Mín. 8 caracteres"></div>
+        <button class="cta outline" [disabled]="guardandoPass" (click)="cambiarPassword()">Cambiar contraseña</button>
       </section>
 
       <!-- Calificaciones recientes -->
@@ -94,7 +100,9 @@
           <p class="rc-date">{{ r.fecha_fin | date:'dd/MM' }}<span *ngIf="r.tipo_servicio"> · {{ r.tipo_servicio }}</span></p>
         </div>
       </section>
-    </div>
+
+      <button class="cta danger" (click)="logout()">Cerrar sesión</button>
+    </ng-container>
 
     <div style="height:80px"></div>
   </div>

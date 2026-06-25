@@ -1,57 +1,103 @@
+.mec-perfil { max-width: 920px; margin: 0 auto; padding: 14px 16px 0; }
+
 .profile-header {
-  display: flex; align-items: center; gap: 16px; padding: 20px;
+  display: flex; align-items: center; gap: 16px;
   background: linear-gradient(135deg, var(--rose-50), var(--emerald-50));
-  border-radius: 24px; margin-bottom: 16px;
+  border: 1px solid var(--hairline); border-radius: 24px; padding: 20px; margin-bottom: 16px;
+
+  .avatar {
+    width: 66px; height: 66px; border-radius: 50%; flex-shrink: 0;
+    background: var(--ion-color-primary); color: #fff; border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-size: 26px; font-weight: 800;
+    box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2);
+  }
+  .info { min-width: 0;
+    h2 { font-family: var(--font-display); font-size: 20px; font-weight: 800; margin: 0; color: #0a0a0a; }
+    .role-chip {
+      display: inline-block; margin-top: 5px; padding: 2px 9px; border-radius: 999px;
+      background: var(--ion-color-primary); color: #fff; font-size: 10.5px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .contact { font-size: 12px; color: #525252; margin: 6px 0 0; word-break: break-word; }
+  }
+  .profile-rating { margin-top: 6px; display: flex; align-items: center; gap: 6px;
+    .stars { color: #b45309; letter-spacing: 1px; font-size: 14px; }
+    .val { font-size: 13px; font-weight: 700; color: #0a0a0a; }
+    .muted { font-size: 11px; color: #737373; }
+  }
 }
-.profile-avatar {
-  width: 66px; height: 66px; border-radius: 50%; flex-shrink: 0;
+
+.stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+@media (min-width: 820px) { .stat-grid { grid-template-columns: repeat(4, 1fr); } }
+.stat {
+  background: var(--ion-card-background); border: 1px solid var(--hairline);
+  border-radius: 24px; box-shadow: var(--shadow-sm); padding: 16px; text-align: center;
+  position: relative; overflow: hidden;
+  &::after { content: ''; position: absolute; top: 0; right: 0; width: 56px; height: 56px; background: var(--n-100); border-bottom-left-radius: 999px; }
+  .stat-num { font-family: var(--font-display); font-size: 34px; font-weight: 900; line-height: 1; letter-spacing: -0.04em; position: relative; z-index: 1; color: var(--ion-color-primary); }
+  .stat-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--n-500); margin-top: 6px; position: relative; z-index: 1; }
+}
+
+.ro-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0 14px; }
+.ro {
+  display: flex; align-items: center; gap: 9px;
+  background: var(--n-50); border: 1px solid var(--hairline); border-radius: 12px; padding: 10px 11px;
+  ion-icon { font-size: 18px; color: var(--text-accent); flex-shrink: 0; }
+  .ro-lbl { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--n-400); }
+  strong { font-size: 13px; font-weight: 700; color: var(--ion-text-color); }
+}
+@media (max-width: 420px) { .ro-row { grid-template-columns: 1fr; } }
+
+.a11y-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.a11y-info { strong { display: block; font-size: 14px; font-weight: 700; } span { font-size: 12px; color: var(--n-500); } }
+.a11y-opts { display: flex; gap: 6px; }
+.a11y-opt {
+  width: 38px; height: 38px; border-radius: 12px; cursor: pointer;
+  border: 1.5px solid var(--hairline); background: var(--ion-card-background); color: var(--n-500);
+  font-weight: 800; line-height: 1; display: flex; align-items: center; justify-content: center;
+  &.on { border-color: var(--ion-color-primary); color: var(--ion-color-primary); background: var(--rose-50); }
+}
+
+.card {
+  background: var(--ion-card-background); border: 1px solid var(--hairline);
+  border-radius: 24px; box-shadow: var(--shadow-sm); padding: 18px; margin-bottom: 14px;
+}
+.section-label {
+  display: block; font-size: 11px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--n-400); margin-bottom: 14px;
+}
+
+.ig {
+  margin-bottom: 12px;
+  label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--n-400); margin-bottom: 5px; }
+  input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--hairline); border-radius: 12px;
+    font-family: inherit; font-size: 13px; background: var(--ion-card-background); color: var(--ion-text-color);
+    outline: none; transition: border-color 0.2s;
+    &:focus { border-color: var(--ion-color-primary); }
+  }
+}
+
+.cta {
+  width: 100%; padding: 13px; border: none; border-radius: 14px;
   background: var(--ion-color-primary); color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 12px rgba(225, 29, 72, .25);
-  ion-icon { font-size: 30px; }
-}
-.profile-info { min-width: 0;
-  h2 { margin: 0; font-family: var(--font-display); font-size: 20px; font-weight: 800; color: #0a0a0a; }
-  // El degradado de fondo es claro en ambos temas: texto secundario en oscuro fijo.
-  .rol { margin: 2px 0 0; font-size: 12px; color: #525252; }
-  .contact { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 4px 12px;
-    span { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: #525252; }
-    ion-icon { font-size: 13px; } }
-  .profile-rating { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 13px;
-    .stars { font-size: 15px; letter-spacing: 1px; color: var(--amber-700); }
-    .val { font-weight: 700; color: #0a0a0a; }
-    .muted { color: var(--n-500); font-size: 12px; } }
+  font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform 0.15s var(--ease, ease);
+  &:active { transform: scale(0.98); }
+  &:disabled { opacity: 0.5; cursor: default; }
+  &.outline { background: none; border: 1.5px solid var(--hairline); color: var(--ion-text-color); }
+  &.danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; margin-top: 4px; }
 }
 
-/* Especialidades */
-.spec-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
-.spec {
-  display: inline-flex; align-items: center; font-size: 11px; font-weight: 700;
-  background: var(--emerald-50); color: var(--emerald-700);
-  padding: 6px 12px; border-radius: 999px;
-}
+.spec-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+.spec { padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  background: var(--rose-50); color: var(--rose-700); border: 1px solid transparent; }
 
-.horario { margin: 0; font-size: 13px; color: var(--n-600); line-height: 1.6; white-space: pre-line; }
-
-/* Calificaciones recientes */
-.rating-card {
-  border: 1px solid var(--hairline); border-radius: 16px; padding: 12px; margin-bottom: 10px;
-  &:last-child { margin-bottom: 0; }
-  .rc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    .stars { font-size: 14px; letter-spacing: 1px; color: var(--amber-700); }
-    .client { font-size: 12px; font-weight: 700; } }
-  .rc-comment { margin: 6px 0 0; font-size: 12.5px; color: var(--n-600); font-style: italic; line-height: 1.4; }
-  .rc-date { margin: 6px 0 0; font-size: 10px; color: var(--n-400); }
-}
-
-/* Editar perfil */
-.fld { margin-bottom: 12px;
-  label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--n-500); margin-bottom: 5px; }
-  input { width: 100%; padding: 10px 12px; border: 1px solid var(--hairline); border-radius: 12px;
-    font-size: 14px; background: var(--ion-card-background); color: var(--ion-text-color); outline: none;
-    &:focus { border-color: var(--ion-color-primary); } }
-}
-.edit-acc { display: flex; gap: 8px; }
-.edit-acc button { flex: 1; padding: 11px; border-radius: 12px; border: none; cursor: pointer; font-size: 14px; font-weight: 700; }
-.btn-ghost { background: var(--n-100); color: var(--n-600); }
-.btn-solid { background: var(--ion-color-primary); color: #fff; &:disabled { opacity: .5; } }
+.rating-card { padding: 10px 0; & + .rating-card { border-top: 1px dashed var(--hairline); } }
+.rc-head { display: flex; align-items: center; gap: 8px;
+  .stars { color: var(--amber-700); letter-spacing: 1px; }
+  .client { font-size: 13px; font-weight: 600; } }
+.rc-comment { font-size: 13px; color: var(--n-500); font-style: italic; margin: 4px 0 0; }
+.rc-date { font-size: 11px; color: var(--n-400); margin: 2px 0 0; }

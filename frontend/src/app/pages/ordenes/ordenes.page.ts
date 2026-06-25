@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { OrdenesService } from '../../services/ordenes.service';
+import { AuthService } from '../../services/auth.service';
 import { Orden, EstadoOrden } from '../../models/orden.model';
 
 @Component({ standalone: false,
@@ -28,7 +29,9 @@ export class OrdenesPage implements OnInit, OnDestroy {
     { valor: 'cancelada', label: 'Cancelada' },
   ];
 
-  constructor(private ordenSvc: OrdenesService, private router: Router) {}
+  constructor(private ordenSvc: OrdenesService, public auth: AuthService, private router: Router) {}
+
+  get esAdmin(): boolean { return this.auth.tieneRol('admin'); }
 
   ngOnInit() {
     this.cargar();

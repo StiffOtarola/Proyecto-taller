@@ -1,5 +1,8 @@
 <ion-header>
   <ion-toolbar color="primary">
+    <ion-buttons slot="start" *ngIf="esAdmin">
+      <ion-back-button defaultHref="/admin" text="Panel"></ion-back-button>
+    </ion-buttons>
     <ion-title>Órdenes de Trabajo</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="nuevaOrden()">
@@ -62,10 +65,10 @@
                 <span *ngIf="orden.tecnico_nombre">
                   <ion-icon name="build-outline"></ion-icon> {{ orden.tecnico_nombre }}
                 </span>
-                <span *ngIf="!orden.tecnico_nombre" style="color:var(--ion-color-warning)">
+                <span *ngIf="!orden.tecnico_nombre" class="sin-tecnico">
                   <ion-icon name="alert-circle-outline"></ion-icon> Sin técnico
                 </span>
-                <span style="margin-left:auto">
+                <span class="orden-fecha">
                   <ion-icon name="time-outline"></ion-icon>
                   {{ orden.fecha_ingreso | date:'dd/MM' }}
                 </span>

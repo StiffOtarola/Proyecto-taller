@@ -41,35 +41,44 @@
       {{ citasFiltradas.length }} cita{{ citasFiltradas.length !== 1 ? 's' : '' }}
     </div>
 
-    <div class="citas-grid">
-      <div class="cita-card" *ngFor="let c of citasFiltradas" (click)="editarCita(c.id!)">
-        <div class="cc-estado-bar" [style.background]="'var(--ion-color-' + estadoColor[c.estado!] + ')'"></div>
-        <div class="cc-body">
-          <div class="cc-top">
-            <strong class="cc-cliente">{{ c.cliente_nombre }} {{ c.cliente_apellido }}</strong>
-            <ion-badge [color]="estadoColor[c.estado!]" class="cc-badge">{{ estadoLabel[c.estado!] }}</ion-badge>
+    <div class="citas-wrapper" *ngFor="let grupo of citasPorFecha">
+      <div class="fecha-sep">
+        <span class="fecha-label" [class.hoy]="grupo.etiqueta === 'Hoy'" [class.manana]="grupo.etiqueta === 'Mañana'">
+          {{ grupo.etiqueta }}
+        </span>
+        <span class="fecha-count">{{ grupo.citas.length }}</span>
+      </div>
+
+      <div class="citas-grid">
+        <div class="cita-card" *ngFor="let c of grupo.citas" (click)="editarCita(c.id!)">
+          <div class="cc-estado-bar" [style.background]="'var(--ion-color-' + estadoColor[c.estado!] + ')'"></div>
+          <div class="cc-body">
+            <div class="cc-top">
+              <strong class="cc-cliente">{{ c.cliente_nombre }} {{ c.cliente_apellido }}</strong>
+              <ion-badge [color]="estadoColor[c.estado!]" class="cc-badge">{{ estadoLabel[c.estado!] }}</ion-badge>
+            </div>
+            <div class="cc-hora">
+              <ion-icon name="time-outline"></ion-icon>
+              {{ formatHora(c.hora!) }}
+            </div>
+            <div class="cc-moto" *ngIf="c.marca">
+              <ion-icon name="bicycle-outline"></ion-icon>
+              {{ c.marca }} {{ c.modelo }}
+              <span *ngIf="c.placa" class="cc-placa mono">· {{ c.placa }}</span>
+            </div>
+            <div class="cc-servicio" *ngIf="c.tipo_servicio">{{ c.tipo_servicio }}</div>
+            <p class="cc-motivo" *ngIf="c.motivo">{{ c.motivo.length > 60 ? c.motivo.slice(0, 60) + '…' : c.motivo }}</p>
+            <div class="cc-footer">
+              <span *ngIf="c.tecnico_nombre" class="cc-tec">
+                <ion-icon name="construct-outline"></ion-icon> {{ c.tecnico_nombre }}
+              </span>
+              <span *ngIf="!c.tecnico_nombre" class="cc-sin">
+                <ion-icon name="person-outline"></ion-icon> Sin asignar
+              </span>
+            </div>
           </div>
-          <div class="cc-fecha">
-            <ion-icon name="calendar-outline"></ion-icon>
-            {{ c.fecha | date:'dd/MM/yyyy' }} · {{ formatHora(c.hora!) }}
-          </div>
-          <div class="cc-moto" *ngIf="c.marca">
-            <ion-icon name="bicycle-outline"></ion-icon>
-            {{ c.marca }} {{ c.modelo }}
-            <span *ngIf="c.placa" class="cc-placa mono">· {{ c.placa }}</span>
-          </div>
-          <div class="cc-servicio" *ngIf="c.tipo_servicio">{{ c.tipo_servicio }}</div>
-          <p class="cc-motivo" *ngIf="c.motivo">{{ c.motivo.length > 60 ? c.motivo.slice(0, 60) + '…' : c.motivo }}</p>
-          <div class="cc-footer">
-            <span *ngIf="c.tecnico_nombre" class="cc-tec">
-              <ion-icon name="construct-outline"></ion-icon> {{ c.tecnico_nombre }}
-            </span>
-            <span *ngIf="!c.tecnico_nombre" class="cc-sin">
-              <ion-icon name="person-outline"></ion-icon> Sin asignar
-            </span>
-          </div>
+          <ion-icon name="chevron-forward-outline" class="cc-chevron"></ion-icon>
         </div>
-        <ion-icon name="chevron-forward-outline" class="cc-chevron"></ion-icon>
       </div>
     </div>
 

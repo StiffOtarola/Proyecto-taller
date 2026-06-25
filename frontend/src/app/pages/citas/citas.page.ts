@@ -59,6 +59,30 @@ export class CitasPage implements OnInit, OnDestroy {
     );
   }
 
+  get citasPorFecha(): { fecha: string; etiqueta: string; citas: Cita[] }[] {
+    const map = new Map<string, Cita[]>();
+    for (const c of this.citasFiltradas) {
+      const f = (c.fecha || '').slice(0, 10);
+      if (!map.has(f)) map.set(f, []);
+      map.get(f)!.push(c);
+    }
+    return [...map.entries()]
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([fecha, citas]) => ({ fecha, etiqueta: this.etiquetaFecha(fecha), citas }));
+  }
+
+  private etiquetaFecha(fecha: string): string {
+    if (!fecha) return '';
+    const hoy = new Date().toISOString().slice(0, 10);
+    const manana = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+    const ayer = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    if (fecha === hoy) return 'Hoy';
+    if (fecha === manana) return 'Mañana';
+    if (fecha === ayer) return 'Ayer';
+    const d = new Date(fecha + 'T12:00:00Z');
+    return d.toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
   formatHora(h: string): string {
     return h ? h.slice(0, 5) : '';
   }

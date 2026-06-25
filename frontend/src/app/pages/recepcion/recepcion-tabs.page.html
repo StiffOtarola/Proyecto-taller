@@ -41,7 +41,7 @@
 
     <ion-footer class="admin-dark">
       <div class="sb-user">
-        <div class="sb-av">{{ iniciales }}</div>
+        <div class="sb-av"><img *ngIf="foto; else sbIni" [src]="foto" alt="Foto" /><ng-template #sbIni>{{ iniciales }}</ng-template></div>
         <div class="sb-info"><strong>{{ nombre }}</strong><span>{{ rolLabel }}</span></div>
         <button class="sb-logout" (click)="logout()" title="Cerrar sesión"><ion-icon name="log-out-outline"></ion-icon></button>
       </div>

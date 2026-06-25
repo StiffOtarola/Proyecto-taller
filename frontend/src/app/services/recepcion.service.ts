@@ -133,6 +133,10 @@ export class RecepcionService {
   updateMiPassword(data: { actual: string; nueva: string }): Observable<{ message: string }> {
     return this.http.put<{ message: string }>(`${this.url}/perfil/password`, data);
   }
+  // Foto de perfil del recepcionista (data URL base64) o null para quitarla.
+  updateMiFoto(foto: string | null): Observable<{ data: { foto: string | null }; message: string }> {
+    return this.http.put<{ data: { foto: string | null }; message: string }>(`${this.url}/perfil/foto`, { foto });
+  }
 
   // Puente cita ↔ orden: crea (o recupera) la orden de trabajo de una cita.
   crearOrdenDesdeCita(citaId: number): Observable<{ data: { orden_id: number; numero_orden: string } }> {

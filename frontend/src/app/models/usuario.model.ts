@@ -6,6 +6,7 @@ export interface Usuario {
   rol: 'recepcion' | 'tecnico' | 'admin';
   sucursal_id?: number | null;       // local del empleado (null = atiende ambas)
   sucursal_nombre?: string | null;
+  foto?: string | null;
   activo?: number;
   created_at?: string;
 }

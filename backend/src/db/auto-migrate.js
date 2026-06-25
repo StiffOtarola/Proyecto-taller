@@ -217,6 +217,8 @@ async function ensureSchema() {
     await addColumnIfMissing('usuarios', 'telefono', 'VARCHAR(20) NULL');
     await addColumnIfMissing('usuarios', 'especialidades', 'VARCHAR(300) NULL');
     await addColumnIfMissing('usuarios', 'horario', 'VARCHAR(200) NULL');
+    // Foto de perfil del personal (data URL base64, igual que clientes.foto).
+    await addColumnIfMissing('usuarios', 'foto', 'MEDIUMTEXT NULL');
 
     // Tareas del mecánico: checklist propio + asignadas por el admin (Fase C).
     await pool.query(`

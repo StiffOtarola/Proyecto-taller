@@ -6,35 +6,106 @@
 </ion-header>
 
 <ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar(); $event.target.complete()">
+    <ion-refresher-content pullingIcon="chevron-down" refreshingSpinner="crescent"></ion-refresher-content>
+  </ion-refresher>
+
   <div class="rec-perfil">
-    <!-- Cabecera del perfil -->
-    <div class="profile-header">
-      <div class="avatar">{{ iniciales }}</div>
-      <div class="info">
-        <h2>{{ cuenta.nombre || 'Recepción' }}</h2>
-        <p class="role">Recepcionista</p>
-        <p class="contact">{{ cuenta.email || '—' }}<ng-container *ngIf="cuenta.telefono"> · 📞 {{ cuenta.telefono }}</ng-container></p>
-      </div>
+    <!-- Skeleton -->
+    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:14px">
+      <div class="skeleton" style="height:108px;border-radius:24px"></div>
+      <div class="skeleton" style="height:96px;border-radius:24px"></div>
+      <div class="skeleton" style="height:240px;border-radius:24px"></div>
     </div>
 
-    <!-- Mi cuenta -->
-    <section class="card">
-      <span class="section-label">Mi cuenta</span>
-      <div class="ig"><label>Nombre</label><input [(ngModel)]="cuenta.nombre" placeholder="Tu nombre"></div>
-      <div class="ig"><label>Correo</label><input type="email" [(ngModel)]="cuenta.email" placeholder="correo@taller.com"></div>
-      <div class="ig"><label>Teléfono</label><input type="tel" [(ngModel)]="cuenta.telefono" placeholder="8888-8888"></div>
-      <button class="cta" [disabled]="guardando" (click)="guardarCuenta()">💾 Guardar cambios</button>
-    </section>
+    <ng-container *ngIf="!cargando">
+      <!-- Cabecera con foto -->
+      <div class="profile-header">
+        <div class="avatar-wrap">
+          <button type="button" class="avatar" (click)="pedirFoto(fotoInput)" [disabled]="subiendoFoto"
+                  [attr.aria-label]="perfil?.foto ? 'Cambiar foto de perfil' : 'Agregar foto de perfil'">
+            <img *ngIf="perfil?.foto; else iniTpl" [src]="perfil.foto" alt="Foto de perfil">
+            <ng-template #iniTpl>{{ iniciales }}</ng-template>
+          </button>
+          <button type="button" class="avatar-cam" [class.cargando]="subiendoFoto" (click)="pedirFoto(fotoInput)"
+                  [disabled]="subiendoFoto" aria-label="Cambiar foto de perfil">
+            <ion-icon [name]="subiendoFoto ? 'hourglass-outline' : 'camera'"></ion-icon>
+          </button>
+          <input #fotoInput type="file" accept="image/*" hidden (change)="onFoto($event)">
+        </div>
+        <div class="info">
+          <h2>{{ cuenta.nombre || 'Recepción' }}</h2>
+          <span class="role-chip">Recepcionista</span>
+          <p class="contact">{{ cuenta.email || '—' }}<ng-container *ngIf="cuenta.telefono"> · 📞 {{ cuenta.telefono }}</ng-container></p>
+          <button type="button" class="quitar-foto" *ngIf="perfil?.foto" (click)="quitarFoto()" [disabled]="subiendoFoto">Quitar foto</button>
+        </div>
+      </div>
 
-    <!-- Seguridad -->
-    <section class="card">
-      <span class="section-label">Seguridad</span>
-      <div class="ig"><label>Contraseña actual</label><input type="password" [(ngModel)]="pass.actual" placeholder="••••••••"></div>
-      <div class="ig"><label>Nueva contraseña</label><input type="password" [(ngModel)]="pass.nueva" placeholder="Mín. 8 caracteres"></div>
-      <button class="cta outline" [disabled]="guardandoPass" (click)="cambiarPassword()">🔑 Cambiar contraseña</button>
-    </section>
+      <!-- Mi jornada (resumen del día) -->
+      <section class="card" *ngIf="resumen">
+        <span class="section-label">Mi jornada</span>
+        <div class="stats">
+          <div class="stat">
+            <span class="s-num">{{ resumen.citas_hoy }}</span>
+            <span class="s-lbl">Citas hoy</span>
+          </div>
+          <div class="stat">
+            <span class="s-num">{{ resumen.ordenes_activas }}</span>
+            <span class="s-lbl">Órdenes activas</span>
+          </div>
+          <div class="stat">
+            <span class="s-num" [class.alerta]="resumen.cotizaciones_pendientes > 0">{{ resumen.cotizaciones_pendientes }}</span>
+            <span class="s-lbl">Cotiz. pendientes</span>
+          </div>
+          <div class="stat">
+            <span class="s-num">{{ resumen.mecanicos_ocupados }}/{{ resumen.mecanicos_totales }}</span>
+            <span class="s-lbl">Mecánicos</span>
+          </div>
+        </div>
+      </section>
 
-    <button class="cta danger" (click)="logout()">⏻ Cerrar sesión</button>
+      <!-- Mi cuenta -->
+      <section class="card">
+        <span class="section-label">Mi cuenta</span>
+        <div class="ig"><label>Nombre</label><input [(ngModel)]="cuenta.nombre" placeholder="Tu nombre"></div>
+        <div class="ig"><label>Correo</label><input type="email" [(ngModel)]="cuenta.email" placeholder="correo@taller.com"></div>
+        <div class="ig"><label>Teléfono</label><input type="tel" [(ngModel)]="cuenta.telefono" placeholder="8888-8888"></div>
+
+        <!-- Datos que fija el admin (solo lectura) -->
+        <div class="ro-row">
+          <div class="ro"><ion-icon name="location-outline"></ion-icon><div><span class="ro-lbl">Sede asignada</span><strong>{{ sedeLabel }}</strong></div></div>
+          <div class="ro"><ion-icon name="calendar-outline"></ion-icon><div><span class="ro-lbl">Miembro desde</span><strong>{{ miembroDesde }}</strong></div></div>
+        </div>
+
+        <button class="cta" [disabled]="guardando" (click)="guardarCuenta()">💾 Guardar cambios</button>
+      </section>
+
+      <!-- Accesibilidad -->
+      <section class="card">
+        <span class="section-label">Accesibilidad</span>
+        <div class="a11y-row">
+          <div class="a11y-info">
+            <strong>Tamaño de texto</strong>
+            <span>{{ nivelesTexto[a11y.nivel].nombre }}</span>
+          </div>
+          <div class="a11y-opts" role="group" aria-label="Tamaño de texto">
+            <button *ngFor="let n of nivelesTexto" class="a11y-opt" [class.on]="a11y.nivel === n.i"
+                    (click)="setTexto(n.i)" [attr.aria-pressed]="a11y.nivel === n.i" [attr.aria-label]="n.nombre"
+                    [style.font-size.px]="13 + n.i * 5">{{ n.etiqueta }}</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Seguridad -->
+      <section class="card">
+        <span class="section-label">Seguridad</span>
+        <div class="ig"><label>Contraseña actual</label><input type="password" [(ngModel)]="pass.actual" placeholder="••••••••"></div>
+        <div class="ig"><label>Nueva contraseña</label><input type="password" [(ngModel)]="pass.nueva" placeholder="Mín. 8 caracteres"></div>
+        <button class="cta outline" [disabled]="guardandoPass" (click)="cambiarPassword()">🔑 Cambiar contraseña</button>
+      </section>
+
+      <button class="cta danger" (click)="logout()">⏻ Cerrar sesión</button>
+    </ng-container>
 
     <div style="height:80px"></div>
   </div>

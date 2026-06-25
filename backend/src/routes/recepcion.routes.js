@@ -595,9 +595,17 @@ router.get('/sucursales', async (req, res) => {
 });
 
 // ── Perfil del recepcionista (su propia cuenta) ──
+// Datos de la cuenta + sede asignada (read-only, la fija el admin) + foto.
+const SELECT_PERFIL = `
+  SELECT u.id, u.nombre, u.email, u.telefono, u.rol, u.foto, u.sucursal_id, u.created_at,
+         s.nombre AS sucursal_nombre
+  FROM usuarios u
+  LEFT JOIN sucursales s ON s.id = u.sucursal_id
+  WHERE u.id = ?`;
+
 router.get('/perfil', async (req, res) => {
   try {
-    const [[u]] = await pool.query('SELECT id, nombre, email, telefono, rol FROM usuarios WHERE id = ?', [req.usuario.id]);
+    const [[u]] = await pool.query(SELECT_PERFIL, [req.usuario.id]);
     if (!u) return res.status(404).json({ error: 'Usuario no encontrado' });
     res.json({ data: u });
   } catch (err) {
@@ -615,8 +623,22 @@ router.put('/perfil', async (req, res) => {
       'UPDATE usuarios SET nombre = ?, email = ?, telefono = ? WHERE id = ?',
       [nombre.trim(), email.trim(), (telefono || '').trim() || null, req.usuario.id]
     );
-    const [[u]] = await pool.query('SELECT id, nombre, email, telefono, rol FROM usuarios WHERE id = ?', [req.usuario.id]);
+    const [[u]] = await pool.query(SELECT_PERFIL, [req.usuario.id]);
     res.json({ data: u, message: 'Perfil actualizado' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// Foto de perfil (data URL base64) o null para quitarla.
+router.put('/perfil/foto', async (req, res) => {
+  try {
+    const { foto } = req.body;
+    if (foto && typeof foto === 'string' && !foto.startsWith('data:image/')) {
+      return res.status(400).json({ error: 'Imagen inválida' });
+    }
+    await pool.query('UPDATE usuarios SET foto = ? WHERE id = ?', [foto || null, req.usuario.id]);
+    res.json({ data: { foto: foto || null }, message: foto ? 'Foto actualizada' : 'Foto eliminada' });
   } catch (err) {
     fail(res, err);
   }

@@ -13,6 +13,7 @@ export class RecepcionTabsPage {
   constructor(private auth: AuthService, private router: Router) {}
 
   get nombre(): string { return this.auth.getUsuario()?.nombre || 'Recepción'; }
+  get foto(): string | null { return this.auth.getUsuario()?.foto || null; }
   get rolLabel(): string { return 'Recepción'; }
   get iniciales(): string {
     const p = this.nombre.trim().split(/\s+/);

@@ -55,7 +55,7 @@
       <!-- Stats -->
       <div class="stat-grid" style="margin-bottom:16px">
         <div class="stat"><div class="st-n">{{ perfil.completadas }}</div><div class="st-l">Citas completadas</div></div>
-        <div class="stat"><div class="st-n em">{{ perfil.ingresos_generados | currency:'CRC':'symbol-narrow':'1.0-0' }}</div><div class="st-l">Ingresos generados</div></div>
+        <div class="stat"><div class="st-n">{{ perfil.citas_mes }}</div><div class="st-l">Citas este mes</div></div>
         <div class="stat"><div class="st-n">{{ perfil.satisfechos_pct != null ? perfil.satisfechos_pct + '%' : '—' }}</div><div class="st-l">Clientes satisfechos</div></div>
         <div class="stat"><div class="st-n" style="font-size:24px">{{ formatMin(perfil.tiempo_promedio_min) }}</div><div class="st-l">Tiempo promedio</div></div>
       </div>
@@ -78,7 +78,7 @@
       <section class="card">
         <span class="section-label">Este mes</span>
         <div class="avg-row"><span class="lbl">Citas del mes</span><span class="val mono">{{ perfil.citas_mes }}</span></div>
-        <div class="avg-row"><span class="lbl">Ingresos del mes</span><span class="val mono">{{ perfil.ingresos_mes | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div>
+        <div class="avg-row"><span class="lbl">Tiempo promedio</span><span class="val mono">{{ formatMin(perfil.tiempo_promedio_min) }}</span></div>
         <div class="avg-row"><span class="lbl">Calificación promedio</span><span class="val stars">{{ estrellas(perfil.calificacion_promedio) }}</span></div>
       </section>
 

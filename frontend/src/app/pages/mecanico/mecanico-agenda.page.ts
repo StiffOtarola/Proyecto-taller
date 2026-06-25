@@ -1,31 +1,45 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { MecanicoService } from '../../services/mecanico.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { MecanicoService } from '../../services/mecanico.service';
+import { hoyCR } from '../../utils/fecha-cita';
+
+interface DiaCal {
+  fecha: string;
+  dia: number | null;
+  hoy: boolean;
+  total: number;
+  flujo: '' | 'bajo' | 'medio' | 'alto';
+}
 
 @Component({
   standalone: false,
   selector: 'app-mecanico-agenda',
   templateUrl: './mecanico-agenda.page.html',
-  styleUrls: ['./mecanico.page.scss'],
+  styleUrls: ['./mecanico-agenda.page.scss'],
 })
 export class MecanicoAgendaPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  cargando = true;
-  offsetSemana = 0; // 0 = esta semana, -1 anterior, +1 siguiente
-  dias: { fecha: string; etiqueta: string; citas: any[] }[] = [];
-  rango = '';
-  citasSemana = 0;
-  ingresosSemana = 0;
+  readonly dows = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  readonly meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  readonly diasLargos = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
   readonly estadoLabel: Record<string, string> = {
     agendado: 'Agendado', en_revision: 'En revisión', en_mantenimiento: 'En mantenimiento',
     listo: 'Listo', entregado: 'Entregado', cancelado: 'Cancelado',
   };
   readonly estadoPill: Record<string, string> = {
-    agendado: 'gris', en_revision: 'amber', en_mantenimiento: 'rose',
-    listo: 'indigo', entregado: 'green', cancelado: 'gris',
+    agendado: 'indigo', en_revision: 'amber', en_mantenimiento: 'rose',
+    listo: 'green', entregado: 'gris', cancelado: 'gris',
   };
+
+  anio = new Date().getFullYear();
+  mes = new Date().getMonth() + 1;
+  cargando = true;
+
+  citasMes: any[] = [];
+  semanas: DiaCal[][] = [];
+  diaSel: DiaCal | null = null;
 
   constructor(private mecanico: MecanicoService) {}
 
@@ -33,48 +47,81 @@ export class MecanicoAgendaPage implements OnInit, OnDestroy {
   ionViewWillEnter() { this.cargar(); }
   ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
-  // Lunes de la semana objetivo.
-  private lunesDe(offset: number): Date {
-    const d = new Date();
-    const dia = (d.getDay() + 6) % 7; // 0 = lunes
-    d.setDate(d.getDate() - dia + offset * 7);
-    d.setHours(0, 0, 0, 0);
-    return d;
+  get tituloMes(): string { return `${this.meses[this.mes - 1]} ${this.anio}`; }
+
+  cambiarMes(dir: number) {
+    if (dir === 0) {
+      this.anio = new Date().getFullYear();
+      this.mes = new Date().getMonth() + 1;
+    } else {
+      this.mes += dir;
+      if (this.mes > 12) { this.mes = 1; this.anio++; }
+      if (this.mes < 1) { this.mes = 12; this.anio--; }
+    }
+    this.cargar();
   }
 
-  private iso(d: Date): string { return d.toISOString().slice(0, 10); }
+  private pad(n: number): string { return String(n).padStart(2, '0'); }
 
-  cambiarSemana(delta: number) { this.offsetSemana += delta; this.cargar(); }
-
-  cargar() {
+  cargar(ev?: any) {
     this.cargando = true;
-    const lunes = this.lunesDe(this.offsetSemana);
-    const domingo = new Date(lunes); domingo.setDate(lunes.getDate() + 6);
-    const desde = this.iso(lunes), hasta = this.iso(domingo);
-    this.rango = `${lunes.toLocaleDateString('es', { day: 'numeric', month: 'short' })} – ${domingo.toLocaleDateString('es', { day: 'numeric', month: 'short' })}`;
-
-    // Arma los 7 días vacíos
-    const nombres = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-    this.dias = Array.from({ length: 7 }, (_, i) => {
-      const f = new Date(lunes); f.setDate(lunes.getDate() + i);
-      return { fecha: this.iso(f), etiqueta: `${nombres[i]} ${f.getDate()}`, citas: [] };
-    });
-
-    this.citasSemana = 0;
-    this.ingresosSemana = 0;
+    const finDia = new Date(Date.UTC(this.anio, this.mes, 0)).getUTCDate();
+    const desde = `${this.anio}-${this.pad(this.mes)}-01`;
+    const hasta = `${this.anio}-${this.pad(this.mes)}-${this.pad(finDia)}`;
     this.mecanico.getAgenda(desde, hasta).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
-        for (const c of r.data) {
-          const dia = this.dias.find(d => d.fecha === c.fecha?.slice(0, 10));
-          if (dia) dia.citas.push(c);
-        }
-        this.citasSemana = r.data.length;
-        this.ingresosSemana = r.data
-          .filter(c => c.estado === 'entregado')
-          .reduce((s, c) => s + Number(c.monto || 0), 0);
+        this.citasMes = r.data || [];
+        this.construir();
         this.cargando = false;
+        if (ev) ev.target.complete();
       },
-      error: () => { this.cargando = false; },
+      error: () => { this.citasMes = []; this.semanas = []; this.cargando = false; if (ev) ev.target.complete(); },
     });
+  }
+
+  private construir() {
+    const porDia = new Map<string, number>();
+    for (const c of this.citasMes) porDia.set(c.fecha, (porDia.get(c.fecha) || 0) + 1);
+
+    const hoyStr = hoyCR();
+    const primerDow = new Date(Date.UTC(this.anio, this.mes - 1, 1)).getUTCDay();
+    const offset = primerDow === 0 ? 6 : primerDow - 1;
+    const diasMes = new Date(Date.UTC(this.anio, this.mes, 0)).getUTCDate();
+
+    const vacio = (): DiaCal => ({ fecha: '', dia: null, hoy: false, total: 0, flujo: '' });
+    const dias: DiaCal[] = [];
+    for (let i = 0; i < offset; i++) dias.push(vacio());
+
+    let diaHoy: DiaCal | null = null;
+    let primerConCitas: DiaCal | null = null;
+    for (let d = 1; d <= diasMes; d++) {
+      const fecha = `${this.anio}-${this.pad(this.mes)}-${this.pad(d)}`;
+      const total = porDia.get(fecha) || 0;
+      const flujo = total === 0 ? '' : total <= 2 ? 'bajo' : total <= 5 ? 'medio' : 'alto';
+      const cel: DiaCal = { fecha, dia: d, hoy: fecha === hoyStr, total, flujo };
+      if (cel.hoy) diaHoy = cel;
+      if (total > 0 && !primerConCitas) primerConCitas = cel;
+      dias.push(cel);
+    }
+    while (dias.length % 7 !== 0) dias.push(vacio());
+
+    this.semanas = [];
+    for (let i = 0; i < dias.length; i += 7) this.semanas.push(dias.slice(i, i + 7));
+
+    const prev = this.diaSel?.fecha;
+    this.diaSel = (prev && dias.find(c => c.fecha === prev)) || diaHoy || primerConCitas || dias.find(c => c.dia) || null;
+  }
+
+  selDia(c: DiaCal) { if (c.dia) this.diaSel = c; }
+
+  get citasDia(): any[] {
+    if (!this.diaSel) return [];
+    return this.citasMes.filter(c => c.fecha === this.diaSel!.fecha);
+  }
+
+  detalleTitulo(): string {
+    if (!this.diaSel?.dia) return '';
+    const d = new Date(Date.UTC(this.anio, this.mes - 1, this.diaSel.dia));
+    return `${this.diasLargos[d.getUTCDay()]} ${this.diaSel.dia} de ${this.meses[this.mes - 1]}`;
   }
 }

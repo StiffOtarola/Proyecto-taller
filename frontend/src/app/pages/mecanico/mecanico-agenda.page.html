@@ -1,44 +1,88 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
-    <ion-title>Agenda de la semana</ion-title>
+    <ion-title>Agenda</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <div class="mec">
-    <div class="sem-nav">
-      <ion-button fill="clear" size="small" (click)="cambiarSemana(-1)"><ion-icon slot="icon-only" name="chevron-back"></ion-icon></ion-button>
-      <span class="sem-rango">{{ rango }}</span>
-      <ion-button fill="clear" size="small" (click)="cambiarSemana(1)"><ion-icon slot="icon-only" name="chevron-forward"></ion-icon></ion-button>
+  <ion-refresher slot="fixed" (ionRefresh)="cargar($event)">
+    <ion-refresher-content pullingIcon="chevron-down" refreshingSpinner="crescent"></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="mec-agenda">
+    <!-- Cabecera del mes -->
+    <div class="cal-head">
+      <h2>{{ tituloMes }}</h2>
+      <div class="cal-nav">
+        <button (click)="cambiarMes(-1)" aria-label="Mes anterior"><ion-icon name="chevron-back"></ion-icon></button>
+        <button class="hoy" (click)="cambiarMes(0)">Hoy</button>
+        <button (click)="cambiarMes(1)" aria-label="Mes siguiente"><ion-icon name="chevron-forward"></ion-icon></button>
+      </div>
     </div>
 
-    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px">
-      <div class="skeleton" style="height:70px;border-radius:16px"></div>
-      <div class="skeleton" style="height:70px;border-radius:16px"></div>
-      <div class="skeleton" style="height:70px;border-radius:16px"></div>
-    </div>
+    <div class="cal-layout">
+      <!-- Calendario -->
+      <div class="cal-card card">
+        <div class="cal-grid cal-dows">
+          <div class="cal-dow" *ngFor="let d of dows">{{ d }}</div>
+        </div>
+        <div class="cal-grid" *ngFor="let semana of semanas">
+          <button *ngFor="let c of semana"
+                  class="cal-day"
+                  [class.empty]="!c.dia"
+                  [class.today]="c.hoy"
+                  [class.sel]="diaSel && c.fecha === diaSel.fecha && c.dia"
+                  [ngClass]="c.flujo ? 'flujo-' + c.flujo : ''"
+                  [disabled]="!c.dia"
+                  (click)="selDia(c)">
+            <ng-container *ngIf="c.dia">
+              <span class="d-num">{{ c.dia }}</span>
+              <span class="d-cnt" *ngIf="c.total">{{ c.total }}</span>
+            </ng-container>
+          </button>
+        </div>
 
-    <div class="week-stats" *ngIf="!cargando">
-      <div class="stat"><div class="st-n">{{ citasSemana }}</div><div class="st-l">Citas semana</div></div>
-      <div class="stat accent"><div class="st-n em">{{ ingresosSemana | currency:'CRC':'symbol-narrow':'1.0-0' }}</div><div class="st-l">Ingresos semana</div></div>
-    </div>
+        <div class="cal-legend">
+          <span><i class="lg bajo"></i> ≤2</span>
+          <span><i class="lg medio"></i> 3–5</span>
+          <span><i class="lg alto"></i> 6+</span>
+        </div>
+      </div>
 
-    <div class="dia-list" *ngIf="!cargando">
-      <div class="dia" *ngFor="let d of dias">
-        <div class="dia-head"><span>{{ d.etiqueta }}</span><span class="dia-count" *ngIf="d.citas.length">{{ d.citas.length }}</span></div>
-        <div class="dia-vacio" *ngIf="d.citas.length === 0">Sin citas</div>
-        <div class="ag-cita" *ngFor="let c of d.citas">
-          <span class="ag-hora mono">{{ c.hora }}</span>
-          <div class="ag-info">
-            <strong>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}</strong>
-            <span *ngIf="c.tipo_servicio">{{ c.tipo_servicio }}</span>
+      <!-- Panel del día -->
+      <div class="day-card card" *ngIf="diaSel && diaSel.dia">
+        <div class="day-head">
+          <div>
+            <h3>{{ detalleTitulo() }}</h3>
+            <p class="day-sub">{{ citasDia.length }} {{ citasDia.length === 1 ? 'cita' : 'citas' }}</p>
           </div>
-          <span class="pill" [ngClass]="estadoPill[c.estado]">{{ estadoLabel[c.estado] }}</span>
+        </div>
+
+        <div class="cita-list">
+          <div class="cita-row" *ngFor="let c of citasDia">
+            <div class="ci-hora mono">{{ c.hora || '—' }}</div>
+            <div class="ci-info">
+              <strong>{{ c.marca || 'Moto' }} {{ c.modelo || '' }}</strong>
+              <span class="ci-moto" *ngIf="c.tipo_servicio">{{ c.tipo_servicio }}</span>
+              <span class="ci-moto" *ngIf="c.cliente_nombre">
+                <ion-icon name="person-outline"></ion-icon> {{ c.cliente_nombre }} {{ c.cliente_apellido }}
+              </span>
+              <div class="ci-badges">
+                <span class="pill" [ngClass]="estadoPill[c.estado]">{{ estadoLabel[c.estado] || c.estado }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cita-empty" *ngIf="!citasDia.length">
+            <ion-icon name="calendar-clear-outline"></ion-icon>
+            <p>Sin citas este día.</p>
+          </div>
         </div>
       </div>
     </div>
 
-    <div style="height:30px"></div>
+    <div *ngIf="cargando && !semanas.length" class="skeleton" style="height:360px;border-radius:24px;margin-top:6px"></div>
+    <div style="height:80px"></div>
   </div>
 </ion-content>

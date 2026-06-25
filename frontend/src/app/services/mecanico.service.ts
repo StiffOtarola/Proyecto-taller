@@ -72,6 +72,9 @@ export class MecanicoService {
   getPerfil(): Observable<{ data: any }> {
     return this.http.get<{ data: any }>(`${this.url}/perfil`);
   }
+  updateFoto(foto: string | null): Observable<{ data: { foto: string | null }; message: string }> {
+    return this.http.put<{ data: { foto: string | null }; message: string }>(`${this.url}/perfil/foto`, { foto });
+  }
   actualizarPerfil(data: { telefono?: string; especialidades?: string; horario?: string }): Observable<any> {
     return this.http.patch(`${this.url}/perfil`, data);
   }

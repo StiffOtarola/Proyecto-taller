@@ -18,13 +18,24 @@
     </div>
 
     <ng-container *ngIf="!cargando && perfil">
-      <!-- Cabecera -->
+      <!-- Cabecera con foto -->
       <div class="profile-header">
-        <div class="avatar">{{ iniciales }}</div>
+        <div class="avatar-wrap">
+          <button type="button" class="avatar" (click)="pedirFoto(fotoInput)" [disabled]="subiendoFoto">
+            <img *ngIf="perfil?.foto; else iniTpl" [src]="perfil.foto" alt="Foto de perfil">
+            <ng-template #iniTpl>{{ iniciales }}</ng-template>
+          </button>
+          <button type="button" class="avatar-cam" [class.cargando]="subiendoFoto" (click)="pedirFoto(fotoInput)"
+                  [disabled]="subiendoFoto" aria-label="Cambiar foto de perfil">
+            <ion-icon [name]="subiendoFoto ? 'hourglass-outline' : 'camera'"></ion-icon>
+          </button>
+          <input #fotoInput type="file" accept="image/*" hidden (change)="onFoto($event)">
+        </div>
         <div class="info">
           <h2>{{ perfil.nombre }}</h2>
           <span class="role-chip">Mecánico</span>
           <p class="contact">{{ perfil.email || '—' }}<ng-container *ngIf="perfil.telefono"> · {{ perfil.telefono }}</ng-container></p>
+          <button type="button" class="quitar-foto" *ngIf="perfil?.foto" (click)="quitarFoto()" [disabled]="subiendoFoto">Quitar foto</button>
           <div class="profile-rating" *ngIf="perfil.calificacion_promedio">
             <span class="stars">{{ estrellas(perfil.calificacion_promedio) }}</span>
             <span class="val">{{ perfil.calificacion_promedio }}/5</span>

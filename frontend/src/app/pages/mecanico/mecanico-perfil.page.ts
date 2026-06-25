@@ -6,6 +6,7 @@ import { takeUntil } from 'rxjs/operators';
 import { MecanicoService } from '../../services/mecanico.service';
 import { AuthService } from '../../services/auth.service';
 import { AccesibilidadService } from '../../services/accesibilidad.service';
+import { comprimirImagen } from '../../shared/image.util';
 
 @Component({
   standalone: false,
@@ -21,6 +22,7 @@ export class MecanicoPerfilPage implements OnInit, OnDestroy {
   cargando = true;
   guardando = false;
   guardandoPass = false;
+  subiendoFoto = false;
 
   readonly nivelesTexto = [
     { i: 0, etiqueta: 'A', nombre: 'Normal' },
@@ -83,6 +85,51 @@ export class MecanicoPerfilPage implements OnInit, OnDestroy {
   }
 
   setTexto(i: number) { this.a11y.setNivel(i); }
+
+  pedirFoto(input: HTMLInputElement) { if (!this.subiendoFoto) input.click(); }
+
+  async onFoto(ev: Event) {
+    const input = ev.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    this.subiendoFoto = true;
+    try {
+      const dataUrl = await comprimirImagen(file, 400, 0.8);
+      this.mecanico.updateFoto(dataUrl).pipe(takeUntil(this.destroy$)).subscribe({
+        next: r => {
+          this.perfil = { ...this.perfil, foto: r.data.foto };
+          this.sincronizarSesion({ foto: r.data.foto });
+          this.subiendoFoto = false;
+          this.aviso('Foto actualizada');
+        },
+        error: e => { this.subiendoFoto = false; this.aviso(e.error?.error || 'No se pudo subir la foto', 'danger'); },
+      });
+    } catch {
+      this.subiendoFoto = false;
+      this.aviso('No se pudo procesar la imagen', 'danger');
+    }
+  }
+
+  quitarFoto() {
+    if (this.subiendoFoto) return;
+    this.subiendoFoto = true;
+    this.mecanico.updateFoto(null).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.perfil = { ...this.perfil, foto: null };
+        this.sincronizarSesion({ foto: null });
+        this.subiendoFoto = false;
+        this.aviso('Foto eliminada');
+      },
+      error: e => { this.subiendoFoto = false; this.aviso(e.error?.error || 'No se pudo quitar la foto', 'danger'); },
+    });
+  }
+
+  private sincronizarSesion(parcial: { foto?: string | null }) {
+    const u = this.auth.getUsuario();
+    const token = this.auth.getToken();
+    if (u && token) this.auth.aplicarSesionStaff(token, { ...u, ...parcial });
+  }
 
   guardarCuenta() {
     this.guardando = true;

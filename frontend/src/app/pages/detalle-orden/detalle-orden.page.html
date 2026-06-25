@@ -5,7 +5,7 @@
     </ion-buttons>
     <ion-title>{{ orden?.numero_orden || 'Orden' }}</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="notificarWhatsApp()" title="Notificar por WhatsApp" *ngIf="orden?.cliente_telefono">
+      <ion-button (click)="notificarWhatsApp()" title="Notificar por WhatsApp" *ngIf="orden?.cliente_telefono && !auth.tieneRol('tecnico')">
         <ion-icon slot="icon-only" name="logo-whatsapp" color="success"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -72,8 +72,8 @@
       </ion-select>
     </section>
 
-    <!-- Costos -->
-    <section class="card costos">
+    <!-- Costos (solo recepción/admin) -->
+    <section class="card costos" *ngIf="!auth.tieneRol('tecnico')">
       <div class="card-head">
         <span class="section-label">Costos</span>
         <span class="tiny mono">Simulación de factura</span>
@@ -91,7 +91,7 @@
     <section class="card">
       <div class="card-head">
         <span class="section-label">Repuestos</span>
-        <button class="link-add" (click)="mostrarFormRepuesto = !mostrarFormRepuesto">
+        <button class="link-add" (click)="mostrarFormRepuesto = !mostrarFormRepuesto" *ngIf="!auth.tieneRol('tecnico')">
           <ion-icon name="add"></ion-icon> Agregar
         </button>
       </div>
@@ -123,7 +123,7 @@
               {{ r.estado }}
             </span>
           </ion-item>
-          <ion-item-options side="end">
+          <ion-item-options side="end" *ngIf="!auth.tieneRol('tecnico')">
             <ion-item-option color="danger" (click)="eliminarRepuesto(r)">
               <ion-icon name="trash-outline"></ion-icon>
             </ion-item-option>
@@ -226,8 +226,8 @@
       </p>
     </section>
 
-    <!-- Resumen de entrega -->
-    <section class="card" *ngIf="orden.estado === 'entregada'">
+    <!-- Resumen de entrega (solo recepción/admin) -->
+    <section class="card" *ngIf="orden.estado === 'entregada' && !auth.tieneRol('tecnico')">
       <span class="section-label">Entrega</span>
       <div class="cost-row"><span>Método de pago</span><span>{{ orden.metodo_pago || '—' }}</span></div>
       <div class="cost-row"><span>Garantía</span><span class="mono">{{ orden.garantia_dias || 0 }} días</span></div>
@@ -235,8 +235,8 @@
       <p *ngIf="orden.observaciones_finales" class="obs"><span class="k">Observaciones</span>{{ orden.observaciones_finales }}</p>
     </section>
 
-    <!-- Garantía y reclamos -->
-    <section class="card" *ngIf="orden.estado === 'entregada'">
+    <!-- Garantía y reclamos (solo recepción/admin) -->
+    <section class="card" *ngIf="orden.estado === 'entregada' && !auth.tieneRol('tecnico')">
       <span class="section-label">
         <ion-icon name="shield-checkmark-outline" style="vertical-align:-2px;margin-right:4px"></ion-icon>
         Garantía
@@ -338,8 +338,8 @@
 
     </div><!-- /ot-grid -->
 
-    <!-- WhatsApp -->
-    <div class="wa-wrap" *ngIf="orden.cliente_telefono">
+    <!-- WhatsApp (solo recepción/admin) -->
+    <div class="wa-wrap" *ngIf="orden.cliente_telefono && !auth.tieneRol('tecnico')">
       <button class="wa-btn" (click)="notificarWhatsApp()">
         <ion-icon name="logo-whatsapp"></ion-icon>
         Notificar al cliente por WhatsApp

@@ -81,14 +81,14 @@
         </div>
 
         <!-- Broadcasts recientes -->
-        <div class="bc-item cd mb" *ngFor="let b of broadcasts">
-          <div class="msg-head"><ion-icon name="megaphone-outline" class="bc-ico"></ion-icon><strong>{{ b.remitente_nombre }}</strong><span class="msg-time">{{ hace(b.created_at) }}</span></div>
-          <p class="msg-body">{{ b.mensaje }}</p>
+        <div class="bc-card mb" *ngFor="let b of broadcasts">
+          <div class="bc-head"><ion-icon name="megaphone-outline"></ion-icon><strong>{{ b.remitente_nombre }}</strong><span>{{ hace(b.created_at) }}</span></div>
+          <p>{{ b.mensaje }}</p>
         </div>
 
         <!-- Conversaciones -->
         <div class="conv-head">
-          <span class="cd-title" style="margin-bottom:0">Conversaciones</span>
+          <span class="cd-title conv-title">Conversaciones</span>
           <button class="btn btn-cr btn-sm" (click)="nuevoChat()"><ion-icon name="create-outline"></ion-icon> Nuevo</button>
         </div>
         <div class="conv-list">
@@ -97,7 +97,7 @@
             <div class="conv-info">
               <div class="conv-top"><strong>{{ c.nombre }}</strong><span>{{ hace(c.ultimo.created_at) }}</span></div>
               <div class="conv-prev">
-                <span>{{ esMio(c.ultimo) ? 'Vos: ' : '' }}{{ c.ultimo.mensaje || '📷 Foto' }}</span>
+                <span>{{ esMio(c.ultimo) ? 'Vos: ' : '' }}{{ c.ultimo.mensaje || '' }}<ion-icon *ngIf="!c.ultimo.mensaje && c.ultimo.foto" name="camera-outline" class="foto-ico"></ion-icon><span *ngIf="!c.ultimo.mensaje && c.ultimo.foto"> Foto</span></span>
                 <span class="conv-badge" *ngIf="c.noLeidos">{{ c.noLeidos }}</span>
               </div>
             </div>

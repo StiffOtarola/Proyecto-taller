@@ -9,8 +9,19 @@
 .broadcast-input { flex: 1; min-width: 0; padding: 11px 16px; border: 1px solid var(--bd);
   border-radius: 999px; font-size: 14px; background: var(--sur2); color: var(--tx); outline: none;
   &:focus { border-color: var(--am); } }
-.bc-ico { font-size: 16px; color: var(--am); margin-right: 4px; }
+.bc-card {
+  background: rgba(245, 158, 11, .08); border: 1px solid rgba(245, 158, 11, .2);
+  border-radius: 16px; padding: 14px 16px;
+  .bc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+    ion-icon { font-size: 16px; color: var(--am); }
+    strong { font-size: 14px; color: var(--am); }
+    span { font-size: 11px; color: var(--tx3); margin-left: auto; } }
+  p { margin: 0; font-size: 13px; color: var(--tx2); line-height: 1.5; }
+}
 
+.foto-ico { font-size: 14px; vertical-align: -2px; margin-right: 2px; color: var(--tx3); }
+
+.conv-title { margin-bottom: 0 !important; }
 .conv-head { display: flex; align-items: center; justify-content: space-between; margin: 16px 0 10px; }
 .conv-list { display: flex; flex-direction: column; gap: 8px; }
 .conv-item { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;

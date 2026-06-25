@@ -28,6 +28,7 @@
           </a>
           <a class="nav-item" routerLink="/admin/mensajes" routerLinkActive="on">
             <ion-icon name="chatbubbles-outline"></ion-icon> Mensajes
+            <span class="nav-badge" *ngIf="noLeidos > 0">{{ noLeidos }}</span>
           </a>
 
           <div class="sb-section">Análisis</div>

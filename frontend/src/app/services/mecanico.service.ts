@@ -63,6 +63,11 @@ export class MecanicoService {
     return this.http.get<{ data: any }>(`${this.url}/recepcion-contacto`);
   }
 
+  // Alertas
+  getAlertas(): Observable<{ data: any[] }> {
+    return this.http.get<{ data: any[] }>(`${this.url}/alertas`);
+  }
+
   // Solicitar repuestos (sin precio)
   solicitarRepuesto(ordenId: number, nombre: string, cantidad: number): Observable<{ data: any }> {
     return this.http.post<{ data: any }>(`${this.url}/ordenes/${ordenId}/repuestos`, { nombre, cantidad });

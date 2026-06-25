@@ -2,6 +2,7 @@
   <ion-toolbar>
     <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
     <ion-title>Tareas</ion-title>
+    <app-mecanico-actions slot="end"></app-mecanico-actions>
     <ion-buttons slot="end">
       <ion-button (click)="mostrarForm = !mostrarForm" title="Nueva tarea">
         <ion-icon slot="icon-only" [name]="mostrarForm ? 'close-outline' : 'add-outline'"></ion-icon>

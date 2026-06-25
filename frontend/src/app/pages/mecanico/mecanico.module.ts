@@ -8,10 +8,12 @@ import { MecanicoContactoPage } from './mecanico-contacto.page';
 import { MecanicoAgendaPage } from './mecanico-agenda.page';
 import { MecanicoPerfilPage } from './mecanico-perfil.page';
 import { SharedModule } from '../../shared/shared.module';
+import { MecanicoActionsComponent } from './mecanico-actions.component';
 
 @NgModule({
   imports: [SharedModule, MecanicoPageRoutingModule],
   declarations: [
+    MecanicoActionsComponent,
     MecanicoTabsPage,
     MecanicoPage,
     MecanicoHistorialPage,

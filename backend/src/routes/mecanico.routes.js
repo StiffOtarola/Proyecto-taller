@@ -377,6 +377,51 @@ router.patch('/perfil', async (req, res) => {
   }
 });
 
+// Alertas del mecánico: mensajes no leídos + citas asignadas recientes + cambios en órdenes
+router.get('/alertas', async (req, res) => {
+  try {
+    const yo = req.usuario.id;
+    const [mensajes] = await pool.query(
+      `SELECT 'mensaje' AS tipo, m.created_at, m.mensaje AS texto,
+              u.nombre AS remitente_nombre
+       FROM mensajes_internos m
+       JOIN usuarios u ON u.id = m.remitente_id
+       WHERE (m.destino_id = ? OR (m.tipo = 'broadcast' AND m.destino_rol = 'tecnico'))
+         AND m.remitente_id != ?
+         AND m.created_at >= NOW() - INTERVAL 24 HOUR
+       ORDER BY m.created_at DESC LIMIT 10`,
+      [yo, yo]
+    );
+    const [citas] = await pool.query(
+      `SELECT 'cita_asignada' AS tipo, ci.created_at,
+              DATE_FORMAT(ci.fecha, '%Y-%m-%d') AS fecha, TIME_FORMAT(ci.hora, '%H:%i') AS hora,
+              ci.tipo_servicio, m.marca, m.modelo
+       FROM citas ci
+       LEFT JOIN motos m ON m.id = ci.moto_id
+       WHERE ci.tecnico_id = ? AND ci.created_at >= NOW() - INTERVAL 24 HOUR
+       ORDER BY ci.created_at DESC LIMIT 10`,
+      [yo]
+    );
+    const [ordenes] = await pool.query(
+      `SELECT 'orden_estado' AS tipo, o.updated_at AS created_at,
+              o.numero_orden, o.id AS orden_id, o.estado,
+              o.aprobacion_cliente, m.marca, m.modelo
+       FROM ordenes_trabajo o
+       JOIN motos m ON m.id = o.moto_id
+       WHERE o.tecnico_id = ? AND o.updated_at >= NOW() - INTERVAL 24 HOUR
+         AND o.estado NOT IN ('recepcion')
+       ORDER BY o.updated_at DESC LIMIT 10`,
+      [yo]
+    );
+    const todas = [...mensajes, ...citas, ...ordenes]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 20);
+    res.json({ data: todas });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
 router.put('/perfil/foto', async (req, res) => {
   try {
     const { foto } = req.body;

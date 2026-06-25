@@ -20,7 +20,7 @@
     <section class="card">
       <span class="section-label">Resumen acumulado</span>
       <div class="avg-row"><span class="lbl">Total completadas</span><span class="val mono">{{ acum?.completadas ?? 0 }}</span></div>
-      <div class="avg-row"><span class="lbl">Ingresos generados</span><span class="val mono">{{ (acum?.ingresos_generados || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div>
+      <div class="avg-row"><span class="lbl">Tiempo promedio</span><span class="val mono">{{ formatMin(acum?.tiempo_promedio_min) }}</span></div>
       <div class="avg-row"><span class="lbl">Calificación promedio</span><span class="val stars">{{ estrellas(acum?.calificacion_promedio ?? null) }} {{ acum?.calificacion_promedio || '' }}</span></div>
     </section>
 
@@ -42,7 +42,6 @@
           {{ (c.fecha_fin || c.fecha) | date:'dd/MM/yy' }} · {{ c.cliente_nombre }} {{ c.cliente_apellido }}
         </div>
         <div class="hist-foot">
-          <span class="monto mono">{{ (c.monto || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span>
           <span class="stars" *ngIf="c.calificacion">{{ estrellas(c.calificacion) }}</span>
           <span class="sin-calif" *ngIf="!c.calificacion">Sin calificar</span>
         </div>

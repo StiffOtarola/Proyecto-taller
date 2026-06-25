@@ -40,6 +40,14 @@ export class MecanicoHistorialPage implements OnInit, OnDestroy {
     });
   }
 
+  formatMin(min: number | null | undefined): string {
+    if (!min) return '—';
+    const h = Math.floor(min / 60);
+    const m = Math.round(min % 60);
+    if (h > 0) return `${h}h ${m}min`;
+    return `${m} min`;
+  }
+
   estrellas(prom: number | null): string {
     if (!prom) return '—';
     const llenas = Math.round(prom);

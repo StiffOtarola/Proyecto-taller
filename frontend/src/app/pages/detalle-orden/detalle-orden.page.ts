@@ -214,8 +214,7 @@ export class DetalleOrdenPage implements OnInit, OnDestroy {
       next: res => {
         this.repuestos.push(res.data);
         this.nuevoRepuesto = { nombre: '', cantidad: 1, costo_unitario: 0 };
-        this.mostrarFormSolicitud = false;
-        this.mostrarToast('Repuesto solicitado a recepción');
+        this.mostrarToast('Repuesto solicitado');
       },
     });
   }

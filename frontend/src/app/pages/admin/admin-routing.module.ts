@@ -10,6 +10,7 @@ import { AdminPromosPage } from './admin-promos.page';
 import { AdminCalendarioPage } from './admin-calendario.page';
 import { AdminConfigPage } from './admin-config.page';
 import { AdminMensajesPage } from './admin-mensajes.page';
+import { AdminPerfilPage } from './admin-perfil.page';
 
 const routes: Routes = [
   {
@@ -26,6 +27,7 @@ const routes: Routes = [
       { path: 'promos', component: AdminPromosPage },
       { path: 'calendario', component: AdminCalendarioPage },
       { path: 'config', component: AdminConfigPage },
+      { path: 'perfil', component: AdminPerfilPage },
     ],
   },
 ];

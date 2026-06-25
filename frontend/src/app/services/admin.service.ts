@@ -63,6 +63,9 @@ export class AdminService {
   updatePassword(payload: { actual: string; nueva: string }): Observable<{ message: string }> {
     return this.http.put<{ message: string }>(`${this.url}/cuenta/password`, payload);
   }
+  updateFoto(foto: string | null): Observable<{ data: { foto: string | null }; message: string }> {
+    return this.http.put<{ data: { foto: string | null }; message: string }>(`${this.url}/cuenta/foto`, { foto });
+  }
 
   // Sucursales (locales del taller).
   getSucursales(): Observable<{ data: any[] }> {

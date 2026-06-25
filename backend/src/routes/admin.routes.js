@@ -399,6 +399,19 @@ router.put('/cuenta/password', async (req, res) => {
   }
 });
 
+router.put('/cuenta/foto', async (req, res) => {
+  try {
+    const { foto } = req.body;
+    if (foto && typeof foto === 'string' && !foto.startsWith('data:image/')) {
+      return res.status(400).json({ error: 'Imagen inválida' });
+    }
+    await pool.query('UPDATE usuarios SET foto = ? WHERE id = ?', [foto || null, req.usuario.id]);
+    res.json({ data: { foto: foto || null }, message: foto ? 'Foto actualizada' : 'Foto eliminada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
 // ───────────────────────────────────────────────────────────
 // Sucursales (locales del taller). El admin las administra desde Configuración.
 // ───────────────────────────────────────────────────────────

@@ -1,0 +1,92 @@
+<ion-header>
+  <ion-toolbar class="admin-topbar">
+    <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
+    <ion-title>Mi perfil</ion-title>
+    <app-admin-actions slot="end"></app-admin-actions>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="admin-dark">
+  <div class="admin">
+    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:14px">
+      <div class="sk-dark" style="height:108px"></div>
+      <div class="sk-dark" style="height:96px"></div>
+    </div>
+
+    <ng-container *ngIf="!cargando">
+      <!-- Header con foto -->
+      <div class="profile-header">
+        <div class="avatar-wrap">
+          <button type="button" class="avatar" (click)="pedirFoto(fotoInput)" [disabled]="subiendoFoto">
+            <img *ngIf="perfil?.foto; else iniTpl" [src]="perfil.foto" alt="Foto">
+            <ng-template #iniTpl>{{ iniciales }}</ng-template>
+          </button>
+          <button type="button" class="avatar-cam" [class.cargando]="subiendoFoto" (click)="pedirFoto(fotoInput)" [disabled]="subiendoFoto">
+            <ion-icon [name]="subiendoFoto ? 'hourglass-outline' : 'camera'"></ion-icon>
+          </button>
+          <input #fotoInput type="file" accept="image/*" hidden (change)="onFoto($event)">
+        </div>
+        <div class="info">
+          <h2>{{ cuenta.nombre }}</h2>
+          <span class="role-chip">Administrador</span>
+          <p class="contact">{{ cuenta.email }}</p>
+          <button type="button" class="quitar-foto" *ngIf="perfil?.foto" (click)="quitarFoto()" [disabled]="subiendoFoto">Quitar foto</button>
+        </div>
+      </div>
+
+      <!-- Mini resumen de actividad -->
+      <div class="kpi-grid" *ngIf="resumen">
+        <div class="kpi cr"><div class="kpi-label">Citas del mes</div><div class="kpi-val">{{ resumen.total_citas || resumen.citas_hoy || 0 }}</div></div>
+        <div class="kpi em"><div class="kpi-label">Órdenes activas</div><div class="kpi-val">{{ resumen.ordenes_activas || 0 }}</div></div>
+        <div class="kpi am"><div class="kpi-label">Pendientes</div><div class="kpi-val">{{ resumen.citas_pendientes || resumen.cotizaciones_pendientes || 0 }}</div></div>
+        <div class="kpi in"><div class="kpi-label">Mecánicos</div><div class="kpi-val">{{ resumen.mecanicos_ocupados || 0 }}/{{ resumen.mecanicos_totales || 0 }}</div></div>
+      </div>
+
+      <!-- Mi cuenta -->
+      <div class="cd mb">
+        <span class="cd-title">Mi cuenta</span>
+        <div class="fg"><label>Nombre</label><input [(ngModel)]="cuenta.nombre" placeholder="Tu nombre"></div>
+        <div class="fg"><label>Correo</label><input type="email" [(ngModel)]="cuenta.email" placeholder="correo@taller.com"></div>
+        <button class="btn btn-cr btn-block" [disabled]="guardando" (click)="guardarCuenta()">Guardar cambios</button>
+      </div>
+
+      <!-- Accesibilidad -->
+      <div class="cd mb">
+        <span class="cd-title">Accesibilidad</span>
+        <div class="a11y-row">
+          <div class="a11y-info"><strong>Tamaño de texto</strong><span>{{ nivelesTexto[a11y.nivel].nombre }}</span></div>
+          <div class="a11y-opts">
+            <button *ngFor="let n of nivelesTexto" class="a11y-opt" [class.on]="a11y.nivel === n.i"
+                    (click)="setTexto(n.i)" [style.font-size.px]="13 + n.i * 5">{{ n.etiqueta }}</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seguridad -->
+      <div class="cd mb">
+        <span class="cd-title">Seguridad</span>
+        <div class="fg pass-field">
+          <label>Contraseña actual</label>
+          <div class="pass-wrap">
+            <input [type]="verActual ? 'text' : 'password'" [(ngModel)]="pass.actual" placeholder="••••••••">
+            <button type="button" class="pass-eye" (click)="verActual = !verActual">
+              <ion-icon [name]="verActual ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </button>
+          </div>
+        </div>
+        <div class="fg pass-field">
+          <label>Nueva contraseña</label>
+          <div class="pass-wrap">
+            <input [type]="verNueva ? 'text' : 'password'" [(ngModel)]="pass.nueva" placeholder="Mín. 8 caracteres">
+            <button type="button" class="pass-eye" (click)="verNueva = !verNueva">
+              <ion-icon [name]="verNueva ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </button>
+          </div>
+        </div>
+        <button class="btn btn-ou btn-block" [disabled]="guardandoPass" (click)="cambiarPassword()">Cambiar contraseña</button>
+      </div>
+
+      <button class="btn btn-block logout-btn" (click)="logout()">Cerrar sesión</button>
+    </ng-container>
+  </div>
+</ion-content>

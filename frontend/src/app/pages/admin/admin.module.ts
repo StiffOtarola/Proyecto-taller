@@ -11,6 +11,7 @@ import { AdminPromosPage } from './admin-promos.page';
 import { AdminCalendarioPage } from './admin-calendario.page';
 import { AdminConfigPage } from './admin-config.page';
 import { AdminMensajesPage } from './admin-mensajes.page';
+import { AdminPerfilPage } from './admin-perfil.page';
 import { AdminActionsComponent } from './admin-actions.component';
 
 @NgModule({
@@ -26,6 +27,7 @@ import { AdminActionsComponent } from './admin-actions.component';
     AdminCalendarioPage,
     AdminConfigPage,
     AdminMensajesPage,
+    AdminPerfilPage,
     AdminActionsComponent,
   ],
 })

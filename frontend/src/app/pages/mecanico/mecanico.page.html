@@ -34,16 +34,11 @@
         <div class="stat accent"><div class="stat-num">{{ resumen?.citas_hoy ?? 0 }}</div><div class="stat-lbl">Citas hoy</div></div>
         <div class="stat accent"><div class="stat-num">{{ resumen?.completadas_hoy ?? 0 }}</div><div class="stat-lbl">Completadas</div></div>
         <div class="stat"><div class="stat-num">{{ resumen?.en_proceso ?? 0 }}</div><div class="stat-lbl">En proceso</div></div>
-        <div class="stat money">
-          <div class="stat-num em">{{ (resumen?.generado_hoy || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</div>
-          <div class="stat-lbl">Generado hoy</div>
-        </div>
       </div>
 
       <!-- Promedios -->
       <section class="card">
         <span class="section-label">Promedios</span>
-        <div class="avg-row"><span class="lbl">Ganancia / cita</span><span class="val mono">{{ (resumen?.monto_promedio || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</span></div>
         <div class="avg-row"><span class="lbl">Tiempo promedio</span><span class="val mono">{{ formatMin(resumen?.tiempo_promedio_min) }}</span></div>
         <div class="avg-row"><span class="lbl">Calificación</span><span class="val stars">{{ estrellas(resumen?.calificacion_promedio ?? null) }} {{ resumen?.calificacion_promedio || '' }}</span></div>
       </section>

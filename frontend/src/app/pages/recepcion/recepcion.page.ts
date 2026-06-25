@@ -273,7 +273,7 @@ export class RecepcionPage implements OnInit, OnDestroy {
   private async ofrecerFactura(o: any, cortesia: boolean) {
     const al = await this.alertCtrl.create({
       header: 'Orden entregada',
-      message: cortesia ? '¡El cliente ganó una cortesía! 🎉 ¿Abrir la factura?' : '¿Abrir la factura?',
+      message: cortesia ? '¡El cliente ganó una cortesía! ¿Abrir la factura?' : '¿Abrir la factura?',
       buttons: [
         { text: 'Ahora no', role: 'cancel' },
         { text: 'Ver factura', handler: () => this.router.navigate(['/factura', o.id]) },

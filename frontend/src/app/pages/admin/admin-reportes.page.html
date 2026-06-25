@@ -48,7 +48,7 @@
 
     <!-- Gráfico: citas por día / mes -->
     <div class="cd mb">
-      <span class="cd-title">📈 Citas por {{ data?.periodo?.clave === 'anio' ? 'mes' : 'día' }} · {{ data?.periodo?.label }}</span>
+      <span class="cd-title"><ion-icon name="trending-up-outline"></ion-icon> Citas por {{ data?.periodo?.clave === 'anio' ? 'mes' : 'día' }} · {{ data?.periodo?.label }}</span>
       <div class="chart-bars">
         <div *ngFor="let b of data?.serie" class="chart-bar" [title]="b.label + ': ' + b.citas + ' citas'">
           <div [style.height.%]="pct(b.citas, maxSerie)" class="chart-fill"></div>
@@ -62,7 +62,7 @@
 
     <!-- Ingresos por servicio -->
     <div class="cd mb">
-      <span class="cd-title">💰 Ingresos por servicio · {{ data?.periodo?.label }}</span>
+      <span class="cd-title"><ion-icon name="wallet-outline"></ion-icon> Ingresos por servicio · {{ data?.periodo?.label }}</span>
       <div class="tbl-wrap">
         <table class="tbl">
           <thead><tr><th>Servicio</th><th>Citas</th><th>Ingreso</th><th>% del total</th><th>Prom./cita</th></tr></thead>
@@ -82,7 +82,7 @@
 
     <!-- Rendimiento por mecánico -->
     <div class="cd mb">
-      <span class="cd-title">🔧 Rendimiento por mecánico · {{ data?.periodo?.label }}</span>
+      <span class="cd-title"><ion-icon name="construct-outline"></ion-icon> Rendimiento por mecánico · {{ data?.periodo?.label }}</span>
       <div class="tbl-wrap">
         <table class="tbl">
           <thead><tr><th>Mecánico</th><th>Citas</th><th>Entreg.</th><th>Tasa</th><th>Ingresos</th><th>T. trabajo</th><th>T. entrega</th><th>Calif.</th></tr></thead>
@@ -105,7 +105,7 @@
 
     <!-- Cotizaciones por recepción -->
     <div class="cd mb">
-      <span class="cd-title">🗂 Cotizaciones por recepción · {{ data?.periodo?.label }}</span>
+      <span class="cd-title"><ion-icon name="document-text-outline"></ion-icon> Cotizaciones por recepción · {{ data?.periodo?.label }}</span>
       <div class="tbl-wrap">
         <table class="tbl">
           <thead><tr><th>Recepcionista</th><th>Órdenes</th><th>Aprobadas</th><th>Rechazadas</th><th>Tasa aprob.</th></tr></thead>

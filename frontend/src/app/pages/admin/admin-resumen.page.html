@@ -40,7 +40,7 @@
     <!-- Facturación | KPI operativo -->
     <div class="g2">
       <div class="cd">
-        <span class="cd-title">💰 Facturación</span>
+        <span class="cd-title"><ion-icon name="wallet-outline"></ion-icon> Facturación</span>
         <div class="fact-today">
           <div class="kpi-val mono fact-val">{{ (op?.facturacion_hoy || 0) | currency:'CRC':'symbol-narrow':'1.0-0' }}</div>
           <div class="fact-sub">Total de hoy</div>
@@ -62,7 +62,7 @@
       </div>
 
       <div class="cd">
-        <span class="cd-title">📈 KPI</span>
+        <span class="cd-title"><ion-icon name="trending-up-outline"></ion-icon> KPI</span>
         <div class="kpi-detail-grid">
           <div class="kpi-detail-box">
             <div class="kpi-detail-label">Ticket promedio</div>
@@ -87,7 +87,7 @@
     <!-- Estado del taller | Semáforo de entregas -->
     <div class="g2">
       <div class="cd">
-        <span class="cd-title">🔧 Estado del taller</span>
+        <span class="cd-title"><ion-icon name="construct-outline"></ion-icon> Estado del taller</span>
         <div *ngFor="let e of op?.ordenes_por_estado" class="estado-row">
           <span class="estado-dot" [style.background]="estadoMap[e.estado]?.dot || '#A3A3A3'"></span>
           <span class="estado-label">{{ estadoMap[e.estado]?.label || e.estado }}</span>
@@ -97,7 +97,7 @@
       </div>
 
       <div class="cd">
-        <span class="cd-title">🚦 Semáforo de entregas</span>
+        <span class="cd-title"><ion-icon name="speedometer-outline"></ion-icon> Semáforo de entregas</span>
         <div class="filter-bar">
           <button class="filter-btn" [class.on]="filtroSemaforo==='rojo'" (click)="filtroSemaforo='rojo'">Atrasado · {{ countRojo }}</button>
           <button class="filter-btn" [class.on]="filtroSemaforo==='amarillo'" (click)="filtroSemaforo='amarillo'">Por vencer · {{ countAmarillo }}</button>
@@ -117,7 +117,7 @@
     <!-- Top servicios | Estado de citas -->
     <div class="g21">
       <div class="cd">
-        <span class="cd-title">🏆 Top servicios del mes</span>
+        <span class="cd-title"><ion-icon name="trophy-outline"></ion-icon> Top servicios del mes</span>
         <div class="bar-item" *ngFor="let s of data?.top_servicios">
           <div class="bar-head"><span>{{ s.servicio }}</span><strong>{{ s.total }} citas</strong></div>
           <div class="bar-track"><div class="bar-fill" [style.width.%]="pct(s.total, maxServicio)"></div></div>
@@ -126,7 +126,7 @@
       </div>
 
       <div class="cd">
-        <span class="cd-title">📊 Estado de citas</span>
+        <span class="cd-title"><ion-icon name="stats-chart-outline"></ion-icon> Estado de citas</span>
         <ng-container *ngIf="data?.estado_citas as e">
           <div class="bar-item"><div class="bar-head"><span>Agendadas</span><strong class="mono">{{ e.agendadas }} — {{ pct(e.agendadas, e.total) }}%</strong></div><div class="bar-track"><div class="bar-fill bar-fill-indigo" [style.width.%]="pct(e.agendadas, e.total)"></div></div></div>
           <div class="bar-item"><div class="bar-head"><span>En proceso</span><strong class="mono">{{ e.en_proceso }} — {{ pct(e.en_proceso, e.total) }}%</strong></div><div class="bar-track"><div class="bar-fill bar-fill-amber" [style.width.%]="pct(e.en_proceso, e.total)"></div></div></div>
@@ -139,7 +139,7 @@
     <!-- Tiempo por etapa | Técnicos -->
     <div class="g2">
       <div class="cd">
-        <span class="cd-title">⏱️ Tiempo por etapa</span>
+        <span class="cd-title"><ion-icon name="timer-outline"></ion-icon> Tiempo por etapa</span>
         <div class="bar-item" *ngFor="let t of tiempos">
           <div class="bar-head"><span>{{ etapaLabel[t.etapa] || t.etapa }}</span><strong class="mono">{{ t.horas_promedio || 0 }}h</strong></div>
           <div class="bar-track"><div class="bar-fill" [style.width.%]="pct(t.horas_promedio, maxTiempo)"></div></div>
@@ -148,7 +148,7 @@
       </div>
 
       <div class="cd">
-        <span class="cd-title">👷 Técnicos</span>
+        <span class="cd-title"><ion-icon name="people-outline"></ion-icon> Técnicos</span>
         <div class="emp-row" *ngFor="let t of tecnicos">
           <div class="emp-av in">{{ iniciales(t.nombre) }}</div>
           <div class="emp-info"><strong>{{ t.nombre }}</strong><span>{{ t.ordenes_completadas || 0 }} completadas · {{ t.horas_promedio || 0 }}h prom.</span></div>
@@ -159,7 +159,7 @@
 
     <!-- Ingresos por servicio -->
     <div class="cd mb">
-      <span class="cd-title">💵 Desglose de ingresos por servicio (mes)</span>
+      <span class="cd-title"><ion-icon name="cash-outline"></ion-icon> Desglose de ingresos por servicio (mes)</span>
       <div class="tbl-wrap">
         <table class="tbl">
           <thead><tr><th>Servicio</th><th>Citas</th><th>Ingreso</th><th>% del total</th><th>Prom./cita</th></tr></thead>
@@ -184,7 +184,7 @@
 
     <!-- Exportar -->
     <div class="cd mb">
-      <span class="cd-title">📄 Generar reporte PDF</span>
+      <span class="cd-title"><ion-icon name="document-text-outline"></ion-icon> Generar reporte PDF</span>
       <div class="export-row">
         <button class="btn btn-cr" (click)="exportarPDF()" [disabled]="cargando">
           <ion-icon name="document-text-outline"></ion-icon> Resumen ejecutivo PDF
@@ -192,7 +192,7 @@
       </div>
     </div>
     <div class="cd mb">
-      <span class="cd-title">📤 Exportar a Excel (CSV)</span>
+      <span class="cd-title"><ion-icon name="download-outline"></ion-icon> Exportar a Excel (CSV)</span>
       <div class="export-row">
         <button class="btn btn-ou" (click)="exportarOrdenes()" [disabled]="exportando">Órdenes</button>
         <button class="btn btn-cr" (click)="exportarFacturacion()" [disabled]="exportando">Facturación</button>

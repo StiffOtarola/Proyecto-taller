@@ -97,7 +97,7 @@
 
       <button class="cta" (click)="guardar()" [disabled]="!valido || enviando">
         <ion-spinner *ngIf="enviando" name="crescent"></ion-spinner>
-        {{ enviando ? 'Guardando...' : (editandoId ? '💾 Guardar cambios' : '💾 Guardar moto') }}
+        {{ enviando ? 'Guardando...' : (editandoId ? 'Guardar cambios' : 'Guardar moto') }}
       </button>
       <button class="cta-o" (click)="cerrarForm()" [disabled]="enviando">Cancelar</button>
     </section>

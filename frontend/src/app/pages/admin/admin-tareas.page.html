@@ -12,7 +12,7 @@
   <div class="admin">
     <!-- Asignar nueva tarea -->
     <div class="cd mb">
-      <span class="cd-title">➕ Asignar nueva tarea</span>
+      <span class="cd-title">Asignar nueva tarea</span>
       <div class="fg">
         <label>Mecánico</label>
         <select [(ngModel)]="form.tecnico_id">
@@ -47,7 +47,7 @@
     <!-- Tareas asignadas -->
     <div class="cd">
       <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap">
-        <span class="cd-title" style="margin:0">📋 Tareas asignadas</span>
+        <span class="cd-title" style="margin:0"><ion-icon name="clipboard-outline"></ion-icon> Tareas asignadas</span>
         <select [(ngModel)]="empleado" (ngModelChange)="cargar()" style="padding:7px 10px; border:1px solid var(--bd); border-radius:8px; background:var(--sur2); color:var(--tx); font-size:12px; font-family:inherit">
           <option [ngValue]="null">Todos los mecánicos</option>
           <option *ngFor="let t of tecnicos" [ngValue]="t.id">{{ t.nombre }}</option>

@@ -84,7 +84,7 @@
         <ion-icon name="gift"></ion-icon>
       </div>
       <div class="reward-count">{{ resumen.recompensas?.ciclo ?? 0 }} de {{ (resumen.recompensas?.meta || 7) - 1 }} citas completadas</div>
-      <p class="reward-txt" *ngIf="resumen.recompensas?.cortesia_disponible"><strong>¡Tu próxima cita es de cortesía! 🎉</strong></p>
+      <p class="reward-txt" *ngIf="resumen.recompensas?.cortesia_disponible"><strong>¡Tu próxima cita es de cortesía!</strong></p>
       <p class="reward-txt" *ngIf="!resumen.recompensas?.cortesia_disponible">
         Faltan <strong>{{ resumen.recompensas?.faltan }}</strong> cita(s) para tu servicio de cortesía
       </p>

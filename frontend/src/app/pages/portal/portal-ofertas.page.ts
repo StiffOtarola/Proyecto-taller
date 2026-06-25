@@ -17,7 +17,7 @@ export class PortalOfertasPage implements OnInit, OnDestroy {
   histAbierto = false;
   cargando = true;
   abierta = new Set<number>();
-  private readonly iconos = ['🛢️', '⛓️', '🔧', '🔋', '🛞', '⚙️'];
+  private readonly iconos = ['disc-outline', 'link-outline', 'construct-outline', 'battery-charging-outline', 'ellipse-outline', 'settings-outline'];
 
   // Bloques de progreso: meta-1 sellos + el último (cortesía/regalo).
   get bloques(): boolean[] {

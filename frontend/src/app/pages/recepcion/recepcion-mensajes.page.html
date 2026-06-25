@@ -118,7 +118,7 @@
               <span class="chat-time">{{ hace(c.ultimo.created_at) }}</span>
             </div>
             <div class="chat-prev">
-              <span class="chat-last">{{ esMio(c.ultimo) ? 'Vos: ' : '' }}{{ c.ultimo.mensaje || '📷 Foto' }}</span>
+              <span class="chat-last">{{ esMio(c.ultimo) ? 'Vos: ' : '' }}{{ c.ultimo.mensaje || 'Foto' }}</span>
               <span class="chat-badge" *ngIf="c.noLeidos">{{ c.noLeidos }}</span>
             </div>
           </div>
@@ -155,7 +155,7 @@
               </div>
             </div>
           </ng-container>
-          <div class="empty-thread" *ngIf="!hilo.length">Escribí el primer mensaje 👇</div>
+          <div class="empty-thread" *ngIf="!hilo.length">Escribí el primer mensaje</div>
         </div>
       </div>
 

@@ -37,7 +37,7 @@
         <div class="info">
           <h2>{{ cuenta.nombre || 'Recepción' }}</h2>
           <span class="role-chip">Recepcionista</span>
-          <p class="contact">{{ cuenta.email || '—' }}<ng-container *ngIf="cuenta.telefono"> · 📞 {{ cuenta.telefono }}</ng-container></p>
+          <p class="contact">{{ cuenta.email || '—' }}<ng-container *ngIf="cuenta.telefono"> · <ion-icon name="call-outline"></ion-icon> {{ cuenta.telefono }}</ng-container></p>
           <button type="button" class="quitar-foto" *ngIf="perfil?.foto" (click)="quitarFoto()" [disabled]="subiendoFoto">Quitar foto</button>
         </div>
       </div>
@@ -55,7 +55,7 @@
           <div class="ro"><ion-icon name="calendar-outline"></ion-icon><div><span class="ro-lbl">Miembro desde</span><strong>{{ miembroDesde }}</strong></div></div>
         </div>
 
-        <button class="cta" [disabled]="guardando" (click)="guardarCuenta()">💾 Guardar cambios</button>
+        <button class="cta" [disabled]="guardando" (click)="guardarCuenta()">Guardar cambios</button>
       </section>
 
       <!-- Accesibilidad -->
@@ -79,10 +79,10 @@
         <span class="section-label">Seguridad</span>
         <div class="ig"><label>Contraseña actual</label><input type="password" [(ngModel)]="pass.actual" placeholder="••••••••"></div>
         <div class="ig"><label>Nueva contraseña</label><input type="password" [(ngModel)]="pass.nueva" placeholder="Mín. 8 caracteres"></div>
-        <button class="cta outline" [disabled]="guardandoPass" (click)="cambiarPassword()">🔑 Cambiar contraseña</button>
+        <button class="cta outline" [disabled]="guardandoPass" (click)="cambiarPassword()"><ion-icon name="lock-closed-outline"></ion-icon> Cambiar contraseña</button>
       </section>
 
-      <button class="cta danger" (click)="logout()">⏻ Cerrar sesión</button>
+      <button class="cta danger" (click)="logout()"><ion-icon name="log-out-outline"></ion-icon> Cerrar sesión</button>
     </ng-container>
 
     <div style="height:80px"></div>

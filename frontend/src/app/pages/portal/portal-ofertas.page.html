@@ -20,7 +20,7 @@
     <section class="reward-hero" *ngIf="fidelidad" [class.ready]="fidelidad.cortesia_disponible">
       <div class="rh-tag"><ion-icon name="gift"></ion-icon> Programa de fidelidad</div>
 
-      <h3 *ngIf="fidelidad.cortesia_disponible">¡Tu próximo servicio es de cortesía! 🎉</h3>
+      <h3 *ngIf="fidelidad.cortesia_disponible">¡Tu próximo servicio es de cortesía!</h3>
       <h3 *ngIf="!fidelidad.cortesia_disponible">
         Te falta{{ fidelidad.faltan === 1 ? '' : 'n' }} <strong>{{ fidelidad.faltan }}</strong> servicio{{ fidelidad.faltan === 1 ? '' : 's' }} para tu cortesía
       </h3>
@@ -54,7 +54,7 @@
 
     <div class="of" *ngFor="let p of promos; let i = index" (click)="toggle(p.id)" [class.open]="abierta.has(p.id)">
       <img *ngIf="p.imagen" [src]="p.imagen" alt="" class="of-img" />
-      <div class="of-img-ph" *ngIf="!p.imagen" [ngClass]="'ph-' + (i % 4)">{{ phIcono(i) }}</div>
+      <div class="of-img-ph" *ngIf="!p.imagen" [ngClass]="'ph-' + (i % 4)"><ion-icon [name]="phIcono(i)"></ion-icon></div>
       <div class="of-b">
         <div class="of-h">
           <strong>{{ p.titulo }}</strong>

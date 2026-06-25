@@ -13,7 +13,7 @@
       <div>
         <!-- Info del taller -->
         <div class="cd mb">
-          <span class="cd-title">🏪 Información del taller</span>
+          <span class="cd-title"><ion-icon name="storefront-outline"></ion-icon> Información del taller</span>
           <div class="fg"><label>Nombre del negocio</label><input [(ngModel)]="config.nombre_taller" placeholder="MS Motos"></div>
           <div class="fg"><label>Teléfono / WhatsApp</label><input [(ngModel)]="config.telefono" placeholder="+506 0000-0000"></div>
           <div class="fg"><label>Correo de contacto</label><input type="email" [(ngModel)]="config.email" placeholder="info@msmotos.com"></div>
@@ -25,17 +25,17 @@
               <button class="btn btn-rd btn-sm" (click)="quitarLogo()">Quitar</button>
             </div>
             <label class="config-upload">
-              <div class="config-upload-icon">🖼️</div>
+              <div class="config-upload-icon"><ion-icon name="image-outline"></ion-icon></div>
               <div class="config-upload-hint">Clic para subir logo</div>
               <input type="file" accept="image/*" (change)="onLogoFile($event)" hidden>
             </label>
           </div>
-          <button class="btn btn-cr config-btn-full" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar información</button>
+          <button class="btn btn-cr config-btn-full" [disabled]="guardando" (click)="guardarConfig()">Guardar información</button>
         </div>
 
         <!-- Horarios -->
         <div class="cd mb">
-          <span class="cd-title">🕒 Horario de atención</span>
+          <span class="cd-title"><ion-icon name="time-outline"></ion-icon> Horario de atención</span>
           <div *ngFor="let h of horariosVista"
                class="config-schedule-day"
                [style.opacity]="h.activo ? 1 : 0.5">
@@ -47,12 +47,12 @@
               <input type="checkbox" [(ngModel)]="h.activo"> Abierto
             </label>
           </div>
-          <button class="btn btn-cr config-btn-full" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar horarios</button>
+          <button class="btn btn-cr config-btn-full" [disabled]="guardando" (click)="guardarConfig()">Guardar horarios</button>
         </div>
 
         <!-- Sucursales (locales del taller) -->
         <div class="cd">
-          <span class="cd-title">📍 Sucursales</span>
+          <span class="cd-title"><ion-icon name="location-outline"></ion-icon> Sucursales</span>
           <div class="hint config-hint">Locales donde el cliente puede agendar. El horario es compartido; el cupo se cuenta por sucursal.</div>
 
           <div *ngFor="let s of sucursales"
@@ -68,7 +68,7 @@
             <div class="config-branch-fields">
               <input [(ngModel)]="s.telefono" placeholder="Teléfono"
                      class="config-branch-input">
-              <button class="btn btn-ou btn-sm" (click)="guardarSucursal(s)">💾 Guardar</button>
+              <button class="btn btn-ou btn-sm" (click)="guardarSucursal(s)">Guardar</button>
             </div>
           </div>
 
@@ -78,7 +78,7 @@
             <input [(ngModel)]="nuevaSucursal.nombre" placeholder="Nombre (ej. Liberia)" class="config-add-input">
             <input [(ngModel)]="nuevaSucursal.direccion" placeholder="Dirección (opcional)" class="config-add-input">
             <input [(ngModel)]="nuevaSucursal.telefono" placeholder="Teléfono (opcional)" class="config-add-input">
-            <button class="btn btn-cr config-btn-full" [disabled]="guardandoSucursal" (click)="agregarSucursal()">➕ Agregar sucursal</button>
+            <button class="btn btn-cr config-btn-full" [disabled]="guardandoSucursal" (click)="agregarSucursal()">Agregar sucursal</button>
           </div>
         </div>
       </div>
@@ -87,17 +87,17 @@
       <div>
         <!-- Capacidad -->
         <div class="cd mb">
-          <span class="cd-title">⚙️ Capacidad de atención</span>
+          <span class="cd-title"><ion-icon name="settings-outline"></ion-icon> Capacidad de atención</span>
           <div class="fg"><label>Máx. citas por hora</label><input type="number" min="1" max="20" [(ngModel)]="config.max_citas_hora"><div class="hint">Cuántas citas puede atender el taller por franja horaria.</div></div>
           <div class="fg"><label>Días de anticipación para agendar</label><input type="number" min="1" max="365" [(ngModel)]="config.dias_anticipacion"><div class="hint">Hasta cuántos días adelante puede reservar un cliente desde el portal.</div></div>
           <div class="fg"><label>Duración promedio por cita (minutos)</label><input type="number" min="15" max="480" [(ngModel)]="config.duracion_cita_min"><div class="hint">Informativo (los cupos del portal son por hora).</div></div>
           <div class="fg"><label>Horas mínimas para cancelar/editar</label><input type="number" min="0" max="168" [(ngModel)]="config.cancelacion_horas_min"><div class="hint">El cliente no puede cancelar ni reprogramar si faltan menos de estas horas para la cita (0 = sin límite).</div></div>
-          <button class="btn btn-cr config-btn-full" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar capacidad</button>
+          <button class="btn btn-cr config-btn-full" [disabled]="guardando" (click)="guardarConfig()">Guardar capacidad</button>
         </div>
 
         <!-- Notificaciones -->
         <div class="cd mb">
-          <span class="cd-title">🔔 Notificaciones</span>
+          <span class="cd-title"><ion-icon name="notifications-outline"></ion-icon> Notificaciones</span>
           <div class="config-notif-list">
             <label class="config-notif-row">
               <span>Notificar al cliente al cambiar estado</span>
@@ -116,7 +116,7 @@
               <ion-toggle [(ngModel)]="config.notif_email_entrega" disabled></ion-toggle>
             </label>
           </div>
-          <button class="btn btn-cr config-btn-full" [disabled]="guardando" (click)="guardarConfig()">💾 Guardar</button>
+          <button class="btn btn-cr config-btn-full" [disabled]="guardando" (click)="guardarConfig()">Guardar</button>
         </div>
 
       </div>

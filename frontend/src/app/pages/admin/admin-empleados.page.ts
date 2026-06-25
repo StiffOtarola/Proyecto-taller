@@ -20,7 +20,7 @@ export class AdminEmpleadosPage implements OnInit, OnDestroy {
   nuevo = { nombre: '', email: '', password: '', rol: 'tecnico', telefono: '', sucursal_id: null as number | null };
 
   readonly rolLabel: Record<string, string> = {
-    tecnico: '🔧 Mecánico', recepcion: '🗂 Recepcionista', admin: 'Administración',
+    tecnico: 'Mecánico', recepcion: 'Recepcionista', admin: 'Administración',
   };
 
   constructor(private svc: UsuariosService, private admin: AdminService, private toast: ToastController) {}

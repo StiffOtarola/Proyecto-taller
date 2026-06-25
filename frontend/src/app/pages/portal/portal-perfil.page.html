@@ -34,7 +34,7 @@
         <div class="info">
           <h2>{{ cuenta.nombre }} {{ cuenta.apellido }}</h2>
           <p class="contact">{{ cuenta.email || '—' }}</p>
-          <p class="contact" *ngIf="cuenta.telefono">📞 {{ cuenta.telefono }}</p>
+          <p class="contact" *ngIf="cuenta.telefono"><ion-icon name="call-outline"></ion-icon> {{ cuenta.telefono }}</p>
           <button type="button" class="quitar-foto" *ngIf="perfil?.foto" (click)="quitarFoto()" [disabled]="subiendoFoto">Quitar foto</button>
         </div>
       </div>
@@ -46,7 +46,7 @@
         <div class="ig"><label>Apellido</label><input [(ngModel)]="cuenta.apellido" placeholder="Tu apellido"></div>
         <div class="ig"><label>Teléfono</label><input type="tel" [(ngModel)]="cuenta.telefono" placeholder="8888-8888"></div>
         <div class="ig"><label>Correo electrónico</label><input type="email" [(ngModel)]="cuenta.email" placeholder="correo@ejemplo.com"></div>
-        <button class="cta" [disabled]="guardando" (click)="guardarCuenta()">💾 Guardar cambios</button>
+        <button class="cta" [disabled]="guardando" (click)="guardarCuenta()">Guardar cambios</button>
       </section>
 
       <!-- Accesibilidad -->
@@ -118,8 +118,8 @@
         </a>
       </section>
 
-      <button class="cta danger" (click)="logout()">⏻ Cerrar sesión</button>
-      <button class="cta danger-outline" [disabled]="eliminando" (click)="eliminarCuenta()">🗑️ Eliminar cuenta</button>
+      <button class="cta danger" (click)="logout()"><ion-icon name="log-out-outline"></ion-icon> Cerrar sesión</button>
+      <button class="cta danger-outline" [disabled]="eliminando" (click)="eliminarCuenta()"><ion-icon name="trash-outline"></ion-icon> Eliminar cuenta</button>
     </ng-container>
 
     <div style="height:90px"></div>

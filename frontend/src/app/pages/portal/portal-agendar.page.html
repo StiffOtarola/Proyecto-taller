@@ -81,7 +81,7 @@
         </div>
         <div class="hint" *ngIf="!form.sucursal_id">Elegí primero la sucursal y la fecha para ver los horarios.</div>
         <div class="hint" *ngIf="form.sucursal_id && !form.fecha">Elegí primero una fecha para ver los horarios.</div>
-        <div class="full-msg" *ngIf="msgHora">⚠ {{ msgHora }}</div>
+        <div class="full-msg" *ngIf="msgHora"><ion-icon name="warning-outline"></ion-icon> {{ msgHora }}</div>
         <div class="hint" *ngIf="form.fecha">Máximo {{ maxPorHora }} citas por hora. Las horas tachadas no están disponibles.</div>
       </div>
 
@@ -92,7 +92,7 @@
 
       <button class="cta" (click)="agendar()" [disabled]="!valido || enviando">
         <ion-spinner *ngIf="enviando" name="crescent"></ion-spinner>
-        {{ enviando ? (editId ? 'Guardando...' : 'Agendando...') : (editId ? '💾 Guardar cambios' : '📅 Agendar cita') }}
+        {{ enviando ? (editId ? 'Guardando...' : 'Agendando...') : (editId ? 'Guardar cambios' : 'Agendar cita') }}
       </button>
 
       <!-- Limpiar el formulario (solo al crear y si hay algo cargado) -->

@@ -85,16 +85,16 @@ export class MecanicoPage implements OnInit, OnDestroy {
     this.notasAbiertas.has(id) ? this.notasAbiertas.delete(id) : this.notasAbiertas.add(id);
   }
 
-  necesitaMonto(estado: string): boolean { return estado === 'listo' || estado === 'entregado'; }
+  necesitaMonto(_estado: string): boolean { return false; }
 
   // Transiciones válidas del flujo de la cita (espejo del backend utils/transiciones.js).
   // El <select> ofrece solo el estado actual + sus siguientes, para no pedir saltos que
   // el backend rechaza (p. ej. agendado→listo).
   private readonly siguientesCita: Record<string, string[]> = {
-    agendado: ['en_revision', 'cancelado'],
-    en_revision: ['en_mantenimiento', 'listo', 'cancelado'],
-    en_mantenimiento: ['listo', 'cancelado'],
-    listo: ['entregado', 'cancelado'],
+    agendado: ['en_revision'],
+    en_revision: ['en_mantenimiento', 'listo'],
+    en_mantenimiento: ['listo'],
+    listo: [],
     entregado: [],
     cancelado: [],
   };

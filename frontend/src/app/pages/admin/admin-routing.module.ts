@@ -9,6 +9,7 @@ import { AdminReportesPage } from './admin-reportes.page';
 import { AdminPromosPage } from './admin-promos.page';
 import { AdminCalendarioPage } from './admin-calendario.page';
 import { AdminConfigPage } from './admin-config.page';
+import { AdminMensajesPage } from './admin-mensajes.page';
 
 const routes: Routes = [
   {
@@ -20,6 +21,7 @@ const routes: Routes = [
       { path: 'citas', component: AdminCitasPage },
       { path: 'empleados', component: AdminEmpleadosPage },
       { path: 'tareas', component: AdminTareasPage },
+      { path: 'mensajes', component: AdminMensajesPage },
       { path: 'reportes', component: AdminReportesPage },
       { path: 'promos', component: AdminPromosPage },
       { path: 'calendario', component: AdminCalendarioPage },

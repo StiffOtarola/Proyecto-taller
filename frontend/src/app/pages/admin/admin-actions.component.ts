@@ -1,17 +1,34 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
+import { Subject, filter, takeUntil } from 'rxjs';
 
-// Acciones del encabezado del panel admin (lado derecho del topbar):
-// badge con la fecha de hoy + botón "Nueva cita". Se coloca con slot="end".
 @Component({
   standalone: false,
   selector: 'app-admin-actions',
   template: `
     <span class="adm-date">{{ fecha }}</span>
-    <ion-button class="adm-nueva" size="small" [routerLink]="['/cita-form']">+ Nueva cita</ion-button>
+    <ion-button *ngIf="mostrarNuevaCita" class="adm-nueva" size="small" [routerLink]="['/cita-form']">+ Nueva cita</ion-button>
   `,
 })
-export class AdminActionsComponent {
+export class AdminActionsComponent implements OnDestroy {
   fecha = this.hoyStr();
+  mostrarNuevaCita = false;
+  private destroy$ = new Subject<void>();
+  private readonly rutasConCita = ['/admin/resumen', '/admin/citas', '/admin/calendario'];
+
+  constructor(private router: Router) {
+    this.evaluar(this.router.url);
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      takeUntil(this.destroy$),
+    ).subscribe(e => this.evaluar(e.urlAfterRedirects));
+  }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
+
+  private evaluar(url: string) {
+    this.mostrarNuevaCita = this.rutasConCita.some(r => url.startsWith(r));
+  }
 
   private hoyStr(): string {
     const d = new Date();

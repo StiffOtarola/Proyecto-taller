@@ -18,30 +18,34 @@
   .avatar-cam {
     position: absolute; right: -2px; bottom: -2px;
     width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
-    background: var(--ion-color-primary); color: #fff; border: 2px solid #fff;
+    background: var(--ion-color-primary); color: #fff; border: 2px solid var(--ion-card-background, #fff);
     display: flex; align-items: center; justify-content: center;
     ion-icon { font-size: 13px; }
     &.cargando { opacity: 0.7; }
   }
   .info { min-width: 0;
-    h2 { font-family: var(--font-display); font-size: 20px; font-weight: 800; margin: 0; color: #0a0a0a; }
+    h2 { font-family: var(--font-display); font-size: 20px; font-weight: 800; margin: 0; }
     .role-chip {
       display: inline-block; margin-top: 5px; padding: 2px 9px; border-radius: 999px;
       background: var(--ion-color-primary); color: #fff; font-size: 10.5px; font-weight: 800;
       text-transform: uppercase; letter-spacing: 0.05em;
     }
-    .contact { font-size: 12px; color: #525252; margin: 6px 0 0; word-break: break-word; }
+    .contact { font-size: 12px; color: var(--n-500); margin: 6px 0 0; word-break: break-word; }
     .quitar-foto {
       margin-top: 6px; background: none; border: none; padding: 0; cursor: pointer;
-      font-size: 11px; font-weight: 700; color: #be123c; text-decoration: underline;
+      font-size: 11px; font-weight: 700; color: var(--ion-color-primary); text-decoration: underline;
       &:disabled { opacity: 0.5; }
     }
   }
   .profile-rating { margin-top: 6px; display: flex; align-items: center; gap: 6px;
-    .stars { color: #b45309; letter-spacing: 1px; font-size: 14px; }
-    .val { font-size: 13px; font-weight: 700; color: #0a0a0a; }
-    .muted { font-size: 11px; color: #737373; }
+    .stars { color: var(--amber-700); letter-spacing: 1px; font-size: 14px; }
+    .val { font-size: 13px; font-weight: 700; }
+    .muted { font-size: 11px; color: var(--n-400); }
   }
+}
+
+@media (prefers-color-scheme: dark) {
+  .profile-header { background: var(--ion-card-background); }
 }
 
 .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
@@ -104,7 +108,7 @@
   &:active { transform: scale(0.98); }
   &:disabled { opacity: 0.5; cursor: default; }
   &.outline { background: none; border: 1.5px solid var(--hairline); color: var(--ion-text-color); }
-  &.danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; margin-top: 4px; }
+  &.danger { background: rgba(220, 38, 38, .08); color: var(--ion-color-danger, #dc2626); border: 1px solid rgba(220, 38, 38, .2); margin-top: 4px; }
 }
 
 .spec-wrap { display: flex; flex-wrap: wrap; gap: 6px; }

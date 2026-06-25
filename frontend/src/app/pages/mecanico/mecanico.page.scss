@@ -70,7 +70,7 @@
 .st-badge.mantenimiento{ background: var(--rose-50);    color: var(--rose-700); }
 .st-badge.listo        { background: var(--emerald-50); color: var(--emerald-700); }
 .st-badge.entregado    { background: var(--n-100);      color: var(--n-500); }
-.st-badge.cancelado    { background: #fef2f2;           color: #dc2626; }
+.st-badge.cancelado    { background: rgba(220, 38, 38, .08); color: var(--ion-color-danger, #dc2626); }
 
 /* Barra de progreso */
 .pr-t { height: 8px; background: var(--n-200); border-radius: 999px; overflow: hidden; margin: 10px 0 4px; }

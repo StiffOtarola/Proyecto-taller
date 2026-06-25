@@ -23,6 +23,15 @@ export class MecanicoContactoPage implements OnInit, OnDestroy {
   enviando = false;
   miId = this.auth.getUsuario()?.id;
   fotoPreview: string | null = null;
+  mostrarRapidas = false;
+
+  readonly respuestasRapidas = [
+    'Listo para entregar',
+    'Necesito repuesto',
+    'Esperando aprobación del cliente',
+    'Moto lista para prueba',
+    'Necesito ayuda con esta moto',
+  ];
 
   constructor(private mecanico: MecanicoService, private auth: AuthService, private toast: ToastController) {}
 
@@ -60,11 +69,12 @@ export class MecanicoContactoPage implements OnInit, OnDestroy {
 
   esMio(m: any): boolean { return m.remitente_id === this.miId; }
 
-  enviar() {
-    const txt = this.texto.trim();
+  enviar(textoOverride?: string) {
+    const txt = (textoOverride || this.texto).trim();
     const foto = this.fotoPreview;
     if (!txt && !foto) return;
     this.enviando = true;
+    this.mostrarRapidas = false;
     this.mecanico.enviarMensaje(txt, foto).pipe(takeUntil(this.destroy$)).subscribe({
       next: r => {
         this.mensajes.push(r.data);
@@ -79,6 +89,10 @@ export class MecanicoContactoPage implements OnInit, OnDestroy {
         await t.present();
       },
     });
+  }
+
+  enviarRapida(msg: string) {
+    this.enviar(msg);
   }
 
   adjuntarFoto() {
@@ -106,13 +120,28 @@ export class MecanicoContactoPage implements OnInit, OnDestroy {
 
   private scrollAbajo() { setTimeout(() => this.content?.scrollToBottom(150), 80); }
 
-  hace(fecha: string): string {
+  // Separadores por día
+  mostrarSeparador(i: number): boolean {
+    if (i === 0) return true;
+    return this.diaDe(this.mensajes[i].created_at) !== this.diaDe(this.mensajes[i - 1].created_at);
+  }
+
+  private diaDe(fecha: string): string { return fecha ? fecha.slice(0, 10) : ''; }
+
+  etiquetaDia(fecha: string): string {
     if (!fecha) return '';
-    const min = Math.round((Date.now() - new Date(fecha).getTime()) / 60000);
-    if (min < 1) return 'Recién';
-    if (min < 60) return `Hace ${min} min`;
-    const h = Math.round(min / 60);
-    if (h < 24) return `Hace ${h} h`;
-    return `Hace ${Math.round(h / 24)} d`;
+    const hoy = new Date().toISOString().slice(0, 10);
+    const ayer = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const d = fecha.slice(0, 10);
+    if (d === hoy) return 'Hoy';
+    if (d === ayer) return 'Ayer';
+    const f = new Date(fecha);
+    return f.toLocaleDateString('es-CR', { day: 'numeric', month: 'short' });
+  }
+
+  horaExacta(fecha: string): string {
+    if (!fecha) return '';
+    const f = new Date(fecha);
+    return f.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit', hour12: true });
   }
 }

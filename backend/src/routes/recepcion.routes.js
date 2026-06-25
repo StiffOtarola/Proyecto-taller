@@ -860,13 +860,16 @@ router.post('/notificar', async (req, res) => {
 const SELECT_MSG_INT = `
   SELECT m.id, m.mensaje, m.foto, m.orden_id, m.tipo, m.created_at, m.leido,
          m.remitente_id, m.destino_rol, m.destino_id,
-         ru.nombre AS remitente_nombre, ru.rol AS remitente_rol,
-         du.nombre AS destino_nombre,
-         o.numero_orden
+         ru.nombre AS remitente_nombre, ru.rol AS remitente_rol, ru.sucursal_id AS remitente_sucursal_id,
+         du.nombre AS destino_nombre, du.sucursal_id AS destino_sucursal_id,
+         o.numero_orden,
+         COALESCE(sr.nombre, sd.nombre) AS sucursal_nombre
   FROM mensajes_internos m
   JOIN usuarios ru ON ru.id = m.remitente_id
   LEFT JOIN usuarios du ON du.id = m.destino_id
-  LEFT JOIN ordenes_trabajo o ON o.id = m.orden_id`;
+  LEFT JOIN ordenes_trabajo o ON o.id = m.orden_id
+  LEFT JOIN sucursales sr ON sr.id = ru.sucursal_id
+  LEFT JOIN sucursales sd ON sd.id = du.sucursal_id`;
 
 router.get('/mensajes-internos', async (req, res) => {
   try {

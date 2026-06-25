@@ -32,6 +32,8 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
   fotoPreview: string | null = null;
   broadcastTexto = '';
   enviandoBroadcast = false;
+  sucursalFiltro: number | '' = '';
+  sucursales: { id: number; nombre: string }[] = [];
 
   constructor(private rec: RecepcionService, private toast: ToastController, private alert: AlertController) {}
 
@@ -50,7 +52,7 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
     this.rec.getNotificaciones().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.notificaciones = r.data; listo(); }, error: listo });
     this.rec.getMensajesInternos().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.internos = r.data; listo(); }, error: listo });
     if (!this.clientes.length) this.rec.getClientes().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.clientes = r.data });
-    if (!this.tecnicos.length) this.rec.getTecnicos().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.tecnicos = r.data, error: () => {} });
+    if (!this.tecnicos.length) this.rec.getTecnicos().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.tecnicos = r.data; this.extraerSucursales(); }, error: () => {} });
   }
 
   private refrescarInternos() {
@@ -60,11 +62,21 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
     });
   }
 
-  private mecDe(m: any): { id: number; nombre: string } | null {
+  private extraerSucursales() {
+    const map = new Map<number, string>();
+    for (const t of this.tecnicos) {
+      if (t.sucursal_id && t.sucursal_nombre) map.set(t.sucursal_id, t.sucursal_nombre);
+    }
+    this.sucursales = [...map].map(([id, nombre]) => ({ id, nombre }));
+  }
+
+  private mecDe(m: any): { id: number; nombre: string; sucursalId?: number; sucursalNombre?: string } | null {
     const esRecep = m.remitente_rol === 'recepcion';
     const id = esRecep ? m.destino_id : m.remitente_id;
     const nombre = esRecep ? (m.destino_nombre || 'Mecánico') : (m.remitente_nombre || 'Mecánico');
-    return id ? { id, nombre } : null;
+    const sucursalId = esRecep ? m.destino_sucursal_id : m.remitente_sucursal_id;
+    const sucursalNombre = m.sucursal_nombre;
+    return id ? { id, nombre, sucursalId, sucursalNombre } : null;
   }
 
   get conversaciones(): any[] {
@@ -73,10 +85,12 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
       if (m.tipo === 'broadcast') continue;
       const mec = this.mecDe(m);
       if (!mec) continue;
-      if (!map.has(mec.id)) map.set(mec.id, { id: mec.id, nombre: mec.nombre, ultimo: m, noLeidos: 0 });
+      if (!map.has(mec.id)) map.set(mec.id, { id: mec.id, nombre: mec.nombre, sucursalId: mec.sucursalId, sucursalNombre: mec.sucursalNombre, ultimo: m, noLeidos: 0 });
       if (m.remitente_rol !== 'recepcion' && !m.leido) map.get(mec.id).noLeidos++;
     }
-    return [...map.values()];
+    let result = [...map.values()];
+    if (this.sucursalFiltro) result = result.filter(c => c.sucursalId === this.sucursalFiltro);
+    return result;
   }
 
   get broadcasts(): any[] {
@@ -173,6 +187,26 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
     const h = Math.round(min / 60);
     if (h < 24) return `Hace ${h} h`;
     return `Hace ${Math.round(h / 24)} d`;
+  }
+
+  horaExacta(fecha: string): string {
+    if (!fecha) return '';
+    return new Date(fecha).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit', hour12: true });
+  }
+
+  mostrarSeparador(arr: any[], i: number): boolean {
+    if (i === 0) return true;
+    return (arr[i].created_at || '').slice(0, 10) !== (arr[i - 1].created_at || '').slice(0, 10);
+  }
+
+  etiquetaDia(fecha: string): string {
+    if (!fecha) return '';
+    const hoy = new Date().toISOString().slice(0, 10);
+    const ayer = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const d = fecha.slice(0, 10);
+    if (d === hoy) return 'Hoy';
+    if (d === ayer) return 'Ayer';
+    return new Date(fecha).toLocaleDateString('es-CR', { day: 'numeric', month: 'short' });
   }
 
   reenviar(a: any) {

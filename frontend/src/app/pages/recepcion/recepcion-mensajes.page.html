@@ -99,7 +99,13 @@
           </div>
         </div>
 
-        <span class="section-label" style="margin-top:12px">Conversaciones</span>
+        <div class="conv-header">
+          <span class="section-label" style="margin-top:12px">Conversaciones</span>
+          <select class="sucursal-filter" [(ngModel)]="sucursalFiltro" *ngIf="sucursales.length > 1">
+            <option [ngValue]="''">Todas las sedes</option>
+            <option *ngFor="let s of sucursales" [ngValue]="s.id">{{ s.nombre }}</option>
+          </select>
+        </div>
         <button class="chat-nuevo" (click)="nuevoChat()">
           <ion-icon name="create-outline"></ion-icon> Nuevo mensaje
         </button>
@@ -108,6 +114,7 @@
           <div class="chat-meta">
             <div class="chat-top">
               <strong>{{ c.nombre }}</strong>
+              <span class="sucursal-tag" *ngIf="c.sucursalNombre">{{ c.sucursalNombre }}</span>
               <span class="chat-time">{{ hace(c.ultimo.created_at) }}</span>
             </div>
             <div class="chat-prev">
@@ -130,19 +137,24 @@
           <div class="th-info"><strong>{{ chatAbierto.nombre }}</strong><span>Mecánico</span></div>
         </div>
         <div class="bubbles">
-          <div class="bubble-row" *ngFor="let m of hilo" [class.mio]="esMio(m)">
-            <div class="bubble">
-              <div class="bubble-order" *ngIf="m.numero_orden">
-                <ion-icon name="document-text-outline"></ion-icon> {{ m.numero_orden }}
-              </div>
-              <img *ngIf="m.foto" [src]="m.foto" class="bubble-img" alt="Foto" />
-              <p *ngIf="m.mensaje">{{ m.mensaje }}</p>
-              <span class="b-time">
-                {{ hace(m.created_at) }}
-                <ion-icon *ngIf="esMio(m)" [name]="m.leido ? 'checkmark-done' : 'checkmark'" [class.read]="m.leido" class="read-icon"></ion-icon>
-              </span>
+          <ng-container *ngFor="let m of hilo; let i = index">
+            <div class="day-sep" *ngIf="mostrarSeparador(hilo, i)">
+              <span>{{ etiquetaDia(m.created_at) }}</span>
             </div>
-          </div>
+            <div class="bubble-row" [class.mio]="esMio(m)">
+              <div class="bubble">
+                <div class="bubble-order" *ngIf="m.numero_orden">
+                  <ion-icon name="document-text-outline"></ion-icon> {{ m.numero_orden }}
+                </div>
+                <img *ngIf="m.foto" [src]="m.foto" class="bubble-img" alt="Foto" />
+                <p *ngIf="m.mensaje">{{ m.mensaje }}</p>
+                <span class="b-time">
+                  {{ horaExacta(m.created_at) }}
+                  <ion-icon *ngIf="esMio(m)" [name]="m.leido ? 'checkmark-done' : 'checkmark'" [class.read]="m.leido" class="read-icon"></ion-icon>
+                </span>
+              </div>
+            </div>
+          </ng-container>
           <div class="empty-thread" *ngIf="!hilo.length">Escribí el primer mensaje 👇</div>
         </div>
       </div>

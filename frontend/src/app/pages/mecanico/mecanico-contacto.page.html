@@ -33,34 +33,41 @@
     </div>
 
     <!-- Conversación -->
-    <span class="section-label" style="margin-top:6px">Conversación con recepción</span>
-
-    <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:10px">
-      <div class="skeleton" style="height:48px;border-radius:14px"></div>
-      <div class="skeleton" style="height:48px;border-radius:14px;width:70%;margin-left:auto"></div>
+    <div *ngIf="cargando" class="skeleton-chat">
+      <div class="skeleton" style="height:48px;border-radius:14px;width:60%"></div>
+      <div class="skeleton" style="height:48px;border-radius:14px;width:55%;margin-left:auto"></div>
+      <div class="skeleton" style="height:48px;border-radius:14px;width:65%"></div>
     </div>
 
     <div class="chat" *ngIf="!cargando">
-      <div class="bubble" [class.mine]="esMio(m)" [class.broadcast]="m.tipo === 'broadcast'" *ngFor="let m of mensajes">
-        <div class="bubble-order" *ngIf="m.numero_orden">
-          <ion-icon name="document-text-outline"></ion-icon> {{ m.numero_orden }}
+      <ng-container *ngFor="let m of mensajes; let i = index">
+        <!-- Separador de día -->
+        <div class="day-sep" *ngIf="mostrarSeparador(i)">
+          <span>{{ etiquetaDia(m.created_at) }}</span>
         </div>
-        <img *ngIf="m.foto" [src]="m.foto" class="bubble-img" alt="Foto adjunta" />
-        <p *ngIf="m.mensaje">{{ m.mensaje }}</p>
-        <span class="meta">
-          {{ esMio(m) ? 'Vos' : m.remitente_nombre }}
-          <span *ngIf="m.tipo === 'broadcast'" class="broadcast-tag">· a todos</span>
-          · {{ hace(m.created_at) }}
-          <ion-icon *ngIf="esMio(m)" [name]="m.leido ? 'checkmark-done' : 'checkmark'" [class.read]="m.leido" class="read-icon"></ion-icon>
-        </span>
-      </div>
+
+        <div class="bubble" [class.mine]="esMio(m)" [class.broadcast]="m.tipo === 'broadcast'">
+          <div class="bubble-order" *ngIf="m.numero_orden">
+            <ion-icon name="document-text-outline"></ion-icon> {{ m.numero_orden }}
+          </div>
+          <img *ngIf="m.foto" [src]="m.foto" class="bubble-img" alt="Foto adjunta" />
+          <p *ngIf="m.mensaje">{{ m.mensaje }}</p>
+          <span class="meta">
+            {{ esMio(m) ? 'Vos' : m.remitente_nombre }}
+            <span *ngIf="m.tipo === 'broadcast'" class="broadcast-tag">· a todos</span>
+            · {{ horaExacta(m.created_at) }}
+            <ion-icon *ngIf="esMio(m)" [name]="m.leido ? 'checkmark-done' : 'checkmark'" [class.read]="m.leido" class="read-icon"></ion-icon>
+          </span>
+        </div>
+      </ng-container>
+
       <div class="empty" *ngIf="!mensajes.length">
         <ion-icon class="ico" name="chatbubbles-outline"></ion-icon>
         <p>Sin mensajes todavía. Escribile a recepción.</p>
       </div>
     </div>
 
-    <div style="height:110px"></div>
+    <div style="height:130px"></div>
   </div>
 
   <!-- Preview de foto -->
@@ -69,10 +76,22 @@
     <button class="foto-remove" (click)="quitarFoto()"><ion-icon name="close-circle"></ion-icon></button>
   </div>
 
+  <!-- Respuestas rápidas -->
+  <div class="quick-replies" *ngIf="mostrarRapidas">
+    <button *ngFor="let r of respuestasRapidas" (click)="enviarRapida(r)" class="qr-btn">{{ r }}</button>
+  </div>
+
   <!-- Barra de envío fija -->
   <div class="send-bar">
-    <button class="attach-btn" (click)="adjuntarFoto()" title="Adjuntar foto"><ion-icon name="camera-outline"></ion-icon></button>
+    <button class="attach-btn" (click)="adjuntarFoto()" title="Adjuntar foto">
+      <ion-icon name="camera-outline"></ion-icon>
+    </button>
+    <button class="attach-btn" (click)="mostrarRapidas = !mostrarRapidas" [class.active]="mostrarRapidas" title="Respuestas rápidas">
+      <ion-icon name="flash-outline"></ion-icon>
+    </button>
     <input type="text" [(ngModel)]="texto" placeholder="Escribí a recepción…" (keyup.enter)="enviar()">
-    <button (click)="enviar()" [disabled]="enviando || (!texto.trim() && !fotoPreview)"><ion-icon name="send"></ion-icon></button>
+    <button class="send-btn" (click)="enviar()" [disabled]="enviando || (!texto.trim() && !fotoPreview)">
+      <ion-icon name="send"></ion-icon>
+    </button>
   </div>
 </ion-content>

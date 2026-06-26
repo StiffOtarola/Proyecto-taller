@@ -48,8 +48,8 @@
     </section>
 
     <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:12px">
-      <div class="skeleton" style="height:150px;border-radius:20px"></div>
-      <div class="skeleton" style="height:150px;border-radius:20px"></div>
+      <div class="skeleton" style="height:150px"></div>
+      <div class="skeleton" style="height:150px"></div>
     </div>
 
     <div class="of" *ngFor="let p of promos; let i = index" (click)="toggle(p.id)" [class.open]="abierta.has(p.id)">

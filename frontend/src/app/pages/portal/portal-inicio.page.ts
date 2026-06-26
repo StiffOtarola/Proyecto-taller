@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { AlertController, ToastController } from '@ionic/angular';
+import { AlertController, NavController, ToastController } from '@ionic/angular';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { PortalService } from '../../services/portal.service';
@@ -27,6 +27,7 @@ export class PortalInicioPage implements OnInit, OnDestroy {
   constructor(
     public portal: PortalService,
     private router: Router,
+    private nav: NavController,
     private alert: AlertController,
     private toast: ToastController
   ) {}
@@ -125,7 +126,7 @@ export class PortalInicioPage implements OnInit, OnDestroy {
 
   irAgendar() { this.router.navigate(['/portal/agendar']); }
   irCitas() { this.router.navigate(['/portal/mis-citas']); }
-  verCita(p: any) { if (p?.id) this.router.navigate(['/portal/cita', p.id]); }
+  verCita(p: any) { if (p?.id) this.nav.navigateForward(`/portal/cita/${p.id}`); }
 
   // Título de la tarjeta destacada según el tipo de cita resuelto en el backend.
   tituloCita(tipo?: string): string {

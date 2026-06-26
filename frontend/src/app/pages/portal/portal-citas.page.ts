@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { ToastController, AlertController } from '@ionic/angular';
+import { ToastController, AlertController, NavController } from '@ionic/angular';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { PortalService } from '../../services/portal.service';
@@ -30,7 +30,7 @@ export class PortalCitasPage implements OnInit, OnDestroy {
   // Estados posibles de una cita pendiente (para los chips de filtro).
   readonly estadosPendiente = ['agendado', 'en_revision', 'en_mantenimiento', 'listo'];
 
-  constructor(private portal: PortalService, private toast: ToastController, private alert: AlertController, private router: Router) {}
+  constructor(private portal: PortalService, private toast: ToastController, private alert: AlertController, private router: Router, private nav: NavController) {}
 
   ngOnInit() { this.cargar(); }
   ionViewWillEnter() { this.cargar(); }
@@ -161,7 +161,7 @@ export class PortalCitasPage implements OnInit, OnDestroy {
 
   estrellas(n: number): string { return '★'.repeat(n) + '☆'.repeat(5 - n); }
 
-  verDetalle(c: any) { this.router.navigate(['/portal/cita', c.id]); }
+  verDetalle(c: any) { this.nav.navigateForward(`/portal/cita/${c.id}`); }
 
   // El presupuesto se aprueba en Inicio (donde está el flujo aprobar/rechazar).
   irAInicio() { this.router.navigate(['/portal/inicio']); }

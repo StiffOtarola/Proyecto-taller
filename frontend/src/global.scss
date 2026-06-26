@@ -936,10 +936,12 @@ ion-footer.admin-dark { background: #111111; }
    ═══════════════════════════════════════════════════════════ */
 ion-action-sheet {
   --backdrop-opacity: 0.5;
+  --background: #1a1a1a;
+  --color: #e5e5e5;
+  --button-color: #e5e5e5;
 
-  // Grupos como tarjetas flotantes (acciones + cancelar, separados).
   .action-sheet-group {
-    background: #1a1a1a;
+    background: #1a1a1a !important;
     border: 1px solid rgba(255, 255, 255, .1);
     border-radius: 20px;
     margin: 0 8px 8px;
@@ -949,28 +951,28 @@ ion-action-sheet {
   .action-sheet-group-cancel { margin-bottom: max(8px, var(--ion-safe-area-bottom, 8px)); }
 
   .action-sheet-title {
-    color: #f5f5f5;
+    color: #f5f5f5 !important;
     font-family: var(--font-display, 'Outfit', sans-serif);
     font-size: 15px; font-weight: 800; letter-spacing: -.01em;
     padding-top: 18px; padding-bottom: 6px;
   }
   .action-sheet-sub-title {
-    color: #999;
+    color: #999 !important;
     font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
   }
 
   .action-sheet-button {
-    color: #e5e5e5;
+    color: #e5e5e5 !important;
     font-size: 15px; font-weight: 600;
     min-height: 56px;
   }
   .action-sheet-button + .action-sheet-button { border-top: 1px solid rgba(255, 255, 255, .08); }
   .action-sheet-button.ion-activated,
-  .action-sheet-button:hover { background: rgba(255, 255, 255, .06); }
-  .action-sheet-icon { color: var(--cr, #E11D48); font-size: 21px; }
+  .action-sheet-button:hover { background: rgba(255, 255, 255, .06) !important; }
+  .action-sheet-icon { color: var(--cr, #E11D48) !important; font-size: 21px; }
 
-  .action-sheet-button.action-sheet-destructive { color: var(--ion-color-danger); }
-  .action-sheet-group-cancel .action-sheet-button { color: #bbb; font-weight: 800; }
+  .action-sheet-button.action-sheet-destructive { color: var(--ion-color-danger) !important; }
+  .action-sheet-group-cancel .action-sheet-button { color: #bbb !important; font-weight: 800; }
 }
 
 // Loading (LoadingController) con el look del portal: caja temática y legible en

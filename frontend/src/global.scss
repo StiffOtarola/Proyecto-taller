@@ -905,6 +905,29 @@ ion-footer.admin-dark { background: #111111; }
 }
 
 /* ═══════════════════════════════════════════════════════════
+   Alerts del panel admin (tema oscuro → forzar fondo claro).
+   Se aplica con cssClass: 'alert-light' en AlertController.
+   ═══════════════════════════════════════════════════════════ */
+.alert-light {
+  .alert-wrapper {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .35);
+  }
+  .alert-title { color: #1a1a1a; font-weight: 800; }
+  .alert-message { color: #444; }
+  .alert-radio-label { color: #1a1a1a; }
+  [aria-checked="true"] .alert-radio-label { color: var(--cr, #E11D48); font-weight: 700; }
+  .alert-radio-icon { border-color: #ccc; }
+  [aria-checked="true"] .alert-radio-icon { border-color: var(--cr, #E11D48); }
+  [aria-checked="true"] .alert-radio-inner { background: var(--cr, #E11D48); }
+  .alert-button { color: var(--cr, #E11D48); }
+  .alert-button.alert-button-role-cancel { color: #888; }
+  .alert-button-group { border-top: 1px solid #e5e5e5; }
+  .alert-button + .alert-button { border-left: 1px solid #e5e5e5; }
+}
+
+/* ═══════════════════════════════════════════════════════════
    Action sheet (ActionSheetController) con el look Crimson Ops.
    Aplica a TODA la app (sin cssClass): reemplaza el sheet plano y
    de bajo contraste de Ionic por tarjetas flotantes legibles en

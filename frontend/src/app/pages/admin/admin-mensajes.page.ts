@@ -94,6 +94,7 @@ export class AdminMensajesPage implements OnInit, OnDestroy {
     if (!this.tecnicos.length) { this.aviso('No hay mecánicos disponibles', 'warning'); return; }
     const al = await this.alert.create({
       header: 'Nuevo mensaje',
+      cssClass: 'alert-light',
       inputs: this.tecnicos.map(t => ({ type: 'radio' as const, label: t.nombre, value: { id: t.id, nombre: t.nombre } })),
       buttons: [
         { text: 'Cancelar', role: 'cancel' },

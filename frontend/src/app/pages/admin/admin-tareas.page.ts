@@ -75,6 +75,7 @@ export class AdminTareasPage implements OnInit, OnDestroy {
 
   async borrar(t: any) {
     const al = await this.alert.create({
+      cssClass: 'alert-light',
       header: 'Eliminar tarea',
       message: `¿Eliminar "${t.titulo}"? No se puede deshacer.`,
       buttons: [

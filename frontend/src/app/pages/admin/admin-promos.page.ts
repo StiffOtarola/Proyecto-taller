@@ -80,6 +80,7 @@ export class AdminPromosPage implements OnInit, OnDestroy {
 
   async borrar(p: Promo) {
     const al = await this.alert.create({
+      cssClass: 'alert-light',
       header: 'Eliminar promoción',
       message: `¿Eliminar "${p.titulo}"? No se puede deshacer.`,
       buttons: [

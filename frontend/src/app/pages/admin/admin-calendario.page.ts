@@ -17,6 +17,7 @@ interface DiaCal {
   standalone: false,
   selector: 'app-admin-calendario',
   templateUrl: './admin-calendario.page.html',
+  styleUrls: ['./admin-calendario.page.scss'],
 })
 export class AdminCalendarioPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

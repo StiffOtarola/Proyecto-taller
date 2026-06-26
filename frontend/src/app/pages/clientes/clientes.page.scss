@@ -1,17 +1,15 @@
-:host-context(.admin-dark) {
-  ion-item {
-    --background: transparent;
-    --color: #f5f5f5;
-    ion-label {
-      h2 { color: #f5f5f5 !important; }
-      p { color: #bbb !important; }
-    }
+ion-item {
+  --background: transparent;
+  ion-label {
+    h2 { color: var(--ion-text-color) !important; font-weight: 700; }
+    p { color: var(--ion-text-color) !important; opacity: .7; }
   }
-  ion-searchbar {
-    --background: rgba(255, 255, 255, .08);
-    --color: #e5e5e5;
-    --placeholder-color: #888;
-    --icon-color: #888;
-  }
-  ion-list { background: transparent; }
+}
+
+ion-searchbar {
+  --color: var(--ion-text-color);
+  --placeholder-color: var(--ion-text-color);
+  --placeholder-opacity: .45;
+  --icon-color: var(--ion-text-color);
+  --icon-opacity: .45;
 }

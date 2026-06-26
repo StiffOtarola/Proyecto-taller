@@ -21,8 +21,6 @@ const routes: Routes = [
   { path: 'registro', component: PortalRegistroPage },
   { path: 'recuperar', component: PortalRecuperarPage },
   { path: 'legal/:doc', component: PortalLegalPage },
-  { path: 'cita/:id', component: PortalCitaDetallePage, canActivate: [PortalGuard] },
-  { path: 'cita/:id/editar', component: PortalAgendarPage, canActivate: [PortalGuard] },
   { path: 'moto/:id/historial', component: PortalMotoHistorialPage, canActivate: [PortalGuard] },
   { path: 'notificaciones', component: PortalNotificacionesPage, canActivate: [PortalGuard] },
   {
@@ -37,6 +35,8 @@ const routes: Routes = [
       { path: 'motos', component: PortalMotosPage },
       { path: 'perfil', component: PortalPerfilPage },
       { path: 'ofertas', component: PortalOfertasPage },
+      { path: 'cita/:id', component: PortalCitaDetallePage },
+      { path: 'cita/:id/editar', component: PortalAgendarPage },
     ],
   },
 ];

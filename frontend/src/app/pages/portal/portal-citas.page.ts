@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { ToastController, AlertController, NavController } from '@ionic/angular';
+import { ToastController, AlertController } from '@ionic/angular';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { PortalService } from '../../services/portal.service';
@@ -30,7 +30,7 @@ export class PortalCitasPage implements OnInit, OnDestroy {
   // Estados posibles de una cita pendiente (para los chips de filtro).
   readonly estadosPendiente = ['agendado', 'en_revision', 'en_mantenimiento', 'listo'];
 
-  constructor(private portal: PortalService, private toast: ToastController, private alert: AlertController, private router: Router, private nav: NavController) {}
+  constructor(private portal: PortalService, private toast: ToastController, private alert: AlertController, private router: Router) {}
 
   ngOnInit() { this.cargar(); }
   ionViewWillEnter() { this.cargar(); }

@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { AlertController, NavController, ToastController } from '@ionic/angular';
+import { AlertController, ToastController } from '@ionic/angular';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { PortalService } from '../../services/portal.service';
@@ -27,7 +27,6 @@ export class PortalInicioPage implements OnInit, OnDestroy {
   constructor(
     public portal: PortalService,
     private router: Router,
-    private nav: NavController,
     private alert: AlertController,
     private toast: ToastController
   ) {}

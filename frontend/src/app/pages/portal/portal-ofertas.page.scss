@@ -56,13 +56,17 @@
 
 .of {
   background: var(--ion-card-background); border: 1px solid var(--hairline);
-  border-radius: 20px; box-shadow: var(--shadow-sm); overflow: hidden; cursor: pointer;
-  transition: box-shadow .2s; margin-bottom: 12px;
+  border-radius: 22px; box-shadow: var(--shadow-sm); overflow: hidden; cursor: pointer;
+  transition: box-shadow .2s, transform .2s; margin-bottom: 14px;
   &.open { box-shadow: var(--shadow-md); }
+  &:active { transform: scale(.99); }
 
-  .of-img { width: 100%; height: 150px; object-fit: cover; display: block; }
+  .of-img {
+    width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block;
+  }
   .of-img-ph {
-    height: 100px; display: flex; align-items: center; justify-content: center; font-size: 36px;
+    aspect-ratio: 16 / 9; display: flex; align-items: center; justify-content: center;
+    ion-icon { font-size: 40px; opacity: .4; }
     background: linear-gradient(135deg, var(--rose-50), var(--n-100));
     &.ph-0 { background: linear-gradient(135deg, var(--rose-50), var(--amber-100)); }
     &.ph-1 { background: linear-gradient(135deg, var(--emerald-50), var(--indigo-50)); }
@@ -70,15 +74,15 @@
     &.ph-3 { background: linear-gradient(135deg, var(--indigo-50), var(--n-100)); }
   }
 
-  .of-b { padding: 14px 16px; }
-  .of-h { display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    strong { font-size: 15px; font-weight: 700; } }
-  .bg { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 999px; flex-shrink: 0;
+  .of-b { padding: 14px 18px 16px; }
+  .of-h { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    strong { font-size: 16px; font-weight: 800; line-height: 1.3; } }
+  .bg { font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 999px; flex-shrink: 0;
     background: var(--rose-50); color: var(--rose-700); }
 
-  .of-d { margin: 8px 0 0; font-size: 13px; color: var(--n-500); line-height: 1.5; display: none; }
+  .of-d { margin: 8px 0 0; font-size: 13.5px; color: var(--n-500); line-height: 1.55; display: none; }
   &.open .of-d { display: block; }
-  .of-tog { display: block; margin-top: 6px; font-size: 12px; font-weight: 600; color: var(--text-accent); }  // AA
+  .of-tog { display: block; margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--text-accent); }
 }
 
 .empty-state {

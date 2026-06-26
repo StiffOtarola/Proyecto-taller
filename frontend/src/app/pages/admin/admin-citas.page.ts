@@ -95,17 +95,19 @@ export class AdminCitasPage implements OnInit, OnDestroy {
 
   async verDetalleCita(c: any) {
     const moto = [c.marca, c.modelo].filter(Boolean).join(' ') || 'Moto';
+    const fecha = c.fecha ? new Date(c.fecha).toLocaleDateString('es-CR') : '—';
+    const lineas = [
+      `${moto}${c.placa ? ' · ' + c.placa : ''}`,
+      `Cliente: ${c.cliente_nombre || ''} ${c.cliente_apellido || ''}`,
+      `Servicio: ${c.tipo_servicio || c.motivo || '—'}`,
+      `Fecha: ${fecha} · ${c.hora?.slice(0, 5) || ''}`,
+      `Mecánico: ${c.tecnico_nombre || 'Sin asignar'}`,
+      `Estado: ${this.estadoLabel[c.estado] || c.estado}`,
+    ];
     const al = await this.alert.create({
       cssClass: 'alert-light',
       header: `Cita #${c.id}`,
-      message: `
-        <strong>${moto}</strong>${c.placa ? ` · ${c.placa}` : ''}<br>
-        <strong>Cliente:</strong> ${c.cliente_nombre || ''} ${c.cliente_apellido || ''}<br>
-        <strong>Servicio:</strong> ${c.tipo_servicio || c.motivo || '—'}<br>
-        <strong>Fecha:</strong> ${c.fecha ? new Date(c.fecha).toLocaleDateString('es-CR') : '—'} · ${c.hora?.slice(0, 5) || ''}<br>
-        <strong>Mecánico:</strong> ${c.tecnico_nombre || 'Sin asignar'}<br>
-        <strong>Estado:</strong> ${this.estadoLabel[c.estado] || c.estado}
-      `,
+      message: lineas.join('\n'),
       buttons: ['Cerrar'],
     });
     await al.present();

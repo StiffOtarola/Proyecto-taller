@@ -265,7 +265,21 @@ router.get('/alertas', async (req, res) => {
          AND ci.created_at >= NOW() - INTERVAL 24 HOUR
        ORDER BY ci.created_at DESC LIMIT 10`
     );
-    const todas = [...fotos, ...listas, ...aprob, ...citasNuevas]
+    const [repSolicitados] = await pool.query(
+      `SELECT 'repuesto' AS tipo, r.created_at,
+              o.numero_orden, o.id AS orden_id,
+              r.nombre AS repuesto_nombre, r.cantidad AS repuesto_cantidad,
+              m.marca, m.modelo,
+              u.nombre AS tecnico_nombre
+       FROM orden_repuestos r
+       JOIN ordenes_trabajo o ON o.id = r.orden_id
+       JOIN motos m ON m.id = o.moto_id
+       LEFT JOIN usuarios u ON u.id = o.tecnico_id
+       WHERE r.estado = 'solicitado'
+         AND r.created_at >= NOW() - INTERVAL 24 HOUR
+       ORDER BY r.created_at DESC LIMIT 10`
+    );
+    const todas = [...fotos, ...listas, ...aprob, ...citasNuevas, ...repSolicitados]
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 20);
     res.json({ data: todas });

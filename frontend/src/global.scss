@@ -306,8 +306,8 @@ ion-toast {
     rgba(var(--ion-text-color-rgb), .10) 37%,
     rgba(var(--ion-text-color-rgb), .05) 63%);
   background-size: 400% 100%;
-  animation: shimmer 1.4s ease infinite;
-  border-radius: 10px;
+  animation: shimmer 1.5s infinite;
+  border-radius: 16px;
 }
 .skeleton-card {
   height: 96px;
@@ -784,7 +784,7 @@ ion-footer.admin-dark { background: #111111; }
   .placeholder { text-align: center; padding: 70px 24px; color: var(--tx3);
     ion-icon { font-size: 54px; opacity: .35; display: block; margin: 0 auto 14px; color: var(--cr); }
     h3 { font-family: var(--fd); font-size: 18px; color: var(--tx); margin: 0 0 6px; } p { font-size: 13px; margin: 0; } }
-  .sk-dark { background: linear-gradient(90deg, var(--sur2) 25%, var(--sur3) 37%, var(--sur2) 63%); background-size: 400% 100%; animation: sksh 1.4s ease infinite; border-radius: 16px; min-height: 20px; }
+  .sk-dark { background: linear-gradient(90deg, var(--sur2) 25%, var(--sur3) 37%, var(--sur2) 63%); background-size: 400% 100%; animation: shimmer 1.5s infinite; border-radius: 16px; min-height: 20px; }
 
   // ——— Calendario de citas ———
   .cal-wrap { display: grid; grid-template-columns: 1fr; gap: 20px; }
@@ -821,7 +821,7 @@ ion-footer.admin-dark { background: #111111; }
   .mec-av-sm { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; }
   .day-total { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--bd); font-size: 12px; color: var(--tx2); strong { color: var(--tx); } }
 }
-@keyframes sksh { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+/* sk-dark now uses @keyframes shimmer (unified skeleton animation) */
 
 @media (min-width: 860px) {
   .admin-dark {

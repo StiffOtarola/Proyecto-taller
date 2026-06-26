@@ -52,6 +52,16 @@
   background: var(--sur2);
   border-radius: 10px;
   margin-bottom: 8px;
+  border: 1px solid transparent;
+  transition: border-color .2s, transform .15s;
+
+  &:hover {
+    border-color: rgba(225, 29, 72, .15);
+  }
+
+  &:active {
+    transform: scale(.99);
+  }
 }
 
 .config-day-label {
@@ -98,6 +108,16 @@
   background: var(--sur2);
   border-radius: 12px;
   margin-bottom: 8px;
+  border: 1px solid transparent;
+  transition: border-color .2s, transform .15s;
+
+  &:hover {
+    border-color: rgba(225, 29, 72, .15);
+  }
+
+  &:active {
+    transform: scale(.99);
+  }
 }
 
 .config-branch-header {

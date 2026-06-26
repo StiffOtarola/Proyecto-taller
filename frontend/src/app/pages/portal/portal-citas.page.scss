@@ -28,6 +28,9 @@
 .cita-card {
   background: var(--ion-card-background); border: 1px solid var(--hairline);
   border-radius: 20px; box-shadow: var(--shadow-sm); padding: 16px; margin-bottom: 12px;
+  transition: border-color .2s, transform .15s;
+  &:hover { border-color: rgba(225, 29, 72, .15); }
+  &:active { transform: scale(.99); }
   &.cancelada { opacity: .6; }
 
   .cita-head { display: flex; align-items: center; justify-content: space-between; gap: 8px;

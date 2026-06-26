@@ -10,6 +10,7 @@ import { Usuario } from '../../models/usuario.model';
   standalone: false,
   selector: 'app-admin-tareas',
   templateUrl: './admin-tareas.page.html',
+  styleUrls: ['./admin-tareas.page.scss'],
 })
 export class AdminTareasPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

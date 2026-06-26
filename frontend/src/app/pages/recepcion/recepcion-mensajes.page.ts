@@ -3,6 +3,7 @@ import { AlertController, IonContent, ToastController } from '@ionic/angular';
 import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { RecepcionService } from '../../services/recepcion.service';
+import { abrirWhatsApp } from '../../shared/whatsapp.util';
 
 @Component({
   standalone: false,
@@ -14,6 +15,9 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   @ViewChild(IonContent) content?: IonContent;
 
+  vista: 'mecanicos' | 'clientes' | 'taller' = 'mecanicos';
+  avances: any[] = [];
+  notificaciones: any[] = [];
   internos: any[] = [];
   cargando = true;
 
@@ -38,19 +42,16 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
 
   cargar(ev?: any) {
     this.cargando = true;
-    this.rec.getMensajesInternos().pipe(takeUntil(this.destroy$)).subscribe({
-      next: r => { this.internos = r.data; this.cargando = false; if (ev) ev.target.complete(); },
-      error: () => { this.cargando = false; if (ev) ev.target.complete(); },
-    });
-    if (!this.tecnicos.length) {
-      this.rec.getTecnicos().pipe(takeUntil(this.destroy$)).subscribe({
-        next: r => { this.tecnicos = r.data; this.extraerSucursales(); },
-        error: () => {},
-      });
-    }
+    let pendientes = 3;
+    const listo = () => { if (--pendientes <= 0) this.cargando = false; if (ev) ev.target.complete(); };
+    this.rec.getAvances().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.avances = r.data; listo(); }, error: listo });
+    this.rec.getNotificaciones().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.notificaciones = r.data; listo(); }, error: listo });
+    this.rec.getMensajesInternos().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.internos = r.data; listo(); }, error: listo });
+    if (!this.tecnicos.length) this.rec.getTecnicos().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.tecnicos = r.data; this.extraerSucursales(); }, error: () => {} });
   }
 
   private refrescarInternos() {
+    if (this.vista !== 'taller') return;
     this.rec.getMensajesInternos().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.internos = r.data; },
     });
@@ -170,8 +171,8 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
 
   private scrollHilo() { setTimeout(() => this.content?.scrollToBottom(150), 60); }
 
-  iniciales(nombre?: string): string {
-    return (nombre || '?').charAt(0).toUpperCase();
+  iniciales(nombre?: string, apellido?: string): string {
+    return `${(nombre || '?').charAt(0)}${(apellido || '').charAt(0)}`.toUpperCase();
   }
 
   hace(fecha: string): string {
@@ -202,6 +203,15 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
     if (d === hoy) return 'Hoy';
     if (d === ayer) return 'Ayer';
     return new Date(fecha).toLocaleDateString('es-CR', { day: 'numeric', month: 'short' });
+  }
+
+  reenviar(a: any) {
+    const msg = `Hola ${a.cliente_nombre}, novedad de tu ${a.marca} ${a.modelo} (orden ${a.numero_orden}): ${a.descripcion}`;
+    abrirWhatsApp(a.cliente_telefono, msg);
+  }
+
+  responder(n: any) {
+    abrirWhatsApp(n.cliente_telefono, `Hola ${n.cliente_nombre}, `);
   }
 
   ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }

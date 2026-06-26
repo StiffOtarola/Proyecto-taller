@@ -3,7 +3,6 @@ import { AlertController, IonContent, ToastController } from '@ionic/angular';
 import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { RecepcionService } from '../../services/recepcion.service';
-import { abrirWhatsApp } from '../../shared/whatsapp.util';
 
 @Component({
   standalone: false,
@@ -15,15 +14,8 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   @ViewChild(IonContent) content?: IonContent;
 
-  vista: 'mecanicos' | 'clientes' | 'taller' = 'mecanicos';
-  avances: any[] = [];
-  notificaciones: any[] = [];
   internos: any[] = [];
   cargando = true;
-
-  clientes: any[] = [];
-  form: { cliente_id: number | null; titulo: string; mensaje: string } = { cliente_id: null, titulo: '', mensaje: '' };
-  enviando = false;
 
   tecnicos: any[] = [];
   chatAbierto: { id: number; nombre: string } | null = null;
@@ -46,17 +38,19 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
 
   cargar(ev?: any) {
     this.cargando = true;
-    let pendientes = 3;
-    const listo = () => { if (--pendientes <= 0) this.cargando = false; if (ev) ev.target.complete(); };
-    this.rec.getAvances().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.avances = r.data; listo(); }, error: listo });
-    this.rec.getNotificaciones().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.notificaciones = r.data; listo(); }, error: listo });
-    this.rec.getMensajesInternos().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.internos = r.data; listo(); }, error: listo });
-    if (!this.clientes.length) this.rec.getClientes().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.clientes = r.data });
-    if (!this.tecnicos.length) this.rec.getTecnicos().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.tecnicos = r.data; this.extraerSucursales(); }, error: () => {} });
+    this.rec.getMensajesInternos().pipe(takeUntil(this.destroy$)).subscribe({
+      next: r => { this.internos = r.data; this.cargando = false; if (ev) ev.target.complete(); },
+      error: () => { this.cargando = false; if (ev) ev.target.complete(); },
+    });
+    if (!this.tecnicos.length) {
+      this.rec.getTecnicos().pipe(takeUntil(this.destroy$)).subscribe({
+        next: r => { this.tecnicos = r.data; this.extraerSucursales(); },
+        error: () => {},
+      });
+    }
   }
 
   private refrescarInternos() {
-    if (this.vista !== 'taller') return;
     this.rec.getMensajesInternos().pipe(takeUntil(this.destroy$)).subscribe({
       next: r => { this.internos = r.data; },
     });
@@ -112,6 +106,7 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
     if (!this.tecnicos.length) { this.aviso('No hay mecánicos disponibles', 'warning'); return; }
     const al = await this.alert.create({
       header: 'Nuevo mensaje',
+      cssClass: 'alert-light',
       inputs: this.tecnicos.map(t => ({ type: 'radio' as const, label: t.nombre, value: { id: t.id, nombre: t.nombre } })),
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
@@ -175,8 +170,8 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
 
   private scrollHilo() { setTimeout(() => this.content?.scrollToBottom(150), 60); }
 
-  iniciales(nombre?: string, apellido?: string): string {
-    return `${(nombre || '?').charAt(0)}${(apellido || '').charAt(0)}`.toUpperCase();
+  iniciales(nombre?: string): string {
+    return (nombre || '?').charAt(0).toUpperCase();
   }
 
   hace(fecha: string): string {
@@ -207,35 +202,6 @@ export class RecepcionMensajesPage implements OnInit, OnDestroy {
     if (d === hoy) return 'Hoy';
     if (d === ayer) return 'Ayer';
     return new Date(fecha).toLocaleDateString('es-CR', { day: 'numeric', month: 'short' });
-  }
-
-  reenviar(a: any) {
-    const msg = `Hola ${a.cliente_nombre}, novedad de tu ${a.marca} ${a.modelo} (orden ${a.numero_orden}): ${a.descripcion}`;
-    abrirWhatsApp(a.cliente_telefono, msg);
-  }
-
-  responder(n: any) {
-    abrirWhatsApp(n.cliente_telefono, `Hola ${n.cliente_nombre}, `);
-  }
-
-  get formValido(): boolean {
-    return !!this.form.cliente_id && !!this.form.titulo.trim() && !!this.form.mensaje.trim();
-  }
-
-  enviarRapido() {
-    if (!this.formValido) { this.aviso('Completá cliente, título y mensaje', 'warning'); return; }
-    this.enviando = true;
-    this.rec.notificar({ cliente_id: this.form.cliente_id!, titulo: this.form.titulo.trim(), mensaje: this.form.mensaje.trim() })
-      .pipe(takeUntil(this.destroy$)).subscribe({
-        next: () => {
-          this.enviando = false;
-          this.form = { cliente_id: null, titulo: '', mensaje: '' };
-          this.vista = 'clientes';
-          this.aviso('Notificación enviada', 'success');
-          this.cargar();
-        },
-        error: () => { this.enviando = false; this.aviso('No se pudo enviar', 'danger'); },
-      });
   }
 
   ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }

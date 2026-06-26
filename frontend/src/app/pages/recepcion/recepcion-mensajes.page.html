@@ -12,69 +12,13 @@
   </ion-refresher>
 
   <div class="rec">
-    <div class="segment" *ngIf="!chatAbierto">
-      <button class="seg-btn" [class.on]="vista==='mecanicos'" (click)="vista='mecanicos'">Mecánicos</button>
-      <button class="seg-btn" [class.on]="vista==='clientes'" (click)="vista='clientes'">Clientes</button>
-      <button class="seg-btn" [class.on]="vista==='taller'" (click)="vista='taller'">Taller</button>
-    </div>
-
     <!-- Skeleton -->
     <div *ngIf="cargando" style="display:flex;flex-direction:column;gap:12px">
       <div class="skeleton" style="height:96px;border-radius:18px"></div>
       <div class="skeleton" style="height:96px;border-radius:18px"></div>
     </div>
 
-    <!-- De mecánicos -->
-    <div class="msg-list" *ngIf="!cargando && vista === 'mecanicos'">
-      <div class="msg-card" *ngFor="let a of avances">
-        <div class="msg-head">
-          <span class="avatar rose">{{ iniciales(a.tecnico_nombre) }}</span>
-          <div class="msg-who">
-            <strong>{{ a.tecnico_nombre }}</strong>
-            <span>{{ a.tecnico_rol }} · {{ a.numero_orden }}</span>
-          </div>
-          <span class="msg-time">{{ hace(a.created_at) }}</span>
-        </div>
-        <p class="msg-body">{{ a.descripcion }}</p>
-        <div class="msg-sub">
-          <span><ion-icon name="bicycle-outline"></ion-icon> {{ a.marca }} {{ a.modelo }}</span>
-          <span *ngIf="a.total_fotos > 0"><ion-icon name="camera-outline"></ion-icon> {{ a.total_fotos }} foto(s)</span>
-        </div>
-        <button class="msg-fwd" (click)="reenviar(a)">
-          <ion-icon name="logo-whatsapp"></ion-icon> Reenviar a cliente
-        </button>
-      </div>
-      <div class="empty-state" *ngIf="!avances.length">
-        <ion-icon name="chatbubbles-outline"></ion-icon>
-        <p>Sin avances de mecánicos.</p>
-      </div>
-    </div>
-
-    <!-- A clientes -->
-    <div class="msg-list" *ngIf="!cargando && vista === 'clientes'">
-      <div class="msg-card" *ngFor="let n of notificaciones">
-        <div class="msg-head">
-          <span class="avatar green">{{ iniciales(n.cliente_nombre, n.cliente_apellido) }}</span>
-          <div class="msg-who">
-            <strong>{{ n.cliente_nombre }} {{ n.cliente_apellido }}</strong>
-            <span>{{ n.titulo }}</span>
-          </div>
-          <span class="msg-time">{{ hace(n.created_at) }}</span>
-        </div>
-        <p class="msg-body">{{ n.mensaje }}</p>
-        <button class="msg-fwd" (click)="responder(n)">
-          <ion-icon name="logo-whatsapp"></ion-icon> Responder
-        </button>
-      </div>
-      <div class="empty-state" *ngIf="!notificaciones.length">
-        <ion-icon name="mail-outline"></ion-icon>
-        <p>No se han enviado notificaciones.</p>
-      </div>
-    </div>
-
-    <!-- Taller: chat interno con mecánicos -->
-    <ng-container *ngIf="!cargando && vista === 'taller'">
-
+    <ng-container *ngIf="!cargando">
       <!-- Lista de conversaciones -->
       <div class="chat-list" *ngIf="!chatAbierto">
         <!-- Broadcast -->
@@ -158,41 +102,24 @@
           <div class="empty-thread" *ngIf="!hilo.length">Escribí el primer mensaje</div>
         </div>
       </div>
-
     </ng-container>
 
-    <div style="height:200px" *ngIf="!(vista === 'taller' && chatAbierto)"></div>
+    <div style="height:200px" *ngIf="!chatAbierto"></div>
   </div>
 
   <!-- Preview de foto -->
-  <div class="foto-preview" *ngIf="fotoPreview && vista === 'taller' && chatAbierto">
+  <div class="foto-preview" *ngIf="fotoPreview && chatAbierto">
     <img [src]="fotoPreview" alt="Preview" />
     <button class="foto-remove" (click)="quitarFoto()"><ion-icon name="close-circle"></ion-icon></button>
   </div>
 
-  <!-- Redactor del chat del taller -->
-  <div class="quick-send chat" *ngIf="vista === 'taller' && chatAbierto">
+  <!-- Redactor del chat -->
+  <div class="quick-send chat" *ngIf="chatAbierto">
     <div class="qs-inner">
       <div class="qs-row">
         <button class="qs-attach" (click)="adjuntarFoto()" title="Adjuntar foto"><ion-icon name="camera-outline"></ion-icon></button>
         <input type="text" [(ngModel)]="borrador" placeholder="Escribí un mensaje…" class="qs-msg" (keyup.enter)="enviarChat()" />
         <button class="qs-send" (click)="enviarChat()" [disabled]="(!borrador.trim() && !fotoPreview) || enviandoChat">
-          <ion-icon name="send"></ion-icon>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Envío rápido de notificación a un cliente -->
-  <div class="quick-send" *ngIf="vista !== 'taller'">
-    <div class="qs-inner">
-      <ion-select [(ngModel)]="form.cliente_id" placeholder="Cliente" interface="action-sheet" class="qs-cliente">
-        <ion-select-option *ngFor="let c of clientes" [value]="c.id">{{ c.nombre }} {{ c.apellido }}</ion-select-option>
-      </ion-select>
-      <input type="text" [(ngModel)]="form.titulo" placeholder="Título" class="qs-titulo" />
-      <div class="qs-row">
-        <input type="text" [(ngModel)]="form.mensaje" placeholder="Mensaje para el cliente…" class="qs-msg" (keyup.enter)="enviarRapido()" />
-        <button class="qs-send" (click)="enviarRapido()" [disabled]="!formValido || enviando">
           <ion-icon name="send"></ion-icon>
         </button>
       </div>

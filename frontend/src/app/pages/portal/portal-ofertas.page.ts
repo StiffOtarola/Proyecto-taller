@@ -16,7 +16,7 @@ export class PortalOfertasPage implements OnInit, OnDestroy {
   recompensas: { id: number; fecha: string; descripcion: string; numero_orden: string | null }[] = [];
   histAbierto = false;
   cargando = true;
-  abierta = new Set<number>();
+  detalle: any = null;
   private readonly iconos = ['disc-outline', 'link-outline', 'construct-outline', 'battery-charging-outline', 'ellipse-outline', 'settings-outline'];
 
   // Bloques de progreso: meta-1 sellos + el último (cortesía/regalo).
@@ -55,7 +55,6 @@ export class PortalOfertasPage implements OnInit, OnDestroy {
 
   toggleHistorial() { this.histAbierto = !this.histAbierto; }
 
-  toggle(id: number) {
-    this.abierta.has(id) ? this.abierta.delete(id) : this.abierta.add(id);
-  }
+  abrirDetalle(p: any) { this.detalle = p; }
+  cerrarDetalle() { this.detalle = null; }
 }

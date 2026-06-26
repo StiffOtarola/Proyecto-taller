@@ -193,15 +193,20 @@
 
       <div class="rep-list">
         <ion-item-sliding *ngFor="let r of repuestos">
-          <ion-item lines="none" class="rep-item">
+          <ion-item lines="none" class="rep-item" [class.rep-solicitado]="r.estado === 'solicitado'">
             <ion-label>
               <h3>{{ r.nombre }}</h3>
               <p class="mono" *ngIf="!auth.tieneRol('tecnico')">{{ r.cantidad }} × ₡{{ r.costo_unitario | number:'1.0-0' }} = ₡{{ r.cantidad * r.costo_unitario | number:'1.0-0' }}</p>
               <p *ngIf="auth.tieneRol('tecnico')">Cantidad: {{ r.cantidad }}</p>
             </ion-label>
-            <span slot="end" class="pill" [ngClass]="r.estado === 'disponible' ? 'solid' : r.estado === 'pedido_especial' ? 'amber' : 'gris'">
-              {{ r.estado }}
-            </span>
+            <div slot="end" style="display:flex;align-items:center;gap:8px">
+              <button *ngIf="r.estado === 'solicitado' && !auth.tieneRol('tecnico')" class="rep-edit-btn" (click)="editarRepuesto(r)">
+                <ion-icon name="create-outline"></ion-icon> Cotizar
+              </button>
+              <span class="pill" [ngClass]="r.estado === 'disponible' ? 'solid' : r.estado === 'pedido_especial' ? 'amber' : r.estado === 'solicitado' ? 'rose' : 'gris'">
+                {{ r.estado }}
+              </span>
+            </div>
           </ion-item>
           <ion-item-options side="end" *ngIf="!auth.tieneRol('tecnico')">
             <ion-item-option color="danger" (click)="eliminarRepuesto(r)">

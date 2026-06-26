@@ -269,6 +269,37 @@ export class DetalleOrdenPage implements OnInit, OnDestroy {
     }
   }
 
+  async editarRepuesto(r: OrdenRepuesto) {
+    const al = await this.alert.create({
+      header: `Cotizar: ${r.nombre}`,
+      inputs: [
+        { name: 'costo_unitario', type: 'number', placeholder: 'Precio unitario (₡)', min: 0, value: r.costo_unitario || '' },
+        { name: 'cantidad', type: 'number', placeholder: 'Cantidad', min: 1, value: r.cantidad },
+        { name: 'estado', type: 'text', placeholder: 'Estado (disponible, pendiente, pedido_especial)', value: 'disponible' },
+      ],
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Guardar',
+          handler: (v) => {
+            const precio = parseFloat(v.costo_unitario) || 0;
+            const cant = parseInt(v.cantidad, 10) || r.cantidad;
+            const estado = ['disponible', 'pendiente', 'pedido_especial'].includes(v.estado) ? v.estado : 'disponible';
+            this.ordenSvc.updateRepuesto(this.orden!.id!, r.id!, { nombre: r.nombre, cantidad: cant, costo_unitario: precio, estado })
+              .pipe(takeUntil(this.destroy$)).subscribe({
+                next: res => {
+                  Object.assign(r, res.data);
+                  this.cargar(this.orden!.id!);
+                  this.mostrarToast('Repuesto actualizado');
+                },
+              });
+          },
+        },
+      ],
+    });
+    await al.present();
+  }
+
   async eliminarRepuesto(r: OrdenRepuesto) {
     const conf = await this.alert.create({
       header: 'Eliminar repuesto',

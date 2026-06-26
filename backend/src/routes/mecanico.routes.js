@@ -169,6 +169,15 @@ router.post('/ordenes/:id/repuestos', async (req, res) => {
       [req.params.id, nombre.trim(), cantidad || 1]
     );
     const [[nuevo]] = await pool.query('SELECT * FROM orden_repuestos WHERE id = ?', [result.insertId]);
+    // Notificar a recepción vía mensaje interno
+    const [[ordenInfo]] = await pool.query(
+      'SELECT numero_orden FROM ordenes_trabajo WHERE id = ?', [req.params.id]
+    );
+    const piezas = `${nombre.trim()} ×${cantidad || 1}`;
+    await pool.query(
+      "INSERT INTO mensajes_internos (remitente_id, destino_rol, mensaje, orden_id, tipo) VALUES (?, 'recepcion', ?, ?, 'directo')",
+      [req.usuario.id, `Solicitud de repuesto: ${piezas}`, req.params.id]
+    );
     res.status(201).json({ data: nuevo, message: 'Repuesto solicitado' });
   } catch (err) {
     fail(res, err);

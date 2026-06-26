@@ -128,7 +128,7 @@ export class PortalInicioPage implements OnInit, OnDestroy {
   irCitas() { this.router.navigate(['/portal/mis-citas']); }
   verCita(p: any) {
     if (!p?.id) return;
-    this.nav.navigateForward(`/portal/cita/${p.id}`);
+    window.location.href = `/portal/cita/${p.id}`;
   }
 
   // Título de la tarjeta destacada según el tipo de cita resuelto en el backend.

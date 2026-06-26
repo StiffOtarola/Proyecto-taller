@@ -161,7 +161,7 @@ export class PortalCitasPage implements OnInit, OnDestroy {
 
   estrellas(n: number): string { return '★'.repeat(n) + '☆'.repeat(5 - n); }
 
-  verDetalle(c: any) { this.router.navigate(['/portal/cita', c.id]); }
+  verDetalle(c: any) { window.location.href = `/portal/cita/${c.id}`; }
 
   // El presupuesto se aprueba en Inicio (donde está el flujo aprobar/rechazar).
   irAInicio() { this.router.navigate(['/portal/inicio']); }

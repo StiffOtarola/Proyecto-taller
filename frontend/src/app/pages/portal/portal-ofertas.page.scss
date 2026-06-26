@@ -133,6 +133,11 @@
   .ofv-desc { margin: 10px 0 0; font-size: 14px; color: var(--n-500); line-height: 1.6; }
 }
 
+.ofv-loading {
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px; color: var(--ion-color-primary);
+}
+
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
 

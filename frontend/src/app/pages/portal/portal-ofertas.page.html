@@ -53,8 +53,10 @@
     </div>
 
     <div class="of" *ngFor="let p of promos; let i = index">
-      <img *ngIf="p.imagen" [src]="p.imagen" alt="" class="of-img" />
-      <div class="of-img-ph" *ngIf="!p.imagen" [ngClass]="'ph-' + (i % 4)"><ion-icon [name]="phIcono(i)"></ion-icon></div>
+      <img *ngIf="imagenes[p.id]" [src]="imagenes[p.id]" alt="" class="of-img" loading="lazy" />
+      <div class="of-img-ph" *ngIf="!imagenes[p.id]" [ngClass]="'ph-' + (i % 4)" (click)="cargarImagen(p)">
+        <ion-icon [name]="p.tiene_imagen ? 'image-outline' : phIcono(i)"></ion-icon>
+      </div>
       <div class="of-b">
         <div class="of-h">
           <strong>{{ p.titulo }}</strong>
@@ -71,7 +73,10 @@
     <div class="of-viewer" *ngIf="detalle" (click)="cerrarDetalle()">
       <div class="ofv-content" (click)="$event.stopPropagation()">
         <button class="ofv-close" (click)="cerrarDetalle()"><ion-icon name="close"></ion-icon></button>
-        <img *ngIf="detalle.imagen" [src]="detalle.imagen" alt="" class="ofv-img" />
+        <img *ngIf="imagenes[detalle.id]" [src]="imagenes[detalle.id]" alt="" class="ofv-img" />
+        <div class="ofv-loading" *ngIf="detalle.tiene_imagen && !imagenes[detalle.id]">
+          <ion-spinner name="crescent"></ion-spinner>
+        </div>
         <div class="ofv-info">
           <div class="ofv-head">
             <h3>{{ detalle.titulo }}</h3>

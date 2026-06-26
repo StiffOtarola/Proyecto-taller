@@ -229,6 +229,9 @@ export class PortalService {
   getPromos(): Observable<{ data: any[] }> {
     return this.http.get<{ data: any[] }>(`${this.url}/promos`);
   }
+  getPromoImagen(id: number): Observable<{ data: string }> {
+    return this.http.get<{ data: string }>(`${this.url}/promos/${id}/imagen`);
+  }
 
   // Estado de fidelidad: visitas completadas, meta y si la cortesía está disponible.
   getFidelidad(): Observable<{ data: { visitas: number; cortesia_disponible: boolean; meta: number; faltan: number } }> {

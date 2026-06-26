@@ -696,11 +696,26 @@ router.get('/recompensas', async (req, res) => {
   }
 });
 
-// GET /api/portal/promos — promociones activas (visibles para el cliente)
+// GET /api/portal/promos — promociones activas (sin imagen pesada para carga rápida)
 router.get('/promos', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT id, titulo, descripcion, descuento, imagen FROM promos WHERE activa = 1 ORDER BY created_at DESC');
+    const [rows] = await pool.query(
+      `SELECT id, titulo, descripcion, descuento, precio_final,
+              CASE WHEN imagen IS NOT NULL THEN 1 ELSE 0 END AS tiene_imagen
+       FROM promos WHERE activa = 1 ORDER BY created_at DESC`
+    );
     res.json({ data: rows });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// GET /api/portal/promos/:id/imagen — imagen individual (lazy load)
+router.get('/promos/:id/imagen', async (req, res) => {
+  try {
+    const [[row]] = await pool.query('SELECT imagen FROM promos WHERE id = ? AND activa = 1', [req.params.id]);
+    if (!row || !row.imagen) return res.status(404).json({ error: 'Sin imagen' });
+    res.json({ data: row.imagen });
   } catch (err) {
     fail(res, err);
   }

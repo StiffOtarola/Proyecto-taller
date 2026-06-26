@@ -17,6 +17,7 @@ export class PortalOfertasPage implements OnInit, OnDestroy {
   histAbierto = false;
   cargando = true;
   detalle: any = null;
+  imagenes: Record<number, string> = {};
   private readonly iconos = ['disc-outline', 'link-outline', 'construct-outline', 'battery-charging-outline', 'ellipse-outline', 'settings-outline'];
 
   // Bloques de progreso: meta-1 sellos + el último (cortesía/regalo).
@@ -38,7 +39,11 @@ export class PortalOfertasPage implements OnInit, OnDestroy {
   cargar() {
     this.cargando = true;
     this.portal.getPromos().pipe(takeUntil(this.destroy$)).subscribe({
-      next: r => { this.promos = r.data; this.cargando = false; },
+      next: r => {
+        this.promos = r.data;
+        this.cargando = false;
+        r.data.filter((p: any) => p.tiene_imagen).slice(0, 3).forEach((p: any) => this.cargarImagen(p));
+      },
       error: () => { this.cargando = false; },
     });
     this.portal.getFidelidad().pipe(takeUntil(this.destroy$)).subscribe({
@@ -55,6 +60,16 @@ export class PortalOfertasPage implements OnInit, OnDestroy {
 
   toggleHistorial() { this.histAbierto = !this.histAbierto; }
 
-  abrirDetalle(p: any) { this.detalle = p; }
+  cargarImagen(p: any) {
+    if (this.imagenes[p.id] || !p.tiene_imagen) return;
+    this.portal.getPromoImagen(p.id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: r => this.imagenes[p.id] = r.data,
+    });
+  }
+
+  abrirDetalle(p: any) {
+    this.detalle = p;
+    this.cargarImagen(p);
+  }
   cerrarDetalle() { this.detalle = null; }
 }

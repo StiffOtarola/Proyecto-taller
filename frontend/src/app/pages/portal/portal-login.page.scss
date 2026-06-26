@@ -12,6 +12,17 @@
   .ico-hammer { font-size: 26px; color: var(--ion-color-primary-tint); transform: rotate(72deg) translateX(2px); }
 }
 
+// Forzar fondo oscuro en autofill de Chrome (quita el amarillo)
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 40px #1a1a1a inset !important;
+  -webkit-text-fill-color: #f5f5f5 !important;
+  caret-color: #f5f5f5 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 .portal-link {
   display: block;
   text-align: center;

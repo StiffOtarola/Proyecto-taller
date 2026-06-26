@@ -23,14 +23,14 @@ export class AdminCalendarioPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   // Paleta de colores asignada por mecánico (cicla si hay más que colores).
   private readonly PALETA: Color[] = [
-    { bg: '#2C0A12', fg: '#FB7185' },
-    { bg: '#0A0F2E', fg: '#818CF8' },
-    { bg: '#0A1F0A', fg: '#4ADE80' },
-    { bg: '#2C1A00', fg: '#FBB834' },
-    { bg: '#0D1F2B', fg: '#38BDF8' },
-    { bg: '#1A0A2B', fg: '#C084FC' },
+    { bg: 'rgba(225, 29, 72, .15)', fg: '#E11D48' },
+    { bg: 'rgba(99, 102, 241, .15)', fg: '#6366F1' },
+    { bg: 'rgba(16, 185, 129, .15)', fg: '#10B981' },
+    { bg: 'rgba(245, 158, 11, .15)', fg: '#F59E0B' },
+    { bg: 'rgba(56, 189, 248, .15)', fg: '#38BDF8' },
+    { bg: 'rgba(168, 85, 247, .15)', fg: '#A855F7' },
   ];
-  private readonly NEUTRO: Color = { bg: '#222222', fg: '#A3A3A3' };
+  private readonly NEUTRO: Color = { bg: 'rgba(163, 163, 163, .1)', fg: '#737373' };
   readonly dows = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   readonly meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 

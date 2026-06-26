@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController, ActionSheetController, AlertController } from '@ionic/angular';
-import { Subject } from 'rxjs';
+import { Subject, interval } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { RecepcionService, ResumenRecepcion } from '../../services/recepcion.service';
 import { AuthService } from '../../services/auth.service';
@@ -67,6 +67,7 @@ export class RecepcionPage implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.cargar();
+    interval(30000).pipe(takeUntil(this.destroy$)).subscribe(() => this.refrescarSilencioso());
     // Buscador con debounce: ≥2 caracteres consulta clientes; vacío limpia resultados.
     this.busqueda$.pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$)).subscribe(q => {
       if (q.length < 2) { this.resultados = []; this.buscando = false; return; }
@@ -225,6 +226,13 @@ export class RecepcionPage implements OnInit, OnDestroy {
     this.rec.getCitasHoy().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.citas = r.data; listo(); }, error: listo });
     this.rec.getAlertas().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.alertas = r.data; listo(); }, error: listo });
     this.rec.getListasEntrega().pipe(takeUntil(this.destroy$)).subscribe({ next: r => { this.listas = r.data; listo(); }, error: listo });
+  }
+
+  private refrescarSilencioso() {
+    this.rec.getCitasHoy().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.citas = r.data });
+    this.rec.getResumen().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.resumen = r.data });
+    this.rec.getAlertas().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.alertas = r.data });
+    this.rec.getListasEntrega().pipe(takeUntil(this.destroy$)).subscribe({ next: r => this.listas = r.data });
   }
 
   // —— Entrega + cobro desde el mostrador ——

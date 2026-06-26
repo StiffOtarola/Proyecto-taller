@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { AlertController } from '@ionic/angular';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AdminService } from '../../services/admin.service';
@@ -51,7 +52,7 @@ export class AdminCitasPage implements OnInit, OnDestroy {
 
   ordenLabel(e: string): string { return ESTADO_CONFIG[e as EstadoOrden]?.label ?? e; }
 
-  constructor(private admin: AdminService, private ordenSvc: OrdenesService, private router: Router) {}
+  constructor(private admin: AdminService, private ordenSvc: OrdenesService, private router: Router, private alert: AlertController) {}
 
   ngOnInit() { this.cargar(); this.cargarSucursales(); }
   ionViewWillEnter() { this.cargar(); }
@@ -91,6 +92,24 @@ export class AdminCitasPage implements OnInit, OnDestroy {
 
   abrir(c: any) { if (c.orden_id) this.router.navigate(['/detalle-orden', c.orden_id]); }
   abrirOrden(o: any) { this.router.navigate(['/detalle-orden', o.id]); }
+
+  async verDetalleCita(c: any) {
+    const moto = [c.marca, c.modelo].filter(Boolean).join(' ') || 'Moto';
+    const al = await this.alert.create({
+      cssClass: 'alert-light',
+      header: `Cita #${c.id}`,
+      message: `
+        <strong>${moto}</strong>${c.placa ? ` · ${c.placa}` : ''}<br>
+        <strong>Cliente:</strong> ${c.cliente_nombre || ''} ${c.cliente_apellido || ''}<br>
+        <strong>Servicio:</strong> ${c.tipo_servicio || c.motivo || '—'}<br>
+        <strong>Fecha:</strong> ${c.fecha ? new Date(c.fecha).toLocaleDateString('es-CR') : '—'} · ${c.hora?.slice(0, 5) || ''}<br>
+        <strong>Mecánico:</strong> ${c.tecnico_nombre || 'Sin asignar'}<br>
+        <strong>Estado:</strong> ${this.estadoLabel[c.estado] || c.estado}
+      `,
+      buttons: ['Cerrar'],
+    });
+    await al.present();
+  }
 
   exportar() {
     descargarCSV(`citas_${new Date().toISOString().slice(0, 10)}`, [

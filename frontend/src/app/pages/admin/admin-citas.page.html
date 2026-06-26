@@ -97,7 +97,7 @@
                 <td><span class="bg" [ngClass]="estadoBadge[c.estado]">{{ estadoLabel[c.estado] }}</span></td>
                 <td>
                   <button class="btn btn-ou btn-sm" *ngIf="c.orden_id" (click)="abrir(c)">Ver orden</button>
-                  <span *ngIf="!c.orden_id" class="clr-tx3">—</span>
+                  <button class="btn btn-ou btn-sm" *ngIf="!c.orden_id" (click)="verDetalleCita(c)">Ver cita</button>
                 </td>
               </tr>
             </tbody>

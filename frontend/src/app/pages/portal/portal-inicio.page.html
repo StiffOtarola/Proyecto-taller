@@ -115,9 +115,10 @@
       <button class="next-cta" *ngIf="p.tipo === 'vencida'" (click)="irAgendar()">
         <ion-icon name="calendar-outline"></ion-icon> Reagendar
       </button>
-      <button class="next-cta ghost" *ngIf="p.tipo !== 'vencida'" (click)="verCita(p)">
-        Ver detalle <ion-icon name="chevron-forward"></ion-icon>
-      </button>
+      <ion-button *ngIf="p.tipo !== 'vencida'" expand="block" fill="outline" class="next-ion-btn"
+                  [routerLink]="['/portal/cita', p.id]" routerDirection="forward">
+        Ver detalle <ion-icon slot="end" name="chevron-forward"></ion-icon>
+      </ion-button>
     </section>
     <section class="card next vacia" *ngIf="resumen && !resumen.proxima_cita">
       <p>No tenés citas próximas.</p>

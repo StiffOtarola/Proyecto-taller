@@ -80,7 +80,11 @@
     background: var(--ion-color-primary); color: #fff;
     ion-icon { font-size: 16px; }
     &:active { transform: scale(.98); }
-    &.ghost { background: none; border: 1.5px solid var(--hairline); color: var(--text-accent); }  // AA
+    &.ghost { background: none; border: 1.5px solid var(--hairline); color: var(--text-accent); }
+  }
+  .next-ion-btn {
+    margin-top: 12px; --border-radius: 999px; --border-color: var(--hairline);
+    --color: var(--text-accent); font-weight: 700; font-size: 13.5px;
   }
 }
 

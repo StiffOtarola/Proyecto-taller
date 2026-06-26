@@ -1,5 +1,8 @@
 <ion-header>
-  <ion-toolbar color="primary">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/admin" text=""></ion-back-button>
+    </ion-buttons>
     <ion-title>Clientes</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="nuevoCliente()">
@@ -7,53 +10,47 @@
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
-  <ion-toolbar>
-    <ion-searchbar [(ngModel)]="busqueda" (ionInput)="buscar($event)"
-      placeholder="Buscar por nombre, teléfono o cédula" debounce="400">
-    </ion-searchbar>
-  </ion-toolbar>
 </ion-header>
 
-<ion-content>
+<ion-content class="admin-dark">
   <ion-refresher slot="fixed" (ionRefresh)="cargar(); $event.target.complete()">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <div class="skeleton-wrap sk-clientes" *ngIf="cargando">
-    <div class="sk-row" *ngFor="let i of [1,2,3,4,5]">
-      <div class="skeleton sk-av"></div>
-      <div class="sk-col">
-        <div class="skeleton skeleton-line sk-50"></div>
-        <div class="skeleton skeleton-line sk-35"></div>
+  <div class="cli-page">
+    <!-- Buscador -->
+    <div class="cli-search">
+      <ion-icon name="search-outline"></ion-icon>
+      <input type="text" [(ngModel)]="busqueda" (ngModelChange)="buscar({ detail: { value: busqueda } })"
+             placeholder="Buscar por nombre, teléfono o cédula">
+      <button *ngIf="busqueda" class="cli-clear" (click)="busqueda=''; buscar({ detail: { value: '' } })">
+        <ion-icon name="close-circle"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Skeleton -->
+    <div *ngIf="cargando" class="cli-list">
+      <div class="sk-dark" style="height:72px;border-radius:16px" *ngFor="let i of [1,2,3,4]"></div>
+    </div>
+
+    <!-- Lista -->
+    <div class="cli-list" *ngIf="!cargando">
+      <div class="cli-card" *ngFor="let c of clientes" (click)="abrirDetalle(c.id!)">
+        <div class="cli-av">{{ iniciales(c) }}</div>
+        <div class="cli-info">
+          <strong>{{ c.nombre }} {{ c.apellido }}</strong>
+          <span *ngIf="c.telefono"><ion-icon name="call-outline"></ion-icon> {{ c.telefono }}</span>
+          <span *ngIf="c.cedula"><ion-icon name="card-outline"></ion-icon> {{ c.cedula }}</span>
+        </div>
+        <ion-icon name="chevron-forward" class="cli-chev"></ion-icon>
+      </div>
+
+      <div class="cli-empty" *ngIf="clientes.length === 0">
+        <ion-icon name="people-outline"></ion-icon>
+        <p>No se encontraron clientes</p>
       </div>
     </div>
   </div>
-
-  <ion-list *ngIf="!cargando">
-    <ion-item-sliding *ngFor="let c of clientes">
-      <ion-item (click)="abrirDetalle(c.id!)" detail="true" button>
-        <ion-avatar slot="start">
-          <ion-icon name="person-circle-outline" style="font-size:40px;color:var(--ion-color-primary)"></ion-icon>
-        </ion-avatar>
-        <ion-label>
-          <h2>{{ c.nombre }} {{ c.apellido }}</h2>
-          <p>{{ c.telefono }}</p>
-          <p *ngIf="c.cedula">CI: {{ c.cedula }}</p>
-        </ion-label>
-      </ion-item>
-      <ion-item-options side="end">
-        <ion-item-option (click)="editarCliente(c.id!)">
-          <ion-icon name="create-outline"></ion-icon>
-        </ion-item-option>
-      </ion-item-options>
-    </ion-item-sliding>
-
-    <ion-item *ngIf="clientes.length === 0 && !cargando">
-      <ion-label class="ion-text-center" color="medium">
-        <p>No se encontraron clientes</p>
-      </ion-label>
-    </ion-item>
-  </ion-list>
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button color="primary" (click)="nuevoCliente()">

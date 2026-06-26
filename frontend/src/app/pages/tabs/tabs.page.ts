@@ -1,15 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+import { AuthService } from '../../services/auth.service';
 
-@Component({ standalone: false,
+@Component({
+  standalone: false,
   selector: 'app-tabs',
   templateUrl: './tabs.page.html',
   styleUrls: ['./tabs.page.scss'],
 })
-export class TabsPage implements OnInit {
+export class TabsPage {
+  constructor(private auth: AuthService) {}
 
-  constructor() { }
-
-  ngOnInit() {
+  get esAdmin(): boolean {
+    return this.auth.getUsuario()?.rol === 'admin';
   }
-
 }

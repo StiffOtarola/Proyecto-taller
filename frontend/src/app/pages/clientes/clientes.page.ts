@@ -50,4 +50,8 @@ export class ClientesPage implements OnInit, OnDestroy {
   abrirDetalle(id: number) { this.router.navigate(['/cliente-detalle', id]); }
   nuevoCliente() { this.router.navigate(['/cliente-form']); }
   editarCliente(id: number) { this.router.navigate(['/cliente-form', id]); }
+
+  iniciales(c: any): string {
+    return ((c.nombre?.[0] || '') + (c.apellido?.[0] || '')).toUpperCase() || '?';
+  }
 }

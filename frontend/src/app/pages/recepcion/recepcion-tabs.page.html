@@ -23,6 +23,7 @@
           </a>
           <a class="nav-item" routerLink="/recepcion/mensajes" routerLinkActive="on">
             <ion-icon name="chatbubbles-outline"></ion-icon> Mensajes
+            <span class="nav-badge" *ngIf="noLeidos > 0">{{ noLeidos }}</span>
           </a>
           <a class="nav-item" routerLink="/recepcion/clientes" routerLinkActive="on">
             <ion-icon name="people-outline"></ion-icon> Clientes

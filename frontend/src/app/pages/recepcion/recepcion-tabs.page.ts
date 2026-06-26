@@ -1,16 +1,31 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subject, interval } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
+import { RecepcionService } from '../../services/recepcion.service';
 
-// Shell de recepción: barra lateral (como el panel admin) en pantallas grandes y
-// menú deslizable en móvil. Aloja las páginas de recepción en su router-outlet.
 @Component({
   standalone: false,
   selector: 'app-recepcion-tabs',
   templateUrl: './recepcion-tabs.page.html',
 })
-export class RecepcionTabsPage {
-  constructor(private auth: AuthService, private router: Router) {}
+export class RecepcionTabsPage implements OnInit, OnDestroy {
+  noLeidos = 0;
+  private destroy$ = new Subject<void>();
+
+  constructor(private auth: AuthService, private router: Router, private rec: RecepcionService) {}
+
+  ngOnInit() {
+    this.consultarNoLeidos();
+    interval(20000).pipe(takeUntil(this.destroy$)).subscribe(() => this.consultarNoLeidos());
+  }
+
+  private consultarNoLeidos() {
+    this.rec.getMensajesNoLeidos().pipe(takeUntil(this.destroy$)).subscribe({
+      next: r => this.noLeidos = r.data.count,
+    });
+  }
 
   get nombre(): string { return this.auth.getUsuario()?.nombre || 'Recepción'; }
   get foto(): string | null { return this.auth.getUsuario()?.foto || null; }
@@ -24,4 +39,6 @@ export class RecepcionTabsPage {
     this.auth.logout();
     this.router.navigate(['/portal/login'], { replaceUrl: true });
   }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 }

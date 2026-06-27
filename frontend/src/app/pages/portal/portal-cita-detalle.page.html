@@ -58,6 +58,9 @@
       </div>
       <div class="tl-progress-bar" *ngIf="cita.estado !== 'cancelado'">
         <div class="tl-progress-fill" [style.width.%]="progPct"></div>
+        <div class="tl-moto" [style.left.%]="progPct">
+          <ion-icon name="bicycle"></ion-icon>
+        </div>
       </div>
       <div class="timeline">
         <div class="step" *ngFor="let e of etapas; let last = last; let i = index" [ngClass]="e.estado" [class.is-last]="last">

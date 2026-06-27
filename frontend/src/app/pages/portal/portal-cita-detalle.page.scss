@@ -65,11 +65,19 @@
 
 .tl-progress-bar {
   height: 4px; border-radius: 99px; background: rgba(255, 255, 255, .06);
-  overflow: hidden; margin-bottom: 20px;
+  margin-bottom: 24px; position: relative;
   .tl-progress-fill {
     height: 100%; border-radius: 99px;
     background: linear-gradient(90deg, #10B981, var(--ion-color-primary), #f43f5e);
     transition: width .8s cubic-bezier(.4, 0, .2, 1);
+  }
+  .tl-moto {
+    position: absolute; top: 50%; transform: translate(-50%, -50%);
+    transition: left .8s cubic-bezier(.4, 0, .2, 1);
+    ion-icon {
+      font-size: 20px; color: var(--ion-color-primary);
+      filter: drop-shadow(0 2px 6px rgba(225, 29, 72, .4));
+    }
   }
 }
 

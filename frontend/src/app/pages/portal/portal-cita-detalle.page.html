@@ -18,7 +18,8 @@
     <!-- ═══ HERO: panel de control ═══ -->
     <section class="cockpit">
       <div class="ck-top">
-        <span class="ck-live" *ngIf="!cancelada && cita.estado !== 'entregado'"><i></i> EN VIVO</span>
+        <span class="ck-live" *ngIf="!cancelada && cita.estado !== 'entregado' && cita.estado !== 'agendado'"><i></i> EN VIVO</span>
+        <span class="ck-live pending" *ngIf="cita.estado === 'agendado'"><ion-icon name="calendar-outline"></ion-icon> Agendada</span>
         <span class="ck-live done" *ngIf="cita.estado === 'entregado'"><ion-icon name="checkmark-done"></ion-icon> Entregado</span>
         <span class="ck-live off" *ngIf="cancelada"><ion-icon name="close"></ion-icon> Cancelada</span>
         <span class="ck-status">{{ estadoLabel[cita.estado] }}</span>

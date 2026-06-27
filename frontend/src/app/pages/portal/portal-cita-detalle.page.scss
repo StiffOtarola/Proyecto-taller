@@ -27,7 +27,7 @@
     i { width: 7px; height: 7px; border-radius: 50%; background: var(--ion-color-primary);
       animation: pulseHalo 2s var(--ease-out) infinite; }
     ion-icon { font-size: 13px; }
-    &.done { color: #6ee7b7; } &.off { color: #d4d4d4; } }
+    &.done { color: #6ee7b7; } &.off { color: #d4d4d4; } &.pending { color: #93c5fd; } }
   .ck-status { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .04em;
     color: #d4d4d4; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 4px 11px; border-radius: 999px; }

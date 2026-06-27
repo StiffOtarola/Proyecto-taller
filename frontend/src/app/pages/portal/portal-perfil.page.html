@@ -76,6 +76,14 @@
           <ion-toggle [(ngModel)]="notif.avances" (ionChange)="guardarNotif('avances')"
                       [disabled]="guardandoNotif" aria-label="Avisos de avance"></ion-toggle>
         </div>
+        <div class="notif-row">
+          <div class="notif-info">
+            <strong>Recordatorios de cita</strong>
+            <span>Un aviso antes de tu próxima cita</span>
+          </div>
+          <ion-toggle [(ngModel)]="notif.recordatorios" (ionChange)="guardarNotif('recordatorios')"
+                      [disabled]="guardandoNotif" aria-label="Recordatorios de cita"></ion-toggle>
+        </div>
       </section>
 
       <!-- Seguridad: ingreso con huella / Face ID (solo app móvil con biometría) -->

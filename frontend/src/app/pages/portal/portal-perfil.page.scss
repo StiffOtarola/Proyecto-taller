@@ -1,49 +1,61 @@
-.perfil { max-width: 920px; margin: 0 auto; padding: 14px 16px 0; }
+.perfil { max-width: 600px; margin: 0 auto; padding: 14px 16px 0; }
 
+/* Header con gradiente y avatar grande */
 .profile-header {
-  display: flex; align-items: center; gap: 16px;
-  background: linear-gradient(135deg, var(--rose-50), var(--emerald-50));
-  border: 1px solid var(--hairline); border-radius: 24px; padding: 20px; margin-bottom: 16px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  background: linear-gradient(160deg, rgba(225, 29, 72, .08), rgba(16, 185, 129, .06));
+  border: 1px solid var(--hairline); border-radius: 26px; padding: 28px 20px 22px; margin-bottom: 18px;
+  position: relative; overflow: hidden;
 
-  // Avatar editable: tocar para cambiar la foto; badge de cámara superpuesto.
-  .avatar-wrap { position: relative; flex-shrink: 0; width: 66px; height: 66px; }
+  &::before {
+    content: ''; position: absolute; top: -40px; right: -40px;
+    width: 120px; height: 120px; border-radius: 50%;
+    background: rgba(225, 29, 72, .06);
+  }
+
+  .avatar-wrap { position: relative; flex-shrink: 0; width: 80px; height: 80px; margin-bottom: 14px; }
   .avatar {
-    width: 66px; height: 66px; border-radius: 50%; padding: 0; overflow: hidden; cursor: pointer;
-    background: var(--ion-color-primary); color: #fff; border: none;
+    width: 80px; height: 80px; border-radius: 50%; padding: 0; overflow: hidden; cursor: pointer;
+    background: var(--ion-color-primary); color: #fff; border: 3px solid rgba(255, 255, 255, .15);
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-display); font-size: 26px; font-weight: 800;
-    box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2);
+    font-family: var(--font-display); font-size: 30px; font-weight: 800;
+    box-shadow: 0 6px 20px rgba(225, 29, 72, .25);
     img { width: 100%; height: 100%; object-fit: cover; display: block; }
     &:active { transform: scale(.96); }
     &:disabled { opacity: .7; cursor: default; }
   }
   .avatar-cam {
-    position: absolute; right: -2px; bottom: -2px; width: 24px; height: 24px; border-radius: 50%;
-    background: var(--ion-card-background); border: 1px solid var(--hairline); cursor: pointer; padding: 0;
+    position: absolute; right: -2px; bottom: -2px; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--ion-color-primary); border: 2px solid var(--ion-card-background); cursor: pointer; padding: 0;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: var(--shadow-sm);
-    ion-icon { font-size: 13px; color: var(--ion-color-primary); }
-    &.cargando ion-icon { color: var(--n-400); }
+    box-shadow: 0 2px 8px rgba(225, 29, 72, .3);
+    ion-icon { font-size: 14px; color: #fff; }
+    &.cargando ion-icon { color: rgba(255, 255, 255, .6); }
     &:active { transform: scale(.9); }
     &:disabled { opacity: .7; }
   }
   .quitar-foto {
-    margin-top: 8px; background: none; border: none; padding: 0; cursor: pointer;
-    font-family: inherit; font-size: 11px; font-weight: 700; color: #b91c1c;
+    margin-top: 6px; background: none; border: none; padding: 0; cursor: pointer;
+    font-family: inherit; font-size: 11px; font-weight: 700; color: var(--ion-color-danger);
     &:disabled { opacity: .6; }
+  }
+
+  .info { min-width: 0; position: relative; z-index: 1;
+    h2 { font-family: var(--font-display); font-size: 22px; font-weight: 800;
+      margin: 0; color: var(--ion-text-color); letter-spacing: -.02em; }
+    .contact { font-size: 13px; color: var(--n-500); margin: 4px 0 0; word-break: break-word;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      ion-icon { font-size: 14px; } }
   }
 }
 
-/* Visor (lightbox) con zoom de la foto de perfil */
+/* Visor (lightbox) con zoom */
 .foto-zoom {
   position: fixed; inset: 0; z-index: 1000;
-  background: rgba(0, 0, 0, 0.93);
-  animation: fzIn .18s ease;
-
+  background: rgba(0, 0, 0, .93); animation: fzIn .18s ease;
   .fz-stage {
     position: absolute; inset: 0; overflow: auto;
     display: flex; align-items: center; justify-content: center; padding: 24px;
-    -webkit-overflow-scrolling: touch;
     img {
       margin: auto; max-width: 94vw; max-height: 82vh; object-fit: contain;
       border-radius: 14px; cursor: zoom-in; user-select: none;
@@ -51,131 +63,124 @@
     }
     &.zoom img { max-width: none; max-height: none; width: 175vw; cursor: zoom-out; border-radius: 0; }
   }
-
   .fz-close {
     position: absolute; top: 14px; right: 14px; z-index: 2;
     width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
-    background: rgba(255, 255, 255, 0.14); color: #fff;
+    background: rgba(255, 255, 255, .14); color: #fff;
     display: flex; align-items: center; justify-content: center;
     ion-icon { font-size: 22px; }
     &:active { transform: scale(.92); }
   }
-
   .fz-hint {
     position: absolute; left: 0; right: 0; bottom: 22px; text-align: center;
-    color: rgba(255, 255, 255, 0.7); font-size: 12px; font-weight: 600; pointer-events: none;
+    color: rgba(255, 255, 255, .7); font-size: 12px; font-weight: 600; pointer-events: none;
   }
 }
 @keyframes fzIn { from { opacity: 0; } to { opacity: 1; } }
 
-.profile-header {
-  // El degradado es claro en ambos temas: el texto va en oscuro fijo (no con vars
-  // de tema) para que no quede texto claro sobre fondo claro en modo oscuro.
-  .info { min-width: 0;
-    h2 { font-family: var(--font-display); font-size: 20px; font-weight: 800; margin: 0; color: #0a0a0a; }
-    .contact { font-size: 12px; color: #525252; margin: 4px 0 0; word-break: break-word; }
-  }
-}
-
+/* Cards */
 .card {
   background: var(--ion-card-background); border: 1px solid var(--hairline);
-  border-radius: 24px; box-shadow: var(--shadow-sm); padding: 18px; margin-bottom: 14px;
+  border-radius: 22px; box-shadow: var(--shadow-sm); padding: 20px; margin-bottom: 14px;
+  transition: border-color .2s;
 }
 .section-label {
-  display: block; font-size: 11px; font-weight: 800; text-transform: uppercase;
-  letter-spacing: 0.12em; color: var(--n-400); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--n-400); margin-bottom: 16px;
 }
 
+/* Inputs */
 .ig {
-  margin-bottom: 12px;
-  label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--n-400); margin-bottom: 5px; }
+  margin-bottom: 14px;
+  label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--n-500); margin-bottom: 6px; }
   input {
-    width: 100%; padding: 10px 12px; border: 1px solid var(--hairline); border-radius: 12px;
-    font-family: inherit; font-size: 13px; background: var(--n-100); color: var(--ion-text-color);
-    outline: none; transition: border-color 0.2s;
-    &:focus { border-color: var(--ion-color-primary); }
-    &::placeholder { color: var(--n-400); }
+    width: 100%; padding: 12px 14px; border: 1px solid var(--hairline); border-radius: 14px;
+    font-family: inherit; font-size: 14px; background: rgba(255, 255, 255, .03);
+    color: var(--ion-text-color); outline: none; transition: border-color .2s, box-shadow .2s;
+    &:focus { border-color: var(--ion-color-primary); box-shadow: 0 0 0 3px rgba(225, 29, 72, .08); }
+    &::placeholder { color: var(--n-500); }
   }
 }
 
-/* Control de accesibilidad: tamaño de texto */
+/* Accesibilidad */
 .a11y-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  .a11y-info { display: flex; flex-direction: column; gap: 2px;
-    strong { font-size: 13.5px; font-weight: 700; }
-    span { font-size: 11.5px; color: var(--n-500); } }
+  .a11y-info { display: flex; flex-direction: column; gap: 3px;
+    strong { font-size: 14px; font-weight: 700; }
+    span { font-size: 12px; color: var(--n-500); } }
   .a11y-opts { display: flex; gap: 6px; flex-shrink: 0; }
   .a11y-opt {
-    width: 40px; height: 40px; border-radius: 12px; cursor: pointer;
-    border: 1.5px solid var(--hairline); background: var(--n-100); color: var(--n-600);
+    width: 42px; height: 42px; border-radius: 12px; cursor: pointer;
+    border: 1.5px solid var(--hairline); background: rgba(255, 255, 255, .03); color: var(--n-600);
     font-family: inherit; font-weight: 800; line-height: 1;
-    display: flex; align-items: center; justify-content: center;
-    &.on { background: var(--ion-color-primary); border-color: var(--ion-color-primary); color: #fff; }
+    display: flex; align-items: center; justify-content: center; transition: all .2s;
+    &.on { background: var(--ion-color-primary); border-color: var(--ion-color-primary); color: #fff;
+      box-shadow: 0 2px 8px rgba(225, 29, 72, .25); }
     &:active { transform: scale(.94); }
   }
 }
 
-/* Filas de preferencias de notificación */
+/* Notificaciones */
 .notif-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 10px 0; border-bottom: 1px solid var(--hairline);
+  padding: 12px 0; border-bottom: 1px solid var(--hairline);
   &:last-child { border-bottom: none; }
-  .notif-info { display: flex; flex-direction: column; gap: 2px;
-    strong { font-size: 13.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
-    span { font-size: 11.5px; color: var(--n-500); } }
+  .notif-info { display: flex; flex-direction: column; gap: 3px;
+    strong { font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+    span { font-size: 12px; color: var(--n-500); } }
   ion-toggle { flex-shrink: 0; }
 }
 .tag-pronto {
-  font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
-  padding: 2px 6px; border-radius: 999px; background: var(--amber-100); color: var(--amber-700);
+  font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
+  padding: 2px 7px; border-radius: 999px; background: rgba(245, 158, 11, .12); color: #F59E0B;
 }
 
-/* Botón de activar/desactivar la biometría */
+/* Biometría */
 .bio-btn {
   flex-shrink: 0; display: flex; align-items: center; gap: 6px;
-  padding: 9px 14px; border-radius: var(--radius-pill, 999px); cursor: pointer;
-  font-family: inherit; font-size: 12.5px; font-weight: 700; line-height: 1;
-  background: var(--ion-color-primary); color: #fff; border: 1.5px solid var(--ion-color-primary);
-  transition: transform .15s ease;
-  ion-icon { font-size: 16px; }
-  &.on { background: none; color: var(--ion-color-danger); border-color: var(--ion-color-danger); }
+  padding: 10px 16px; border-radius: 12px; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 700; line-height: 1;
+  background: var(--ion-color-primary); color: #fff; border: none;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, .2);
+  transition: transform .15s;
+  ion-icon { font-size: 17px; }
+  &.on { background: none; color: var(--ion-color-danger); border: 1.5px solid var(--ion-color-danger);
+    box-shadow: none; }
   &:active { transform: scale(.96); }
   &:disabled { opacity: .5; cursor: default; }
 }
 
-.nf {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 0; border-bottom: 1px solid var(--hairline);
-  cursor: pointer; transition: opacity .15s;
-  &:last-child { border-bottom: none; }
-  &:active { opacity: .6; }
-  .nf-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-  .nf-msg { font-size: 13px; font-weight: 600; color: var(--ion-text-color); }
-  .nf-t { font-size: 11px; color: var(--n-400); }
-  .nf-chev { font-size: 16px; color: var(--n-400); flex-shrink: 0; }
-}
-
-.cta {
-  width: 100%; padding: 13px; border: none; border-radius: 14px;
-  background: var(--ion-color-primary); color: #fff;
-  font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  transition: transform 0.15s ease;
-  &:active { transform: scale(0.98); }
-  &:disabled { opacity: 0.5; cursor: default; }
-
-  &.outline { background: none; border: 1.5px solid var(--hairline); color: var(--ion-text-color); }
-  &.danger { background: var(--rose-50); color: var(--rose-700); border: 1px solid var(--rose-200); }  // AA sobre pastilla clara
-  &.danger-outline { background: none; border: 1.5px solid var(--ion-color-danger); color: var(--ion-color-danger); margin-top: 10px; }
-}
-
-/* Filas de "Información legal" */
+/* Legal */
 .legal-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 2px; cursor: pointer; text-decoration: none;
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 2px; cursor: pointer; text-decoration: none;
   color: var(--ion-text-color); border-bottom: 1px solid var(--hairline);
+  transition: background .2s; border-radius: 8px;
   &:last-child { border-bottom: none; }
+  &:hover { background: rgba(255, 255, 255, .03); }
   ion-icon:first-child { font-size: 20px; color: var(--ion-color-primary); flex-shrink: 0; }
   span { flex: 1; font-size: 14px; font-weight: 600; }
   .chev { font-size: 16px; color: var(--n-400); flex-shrink: 0; }
+}
+
+/* Botones de acción */
+.cta {
+  width: 100%; padding: 14px; border: none; border-radius: 14px;
+  background: var(--ion-color-primary); color: #fff;
+  font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, .2);
+  transition: transform .15s, box-shadow .15s;
+  &:hover { box-shadow: 0 6px 20px rgba(225, 29, 72, .3); }
+  &:active { transform: scale(.98); }
+  &:disabled { opacity: .5; cursor: default; box-shadow: none; }
+  &.outline { background: none; border: 1.5px solid var(--hairline); color: var(--ion-text-color); box-shadow: none; }
+  &.danger { background: rgba(239, 68, 68, .08); color: #EF4444;
+    border: 1px solid rgba(239, 68, 68, .15); box-shadow: none;
+    ion-icon { font-size: 17px; } }
+  &.danger-outline { background: none; border: 1.5px solid rgba(239, 68, 68, .2); color: #EF4444;
+    margin-top: 10px; box-shadow: none; font-size: 13px;
+    ion-icon { font-size: 16px; } }
 }

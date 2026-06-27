@@ -60,35 +60,37 @@
 .tl-card { padding-bottom: 6px; }
 .timeline { display: flex; flex-direction: column; }
 
-.step { display: flex; gap: 14px;
-  .spine { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 30px; }
-  .node { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+.step { display: flex; gap: 16px;
+  .spine { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 36px; }
+  .node { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    ion-icon { font-size: 15px; } }
-  .seg { flex: 1 1 auto; width: 2px; min-height: 16px; margin: 3px 0; border-radius: 2px; }
-  .body { flex: 1; min-width: 0; padding-bottom: 18px; }
+    transition: all .3s;
+    ion-icon { font-size: 17px; } }
+  .seg { flex: 1 1 auto; width: 3px; min-height: 18px; margin: 4px 0; border-radius: 3px; }
+  .body { flex: 1; min-width: 0; padding-bottom: 20px; }
   &.is-last .body { padding-bottom: 2px; }
   .step-label { display: block; font-family: var(--font-display); font-size: 15px; font-weight: 700;
-    letter-spacing: -0.01em; line-height: 30px; }
+    letter-spacing: -0.01em; line-height: 36px; }
 
-  /* Pasado: relleno neutro + línea sólida */
+  /* Pasado: verde completado */
   &.pasado {
-    .node { background: var(--n-200); color: var(--n-500); }
-    .seg { background: var(--n-300); }
+    .node { background: rgba(16, 185, 129, .15); color: #10B981; }
+    .seg { background: rgba(16, 185, 129, .3); }
     .step-label { color: var(--n-500); }
   }
   /* Activo: carmesí con halo latiendo */
   &.activo {
-    .node { background: var(--ion-color-primary); color: #fff; box-shadow: 0 4px 12px rgba(225, 29, 72, .35);
+    .node { background: var(--ion-color-primary); color: #fff;
+      box-shadow: 0 0 0 6px rgba(225, 29, 72, .15), 0 4px 14px rgba(225, 29, 72, .3);
       animation: pulseHalo 2.2s var(--ease-out) infinite; }
-    .seg { background: linear-gradient(var(--n-300), transparent); }
+    .seg { background: linear-gradient(rgba(225, 29, 72, .3), transparent); }
     .step-label { color: var(--ion-text-color); font-weight: 800; }
   }
   /* Futuro: hueco, punteado, atenuado */
   &.futuro {
-    .node { background: transparent; border: 1.5px dashed var(--n-300); color: var(--n-400); opacity: .6; }
-    .seg { background: repeating-linear-gradient(var(--n-300) 0 3px, transparent 3px 7px); opacity: .5; }
-    .step-label { color: var(--n-400); opacity: .7; }
+    .node { background: transparent; border: 1.5px dashed rgba(255, 255, 255, .12); color: var(--n-500); }
+    .seg { background: repeating-linear-gradient(rgba(255, 255, 255, .08) 0 3px, transparent 3px 8px); }
+    .step-label { color: var(--n-500); opacity: .6; }
   }
 }
 

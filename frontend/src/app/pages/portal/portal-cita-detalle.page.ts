@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastController, AlertController } from '@ionic/angular';
-import { Subject } from 'rxjs';
+import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { PortalService } from '../../services/portal.service';
 import { FLUJO_CITA, ESTADO_CITA_LABEL } from '../../utils/servicios';
@@ -61,9 +61,14 @@ export class PortalCitaDetallePage implements OnInit, OnDestroy {
     return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || '·';
   }
 
+  private citaId = 0;
+
   ngOnInit() {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (id) this.cargar(id);
+    this.citaId = Number(this.route.snapshot.paramMap.get('id'));
+    if (this.citaId) {
+      this.cargar(this.citaId);
+      interval(20000).pipe(takeUntil(this.destroy$)).subscribe(() => this.refrescar());
+    }
   }
 
   cargar(id: number) {
@@ -77,6 +82,18 @@ export class PortalCitaDetallePage implements OnInit, OnDestroy {
         }
       },
       error: () => { this.cargando = false; },
+    });
+  }
+
+  private refrescar() {
+    if (!this.citaId) return;
+    this.portal.getCita(this.citaId).pipe(takeUntil(this.destroy$)).subscribe({
+      next: r => {
+        this.cita = r.data;
+        if (this.cita?.orden_id) {
+          this.portal.getOrden(this.cita.orden_id).pipe(takeUntil(this.destroy$)).subscribe({ next: o => this.orden = o.data });
+        }
+      },
     });
   }
 

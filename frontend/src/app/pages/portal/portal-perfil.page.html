@@ -17,8 +17,18 @@
     </div>
 
     <ng-container *ngIf="!cargando">
-      <!-- Cabecera -->
-      <div class="profile-header">
+      <!-- Cabecera con cover -->
+      <div class="profile-header" [style.--cover]="perfil?.cover ? 'url(' + perfil.cover + ')' : 'none'">
+        <div class="cover-area" [class.has-cover]="perfil?.cover">
+          <button type="button" class="cover-btn" (click)="coverInput.click()" [disabled]="subiendoCover">
+            <ion-icon [name]="subiendoCover ? 'hourglass-outline' : 'image-outline'"></ion-icon>
+            {{ perfil?.cover ? 'Cambiar fondo' : 'Agregar fondo' }}
+          </button>
+          <button type="button" class="cover-remove" *ngIf="perfil?.cover" (click)="quitarCover()" [disabled]="subiendoCover">
+            <ion-icon name="close"></ion-icon>
+          </button>
+          <input #coverInput type="file" accept="image/*" hidden (change)="onCover($event)">
+        </div>
         <div class="avatar-wrap">
           <button type="button" class="avatar" (click)="abrirAvatar(fotoInput)" [disabled]="subiendoFoto"
                   [attr.aria-label]="perfil?.foto ? 'Ver foto de perfil' : 'Agregar foto de perfil'">

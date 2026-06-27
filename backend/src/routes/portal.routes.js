@@ -372,7 +372,7 @@ router.delete('/notificaciones/:id', async (req, res) => {
 router.get('/perfil', async (req, res) => {
   try {
     const [[c]] = await pool.query(
-      'SELECT id, nombre, apellido, email, telefono, cedula, foto, notif_avances, notif_recordatorios FROM clientes WHERE id = ? AND activo = 1',
+      'SELECT id, nombre, apellido, email, telefono, cedula, foto, cover, notif_avances, notif_recordatorios FROM clientes WHERE id = ? AND activo = 1',
       [req.cliente.id]
     );
     if (!c) return res.status(404).json({ error: 'Cuenta no encontrada' });
@@ -458,6 +458,18 @@ router.put('/perfil/foto', async (req, res) => {
     const val = fotoParaGuardar(foto);
     await pool.query('UPDATE clientes SET foto = ? WHERE id = ?', [val, req.cliente.id]);
     res.json({ data: { foto: val }, message: val ? 'Foto actualizada' : 'Foto eliminada' });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// PUT /api/portal/perfil/cover — foto de fondo del perfil.
+router.put('/perfil/cover', async (req, res) => {
+  try {
+    const { cover } = req.body;
+    const val = cover && typeof cover === 'string' && cover.startsWith('data:image/') ? cover : null;
+    await pool.query('UPDATE clientes SET cover = ? WHERE id = ?', [val, req.cliente.id]);
+    res.json({ data: { cover: val }, message: val ? 'Fondo actualizado' : 'Fondo eliminado' });
   } catch (err) {
     fail(res, err);
   }

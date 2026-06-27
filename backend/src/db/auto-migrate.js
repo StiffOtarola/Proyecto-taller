@@ -49,6 +49,7 @@ async function ensureSchema() {
     // Fotos del portal (data URL base64, igual que orden_fotos/promos): avatar del
     // cliente y foto de cada moto. MEDIUMTEXT aguanta imágenes comprimidas (~16 MB máx).
     await addColumnIfMissing('clientes', 'foto', 'MEDIUMTEXT NULL');
+    await addColumnIfMissing('clientes', 'cover', 'MEDIUMTEXT NULL');
     await addColumnIfMissing('motos', 'foto', 'MEDIUMTEXT NULL');
 
     // Preferencias de notificación por cliente (el cliente decide si quiere recibirlas).

@@ -50,6 +50,12 @@ export class PortalCitaDetallePage implements OnInit, OnDestroy {
 
   get cancelada(): boolean { return this.cita?.estado === 'cancelado'; }
 
+  get progPct(): number {
+    const i = this.flujo.indexOf(this.cita?.estado);
+    if (i < 0) return 0;
+    return Math.round((i / (this.etapasMeta.length - 1)) * 100);
+  }
+
   // ¿La orden vinculada espera que el cliente apruebe el presupuesto?
   get esperandoAprobacion(): boolean {
     return this.cita?.orden_estado === 'esperando_aprobacion' && this.cita?.aprobacion_cliente === 'pendiente';

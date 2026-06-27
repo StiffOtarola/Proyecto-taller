@@ -58,40 +58,70 @@
    TIMELINE vertical activa (la espina)
    ═══════════════════════════════════════════════════ */
 .tl-card { padding-bottom: 6px; }
+
+.tl-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.tl-pct { font-size: 22px; font-weight: 900; color: var(--ion-color-primary);
+  font-family: var(--font-display); letter-spacing: -.03em; }
+
+.tl-progress-bar {
+  height: 4px; border-radius: 99px; background: rgba(255, 255, 255, .06);
+  overflow: hidden; margin-bottom: 20px;
+  .tl-progress-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, #10B981, var(--ion-color-primary), #f43f5e);
+    transition: width .8s cubic-bezier(.4, 0, .2, 1);
+  }
+}
+
 .timeline { display: flex; flex-direction: column; }
 
-.step { display: flex; gap: 16px;
-  .spine { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 36px; }
-  .node { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+.step { display: flex; gap: 18px;
+  .spine { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 40px; }
+  .node { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    transition: all .3s;
-    ion-icon { font-size: 17px; } }
-  .seg { flex: 1 1 auto; width: 3px; min-height: 18px; margin: 4px 0; border-radius: 3px; }
-  .body { flex: 1; min-width: 0; padding-bottom: 20px; }
+    transition: all .3s; position: relative;
+    ion-icon { font-size: 18px; position: relative; z-index: 1; } }
+  .node-ring {
+    position: absolute; inset: -5px; border-radius: 50%;
+    border: 2px solid var(--ion-color-primary); opacity: .4;
+    animation: ringPulse 2s ease-in-out infinite;
+  }
+  .seg { flex: 1 1 auto; width: 3px; min-height: 20px; margin: 4px 0; border-radius: 3px; }
+  .body { flex: 1; min-width: 0; padding-bottom: 22px; }
   &.is-last .body { padding-bottom: 2px; }
   .step-label { display: block; font-family: var(--font-display); font-size: 15px; font-weight: 700;
-    letter-spacing: -0.01em; line-height: 36px; }
+    letter-spacing: -0.01em; line-height: 40px; }
+  .step-sub { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; margin-top: -2px;
+    color: var(--ion-color-primary);
+    &.done { color: #10B981; } }
 
-  /* Pasado: verde completado */
+  /* Pasado: verde con check */
   &.pasado {
-    .node { background: rgba(16, 185, 129, .15); color: #10B981; }
-    .seg { background: rgba(16, 185, 129, .3); }
-    .step-label { color: var(--n-500); }
+    .node { background: #10B981; color: #fff;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, .25); }
+    .seg { background: #10B981; }
+    .step-label { color: var(--ion-text-color); }
   }
-  /* Activo: carmesí con halo latiendo */
+  /* Activo: carmesí con anillo + glow */
   &.activo {
     .node { background: var(--ion-color-primary); color: #fff;
-      box-shadow: 0 0 0 6px rgba(225, 29, 72, .15), 0 4px 14px rgba(225, 29, 72, .3);
+      box-shadow: 0 0 0 6px rgba(225, 29, 72, .12), 0 6px 20px rgba(225, 29, 72, .35);
       animation: pulseHalo 2.2s var(--ease-out) infinite; }
-    .seg { background: linear-gradient(rgba(225, 29, 72, .3), transparent); }
-    .step-label { color: var(--ion-text-color); font-weight: 800; }
+    .seg { background: linear-gradient(rgba(225, 29, 72, .4), rgba(255, 255, 255, .06)); }
+    .step-label { color: var(--ion-text-color); font-weight: 800; font-size: 16px; }
   }
-  /* Futuro: hueco, punteado, atenuado */
+  /* Futuro: sutil */
   &.futuro {
-    .node { background: transparent; border: 1.5px dashed rgba(255, 255, 255, .12); color: var(--n-500); }
-    .seg { background: repeating-linear-gradient(rgba(255, 255, 255, .08) 0 3px, transparent 3px 8px); }
-    .step-label { color: var(--n-500); opacity: .6; }
+    .node { background: rgba(255, 255, 255, .04); border: 1.5px solid rgba(255, 255, 255, .1); color: rgba(255, 255, 255, .25); }
+    .seg { background: rgba(255, 255, 255, .05); }
+    .step-label { color: rgba(255, 255, 255, .3); }
   }
+}
+
+@keyframes ringPulse {
+  0%, 100% { opacity: .4; transform: scale(1); }
+  50% { opacity: .15; transform: scale(1.15); }
 }
 
 /* Transparencia operativa: tu mecánico */

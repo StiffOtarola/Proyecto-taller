@@ -52,15 +52,27 @@
 
     <!-- ═══ TIMELINE activa ═══ -->
     <section class="card tl-card" *ngIf="!cancelada">
-      <span class="section-label">Seguimiento en tiempo real</span>
+      <div class="tl-header">
+        <span class="section-label">Seguimiento en tiempo real</span>
+        <span class="tl-pct mono" *ngIf="cita.estado !== 'entregado' && cita.estado !== 'cancelado'">{{ progPct }}%</span>
+      </div>
+      <div class="tl-progress-bar" *ngIf="cita.estado !== 'cancelado'">
+        <div class="tl-progress-fill" [style.width.%]="progPct"></div>
+      </div>
       <div class="timeline">
-        <div class="step" *ngFor="let e of etapas; let last = last" [ngClass]="e.estado" [class.is-last]="last">
+        <div class="step" *ngFor="let e of etapas; let last = last; let i = index" [ngClass]="e.estado" [class.is-last]="last">
           <div class="spine">
-            <span class="node"><ion-icon [name]="e.icon"></ion-icon></span>
+            <span class="node">
+              <ion-icon *ngIf="e.estado === 'pasado'" name="checkmark"></ion-icon>
+              <ion-icon *ngIf="e.estado !== 'pasado'" [name]="e.icon"></ion-icon>
+              <span class="node-ring" *ngIf="e.estado === 'activo'"></span>
+            </span>
             <span class="seg" *ngIf="!last"></span>
           </div>
           <div class="body">
             <span class="step-label">{{ e.label }}</span>
+            <span class="step-sub" *ngIf="e.estado === 'activo'">En curso</span>
+            <span class="step-sub done" *ngIf="e.estado === 'pasado'">Completado</span>
 
             <!-- Transparencia operativa: tu mecánico, en la etapa de trabajo -->
             <div class="tec" *ngIf="e.key === 'en_mantenimiento' && e.estado !== 'futuro' && cita.tecnico_nombre">

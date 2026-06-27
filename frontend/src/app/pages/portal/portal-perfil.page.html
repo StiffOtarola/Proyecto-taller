@@ -18,8 +18,9 @@
 
     <ng-container *ngIf="!cargando">
       <!-- Cabecera con cover -->
-      <div class="profile-header" [style.--cover]="perfil?.cover ? 'url(' + perfil.cover + ')' : 'none'">
-        <div class="cover-area" [class.has-cover]="perfil?.cover">
+      <div class="profile-header">
+        <div class="cover-area" [class.has-cover]="perfil?.cover"
+             [style.background-image]="perfil?.cover ? 'url(' + perfil.cover + ')' : null">
           <button type="button" class="cover-btn" (click)="coverInput.click()" [disabled]="subiendoCover">
             <ion-icon [name]="subiendoCover ? 'hourglass-outline' : 'image-outline'"></ion-icon>
             {{ perfil?.cover ? 'Cambiar fondo' : 'Agregar fondo' }}

@@ -79,8 +79,10 @@
         </div>
 
         <!-- Barra de progreso -->
-        <div class="prog-track"><div class="prog-fill" [style.width.%]="progresoPct(o.estado)"></div></div>
-        <div class="prog-lbl">{{ progresoPct(o.estado) }}%</div>
+        <div class="prog-wrap">
+          <div class="prog-track"><div class="prog-fill" [style.width.%]="progresoPct(o.estado)"></div></div>
+          <div class="prog-lbl">{{ progresoPct(o.estado) }}%</div>
+        </div>
 
         <!-- Evidencias -->
         <div class="ev-box">

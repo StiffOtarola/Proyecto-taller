@@ -265,9 +265,6 @@ export class PortalService {
   actualizarFotoPerfil(foto: string | null): Observable<{ data: { foto: string | null } }> {
     return this.http.put<{ data: { foto: string | null } }>(`${this.url}/perfil/foto`, { foto });
   }
-  actualizarCover(cover: string | null): Observable<any> {
-    return this.http.put<any>(`${this.url}/perfil/cover`, { cover });
-  }
 
   eliminarCuenta(): Observable<any> {
     return this.http.delete(`${this.url}/perfil`);

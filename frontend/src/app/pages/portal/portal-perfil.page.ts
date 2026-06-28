@@ -22,7 +22,6 @@ export class PortalPerfilPage implements OnInit, OnDestroy {
   guardando = false;
   eliminando = false;
   subiendoFoto = false;
-  subiendoCover = false;
 
   // Visor (lightbox) de la foto de perfil con zoom.
   zoomAbierto = false;
@@ -239,38 +238,6 @@ export class PortalPerfilPage implements OnInit, OnDestroy {
         this.aviso('Foto eliminada');
       },
       error: e => { this.subiendoFoto = false; this.aviso(e.error?.error || 'No se pudo quitar la foto', 'danger'); },
-    });
-  }
-
-  async onCover(ev: Event) {
-    const file = (ev.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { this.aviso('Imagen muy grande (máx 5 MB)', 'warning'); return; }
-    this.subiendoCover = true;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const cover = reader.result as string;
-      this.portal.actualizarCover(cover).pipe(takeUntil(this.destroy$)).subscribe({
-        next: () => {
-          this.perfil = { ...this.perfil, cover };
-          this.subiendoCover = false;
-          this.aviso('Fondo actualizado');
-        },
-        error: () => { this.subiendoCover = false; this.aviso('No se pudo subir', 'danger'); },
-      });
-    };
-    reader.readAsDataURL(file);
-  }
-
-  quitarCover() {
-    this.subiendoCover = true;
-    this.portal.actualizarCover(null).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
-        this.perfil = { ...this.perfil, cover: null };
-        this.subiendoCover = false;
-        this.aviso('Fondo eliminado');
-      },
-      error: () => { this.subiendoCover = false; this.aviso('No se pudo quitar', 'danger'); },
     });
   }
 
